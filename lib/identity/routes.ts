@@ -26,10 +26,14 @@ export function safeNextPath(next: string | null | undefined): string {
   return url.pathname + url.search + url.hash;
 }
 
-export function resolveRoute(input: { pathname: string; hasOperatorCookie: boolean }): { redirect: string } | null {
-  const { pathname, hasOperatorCookie } = input;
+export function resolveRoute(input: {
+  pathname: string;
+  search?: string;
+  hasOperatorCookie: boolean;
+}): { redirect: string } | null {
+  const { pathname, search = "", hasOperatorCookie } = input;
   if (hasOperatorCookie && pathname === "/start") return { redirect: DEFAULT_AFTER_START };
   if (isPublicPath(pathname)) return null;
-  if (!hasOperatorCookie) return { redirect: `/start?next=${encodeURIComponent(pathname)}` };
+  if (!hasOperatorCookie) return { redirect: `/start?next=${encodeURIComponent(pathname + search)}` };
   return null;
 }

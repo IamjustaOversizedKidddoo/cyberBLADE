@@ -1,17 +1,20 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { OPERATOR_COOKIE } from "./constants";
 import { getOperatorStore } from "./operator-store";
 import type { Operator } from "./types";
 
-export const OPERATOR_COOKIE = "neon_uid";
+export { OPERATOR_COOKIE };
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
-export async function getCurrentOperator(): Promise<Operator | null> {
+// cache(): layout and page in the same request share one lookup.
+export const getCurrentOperator = cache(async (): Promise<Operator | null> => {
   const id = (await cookies()).get(OPERATOR_COOKIE)?.value;
   if (!id) return null;
   return getOperatorStore().get(id);
-}
+});
 
 /** For app pages. A cookie whose operator no longer exists is cleared via /session/stale. */
 export async function requireOperator(): Promise<Operator> {
