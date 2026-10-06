@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # CLAUDE.md — Cybersecurity Learning Platform (codename NEON)
 
 Read `docs/specs/2026-10-06-platform-design.md` before doing any work. It is the source of truth.
@@ -25,7 +27,8 @@ Goal: deeper and more practical than CEH, CompTIA Security+/CySA+, and OSCP prep
 
 - **Original only.** Map to official cert *objectives* (`content/coverage/<track>.yaml`), never copy vendor text or questions.
 - Every technical claim must be accurate and checkable. Every command/query shown must work in the lab engine or a real environment.
-- Write for a smart beginner with zero background: analogy first, then full technical depth. Define every term on first use.
+- Write for a smart beginner with zero background, following `docs/curriculum/teaching-style.md` (binding): simple first → technical → professional, What/Why/How, analogy then the real meaning, one idea at a time, every term and command explained on first use.
+- Track content follows the roadmaps in `docs/curriculum/` (core + Cybersecurity (Purple Team) = B.L.A.D.E; SOC Analyst; Penetration Tester / VAPT; Cloud Security).
 - Mark each lesson `status: draft` until a human expert reviews it. Never publish AI drafts unreviewed.
 - Offensive lessons include legal/authorization context.
 
@@ -49,15 +52,18 @@ last_reviewed: null
 ---
 
 ## Briefing
-### 1. What it is            <!-- plain language + everyday analogy -->
-### 2. Why it exists          <!-- the problem it solves -->
-### 3. How it works           <!-- internals step by step, diagrams, real examples -->
-### 4. How attackers abuse it <!-- techniques + ATT&CK IDs -->
+### 1. What it is            <!-- 5-second answer (1–2 simple sentences), then analogy → real technical meaning -->
+### 2. Why it exists          <!-- "This exists because…": problem → solution → what breaks when misconfigured -->
+### 3. How it works           <!-- simple → technical → professional; ASCII diagram explained in plain English; commands in the Command / In simple English / Why do I care? / Important part / Example output / What to look for format -->
+### 4. How attackers abuse it <!-- techniques + ATT&CK IDs, authorized-lab framing -->
 ### 5. How defenders detect it<!-- what it looks like in logs/SIEM, example queries -->
 ### 6. How to prevent/fix it  <!-- hardening, controls -->
+### 7. Common mistakes
+### Remember it like this     <!-- one-line memory anchor per major concept -->
+### Interview answer          <!-- short, professional, easy to say out loud -->
 
 ## Terminal Check
-<!-- 2–4 questions: recall + application. Explanations for every answer option. -->
+<!-- 3–5 questions covering basic, conceptual, practical, security, scenario. Explanations for every answer option. -->
 
 ## Lab
 <!-- link/embed lab + what the learner will do -->
@@ -70,6 +76,7 @@ last_reviewed: null
 See spec §7.2 (`labs/<lab-id>/lab.yaml`). Datasets come from seeded generators so every learner and exam candidate gets unique values. Answer keys are never sent to the client in plain text.
 
 ## Handler (AI tutor) rules
+- Teaches in the `docs/curriculum/teaching-style.md` style and supports its learner commands (explain again, simplify, deep dive, example, diagram, test, interview, revision, recap).
 - Graduated hints from the lab hint ladder; never reveal flags or exam answers.
 - Disabled in exam mode.
 - Scope-limited to platform learning; refuses real-world offensive targeting.

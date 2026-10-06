@@ -16,7 +16,8 @@
 - Every lesson follows the CLAUDE.md template exactly: frontmatter keys `id title track rank module order estimated_minutes objectives_covered mitre lab xp status last_reviewed`; body sections `## Briefing` (with `### 1.`…`### 6.` subsections in template order), `## Terminal Check`, `## Lab`, `## Debrief`.
 - All lessons ship `status: draft`, `last_reviewed: null`. Production shows only `published`; `NEON_SHOW_DRAFTS=true` (dev, preview, e2e) shows drafts with a visible "DRAFT — not yet expert-reviewed" banner. Never flip status in code.
 - Original content only; objectives mapped by ID, never vendor text. Every command shown in a lesson must run in the lab engine (enforced by Task 9's check).
-- Terminal Checks: 2–4 questions, every option has an explanation (CLAUDE.md).
+- Terminal Checks: 3–5 questions (basic, conceptual, practical, security, scenario), every option has an explanation (CLAUDE.md).
+- Lesson prose follows `docs/curriculum/teaching-style.md` (binding).
 - Lab definition per spec §7.2; datasets from seeded generators; answer keys never sent to the client; every lab has a test that solves it.
 - Rank advance requires passing a practical, timed, per-learner-randomized challenge; retry after cooldown with a new seed (spec §3.3).
 - One lab type per folder in `lib/lab-engine/`; small focused files; TDD for all of `lib/`.
@@ -72,12 +73,12 @@ questions:
 
 **Interfaces:**
 - Produces:
-  - `checksSchema` — 2–4 questions; each 2–5 options; exactly one `correct: true`; every option has non-empty `explanation`; question ids unique.
+  - `checksSchema` — 3–5 questions; each 2–5 options; exactly one `correct: true`; every option has non-empty `explanation`; question ids unique.
   - `loadChecks(lessonId: string): Promise<CheckSet>` (server-only).
   - `toPublicChecks(set: CheckSet): { id: string; prompt: string; options: string[] }[]` — strips `correct` and `explanation`.
   - `gradeCheck(set: CheckSet, questionId: string, optionIndex: number): { correct: boolean; explanations: string[] }` — throws on unknown question/out-of-range index.
 
-- [ ] **Step 1: Failing tests:** schema rejects 1 question, 5 questions, two correct options, empty explanation; `JSON.stringify(toPublicChecks(set))` contains neither `"correct"` nor any explanation text; `gradeCheck` right/wrong cases return all explanations; out-of-range index throws.
+- [ ] **Step 1: Failing tests:** schema rejects 2 questions, 6 questions, two correct options, empty explanation; `JSON.stringify(toPublicChecks(set))` contains neither `"correct"` nor any explanation text; `gradeCheck` right/wrong cases return all explanations; out-of-range index throws.
 - [ ] **Step 2:** Run → FAIL. Implement. Run → PASS.
 - [ ] **Step 3:** Commit `feat(content): terminal check schema, public view, grading`.
 
@@ -288,7 +289,7 @@ objectives:
 
 **Interfaces:**
 - Produces: `validateContent(input: { lessons: Lesson[]; checks: Map<string, CheckSet>; labs: Lab[]; coverage: Coverage; runLessonCommands: (lesson) => string[] }): string[]` (list of human-readable errors; script exits 1 if non-empty). Rules:
-  1. Body has `## Briefing`, `### 1.`…`### 6.` in order, `## Terminal Check`, `## Lab`, `## Debrief`.
+  1. Body has `## Briefing`, `### 1.`…`### 7.` in order, then `### Remember it like this` and `### Interview answer`, `## Terminal Check`, `## Lab`, `## Debrief`.
   2. Every lesson has a checks file; `lab` (if set) exists in `labs/`.
   3. Every `objectives_covered` id exists in coverage; every objective with `target_rank` in `built_ranks` is covered by ≥1 lesson.
   4. Every line starting with `$ ` inside a ```` ```console ```` block runs in `createShell` against the lesson's lab world (seed `"content-check"`) or a default demo world, and never exits 127 (command not found) or with a parse error.
@@ -343,7 +344,7 @@ The test only uses shell output to find answers — never reads `answers` except
 | 5 | `core-r0-mind-attacker-defender-01` | Thinking Like a Defender vs an Attacker | — | Target (2013): alerts fired but weren't acted on |
 | 6 | `core-r0-career-ethics-law-01` | Cyber Careers Map + Ethics & Law | — | AIIMS Delhi ransomware (2022) |
 
-Rules for every lesson: full CLAUDE.md template; `track: core`, `rank: 0`, `order` = #, `estimated_minutes` 20–35, `xp: 100`, `status: draft`, `last_reviewed: null`; analogy first, then full depth, every term defined on first use; section 4 lists ATT&CK IDs only where truly relevant (e.g. lesson 2 T1486 Data Encrypted for Impact; lesson 3 T1498 Network Denial of Service; lesson 4 T1059.004 Unix Shell); commands only inside ```` ```console ```` blocks with `$ ` prompts using engine-supported commands; lessons without a lab use `## Lab` for an unscored "Field exercise" (e.g. lesson 3: trace what happens when you open a website, step list to fill in). Lesson 6 covers IT Act 2000 (ss. 43, 66, 66C, 66D, 72A as applicable) and DPDP Act 2023 in own words with a "not legal advice" note, and links the careers map to the three launch tracks. Each checks file: 3 questions (1 recall, 2 application).
+Rules for every lesson: full CLAUDE.md template; `track: core`, `rank: 0`, `order` = #, `estimated_minutes` 20–35, `xp: 100`, `status: draft`, `last_reviewed: null`; analogy first, then full depth, every term defined on first use; section 4 lists ATT&CK IDs only where truly relevant (e.g. lesson 2 T1486 Data Encrypted for Impact; lesson 3 T1498 Network Denial of Service; lesson 4 T1059.004 Unix Shell); commands only inside ```` ```console ```` blocks with `$ ` prompts using engine-supported commands; lessons without a lab use `## Lab` for an unscored "Field exercise" (e.g. lesson 3: trace what happens when you open a website, step list to fill in). Lesson 6 covers IT Act 2000 (ss. 43, 66, 66C, 66D, 72A as applicable) and DPDP Act 2023 in own words with a "not legal advice" note, and links the careers map to the four launch tracks (Cybersecurity (Purple Team), SOC Analyst, Penetration Tester / VAPT, Cloud Security). Each checks file: 4 questions (basic, conceptual, practical or scenario, security). Every lesson follows `docs/curriculum/teaching-style.md`: 5-second answer first, analogy then real meaning, commands in the explained format, a "Remember it like this" anchor and an interview answer.
 
 - [ ] **Step 1:** Write lessons 1–2 + checks; `npm run check:content` → PASS; read them rendered at 375px.
 - [ ] **Step 2:** Lessons 3–4 + checks; `npm run check:content` → PASS.

@@ -47,17 +47,19 @@ Assumptions: English-first (Hinglish explanations available via the AI Handler),
 ```
 SHARED CORE (everyone)          JOB TRACKS (pick after core)
 Rank 0  Initiate   ─┐
-Rank 1  Operator    ├──► "Find your role" quiz ──► SOC Analyst      (launch)
-Rank 2  Watcher    ─┘                          ├─► Penetration Tester (launch)
-                                               ├─► Cloud Security    (launch)
-                                               └─► 15+ tracks shown as locked "Coming soon"
+Rank 1  Operator    ├──► "Find your role" quiz ──► Cybersecurity (Purple Team) (launch)
+Rank 2  Watcher    ─┘                          ├─► SOC Analyst                 (launch)
+                                               ├─► Penetration Tester / VAPT   (launch)
+                                               ├─► Cloud Security              (launch)
+                                               └─► other tracks shown as locked "Coming soon"
 ```
 
 Each track has its own Ranks 3–5 (Hunter → Analyst → Sentinel, renamed per track), a capstone, and a final certification exam.
 
 **Full track catalogue (roadmap):**
+- Flagship: Cybersecurity (Purple Team)
 - Defend: SOC Analyst, Incident Responder, Threat Hunter, Detection Engineer, Digital Forensics, Malware Analyst
-- Attack: Penetration Tester, Red Teamer, Bug Bounty Hunter, Mobile Security
+- Attack: Penetration Tester / VAPT Analyst, Red Teamer, Bug Bounty Hunter, Mobile Security
 - Build: Cloud Security, AppSec/DevSecOps, Network Security Engineer, IAM Engineer, OT/ICS Security
 - Emerging: AI Security, Threat Intelligence
 - Governance: GRC Analyst, Security Auditor, Privacy Analyst
@@ -66,7 +68,7 @@ Each track has its own Ranks 3–5 (Hunter → Analyst → Sentinel, renamed per
 ### 3.2 The lesson loop (every lesson, no exceptions)
 
 1. **Briefing** — the concept in plain language, everyday analogy first, then technical depth.
-2. **Terminal Check** — 2–4 quick questions (recall + application).
+2. **Terminal Check** — 3–5 quick questions (basic, conceptual, practical, security, scenario).
 3. **Lab** — hands-on task in the browser.
 4. **Debrief** — what a real professional does here, common mistakes, real-world incident example, XP awarded.
 
@@ -95,6 +97,8 @@ Every concept is taught through these layers (lesson template in `CLAUDE.md`):
 
 Certs typically cover layers 1, 3 and 6. Covering all eight is the differentiator.
 
+**How it is written:** every lesson follows `docs/curriculum/teaching-style.md` (owner decision 2026-10-07) — simple explanation first, then technical, then professional; What/Why/How; analogy then the real meaning; one idea at a time; commands always explained; a common mistake, an interview answer and a "Remember it like this" memory anchor per major concept.
+
 ### 4.2 Objective mapping (coverage guarantee)
 
 - For each track, download the **current official exam objectives** of the comparable certs and maintain a coverage matrix `content/coverage/<track>.yaml` mapping each objective → lesson(s) + lab(s).
@@ -103,8 +107,9 @@ Certs typically cover layers 1, 3 and 6. Covering all eight is the differentiato
 | Track | Benchmark certs to exceed |
 |---|---|
 | Shared core | CompTIA A+ (security-relevant parts), Network+, Security+ |
+| Cybersecurity (Purple Team) | Security+, CySA+, PenTest+, OSCP (PEN-200 topics), GIAC GCIH-level topics |
 | SOC Analyst | Security+, CompTIA CySA+, Blue Team Level 1, Splunk Core User, GIAC GCIH/GSOC level topics |
-| Penetration Tester | CEH, eJPT, OSCP (PEN-200 syllabus), HTB CPTS |
+| Penetration Tester / VAPT | CEH, CompTIA PenTest+, eJPT, OSCP (PEN-200 syllabus), HTB CPTS |
 | Cloud Security | AWS Certified Security – Specialty, CCSK, CCSP (cloud domains) |
 
 ### 4.3 Rules
@@ -132,7 +137,8 @@ Certs typically cover layers 1, 3 and 6. Covering all eight is the differentiato
 ### 5.2 Track exams (designed to be harder to fake than MCQ certs)
 
 - **SOC Analyst:** 8-hour simulated SOC shift — 60+ alerts (mostly noise), 3 real incidents hidden inside; must triage, investigate, write incident reports.
-- **Penetration Tester:** 24-hour exam against a simulated network + web apps (v1 simulated; v2 real containers), then 24 hours to submit a professional pentest report (OSCP-style rigor).
+- **Cybersecurity (Purple Team):** capstone in a simulated enterprise (web + Linux + Windows + AD): an authorized attack simulation, then detection, hunting and incident response on the same environment; submits an engagement report plus a detection-gap / IR report.
+- **Penetration Tester / VAPT:** 24-hour exam against a simulated network + web apps (v1 simulated; v2 real containers), then 24 hours to submit a professional pentest/VAPT report (OSCP-style rigor), including risk ratings and remediation.
 - **Cloud Security:** Breach-and-fix of a misconfigured mock cloud org + an architecture review report.
 
 ### 5.3 Integrity
@@ -162,30 +168,28 @@ Lesson counts are estimates; each module ends with a mini-lab.
 5. Thinking like a defender vs an attacker
 6. Cyber careers map + ethics & law (IT Act 2000, DPDP Act 2023)
 
-**Rank 1 · Operator — Foundations**
-1. Linux fundamentals (filesystem, users, permissions, processes, services, bash)
-2. Windows fundamentals (registry, services, Event Logs, PowerShell, Active Directory basics)
-3. Networking (OSI/TCP-IP, IP/subnetting, ports, TCP/UDP, DNS, DHCP, HTTP/S, TLS)
-4. Packet analysis (Wireshark-style capture viewer)
-5. Scripting basics (bash, Python for security tasks)
+**Rank 1 · Operator — Foundations** (B.L.A.D.E Phase 1, weeks 1–3)
+1. Networking & protocols (TCP/IP, OSI, IPv4/IPv6, CIDR/subnetting, ARP, ICMP, TCP/UDP, DNS, DHCP, NAT, HTTP/S, TLS, routing, firewalls, proxies, packet capture)
+2. Linux fundamentals (filesystem, users/groups, permissions, SUID/SGID, processes, services/systemd, cron, SSH, bash, logs, host investigation)
+3. Windows & PowerShell (processes, services, registry, ACLs, tokens, WMI/WinRM, scheduled tasks, event logs, UAC, Sysmon)
 
-**Rank 2 · Watcher — Security core**
-1. CIA triad, risk, threats/vulnerabilities, controls
-2. Cryptography (hashing, symmetric/asymmetric, PKI, certificates)
-3. Authentication & identity (passwords, MFA, SSO, OAuth basics)
-4. Attack types (phishing, malware families, web attacks, password attacks, social engineering)
-5. MITRE ATT&CK & Cyber Kill Chain
-6. Security tools landscape (firewall, IDS/IPS, SIEM, EDR, WAF, proxy)
-7. AI in security (how AI is used by attackers and defenders; prompt injection intro)
+**Rank 2 · Watcher — Web + security core** (B.L.A.D.E Phase 1, weeks 4–6, plus security essentials)
+1. Web architecture & security (HTTP, cookies, sessions, authn/authz, same-origin policy, CORS, CSRF, JWT, OAuth, APIs, GraphQL, WebSockets, reverse proxies, CDNs)
+2. Security core (CIA triad, risk, threats/vulnerabilities, controls, cryptography & PKI, MFA/SSO, attack types, MITRE ATT&CK & Kill Chain, security tools landscape, AI in security)
+3. Security tooling foundation (Nmap, Burp Suite, Git, Python & shell scripting basics, evidence collection) — taught on simulated targets
 
-### SOC Analyst track (~60 lessons)
-Log sources & formats · SIEM queries & dashboards · Alert triage methodology · Phishing analysis (headers, URLs, attachments) · Endpoint/EDR investigation · Network detection · Threat intelligence & IOCs · Incident response lifecycle (NIST) · Timeline building · Detection rules (Sigma, YARA basics) · AI-assisted triage & validating AI verdicts · Report writing & escalation · Capstone: SOC shift.
+### Job tracks
 
-### Penetration Tester track (~70 lessons)
-Methodology & scoping/legal · Recon & OSINT · Scanning & enumeration · Web app testing (OWASP Top 10 in depth) · Authentication attacks · Linux privilege escalation · Windows privilege escalation · Active Directory attacks · Pivoting & tunnelling concepts · Password cracking · Exploit research & modification · Pentest report writing · Capstone: full engagement.
+Each track has its own roadmap document; these are the source of truth for track content:
 
-### Cloud Security track (~55 lessons)
-Cloud fundamentals & shared responsibility · IAM deep dive (policies, roles, least privilege) · Storage security · Network security in cloud (VPCs, security groups) · Logging & monitoring (CloudTrail-style logs) · Secrets & key management · Container & Kubernetes security basics · Cloud attack paths · CSPM & compliance · Incident response in cloud · Capstone: breach-and-fix.
+| Track | Roadmap | Shape |
+|---|---|---|
+| Cybersecurity (Purple Team) | `docs/curriculum/blade-roadmap.md` | B.L.A.D.E Phases 2–9 (weeks 7–40): web & recon, privesc & AD, vulnerability research, red team & C2 concepts, blue team & SOC, malware & forensics, security programming (Rust), purple-team capstone |
+| SOC Analyst | `docs/curriculum/soc-analyst-roadmap.md` | 14 modules, ~16 weeks |
+| Penetration Tester / VAPT | `docs/curriculum/pentest-vapt-roadmap.md` | 14 modules, ~18 weeks |
+| Cloud Security | `docs/curriculum/cloud-security-roadmap.md` | owner's CLOUD-SECURITY-journal: 3 phases, 16 weeks, AWS-first |
+
+**Shared lessons:** tracks overlap (e.g. web testing is in Purple Team and Pentest; SIEM in Purple Team, SOC and Cloud). A topic is written once; each track lists its modules and lesson ids in `content/tracks/<track>/track.yaml`, so one lesson can appear in several tracks.
 
 ---
 
@@ -247,6 +251,8 @@ A chat panel in every lesson and lab, powered by the Claude API.
 - Gives **graduated hints** (uses the lab's hint ladder + learner's attempts); never reveals flags or exam answers.
 - Grades reports against rubrics with line-level feedback.
 - Answers "why" questions about the current lesson.
+
+**Commands & style:** the Handler teaches in the `docs/curriculum/teaching-style.md` style and supports the learner commands listed there (`what is X?`, `why?`, `explain again`, `simplify`, `deep dive`, `example`, `diagram`, `test`, `interview`, `revision`, `recap`).
 
 **Doesn't:**
 - Help during track exams (disabled; exam mode).
@@ -363,9 +369,10 @@ Timelines are rough for a solo founder working with Claude Code; adjust after Ph
 | **2. Core complete + Handler** (wk 6–10) | Full shared core | Ranks 1–2 content, `packet` + `siem` (basic) labs, Handler (hints + Q&A), achievements/streaks | Closed beta: 30–50 testers complete the core; feedback collected |
 | **3. SOC track** (wk 11–16) | First job track | Full SIEM console, `report` lab + AI grading, SOC content, SOC exam, certificate + verify page, coverage matrix | Beta testers pass the SOC exam; external reviewer sign-off |
 | **4. Public launch** (wk 17–18) | Revenue | Razorpay, pricing gates, landing page, legal pages, admin review queue | Public launch: core + SOC live, other tracks "Coming soon" |
-| **5. Pentest track** (wk 19–28) | Second track | `webapp` lab type, Pentest content, Pentest exam | Track live after reviewer sign-off |
+| **5. Pentest / VAPT track** (wk 19–28) | Second track | `webapp` lab type, Pentest/VAPT content, exam | Track live after reviewer sign-off |
 | **6. Cloud track** (wk 29–36) | Third track | `cloud` lab type + policy engine, Cloud content, Cloud exam | Track live |
-| **7. v2** | Scale | Real container labs, proctoring, more tracks (GRC, AI Security next), hiring partners | Ongoing |
+| **7. Cybersecurity (Purple Team) track** | Flagship track | Reuses SOC + Pentest lessons; adds vulnerability-intel, C2 traffic analysis, malware/forensics depth, security programming (needs a code-runner lab type), purple-team capstone + exam | Track live after reviewer sign-off |
+| **8. v2** | Scale | Real container labs, proctoring, more tracks (GRC, AI Security next), hiring partners | Ongoing |
 
 **Local-first (owner decision, 2026-10-06):** Phases 0–1 run as a local website only — no Supabase, auth or deployment. A cookie-based local "operator" identity and JSON files in `.data/` stand in, behind the same store interfaces. Supabase Auth (email + Google), Postgres and Vercel deployment are added as the first step of Phase 2, before the closed beta.
 
@@ -379,4 +386,5 @@ Timelines are rough for a solo founder working with Claude Code; adjust after Ph
 2. Pricing after validation interviews.
 3. External expert reviewer(s) per track — budget and source.
 4. Whether to also offer prep bundles for established certs (Security+, OSCP) alongside the platform's own cert.
-5. Hinglish: Handler-only (v1) or full translated lessons (later)?
+5. Code-runner labs for the Purple Team track's Rust/Python tool-building weeks: in-browser (WASM) or v2 containers?
+6. Hinglish: Handler-only (v1) or full translated lessons (later)?
