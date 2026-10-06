@@ -1,0 +1,21 @@
+id: fixture-lab-01
+title: "Fixture Lab"
+type: terminal
+track: core
+rank: 0
+estimated_minutes: 10
+briefing: briefing.md
+dataset:
+  generator: fixture_gen
+  params: { files: 2 }
+objectives:
+  - id: o1
+    prompt: "What is the flag?"
+    check: { kind: flag, answer_from: generator.flag }
+  - id: o2
+    prompt: "Who logged in?"
+    check: { kind: flag, answer_from: generator.user, case_sensitive: false }
+hints:
+  o1: ["Look around.", "Try ls -a."]
+xp: 50
+mitre: []
