@@ -104,13 +104,15 @@ Certs typically cover layers 1, 3 and 6. Covering all eight is the differentiato
 - For each track, download the **current official exam objectives** of the comparable certs and maintain a coverage matrix `content/coverage/<track>.yaml` mapping each objective → lesson(s) + lab(s).
 - CI check fails if any mapped objective has no lesson.
 
-| Track | Benchmark certs to exceed |
+**Target certifications (owner decision 2026-10-07):** each track teaches toward *all* major paid certifications of its field. The authoritative list, with formats and notes, is `docs/curriculum/cert-targets.md`:
+
+| Track | Target certs (summary) |
 |---|---|
-| Shared core | CompTIA A+ (security-relevant parts), Network+, Security+ |
-| Cybersecurity (Purple Team) | Security+, CySA+, PenTest+, OSCP (PEN-200 topics), GIAC GCIH-level topics |
-| SOC Analyst | Security+, CompTIA CySA+, Blue Team Level 1, Splunk Core User, GIAC GCIH/GSOC level topics |
-| Penetration Tester / VAPT | CEH, CompTIA PenTest+, eJPT, OSCP (PEN-200 syllabus), HTB CPTS |
-| Cloud Security | AWS Certified Security – Specialty, CCSK, CCSP (cloud domains) |
+| Shared core | CompTIA A+ (security parts), Network+, Security+, ISC2 CC |
+| SOC Analyst | CySA+, BTL1, Splunk Core Certified User, Microsoft SC-200, GCIH-level topics |
+| Penetration Tester / VAPT | eJPT, PenTest+, CEH + CEH Practical, OSCP/OSCP+, HTB CPTS, CRTP |
+| Cloud Security | AWS Security – Specialty, AZ-500, Google PCSE, CCSK, CCSP, CKS |
+| Cybersecurity (Purple Team) | SOC + Pentest lists, plus CRTO, OSDA, GCFA and GREM topic coverage |
 
 ### 4.3 Rules
 
@@ -151,6 +153,22 @@ Certs typically cover layers 1, 3 and 6. Covering all eight is the differentiato
 ### 5.4 Earning recognition (honest note)
 
 Content quality alone doesn't make a cert recognized — HR filters still look for Security+/CEH/OSCP. Recognition is built by: publishing the coverage matrix and exam format, publishing pass rates, hiring-partner programme with Indian SOCs/MSSPs, and graduate outcomes. Until then, the platform also prepares learners to pass the established certs if they choose.
+
+### 5.5 Exam readiness system ("pass the paid exam")
+
+Lessons build skill; this layer makes a learner ready for a specific paid exam's format, timing and pressure. Applies to every cert in `docs/curriculum/cert-targets.md`.
+
+1. **Cert registry.** `content/certs/<cert-id>.yaml`: vendor, exam version, official objectives URL, format, question count, time limit, and the objective list (`id`, domain, weight, own-words summary — never vendor text). Filled from the current official page; re-verified quarterly.
+2. **Coverage matrix.** Lessons (`objectives_covered`), labs and practice questions are tagged with `<cert-id>:<objective-id>`. CI computes coverage per cert and fails a track marked exam-ready if any objective lacks a lesson, a lab or practical where the exam is practical, and practice questions. Coverage % per cert is published.
+3. **Question bank.** `content/question-bank/<cert-id>/*.yaml`, original items only, each tagged to objectives, with explanations for every option. Item types: single/multiple choice, ordering, matching, **PBQ simulations** (small lab-engine scenarios, CompTIA-style), and **practical flags** (eJPT/OSCP-style). Expert-reviewed like lessons (`status: draft` until reviewed).
+4. **Exam Prep mode** per cert: domain drills → **full timed mock exams** that match the real exam's length, time limit and domain weights, generated per learner from the bank → score report per domain → weak areas link back to the exact lessons and labs. The Handler is disabled during mocks.
+5. **Readiness score.** "Ready" = every objective's lessons completed + practical labs solved + ≥85% on 3 different mocks. Grading bands from `teaching-style.md` (Weak / Needs review / Good / Strong / Excellent).
+6. **Retention.** Spaced-repetition review cards generated from each lesson's "Remember it like this" anchors and the learner's missed questions.
+7. **Real-tool fluency.** The `siem` lab supports SPL-style (Splunk) and KQL-style (Microsoft Sentinel) query syntax over the same engine; cloud labs cover AWS first, then Azure and GCP module sets.
+8. **Build-your-own-lab modules** for practical exams (OSCP, CPTS, CRTP, CEH Practical, BTL1, CKS): guided setup of the learner's own home lab (Kali + Windows Server/AD + Linux targets) with an evidence checklist; v2 adds hosted containers. Browser simulations alone are not claimed to be enough for these exams.
+9. **Proof.** Learners can record their real cert results; the platform publishes pass rates per cert. When a vendor changes an exam version, the registry diff flags every affected lesson and question.
+
+**Never:** collect, recall or reproduce real exam questions ("dumps"); promise a pass (§12).
 
 ---
 
@@ -282,6 +300,7 @@ A chat panel in every lesson and lab, powered by the Claude API.
 - Auth (email + Google), profile, ethical-use agreement
 - Course map: core + 3 tracks; locked "Coming soon" tracks
 - Lesson reader (MDX), Terminal Checks, progress, XP, ranks, achievements, streaks
+- Exam readiness system (§5.5): cert registry, coverage matrix, question bank, Exam Prep mode with timed mocks, readiness score, review cards — Security+ prep first
 - Lab engine: `terminal`, `siem`, `packet`, `report` (SOC needs), then `webapp` (Pentest), `cloud` (Cloud)
 - Handler chat + hints + report grading
 - Rank challenges, SOC track exam, certificate + verification page
@@ -366,7 +385,7 @@ Timelines are rough for a solo founder working with Claude Code; adjust after Ph
 |---|---|---|---|
 | **0. Foundation** (wk 1–2) | Project skeleton | Repo, Next.js + Supabase + Tailwind theme, auth, layout, CLAUDE.md, CI | A user can sign up and see the themed dashboard |
 | **1. Learning engine + Rank 0** (wk 3–5) | One rank end-to-end | MDX lesson reader, Terminal Checks, progress/XP/ranks, `terminal` lab type, Rank 0 content + challenge | A new user completes Rank 0 fully in the browser |
-| **2. Core complete + Handler** (wk 6–10) | Full shared core | Ranks 1–2 content, `packet` + `siem` (basic) labs, Handler (hints + Q&A), achievements/streaks | Closed beta: 30–50 testers complete the core; feedback collected |
+| **2. Core complete + Handler** (wk 6–10) | Full shared core | Ranks 1–2 content, `packet` + `siem` (basic) labs, Handler (hints + Q&A), achievements/streaks, exam readiness engine (§5.5) + core cert prep (Security+, Network+, ISC2 CC, A+ security parts) | Closed beta: 30–50 testers complete the core; feedback collected |
 | **3. SOC track** (wk 11–16) | First job track | Full SIEM console, `report` lab + AI grading, SOC content, SOC exam, certificate + verify page, coverage matrix | Beta testers pass the SOC exam; external reviewer sign-off |
 | **4. Public launch** (wk 17–18) | Revenue | Razorpay, pricing gates, landing page, legal pages, admin review queue | Public launch: core + SOC live, other tracks "Coming soon" |
 | **5. Pentest / VAPT track** (wk 19–28) | Second track | `webapp` lab type, Pentest/VAPT content, exam | Track live after reviewer sign-off |
@@ -375,6 +394,8 @@ Timelines are rough for a solo founder working with Claude Code; adjust after Ph
 | **8. v2** | Scale | Real container labs, proctoring, more tracks (GRC, AI Security next), hiring partners | Ongoing |
 
 **Local-first (owner decision, 2026-10-06):** Phases 0–1 run as a local website only — no Supabase, auth or deployment. A cookie-based local "operator" identity and JSON files in `.data/` stand in, behind the same store interfaces. Supabase Auth (email + Google), Postgres and Vercel deployment are added as the first step of Phase 2, before the closed beta.
+
+**Cert prep per track:** each track phase (3, 5, 6, 7) ships its track's cert registry entries, question bank, mocks and build-your-own-lab modules (§5.5), and closes the roadmap gaps listed in `docs/curriculum/cert-targets.md`.
 
 **Per phase in Claude Code:** spec section → implementation plan (`docs/plans/`) → build with tests → review → merge.
 

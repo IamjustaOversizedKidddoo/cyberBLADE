@@ -66,6 +66,7 @@ lesson: core-r0-comp-hardware-01
 questions:
   - id: q1
     prompt: "…"
+    objectives: ["secplus:1.2"]   # ≥1 cert objective this question tests (spec §5.5)
     options:
       - { text: "…", correct: true,  explanation: "…" }
       - { text: "…", correct: false, explanation: "…" }
@@ -73,12 +74,12 @@ questions:
 
 **Interfaces:**
 - Produces:
-  - `checksSchema` — 3–5 questions; each 2–5 options; exactly one `correct: true`; every option has non-empty `explanation`; question ids unique.
+  - `checksSchema` — 3–5 questions; each 2–5 options; exactly one `correct: true`; every option has non-empty `explanation`; question ids unique; every question has `objectives: string[]` with ≥1 id matching `/^[a-z0-9]+:[\w.-]+$/`.
   - `loadChecks(lessonId: string): Promise<CheckSet>` (server-only).
   - `toPublicChecks(set: CheckSet): { id: string; prompt: string; options: string[] }[]` — strips `correct` and `explanation`.
   - `gradeCheck(set: CheckSet, questionId: string, optionIndex: number): { correct: boolean; explanations: string[] }` — throws on unknown question/out-of-range index.
 
-- [ ] **Step 1: Failing tests:** schema rejects 2 questions, 6 questions, two correct options, empty explanation; `JSON.stringify(toPublicChecks(set))` contains neither `"correct"` nor any explanation text; `gradeCheck` right/wrong cases return all explanations; out-of-range index throws.
+- [ ] **Step 1: Failing tests:** schema rejects 2 questions, 6 questions, a question with `objectives: []`, two correct options, empty explanation; `JSON.stringify(toPublicChecks(set))` contains neither `"correct"` nor any explanation text; `gradeCheck` right/wrong cases return all explanations; out-of-range index throws.
 - [ ] **Step 2:** Run → FAIL. Implement. Run → PASS.
 - [ ] **Step 3:** Commit `feat(content): terminal check schema, public view, grading`.
 
@@ -280,18 +281,19 @@ certs:
   secplus: { name: "CompTIA Security+", exam: "SY0-701" }
   netplus: { name: "CompTIA Network+",  exam: "N10-009" }
   aplus:   { name: "CompTIA A+",        exam: "220-1201/1202" }
+  isc2cc:  { name: "ISC2 Certified in Cybersecurity", exam: "CC" }
 objectives:
   - id: "secplus:1.1"
     summary: "<own-words summary, not vendor text>"
     target_rank: 2
 ```
-(Exam codes: confirm current versions against the official CompTIA objective PDFs when filling this in.)
+(Exam codes: confirm current versions against the official CompTIA/ISC2 objective pages when filling this in. This file is the Phase 1 seed of the spec §5.5 cert registry; Phase 2 migrates it into `content/certs/<cert-id>.yaml`.)
 
 **Interfaces:**
 - Produces: `validateContent(input: { lessons: Lesson[]; checks: Map<string, CheckSet>; labs: Lab[]; coverage: Coverage; runLessonCommands: (lesson) => string[] }): string[]` (list of human-readable errors; script exits 1 if non-empty). Rules:
   1. Body has `## Briefing`, `### 1.`…`### 7.` in order, then `### Remember it like this` and `### Interview answer`, `## Terminal Check`, `## Lab`, `## Debrief`.
   2. Every lesson has a checks file; `lab` (if set) exists in `labs/`.
-  3. Every `objectives_covered` id exists in coverage; every objective with `target_rank` in `built_ranks` is covered by ≥1 lesson.
+  3. Every `objectives_covered` id and every check question's `objectives` id exists in coverage; every objective with `target_rank` in `built_ranks` is covered by ≥1 lesson.
   4. Every line starting with `$ ` inside a ```` ```console ```` block runs in `createShell` against the lesson's lab world (seed `"content-check"`) or a default demo world, and never exits 127 (command not found) or with a parse error.
   5. `last_reviewed` older than 12 months → warning (not failure).
 
