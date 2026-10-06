@@ -67,6 +67,10 @@ export class Vfs {
   }
 
   /** Walks to `path` as `user`: every ancestor must be a searchable directory. */
+  lookup(path: string, user: string): Node {
+    return this.walk(path, user);
+  }
+
   private walk(path: string, user: string): Node {
     let node: Node = this.root;
     for (const seg of split(path)) {
