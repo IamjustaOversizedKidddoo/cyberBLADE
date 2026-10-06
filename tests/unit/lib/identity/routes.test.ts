@@ -9,6 +9,12 @@ test.each([
   [undefined, "/dashboard"],
   ["", "/dashboard"],
   ["/learn/core", "/learn/core"],
+  ["/\t/evil.example", "/dashboard"],
+  ["/\n/evil.example", "/dashboard"],
+  ["/\r/evil.example", "/dashboard"],
+  ["/\t\\evil", "/dashboard"],
+  [" //evil.example", "/dashboard"],
+  ["/learn/core?tab=lab#o1", "/learn/core?tab=lab#o1"],
 ])("safeNextPath(%s) → %s", (input, expected) => {
   expect(safeNextPath(input)).toBe(expected);
 });
