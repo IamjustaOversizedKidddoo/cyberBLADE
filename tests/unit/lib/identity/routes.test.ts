@@ -25,6 +25,12 @@ test("no cookie → start with next", () => {
   });
 });
 
+test("no cookie → next keeps the query string (deep links)", () => {
+  expect(resolveRoute({ pathname: "/labs/core-r0-terminal-lab-01", search: "?lesson=x", hasOperatorCookie: false })).toEqual({
+    redirect: "/start?next=%2Flabs%2Fcore-r0-terminal-lab-01%3Flesson%3Dx",
+  });
+});
+
 test("operator skips start", () => {
   expect(resolveRoute({ pathname: "/start", hasOperatorCookie: true })).toEqual({ redirect: "/dashboard" });
 });
