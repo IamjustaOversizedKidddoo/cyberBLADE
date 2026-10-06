@@ -1,26 +1,172 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-void: #000000;
+  --color-ink: #ffffff;
+  --color-paper: #f5fafc;
+  --color-muted: #ccd6dd;
+  --color-line: rgb(255 255 255 / 0.2);
+  --color-cyan: #0fbeff;
+  --color-purple: #c83cff;
+  --color-pink: #ff1065;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-hacked), "Courier New", monospace;
+  --font-ui: var(--font-pixel), ui-monospace, monospace;
+  --font-sans: var(--font-plex), system-ui, sans-serif;
+  --font-mono: var(--font-jbmono), ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+[data-contrast="high"] {
+  --color-muted: #ffffff;
+  --color-line: rgb(255 255 255 / 0.6);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    background: var(--color-void);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.65;
+  }
+  h1,
+  h2 {
+    font-family: var(--font-display);
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+  }
+  h3,
+  h4,
+  nav,
+  button {
+    font-family: var(--font-ui);
+  }
+  label,
+  input,
+  textarea,
+  select,
+  p,
+  li {
+    font-family: var(--font-sans);
+  }
+  code,
+  pre,
+  kbd,
+  samp,
+  .xterm {
+    font-family: var(--font-mono);
+  }
+  a {
+    text-underline-offset: 3px;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-cyan);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .neon-cursor {
+    animation: neon-blink 1s steps(1, end) infinite;
+  }
+
+  .neon-toggle {
+    border: 1px solid var(--color-line);
+    padding: 0.15rem 0.6rem;
+    font-size: 0.95rem;
+    color: var(--color-muted);
+  }
+  .neon-toggle[aria-pressed="true"] {
+    border-color: var(--color-cyan);
+    color: var(--color-cyan);
+  }
+
+  /* RGB-split glitch: two offset copies of the heading text, shown briefly. */
+  .neon-glitch {
+    position: relative;
+    display: inline-block;
+  }
+  .neon-glitch::before,
+  .neon-glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .neon-glitch::before {
+    color: var(--color-cyan);
+    transform: translate(-2px, 0);
+  }
+  .neon-glitch::after {
+    color: var(--color-pink);
+    transform: translate(2px, 0);
+  }
+  .neon-glitch[data-glitch="intro"]::before,
+  .neon-glitch[data-glitch="intro"]::after,
+  .neon-glitch:hover::before,
+  .neon-glitch:hover::after {
+    animation: neon-glitch 0.6s steps(2, end) 2;
+  }
+
+  .neon-scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.05;
+    background: repeating-linear-gradient(to bottom, #fff 0 1px, transparent 1px 3px);
+  }
+}
+
+@keyframes neon-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes neon-glitch {
+  0% {
+    opacity: 0.8;
+    clip-path: inset(10% 0 60% 0);
+  }
+  50% {
+    opacity: 0.8;
+    clip-path: inset(55% 0 15% 0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
+}
+
+[data-contrast="high"] .neon-glitch::before,
+[data-contrast="high"] .neon-glitch::after,
+[data-contrast="high"] .neon-scanlines,
+[data-motion="reduce"] .neon-scanlines {
+  display: none;
+}
+
+[data-motion="reduce"] *,
+[data-motion="reduce"] *::before,
+[data-motion="reduce"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .neon-scanlines {
+    display: none;
+  }
 }
