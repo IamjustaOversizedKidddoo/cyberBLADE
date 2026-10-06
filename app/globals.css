@@ -86,31 +86,27 @@
     color: var(--color-cyan);
   }
 
-  /* RGB-split glitch: two offset copies of the heading text, shown briefly. */
+  /* RGB-split glitch: two aria-hidden offset copies of the heading text, shown briefly. */
   .neon-glitch {
     position: relative;
     display: inline-block;
   }
-  .neon-glitch::before,
-  .neon-glitch::after {
-    content: attr(data-text);
+  .neon-glitch-copy {
     position: absolute;
     inset: 0;
     pointer-events: none;
     opacity: 0;
   }
-  .neon-glitch::before {
+  .neon-glitch-cyan {
     color: var(--color-cyan);
     transform: translate(-2px, 0);
   }
-  .neon-glitch::after {
+  .neon-glitch-pink {
     color: var(--color-pink);
     transform: translate(2px, 0);
   }
-  .neon-glitch[data-glitch="intro"]::before,
-  .neon-glitch[data-glitch="intro"]::after,
-  .neon-glitch:hover::before,
-  .neon-glitch:hover::after {
+  .neon-glitch[data-glitch="intro"] .neon-glitch-copy,
+  .neon-glitch:hover .neon-glitch-copy {
     animation: neon-glitch 0.6s steps(2, end) 2;
   }
 
@@ -145,8 +141,7 @@
   }
 }
 
-[data-contrast="high"] .neon-glitch::before,
-[data-contrast="high"] .neon-glitch::after,
+[data-contrast="high"] .neon-glitch-copy,
 [data-contrast="high"] .neon-scanlines,
 [data-motion="reduce"] .neon-scanlines {
   display: none;
