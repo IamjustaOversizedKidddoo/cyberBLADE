@@ -1,5 +1,7 @@
 import { cat } from "./cat";
 import { cd } from "./cd";
+import { chmod } from "./chmod";
+import { chgrp, chown } from "./chown";
 import { echo } from "./echo";
 import { curl } from "./curl";
 import { dig } from "./dig";
@@ -17,6 +19,7 @@ import { ss } from "./ss";
 import { submit } from "./submit";
 import { touch } from "./touch";
 import { traceroute } from "./traceroute";
+import { umask } from "./umask";
 import type { Command } from "./types";
 import { ok } from "./util";
 import { wc } from "./wc";
@@ -35,5 +38,5 @@ const help: Command = {
 
 /** The lab command set (Rank 0 basics + Rank 1 networking). Each command lives in its own file. */
 export const COMMANDS: Record<string, Command> = Object.fromEntries(
-  [cat, cd, clear, curl, dig, echo, grep, groups, head, help, history, hostname, id, ip, ls, mkdir, ping, pwd, ss, submit, tail, touch, traceroute, wc, whoami].map((c) => [c.name, c]),
+  [cat, cd, chgrp, chmod, chown, clear, curl, dig, echo, grep, groups, head, help, history, hostname, id, ip, ls, mkdir, ping, pwd, ss, submit, tail, touch, traceroute, umask, wc, whoami].map((c) => [c.name, c]),
 );

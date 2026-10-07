@@ -7,7 +7,7 @@ import { resolvePath, Vfs } from "./vfs";
 export type Shell = { exec(line: string): CmdResult; cwd(): string; prompt(): string };
 
 export function createShell(world: World): Shell {
-  const vfs = new Vfs(world.root);
+  const vfs = new Vfs(world.root, { umask: world.umask });
   const { user, home, hostname } = world;
   const history: string[] = [];
   let cwd = home;
@@ -49,7 +49,7 @@ export function createShell(world: World): Shell {
       const isTty = index === parsed.commands.length - 1 && !redirect;
       const alone = parsed.commands.length === 1 && !redirect;
       last = impl
-        ? impl.run({ argv, stdin, vfs, cwd, user, home, hostname, env, history, isTty, alone, network: world.network, setCwd })
+        ? impl.run({ argv, stdin, vfs, cwd, user, home, hostname, env, history, isTty, alone, network: world.network, umask: vfs.umask, setUmask: (n) => (vfs.umask = n), setCwd })
         : { stdout: "", stderr: `${argv[0]}: command not found\n`, code: 127 };
 
       if (redirect && target) {

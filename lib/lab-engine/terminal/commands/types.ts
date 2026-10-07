@@ -25,6 +25,9 @@ export type CmdContext = {
   /** True when this is the only command on the line, with no redirect. */
   alone: boolean;
   network?: Network;
+  /** Bits removed from new files' permissions (`umask`). */
+  umask: number;
+  setUmask(umask: number): void;
   setCwd(path: string): void;
 };
 
