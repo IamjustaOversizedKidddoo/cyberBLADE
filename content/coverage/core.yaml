@@ -43,6 +43,27 @@ objectives:
   - id: "netplus:1.4"
     summary: "Common ports and protocols and what each is used for"
     target_rank: 1
+  - id: "netplus:1.2"
+    summary: "Network appliances and functions (firewalls, proxies, gateways)"
+    target_rank: 1
+  - id: "netplus:1.7"
+    summary: "IPv4 addressing, subnets and CIDR notation"
+    target_rank: 1
+  - id: "netplus:1.8"
+    summary: "Modern network environments including IPv6"
+    target_rank: 1
+  - id: "netplus:2.1"
+    summary: "Routing concepts, default gateways, and static routing"
+    target_rank: 1
+  - id: "netplus:2.2"
+    summary: "Switching concepts: MAC addresses, ARP, and VLAN basics"
+    target_rank: 1
+  - id: "netplus:3.5"
+    summary: "Core network services: DHCP, DNS, and NTP"
+    target_rank: 1
+  - id: "netplus:5.5"
+    summary: "Network troubleshooting tools: ping, traceroute, dig, ip, and packet capture"
+    target_rank: 1
 
   # --- Introduced in Rank 0, completed in Rank 2 ------------------------------
   - id: "secplus:1.2"
@@ -53,4 +74,10 @@ objectives:
     target_rank: 2
   - id: "secplus:1.1"
     summary: "Types and categories of security controls"
+    target_rank: 2
+  - id: "secplus:1.4"
+    summary: "Cryptographic solutions and secure communication protocols (TLS/HTTPS)"
+    target_rank: 2
+  - id: "secplus:3.2"
+    summary: "Securing network infrastructure (firewalls, proxies, and network segmentation)"
     target_rank: 2

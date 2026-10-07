@@ -1,0 +1,126 @@
+---
+id: core-r1-net-osi-01
+title: "Layers: the OSI and TCP/IP Models"
+track: core
+rank: 1
+module: networking
+order: 1
+estimated_minutes: 30
+objectives_covered: ["netplus:1.1"]
+mitre: []
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+Network communication is split into modular tiers called **layers**. Each layer solves one specific engineering challenge, offers services to the layer directly above it, and relies entirely on the layer directly beneath it.
+
+Engineers use two models to reason about networks:
+
+1. The **OSI (Open Systems Interconnection) 7-layer model**: A conceptual reference architecture dividing communication into 7 distinct stages: Physical (L1), Data Link (L2), Network (L3), Transport (L4), Session (L5), Presentation (L6), and Application (L7).
+2. The **TCP/IP 4-layer model**: The pragmatic architecture actually implemented on the internet: Network Access (Link), Internet (Network), Transport, and Application.
+
+When your computer sends data, the payload moves down the stack through a process called **encapsulation** — each layer wraps the payload with its own protocol header. At the receiving end, the reverse happens: **decapsulation** strips each header in sequence as data moves up the stack.
+
+### 2. Why it exists
+
+Before layered abstractions, network equipment manufacturers used proprietary, monolithic architectures. An application written for one vendor's mainframe could not communicate over another vendor's cabling or switches.
+
+Layers deliver two critical benefits:
+
+- **Modularity and interoperability**: A web browser (L7) doesn't care whether data travels across fibre-optic cables, 5G wireless radio waves, or Ethernet copper (L1). The physical medium can change without rewriting the application.
+- **Systematic troubleshooting**: Security analysts and network engineers isolate failures by layer. If physical link lights are dark (L1), testing DNS resolution (L7) is pointless.
+
+### 3. How it works
+
+The two models align as follows:
+
+| OSI Layer | Name | Unit of Data (PDU) | Primary Function & Protocols | TCP/IP Equivalent |
+|---|---|---|---|---|
+| Layer 7 | Application | Data | User interaction, APIs: HTTP, HTTPS, DNS, SSH, SMTP | Application |
+| Layer 6 | Presentation | Data | Data formatting, encryption, compression: TLS, ASCII, JSON | Application |
+| Layer 5 | Session | Data | Dialog control, session maintenance: RPC, NetBIOS | Application |
+| Layer 4 | Transport | Segment (TCP) / Datagram (UDP) | End-to-end delivery, port numbers: TCP, UDP | Transport |
+| Layer 3 | Network | Packet | Logical addressing, routing across networks: IPv4, IPv6, ICMP | Internet |
+| Layer 2 | Data Link | Frame | Physical addressing on local segment: MAC addresses, ARP, Ethernet | Network Access (Link) |
+| Layer 1 | Physical | Bit | Electrical signals, radio waves, light pulses: CAT6, fibre, Wi-Fi PHY | Network Access (Link) |
+
+**Encapsulation in action:**
+
+```text
+Application Data:             [ HTTP Request Body ]
+Transport Header added:  [TCP | HTTP Request Body ]          -> Segment
+Network Header added:    [IP  | TCP | HTTP Request Body ]     -> Packet
+Data Link Header added:  [ETH | IP  | TCP | HTTP Data | FCS ] -> Frame
+Physical transmission:   0110100101100010...                  -> Bits
+```
+
+On our simulated terminal, inspect the listening ports on Layer 4:
+
+```console
+$ ss -tln
+```
+
+You can see local sockets bound to ports, awaiting incoming transport segments.
+
+### 4. How attackers abuse it
+
+Attackers target vulnerabilities specific to each layer:
+
+- **Layer 2 (Data Link)**: ARP poisoning, MAC flooding, and rogue DHCP servers to hijack local segment traffic.
+- **Layer 3 (Network)**: IP spoofing, ICMP redirect abuse, and route poisoning to misdirect packets across subnets.
+- **Layer 4 (Transport)**: TCP SYN floods to exhaust connection state tables, and UDP amplification reflection attacks.
+- **Layer 7 (Application)**: SQL injection, cross-site scripting (XSS), credential stuffing, and HTTP request smuggling.
+
+### 5. How defenders detect it
+
+Defenders deploy monitoring tools calibrated to specific layer boundaries:
+
+- **Layer 2/3**: Switch port security, DHCP snooping, and ARP inspection detect rogue local devices.
+- **Layer 3/4**: Stateful firewalls, NetFlow/IPFIX logs, and intrusion detection systems (IDS/IPS) inspect packet headers, source/destination IPs, and TCP flags.
+- **Layer 7**: Web Application Firewalls (WAF), reverse proxies, and application loggers inspect decoded HTTP payloads, headers, and request methods.
+
+### 6. How to prevent/fix it
+
+- **Defense-in-depth across layers**: Never rely on a single layer of control. Combine switch port access lists (L2), subnet firewalls (L3/L4), TLS encryption (L6), and application authentication (L7).
+- **Segment networks**: Place sensitive servers on isolated Layer 3 subnets so a compromise at Layer 2 cannot trivially reach high-value targets.
+- **Isolate failure domains**: Verify that higher-level services degrade gracefully when lower-layer dependencies experience latency or partitions.
+
+### 7. Common mistakes
+
+- **Confusing packets and frames**: A packet lives at Layer 3 (IP). A frame lives at Layer 2 (Ethernet). Routers forward packets; switches forward frames.
+- **Assuming Layer 7 security protects Layer 2**: Encrypting application data with TLS does not prevent an attacker on your local Wi-Fi from spoofing ARP replies and observing who you talk to.
+- **Troubleshooting top-down without checking Layer 1/2**: Debugging application timeouts before checking interface link state and IP assignment wastes hours.
+
+### Remember it like this
+
+> **"Please Do Not Throw Sausage Pizza Away" (Physical, Data Link, Network, Transport, Session, Presentation, Application). Bits, Frames, Packets, Segments, Data.**
+
+### Interview answer
+
+> "The OSI 7-layer model is a conceptual hierarchy separating network concerns into Physical, Data Link, Network, Transport, Session, Presentation, and Application layers. The TCP/IP model condenses this into four operational layers: Network Access, Internet, Transport, and Application. When data is sent, each layer encapsulates the payload with headers containing layer-specific addressing — MAC addresses at Layer 2, IP addresses at Layer 3, and port numbers at Layer 4. In cybersecurity, we use these models for defense-in-depth: applying controls like ARP inspection at Layer 2, stateful firewall rules at Layer 3/4, and WAF inspection at Layer 7."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no scored lab. **Field exercise (not scored):** Open your operating system terminal and run `ping` against your local router IP, then run `arp -a` (Windows/macOS) or `ip neigh` (Linux). Identify the Layer 3 address and the corresponding Layer 2 MAC address. Note how your machine maps the Network layer to the Data Link layer.
+
+## Debrief
+
+**What a professional does here.** Security analysts investigate incidents by correlating events across layers. When a triage ticket reports "intranet unavailable," the analyst checks ping reachability (L3), port status (L4), and HTTP response codes (L7) before escalating.
+
+**Real incident: Meta/Facebook Outage (4 October 2021).** During routine data center maintenance, an errant command took down Meta's backbone connections. This caused their Border Gateway Protocol (BGP) routers to withdraw all routes to their authoritative DNS servers. Because the Layer 3 network routes were gone, the entire world's DNS resolvers (Layer 7) could no longer reach Facebook, Instagram, or WhatsApp nameservers. The domains appeared to have vanished from the internet. The outage demonstrated how a lower-layer routing failure cascades upwards to render high-level application services completely unreachable.
+
+**Key takeaways**
+
+- OSI has 7 conceptual layers; TCP/IP has 4 practical layers.
+- Data encapsulation moves down the stack (Data -> Segment -> Packet -> Frame -> Bits).
+- Layer 2 uses MAC addresses; Layer 3 uses IP addresses; Layer 4 uses ports.
+- Defense-in-depth requires distinct controls at each layer of the stack.

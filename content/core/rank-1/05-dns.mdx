@@ -1,0 +1,122 @@
+---
+id: core-r1-net-dns-01
+title: "DNS — The Internet's Phonebook"
+track: core
+rank: 1
+module: networking
+order: 5
+estimated_minutes: 35
+objectives_covered: ["netplus:3.5", "netplus:5.5"]
+mitre: ["T1071.004", "T1584.002"]
+lab: core-r1-pkt-dns-lab-01
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+The **Domain Name System (DNS)** is a hierarchical, distributed naming database that translates human-memorable domain names (e.g., `example.com`) into computer-routable IP addresses (e.g., `203.0.113.10`).
+
+DNS operates primarily over **UDP port 53** for low-latency queries, switching to **TCP port 53** when response payloads exceed 512 bytes or when performing authoritative database transfers (**zone transfers**).
+
+Key components of the DNS architecture:
+- **Stub Resolver**: The client library on your operating system requesting a translation.
+- **Recursive Resolver**: The upstream server (e.g., provided by your ISP, corporate IT, or Quad9/Cloudflare) that traverses the global hierarchy on the client's behalf.
+- **Root Nameservers (`.` )**: 13 logical root server authorities operating at the top of the DNS tree.
+- **Top-Level Domain (TLD) Nameservers**: Authorities managing suffixes like `.com`, `.org`, or country codes like `.in`.
+- **Authoritative Nameservers**: The final servers holding the actual zone records for a specific domain.
+
+### 2. Why it exists
+
+Humans cannot memorize billions of 32-bit or 128-bit numerical strings. Furthermore, IP addresses change when servers migrate across hosting providers or cloud availability zones.
+
+DNS decouples human-facing application names from physical infrastructure addresses. A company can migrate web servers from one data center to another simply by updating an `A` record in its authoritative zone, without changing the URL users bookmark.
+
+Because almost every internet transaction begins with a DNS lookup, DNS is also one of the most critical observability chokepoints and attack surfaces in enterprise cybersecurity.
+
+### 3. How it works
+
+**Core DNS Record Types:**
+
+| Type | Name | Purpose | Example Value |
+|---|---|---|---|
+| **A** | Address | Maps domain name to an IPv4 address | `example.com -> 203.0.113.10` |
+| **AAAA** | IPv6 Address | Maps domain name to an IPv6 address | `example.com -> 2001:db8::10` |
+| **CNAME** | Canonical Name | Alias pointing one domain to another domain | `www.example.com -> example.com` |
+| **MX** | Mail Exchange | Designates incoming mail servers with priority | `10 mail.example.com` |
+| **TXT** | Text | Freeform text; used for SPF, DKIM, and site ownership | `v=spf1 -all` |
+| **NS** | Name Server | Delegates a zone to authoritative nameservers | `ns1.example.com` |
+| **PTR** | Pointer | Reverse lookup: maps IP to a domain name | `10.113.0.203.in-addr.arpa -> example.com` |
+
+**Resolution return codes (RCODEs):**
+- **NOERROR**: Query completed successfully.
+- **NXDOMAIN (Non-Existent Domain)**: The queried domain name does not exist.
+- **SERVFAIL**: The nameserver encountered an internal failure or timeout.
+
+Let's test DNS resolution on our demo machine using BIND `dig`:
+
+```console
+$ dig +short example.com
+$ dig @127.0.0.53 example.com
+```
+
+The output displays the DNS header flags, question section, and answer section containing the resolved IP address.
+
+### 4. How attackers abuse it
+
+- **Application Layer Protocol: DNS (ATT&CK T1071.004)**: Malware uses **DNS Tunneling** to encode stolen files or Command and Control (C2) instructions inside subdomains of an attacker-owned domain (e.g., `data123.evil.example`). Because port 53 is almost always permitted through corporate firewalls, this bypasses egress controls.
+- **DNS Server Compromise & Hijacking (ATT&CK T1584.002)**: Attackers compromise registrar accounts, BGP routes, or DNS caching servers to point legitimate domain records to malicious clone servers (DNS Cache Poisoning / Kaminsky attack).
+- **Domain Generation Algorithms (DGAs)**: Malware generates hundreds of pseudorandom domains daily (e.g., `x89fk2a.biz`) to contact C2 servers, making static IP/domain blocking ineffective.
+
+### 5. How defenders detect it
+
+- **DNS Query Logging & Telemetry**: Logging all queries at corporate recursive resolvers exposes infected hosts querying high numbers of NXDOMAINs (a hallmark of DGAs).
+- **High-entropy domain detection**: Security analytics flag subdomains with long, randomized character strings indicative of DNS data tunneling.
+- **Passive DNS databases**: Security teams query historical DNS databases to discover which IP addresses a suspicious domain previously resolved to during threat investigations.
+
+### 6. How to prevent/fix it
+
+- **Deploy DNSSEC (DNS Security Extensions)**: Cryptographically sign DNS records to prevent cache poisoning and verify answer authenticity.
+- **Use Protective DNS (PDNS) / DNS Filtering**: Direct all internal traffic through resolvers that block known malicious domains, phishing links, and dynamic DGAs.
+- **Enforce DNS over HTTPS (DoH) / DNS over TLS (DoT)**: Encrypt DNS queries to prevent on-path eavesdropping and tampering by local Wi-Fi or ISP adversaries.
+- **Disable open DNS recursion**: Ensure public-facing authoritative nameservers do not answer recursive lookups for external domains.
+
+### 7. Common mistakes
+
+- **Allowing internal clients to bypass corporate DNS**: If workstations can query public resolvers (8.8.8.8, 1.1.1.1) directly over UDP/TCP 53, attackers can bypass enterprise DNS logging. Block outbound port 53 except from designated recursive resolvers.
+- **Assuming DNS records update instantly**: DNS records are cached according to their **TTL (Time-To-Live)** in seconds. Caches worldwide retain old IPs until the TTL expires.
+- **Confusing CNAME with A records**: CNAME records must always point to another domain name, never directly to an IP address.
+
+### Remember it like this
+
+> **A = IPv4 · AAAA = IPv6 · CNAME = Alias · MX = Mail · TXT = Verification/SPF · NXDOMAIN = No such name · Port 53 UDP/TCP.**
+
+### Interview answer
+
+> "DNS is the distributed database resolving domain names to IP addresses, operating primarily over UDP port 53 for queries and TCP port 53 for large responses and zone transfers. Client stub resolvers query recursive resolvers, which traverse the root, TLD, and authoritative nameserver hierarchy. From a security perspective, DNS is a primary C2 and data exfiltration channel via DNS tunneling (ATT&CK T1071.004) and DGAs. Defenders protect against abuse by inspecting recursive resolver query logs, deploying protective DNS filters, enforcing DNSSEC to prevent cache poisoning, and blocking direct outbound port 53 to prevent clients from bypassing monitoring."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+In this packet capture lab, inspect a recording of enterprise DNS traffic. Filter for response packets returning NXDOMAIN errors, determine the specific IPv4 address resolved for beacon.example, and identify which internal client IP dispatched the highest volume of queries.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** Security Operations Center (SOC) analysts monitor recursive resolver logs for beaconing patterns, spike in NXDOMAIN responses, and anomalous TXT record sizes indicating data exfiltration.
+
+**Real incident: MyEtherWallet BGP DNS Hijack (24 April 2018).** Attackers used BGP route hijacking to announce IP prefixes belonging to Amazon's Route 53 DNS service. For approximately two hours, DNS queries for the cryptocurrency wallet website `myetherwallet.com` were redirected to an attacker-controlled rogue DNS server. The rogue server answered with the IP address of a phishing clone hosted in Russia. Users who visited the site and logged in had their private keys stolen, resulting in the theft of approximately $150,000 in cryptocurrency. This attack highlighted how vulnerabilities in lower-layer BGP routing can directly compromise DNS integrity.
+
+**Key takeaways**
+
+- DNS translates domain names to IP addresses (A/AAAA records) using UDP/TCP port 53.
+- NXDOMAIN indicates that a queried domain does not exist.
+- Malware leverages DNS tunneling and DGAs for evasive Command and Control.
+- Restricting outbound port 53 to corporate resolvers is essential for security visibility.

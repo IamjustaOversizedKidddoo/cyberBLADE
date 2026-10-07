@@ -1,0 +1,135 @@
+---
+id: core-r1-net-tcpudp-01
+title: "TCP, UDP and Ports"
+track: core
+rank: 1
+module: networking
+order: 4
+estimated_minutes: 35
+objectives_covered: ["netplus:1.4"]
+mitre: ["T1046", "T1498.002"]
+lab: core-r1-pkt-scan-lab-01
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+At Layer 4 (Transport layer), communication shifts from host-to-host delivery (handled by IP) to **process-to-process delivery** (handled by ports and transport protocols).
+
+- **Port numbers (16-bit integers, 0 to 65535)** direct incoming traffic to the specific software process listening on that socket. Ports are divided into Well-Known (0–1023), Registered (1024–49151), and Dynamic/Ephemeral (49152–65535).
+- **TCP (Transmission Control Protocol)**: A connection-oriented, reliable transport protocol. It establishes state using a 3-way handshake, sequences data packets, acknowledges receipt, retransmits lost segments, and handles congestion control.
+- **UDP (User Datagram Protocol)**: A connectionless, lightweight transport protocol. It sends standalone datagrams with minimal header overhead, offering no handshake, no guarantee of delivery, and no reordering.
+
+> **Legal and Authorization Note**: Port scanning and network discovery tools (such as Nmap or SYN scanners) interact directly with remote infrastructure. Only probe networks and systems you own or have explicit written authorization to test. Unauthorized port scanning or service disruption violates computer crime legislation, including Section 43/66 of India's Information Technology Act and similar global statutes.
+
+### 2. Why it exists
+
+Different applications demand fundamentally different trade-offs:
+
+- **Web, file transfer, and remote administration (HTTP, SSH, SMTP)** require zero data loss. Missing a single byte of an executable or banking transaction corrupts the entire exchange. TCP guarantees that every byte arrives intact and in order.
+- **Voice over IP (VoIP), streaming video, and DNS lookups** prioritize low latency over perfection. If a single audio frame is delayed by 200 ms, playing it late creates jitter; dropping it immediately sounds better. UDP avoids connection setup handshakes and head-of-line blocking delays.
+
+### 3. How it works
+
+**The TCP Three-Way Handshake:**
+
+Before sending application data, TCP establishes a bidirectional session using control flags:
+
+```text
+Client (e.g., ephemeral port 51514)          Server (port 80)
+───────────────────────────────────          ────────────────
+1. [SYN] Seq = 0                     ───────►
+                                     ◄───────  2. [SYN, ACK] Seq = 0, Ack = 1
+3. [ACK] Seq = 1, Ack = 1            ───────►
+── Connection Established: Data transfer begins ──
+4. [FIN] or [RST] terminates the session
+```
+
+- **SYN (Synchronize)**: Initiates the connection and synchronizes initial sequence numbers.
+- **ACK (Acknowledgment)**: Confirms receipt of the previous sequence number.
+- **FIN (Finish)**: Requests a graceful connection teardown.
+- **RST (Reset)**: Abruptly terminates an invalid or rejected connection (sent by servers when a port is closed).
+
+**Common ports you must recognize instantly:**
+
+| Port | Protocol | Default Transport | Purpose |
+|---|---|---|---|
+| 20/21 | FTP | TCP | File Transfer Protocol |
+| 22 | SSH | TCP | Secure Shell remote console |
+| 23 | Telnet | TCP | Unencrypted remote terminal (legacy) |
+| 25 | SMTP | TCP | Simple Mail Transfer Protocol |
+| 53 | DNS | UDP (queries) / TCP (zone transfers) | Domain Name System |
+| 80 | HTTP | TCP | World Wide Web (unencrypted) |
+| 110 | POP3 | TCP | Post Office Protocol email retrieval |
+| 143 | IMAP | TCP | Internet Message Access Protocol email |
+| 443 | HTTPS | TCP | Secure Web (TLS) |
+| 445 | SMB | TCP | Server Message Block file sharing |
+| 3389 | RDP | TCP | Remote Desktop Protocol |
+
+Let's check open listening sockets on our demo host:
+
+```console
+$ ss -tulnp
+```
+
+The `ss` command reveals active TCP listening sockets and open UDP endpoints with their associated process IDs.
+
+### 4. How attackers abuse it
+
+- **Network Service Discovery (ATT&CK T1046)**: Attackers conduct TCP SYN scans (half-open scans) by sending SYN packets to thousands of ports. If the target responds with `SYN-ACK`, the port is open; if `RST`, it is closed. The scanner never sends the final `ACK`, avoiding full connection establishment to reduce application logging.
+- **Reflection & Amplification DDoS (ATT&CK T1498.002)**: Because UDP does not verify source IP addresses with a handshake, attackers spoof the victim's IP and send small requests to publicly exposed UDP services (NTP, DNS, Memcached). The servers reply to the victim with massive responses, multiplying bandwidth up to 50,000 times.
+- **TCP SYN Flooding**: Attackers flood a server with SYN packets from spoofed IPs. The server allocates memory in its connection backlog table waiting for the third ACK packet, which never arrives, starving legitimate clients of connection slots.
+
+### 5. How defenders detect it
+
+- **Connection state monitoring**: High ratios of incoming SYN packets without corresponding ACK packets trigger SYN flood defenses (SYN cookies).
+- **Port scan detection in NIDS/Firewalls**: Security tools (Suricata, Snort, Zeek) detect single source IPs knocking on dozens of sequential or popular ports within short time windows.
+- **NetFlow asymmetric traffic analysis**: Extreme disparities between outbound UDP requests and inbound gigabit responses pinpoint reflection DDoS victims and reflectors.
+
+### 6. How to prevent/fix it
+
+- **Close unnecessary listening services**: Audit server listening sockets and bind services only to `127.0.0.1` unless external access is required.
+- **Deploy stateful firewalls**: Allow only established/related inbound TCP traffic and permit incoming connections strictly to designated public service ports.
+- **Enable SYN cookies**: Protect Linux kernels against SYN floods by encoding connection state into the sequence number rather than exhausting server RAM tables.
+- **Disable or firewall exposed UDP daemons**: Never leave stateless services like Memcached or recursive DNS resolvers open to the public internet.
+
+### 7. Common mistakes
+
+- **Assuming closed ports silently drop traffic**: A closed TCP port actively returns a TCP RST packet unless filtered by a firewall. Dropping without reply indicates packet filtering.
+- **Treating UDP as completely unreliable**: UDP lacks reliability at the transport layer, but applications (such as QUIC or custom game engines) can implement their own retransmission logic on top of UDP.
+- **Confusing source and destination ports**: Outbound client requests use randomized ephemeral source ports (e.g., 51520) and well-known destination ports (e.g., 443).
+
+### Remember it like this
+
+> **TCP = 3-way handshake, reliable, sequenced, heavy. UDP = fire-and-forget, fast, stateless, prone to spoofing. Well-known ports = 0–1023.**
+
+### Interview answer
+
+> "Layer 4 handles process-to-process delivery using 16-bit port numbers. TCP is connection-oriented, establishing sessions via a three-way handshake (SYN, SYN-ACK, ACK) and guaranteeing delivery, ordering, and flow control. UDP is connectionless and stateless, transmitting datagrams with minimal overhead for latency-sensitive applications like DNS and voice. In cybersecurity, TCP is targeted via SYN port scanning (ATT&CK T1046) and connection table exhaustion, while UDP is heavily exploited in reflection amplification DDoS attacks (ATT&CK T1498.002) because stateless UDP datagrams allow trivial source IP spoofing."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+In this packet capture lab, inspect a recorded port scan against an internal server. Filter for TCP SYN probe packets, determine the scanning IP address, identify which destination ports responded with SYN-ACK (indicating open services), and count the total ports probed.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** Security engineers inspect network captures to distinguish routine vulnerability scanner probes from targeted adversary reconnaissance, and configure firewall rules to minimize external attack surfaces.
+
+**Real incident: GitHub 1.35 Tbps Memcached DDoS (28 February 2018).** Attackers launched the largest DDoS attack recorded up to that date against GitHub. They spoofed GitHub's IP address and sent small UDP requests on port 11211 to misconfigured Memcached database caching servers exposed on the public internet. Memcached responded with cached data over 50,000 times larger than the requests, delivering 1.35 Terabits per second of UDP traffic to GitHub's infrastructure. GitHub's automated DDoS mitigation redirected the traffic within 10 minutes. The attack led the security industry to shut down public UDP access to Memcached servers globally.
+
+**Key takeaways**
+
+- TCP uses a 3-way handshake (SYN, SYN-ACK, ACK); UDP is connectionless.
+- Ports 0–1023 are well-known system ports (SSH 22, DNS 53, HTTP 80, HTTPS 443).
+- TCP port scanning identifies open services by observing SYN-ACK responses.
+- UDP is vulnerable to reflection amplification attacks due to lack of source IP verification.

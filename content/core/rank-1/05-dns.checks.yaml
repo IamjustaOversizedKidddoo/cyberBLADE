@@ -1,0 +1,66 @@
+lesson: core-r1-net-dns-01
+questions:
+  - id: q1
+    prompt: "Which DNS record type maps a domain name to an IPv4 address?"
+    objectives: ["netplus:3.5"]
+    options:
+      - text: "A record"
+        correct: true
+        explanation: "Correct. An 'A' (Address) record maps a hostname directly to a 32-bit IPv4 address."
+      - text: "AAAA record"
+        correct: false
+        explanation: "An 'AAAA' record maps a hostname to a 128-bit IPv6 address."
+      - text: "CNAME record"
+        correct: false
+        explanation: "A 'CNAME' record aliases one domain name to another domain name."
+      - text: "MX record"
+        correct: false
+        explanation: "An 'MX' record designates the mail server responsible for receiving email."
+  - id: q2
+    prompt: "What does an NXDOMAIN response code indicate in a DNS lookup?"
+    objectives: ["netplus:3.5"]
+    options:
+      - text: "The queried domain name does not exist in the DNS hierarchy."
+        correct: true
+        explanation: "Correct. NXDOMAIN (Non-Existent Domain) signifies that the authoritative nameserver has no record for the requested name."
+      - text: "The DNS server's network connection timed out."
+        correct: false
+        explanation: "Network timeouts produce a SERVFAIL error or client connection timeout."
+      - text: "The domain name requires user authentication."
+        correct: false
+        explanation: "DNS does not have user authentication codes; NXDOMAIN specifically means the domain does not exist."
+      - text: "The requested IP address is offline."
+        correct: false
+        explanation: "DNS only resolves names to IP addresses; it does not monitor whether the underlying server is online."
+  - id: q3
+    prompt: "Why do adversaries use DNS Tunneling (ATT&CK T1071.004) in corporate environments?"
+    objectives: ["netplus:3.5"]
+    options:
+      - text: "Outbound UDP port 53 is almost universally permitted through firewalls, allowing data exfiltration encoded in subdomains."
+        correct: true
+        explanation: "Correct. Because organizations rarely block DNS queries to upstream resolvers, attackers tunnel stolen data or C2 traffic inside subdomains."
+      - text: "DNS automatically encrypts payloads with military-grade encryption."
+        correct: false
+        explanation: "Standard DNS is completely unencrypted plain text."
+      - text: "DNS lookups bypass all intrusion detection systems permanently."
+        correct: false
+        explanation: "Security systems can inspect DNS query logs and flag high-entropy tunneling patterns."
+      - text: "DNS tunneling speeds up file downloads tenfold compared to HTTP."
+        correct: false
+        explanation: "DNS tunneling has very high overhead and is much slower than HTTP; its advantage is evasion, not speed."
+  - id: q4
+    prompt: "Which command-line tool is standard on Unix/Linux systems for querying DNS records and viewing detailed header flags?"
+    objectives: ["netplus:5.5"]
+    options:
+      - text: "dig"
+        correct: true
+        explanation: "Correct. BIND's dig (Domain Information Groper) is the standard administrative tool for querying DNS records, displaying query times, flags, and responses."
+      - text: "ping"
+        correct: false
+        explanation: "Ping sends ICMP echo requests to test reachability, not detailed DNS record inspection."
+      - text: "traceroute"
+        correct: false
+        explanation: "Traceroute measures router hop paths using TTL expiration."
+      - text: "ip route"
+        correct: false
+        explanation: "ip route displays the local kernel IP routing table."
