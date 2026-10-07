@@ -91,6 +91,26 @@ export const LAB: LoadedLab = {
   briefingText: "Simulated machine.",
 };
 
+export const CHALLENGE_LAB: LoadedLab = {
+  ...labSchema.parse({
+    id: "test-challenge-01",
+    title: "Test challenge",
+    type: "terminal",
+    track: "core",
+    rank: 0,
+    estimated_minutes: 45,
+    briefing: "briefing.md",
+    dataset: { generator: "flag_gen", params: {} },
+    objectives: [
+      { id: "o1", prompt: "flag?", check: { kind: "flag", answer_from: "generator.flag" } },
+      { id: "o2", prompt: "word?", check: { kind: "flag", answer_from: "generator.word" } },
+    ],
+    xp: 300,
+    challenge: { rank: 0, time_limit_minutes: 45, cooldown_minutes: 30 },
+  }),
+  briefingText: "Night shift.",
+};
+
 export const LESSONS = [lesson("core-r0-test-alpha-01", 1, LAB.id), lesson("core-r0-test-beta-01", 2)];
 
 export function fakeContent(): ContentSource {
@@ -99,9 +119,11 @@ export function fakeContent(): ContentSource {
     getLessons: async (filter = {}) => LESSONS.filter((l) => filter.rank === undefined || l.rank === filter.rank),
     loadChecks: async (id) => checks(id),
     loadLab: async (id) => {
-      if (id !== LAB.id) throw new Error(`unknown lab ${id}`);
-      return LAB;
+      const lab = [LAB, CHALLENGE_LAB].find((l) => l.id === id);
+      if (!lab) throw new Error(`unknown lab ${id}`);
+      return lab;
     },
+    listLabs: async () => [LAB, CHALLENGE_LAB],
     generators: { flag_gen: flagGen },
   };
 }
