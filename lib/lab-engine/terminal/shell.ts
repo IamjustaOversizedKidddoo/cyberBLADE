@@ -47,8 +47,9 @@ export function createShell(world: World): Shell {
       // Own keys only: "toString" or "constructor" must not resolve to Object.prototype members.
       const impl = Object.hasOwn(COMMANDS, argv[0]) ? COMMANDS[argv[0]] : undefined;
       const isTty = index === parsed.commands.length - 1 && !redirect;
+      const alone = parsed.commands.length === 1 && !redirect;
       last = impl
-        ? impl.run({ argv, stdin, vfs, cwd, user, home, hostname, env, history, isTty, setCwd })
+        ? impl.run({ argv, stdin, vfs, cwd, user, home, hostname, env, history, isTty, alone, setCwd })
         : { stdout: "", stderr: `${argv[0]}: command not found\n`, code: 127 };
 
       if (redirect && target) {
@@ -64,6 +65,7 @@ export function createShell(world: World): Shell {
     });
     const result: CmdResult = { stdout: last.stdout, stderr, code: last.code };
     if (last.clear) result.clear = true;
+    if (last.submit) result.submit = last.submit;
     return result;
   }
 

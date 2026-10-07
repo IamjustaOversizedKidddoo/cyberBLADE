@@ -4,6 +4,11 @@
 # objective documents before relying on this file (CompTIA and ISC2 revise exams every few years).
 # Summaries are our own words — never paste vendor text here.
 #
+# 2026-10-07: exam codes and the objective ids below were checked against public CompTIA/ISC2
+# information by an AI tool (web search) and found consistent (220-1201/1202, N10-009, SY0-701, CC).
+# That is NOT a human verification — confirm against the official objective PDFs before Phase 2
+# builds Security+ exam prep on this file.
+#
 # built_ranks: objectives whose target_rank is listed here must already have ≥1 lesson (CI fails otherwise).
 # A+ ids are domain-level (aplus1201:<domain>, aplus1202:<domain>) until objective-level mapping is done.
 

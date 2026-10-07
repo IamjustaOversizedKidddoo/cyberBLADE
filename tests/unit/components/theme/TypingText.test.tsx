@@ -31,7 +31,22 @@ test("types out the full text over time", () => {
   expect(typed(container)).toBe("ACCESS GRANTED");
 });
 
+test("no lone cursor before typing starts; cursor appears once text does", () => {
+  vi.useFakeTimers();
+  const { container } = render(<TypingText text="ACCESS GRANTED" />);
+  expect(container.querySelector(".neon-cursor")).toBeNull();
+  act(() => { vi.advanceTimersByTime(18); });
+  expect(container.querySelector(".neon-cursor")).not.toBeNull();
+});
+
+test("the full text's space is reserved so the line never jumps", () => {
+  const { container } = render(<TypingText text="ACCESS GRANTED" />);
+  const ghost = container.querySelector("[data-ghost]");
+  expect(ghost).toHaveTextContent("ACCESS GRANTED");
+  expect(ghost).toHaveAttribute("aria-hidden", "true");
+});
+
 test("typed copy is hidden from screen readers", () => {
   const { container } = render(<TypingText text="hi" />);
-  expect(container.querySelector("[data-typed]")).toHaveAttribute("aria-hidden", "true");
+  expect(container.querySelector("[data-typed]")?.closest('[aria-hidden="true"]')).not.toBeNull();
 });

@@ -34,10 +34,10 @@ Supabase Auth, Postgres and deployment are added at the start of Phase 2 (spec Â
 npm run lint
 npm run typecheck     # runs `next typegen` first (Next 16 route types)
 npm test              # Vitest unit + component tests
-npm run test:e2e      # Playwright, desktop + mobile; builds and serves on :3000 with NEON_DATA_DIR=.data-e2e
+npm run test:e2e      # Playwright, desktop + mobile; builds and serves on :3100 (E2E_PORT) with NEON_DATA_DIR=.data-e2e
 ```
 
-Stop any dev server on port 3000 before `npm run test:e2e`, or it will be reused with your local data.
+End-to-end tests use their own server on port 3100 (override with `E2E_PORT`), so a dev server on :3000 can keep running.
 
 ## Credits
 

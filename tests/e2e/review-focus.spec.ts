@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { E2E_BASE_URL, onSite } from "./helpers/base";
 
 let counter = 0;
 const uniqueHandle = () => `rf_${(Date.now() + counter++) % 1_000_000}`;
@@ -13,13 +14,13 @@ for (const next of ["//evil.example", "/%09/evil.example", "/%0A/evil.example", 
   test(`next=${next} stays on site`, async ({ page }) => {
     await page.goto(`/start?next=${next}`);
     await onboard(page);
-    await expect(page).toHaveURL(/^http:\/\/localhost:3000\//);
+    await expect(page).toHaveURL(onSite("/"));
     await expect(page).toHaveURL(/\/dashboard$/);
   });
 }
 
 test("stale cookie is cleared and the visitor is sent to /start", async ({ page, context }) => {
-  await context.addCookies([{ name: "neon_uid", value: "does-not-exist", url: "http://localhost:3000" }]);
+  await context.addCookies([{ name: "neon_uid", value: "does-not-exist", url: E2E_BASE_URL }]);
   const response = await page.goto("/dashboard");
   expect(response?.status()).toBeLessThan(500);
   await expect(page).toHaveURL(/\/start$/);
@@ -50,4 +51,25 @@ test("readable text never uses the Hacked or Pixel fonts", async ({ page }) => {
   );
   expect(fonts.length).toBeGreaterThan(0);
   for (const f of fonts) expect(f.toLowerCase()).not.toMatch(/hacked|pixel/);
+});
+
+test("unknown pages show the themed 404 and the guessed challenge path redirects", async ({ page }) => {
+  await page.goto("/start");
+  await onboard(page);
+  await expect(page).toHaveURL(/\/dashboard$/);
+  const res = await page.goto("/this-page-does-not-exist");
+  expect(res?.status()).toBe(404);
+  await expect(page.getByRole("heading", { level: 1, name: "404_not_found" })).toBeVisible();
+  await page.goto("/learn/core/challenge");
+  await expect(page).toHaveURL(/\/challenge\/0$/);
+});
+
+test("high contrast turns the hero band dark", async ({ page }) => {
+  await page.goto("/");
+  const hero = page.locator(".neon-hero").first();
+  const light = await hero.evaluate((el) => getComputedStyle(el).backgroundColor);
+  await page.evaluate(() => (document.documentElement.dataset.contrast = "high"));
+  const dark = await hero.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(light).not.toBe(dark);
+  expect(dark).toBe("rgb(11, 15, 25)");
 });

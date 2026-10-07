@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { LabWorkspace } from "@/components/labs/LabWorkspace";
 import { proseComponents } from "@/components/lesson/prose";
 import { HeroBand } from "@/components/theme/HeroBand";
+import { getLesson, getLessons } from "@/lib/content/lessons";
 import { renderMdx } from "@/lib/content/mdx";
+import { continueTarget } from "@/lib/content/navigation";
 import { requireOperator } from "@/lib/identity/session";
 import type { LoadedLab } from "@/lib/lab-engine/lab-schema";
 import { loadLab } from "@/lib/lab-engine/labs";
@@ -35,7 +37,12 @@ export default async function LabPage(props: PageProps<"/labs/[labId]">) {
   const operator = await requireOperator();
   const session = await startLab(getCtx(), operator.id, lab.id);
   const briefing = await renderMdx(lab.briefingText, proseComponents, "md");
-  const back = typeof lesson === "string" && /^[a-z0-9-]+$/.test(lesson) ? `/learn/${lesson}` : "/learn/core";
+  const lessonId = typeof lesson === "string" && /^[a-z0-9-]+$/.test(lesson) ? lesson : undefined;
+  const back = lessonId ? `/learn/${lessonId}` : "/learn/core";
+  const fromLesson = lessonId ? await getLesson(lessonId) : null;
+  const continueTo = fromLesson
+    ? continueTarget(await getLessons({ track: fromLesson.track, rank: fromLesson.rank }), fromLesson.id)
+    : continueTarget([], undefined);
 
   return (
     <main>
@@ -54,6 +61,7 @@ export default async function LabPage(props: PageProps<"/labs/[labId]">) {
           world={session.world}
           objectives={session.objectives}
           onSubmit={submitObjectiveAction.bind(null, session.attemptId)}
+          continueTo={continueTo}
         />
       </div>
     </main>

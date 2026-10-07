@@ -165,3 +165,13 @@
     display: none;
   }
 }
+
+/* High contrast doubles as the dark-room mode: hero bands turn dark instead of near-white. */
+[data-contrast="high"] .neon-hero {
+  background: #0b0f19;
+  color: var(--color-ink);
+  border-bottom: 1px solid var(--color-cyan);
+}
+[data-contrast="high"] .neon-hero * {
+  color: var(--color-ink);
+}

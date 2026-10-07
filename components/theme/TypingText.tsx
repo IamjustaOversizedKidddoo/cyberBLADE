@@ -26,10 +26,16 @@ export function TypingText({ text, speedMs = 18, className }: Props) {
   return (
     <span className={`font-ui ${className ?? ""}`}>
       <span className="sr-only">{text}</span>
-      <span aria-hidden="true" data-typed="">
-        {visible}
+      {/* An invisible copy reserves the final size; the typed text is drawn on top of it. */}
+      <span className="relative inline-block">
+        <span aria-hidden="true" data-ghost="" className="invisible">
+          {text}_
+        </span>
+        <span aria-hidden="true" className="absolute inset-0">
+          <span data-typed="">{visible}</span>
+          {visible.length > 0 && <BlinkCursor />}
+        </span>
       </span>
-      <BlinkCursor />
     </span>
   );
 }

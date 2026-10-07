@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { onSite } from "./helpers/base";
 
 async function onboard(page: Page, handle: string) {
   await page.getByLabel("Choose your operator handle").fill(handle);
@@ -22,7 +23,7 @@ test("new visitor onboards and lands on the dashboard", async ({ page }) => {
 test("an off-site next link never leaves the site", async ({ page }) => {
   await page.goto("/start?next=https://evil.example");
   await onboard(page, `e2e_${(Date.now() + 1) % 1_000_000}`);
-  await expect(page).toHaveURL(/localhost:3000\/dashboard$/);
+  await expect(page).toHaveURL(onSite("/dashboard$"));
 });
 
 test("form errors are shown and the visitor stays on /start", async ({ page }) => {
@@ -38,7 +39,7 @@ test("switch operator returns to the landing page and re-gates", async ({ page }
   await onboard(page, `e2e_${(Date.now() + 2) % 1_000_000}`);
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.getByRole("button", { name: "Switch operator" }).click();
-  await expect(page).toHaveURL(/localhost:3000\/$/);
+  await expect(page).toHaveURL(onSite("/$"));
   await page.goto("/dashboard");
   await expect(page).toHaveURL(/\/start/);
 });

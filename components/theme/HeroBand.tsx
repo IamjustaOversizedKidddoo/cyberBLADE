@@ -6,7 +6,7 @@ type Props = { title: string; kicker?: string; children?: React.ReactNode };
 /** Near-white band with a huge black Hacked heading. */
 export function HeroBand({ title, kicker, children }: Props) {
   return (
-    <section className="bg-paper px-4 py-12 text-void sm:py-20">
+    <section className="neon-hero bg-paper px-4 py-12 text-void sm:py-20">
       <div className="mx-auto max-w-5xl">
         {kicker && (
           <p className="mb-4 text-lg sm:text-xl">
