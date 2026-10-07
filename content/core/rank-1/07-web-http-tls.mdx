@@ -1,0 +1,133 @@
+---
+id: core-r1-net-web-01
+title: "HTTP, HTTPS and TLS"
+track: core
+rank: 1
+module: networking
+order: 7
+estimated_minutes: 35
+objectives_covered: ["secplus:1.4"]
+mitre: ["T1557"]
+lab: core-r1-net-web-lab-01
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+The World Wide Web runs on two interconnected protocols operating at the upper layers of the network stack:
+
+- **HTTP (Hypertext Transfer Protocol)**: A stateless, plain-text application protocol (Layer 7) using request/response semantics to fetch web documents, submit form data, and communicate with REST APIs.
+- **HTTPS (HTTP Secure)**: Standard HTTP layered on top of **TLS (Transport Layer Security)**, providing mutual authentication, confidentiality (encryption), and data integrity.
+
+TLS operates beneath HTTP and above TCP (historically Layer 5/6), encrypting all application data — including request URLs, paths, headers, cookies, and payloads — before it touches the transport layer.
+
+### 2. Why it exists
+
+In the early days of the web, HTTP transmitted everything in clear text across unencrypted networks. Anyone with access to an intermediate router, ISP gateway, or shared wireless access point could read usernames, passwords, credit card numbers, and session cookies using basic packet sniffing tools.
+
+HTTPS with TLS was engineered to solve three core security pillars:
+
+- **Confidentiality**: Eavesdroppers intercepting network traffic see only encrypted ciphertext.
+- **Integrity**: Cryptographic Message Authentication Codes (MACs) ensure data cannot be altered, injected, or truncated in transit without detection.
+- **Authentication**: Digital certificates issued by trusted **Certificate Authorities (CAs)** prove that the server you connected to is genuinely the entity named in the URL, preventing on-path impersonation.
+
+### 3. How it works
+
+**HTTP Request and Response Architecture:**
+
+An HTTP client sends a text request starting with a method and URI:
+- **Methods**: `GET` (retrieve resources), `POST` (submit data or credentials), `PUT`/`PATCH` (update data), `DELETE` (remove resources), `HEAD` (fetch headers without body).
+
+The server replies with a status code and headers:
+- `200 OK`: Request succeeded.
+- `301 Moved Permanently` / `302 Found`: Redirects client to a new URL specified in the `Location` header.
+- `401 Unauthorized` / `403 Forbidden`: Authentication required or access denied.
+- `404 Not Found`: Resource does not exist.
+- `500 Internal Server Error`: Application crash on server.
+
+**The TLS Handshake:**
+
+Before any HTTP data passes, the client and server negotiate cryptographic parameters:
+
+```text
+Client                                                    Server
+──────                                                    ──────
+1. Client Hello (supported ciphers, random, SNI) ──────►
+                                                 ◄──────  2. Server Hello (selected cipher, cert)
+3. Client verifies certificate chain with CA root
+4. Key Exchange (Diffie-Hellman / ECDHE)        ◄──────►  Exchange public key parameters
+5. Both sides derive symmetric session keys
+── Secure Channel Established: Encrypted HTTP traffic begins ──
+```
+
+- **SNI (Server Name Indication)**: An extension in the unencrypted Client Hello stating which hostname the client wants. This allows a single server IP to host multiple distinct TLS certificates.
+- **Symmetric Encryption**: Once keys are derived, bulk communication uses fast symmetric ciphers (such as AES-GCM or ChaCha20).
+
+Let's test an HTTP interaction on our terminal lab using `curl`:
+
+```console
+$ curl -I http://intranet.corp.example/
+$ curl -L http://intranet.corp.example/
+```
+
+The `-I` flag fetches HTTP response headers, revealing status codes, server signatures, and redirect locations, while `-L` follows redirect instructions automatically.
+
+### 4. How attackers abuse it
+
+- **Adversary-in-the-Middle (AiTM / MITM - ATT&CK T1557)**: Attackers on local networks intercept plain-text HTTP connections to harvest credentials or inject malicious scripts. Even with HTTPS, attackers attempt **SSL Stripping**, intercepting initial unencrypted `http://` requests before redirects to `https://` can execute.
+- **Session Hijacking**: If web developers fail to mark session cookies with the `Secure` and `HttpOnly` flags, cookies leaked over clear-text HTTP or cross-site scripting (XSS) allow attackers to impersonate authenticated users.
+- **SNI Inspection / Traffic Analysis**: Because the TLS Client Hello sends the SNI hostname in clear text before encryption begins, network eavesdroppers can see which website domain you are visiting, even if they cannot see the specific page path or payload.
+
+### 5. How defenders detect it
+
+- **Network flow inspection**: Firewalls flag outbound HTTP connections transmitting sensitive keywords or unencrypted basic authentication headers (`Authorization: Basic ...`).
+- **Certificate transparency logs**: Security teams monitor public Certificate Transparency (CT) logs for unauthorized certificates issued for their company domains (detecting rogue or compromised CAs).
+- **TLS inspection / Decryption proxies**: Enterprise edge appliances terminate TLS sessions, scan the unencrypted HTTP traffic for malware or data leaks, and re-encrypt the traffic before forwarding it to internal endpoints.
+
+### 6. How to prevent/fix it
+
+- **Enforce HSTS (HTTP Strict Transport Security)**: The `Strict-Transport-Security` header instructs browsers to never connect over plain HTTP, defeating SSL stripping attacks.
+- **Redirect all HTTP traffic to HTTPS**: Configure web servers to immediately return a `301 Moved Permanently` directing clients to the HTTPS endpoint.
+- **Secure cookie attributes**: Mark all session identifiers with `Secure` (transmitted only over HTTPS), `HttpOnly` (inaccessible to JavaScript), and `SameSite=Strict` (defends against CSRF).
+- **Deprecate outdated TLS versions**: Disable legacy SSLv3, TLS 1.0, and TLS 1.1; enforce TLS 1.2 and TLS 1.3 with forward secrecy ciphers.
+
+### 7. Common mistakes
+
+- **Assuming HTTPS protects the server from attacks**: HTTPS only secures data in transit. It does not stop SQL injection, credential stuffing, or application logic bugs submitted over the encrypted channel.
+- **Ignoring certificate validation errors**: Suppressing certificate verification warnings (`curl -k` or ignoring browser warnings) completely nullifies TLS authentication, exposing users to AiTM attacks.
+- **Leaving internal admin interfaces on plain HTTP**: Believing that "internal traffic doesn't need encryption" leaves corporate networks vulnerable to any compromised device on the LAN.
+
+### Remember it like this
+
+> **HTTP = Clear text, stateless · HTTPS = HTTP over TLS · Port 80 (HTTP) vs 443 (HTTPS) · TLS delivers Confidentiality, Integrity, and Authentication.**
+
+### Interview answer
+
+> "HTTP is a stateless Layer 7 protocol for web communication, transmitting requests and responses in plain text over TCP port 80. HTTPS wraps HTTP inside Transport Layer Security (TLS) on TCP port 443 to deliver confidentiality via symmetric encryption, integrity via message authentication codes, and server authentication via X.509 digital certificates. In security operations, plain HTTP is vulnerable to Adversary-in-the-Middle interception (ATT&CK T1557) and session hijacking. We secure web applications by enforcing HTTPS with HSTS, setting Secure and HttpOnly flags on session cookies, disabling legacy TLS versions, and inspecting outbound traffic."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+In this terminal lab, inspect an internal corporate intranet web service using curl. Retrieve the server response headers, follow redirection paths to determine destination endpoints, and extract sensitive administrator verification notes from protected web paths.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** Security engineers configure TLS cipher suites and HSTS policies on reverse proxies, while penetration testers inspect web application headers for misconfigurations and missing security flags.
+
+**Real incident: Heartbleed Bug (CVE-2014-0160, April 2014).** A critical vulnerability was uncovered in OpenSSL, the cryptographic library powering hundreds of thousands of HTTPS web servers worldwide. The TLS Heartbeat extension allowed clients to send a keepalive payload with a specified length. Due to missing bounds validation, an attacker could request a 64-kilobyte payload while sending only 1 byte of data. The vulnerable server would read beyond the buffer and return 64 KB of raw server memory back to the attacker. Attackers repeatedly triggered Heartbleed to harvest private encryption keys, usernames, passwords, and active session tokens directly from memory, without leaving a trace in application logs.
+
+**Key takeaways**
+
+- HTTP operates on port 80 in plain text; HTTPS operates on port 443 with TLS encryption.
+- TLS provides confidentiality, data integrity, and server authentication.
+- HSTS prevents SSL stripping by forcing browsers to connect only via HTTPS.
+- HTTPS encrypts application data, but the initial SNI hostname is transmitted in clear text.

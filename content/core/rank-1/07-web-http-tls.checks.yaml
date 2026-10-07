@@ -1,0 +1,66 @@
+lesson: core-r1-net-web-01
+questions:
+  - id: q1
+    prompt: "What three primary security guarantees does TLS provide for HTTPS web communications?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "Confidentiality, Integrity, and Authentication"
+        correct: true
+        explanation: "Correct. TLS encrypts data (confidentiality), detects tampering (integrity), and verifies server identity via certificates (authentication)."
+      - text: "Anonymity, Compression, and Non-repudiation"
+        correct: false
+        explanation: "TLS does not guarantee user anonymity (SNI and IP headers remain visible) and compression is disabled in modern TLS due to CRIME attacks."
+      - text: "Speed, Scalability, and Load Balancing"
+        correct: false
+        explanation: "These are architectural performance goals, not cryptographic security guarantees."
+      - text: "Firewalling, Logging, and Intrusion Prevention"
+        correct: false
+        explanation: "These are network defense mechanisms, not cryptographic properties provided by TLS."
+  - id: q2
+    prompt: "How does the HTTP Strict Transport Security (HSTS) header protect users from Adversary-in-the-Middle attacks?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "It instructs browsers to automatically convert all HTTP links to HTTPS and refuse connections if certificate errors occur."
+        correct: true
+        explanation: "Correct. HSTS forces the browser to only connect via HTTPS, preventing attackers from performing SSL stripping attacks."
+      - text: "It blocks cross-site scripting attacks by sanitizing HTML input."
+        correct: false
+        explanation: "Sanitizing HTML input and Content Security Policy defend against XSS, not HSTS."
+      - text: "It hides the server's public IP address from internet DNS servers."
+        correct: false
+        explanation: "HSTS is an HTTP response header; it has no effect on DNS records."
+      - text: "It forces the client to download a client-side firewall certificate."
+        correct: false
+        explanation: "HSTS enforces browser-level policy; it does not install certificates."
+  - id: q3
+    prompt: "What was the mechanism behind the 2014 Heartbleed vulnerability (CVE-2014-0160) in OpenSSL?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "A missing buffer bounds check in the TLS Heartbeat extension allowed clients to read up to 64KB of server memory."
+        correct: true
+        explanation: "Correct. The server failed to verify that the payload size matched the requested length, leaking raw RAM memory containing private keys and passwords."
+      - text: "An attacker cracked RSA 2048-bit encryption keys using quantum computing."
+        correct: false
+        explanation: "The attack was a software implementation memory leak, not a mathematical compromise of RSA."
+      - text: "A rogue certificate authority issued fake certificates for major websites."
+        correct: false
+        explanation: "Heartbleed was an OpenSSL memory reading vulnerability, not a CA compromise."
+      - text: "A default password on SSL administrative interfaces allowed unauthorized root access."
+        correct: false
+        explanation: "Heartbleed exploited a flaw in packet handling, not default credentials."
+  - id: q4
+    prompt: "Why can network eavesdroppers identify which website domain you are visiting even when using HTTPS?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "The Server Name Indication (SNI) extension in the initial TLS Client Hello is sent before encryption begins."
+        correct: true
+        explanation: "Correct. Because the server needs to know which certificate to present, SNI transmits the requested hostname in plain text during the initial handshake."
+      - text: "HTTPS only encrypts the body of the web page, leaving all headers and URLs in clear text."
+        correct: false
+        explanation: "HTTPS encrypts the entire HTTP request and response, including headers and URLs, once the TLS session is established."
+      - text: "The web browser sends an unencrypted copy of the web page to the local default gateway."
+        correct: false
+        explanation: "Browsers do not send unencrypted duplicate copies."
+      - text: "TLS certificates do not contain domain names."
+        correct: false
+        explanation: "TLS certificates explicitly contain domain names in the Subject Alternative Name (SAN) field."

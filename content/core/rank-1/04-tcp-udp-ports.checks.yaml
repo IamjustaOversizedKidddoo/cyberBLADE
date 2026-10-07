@@ -1,0 +1,66 @@
+lesson: core-r1-net-tcpudp-01
+questions:
+  - id: q1
+    prompt: "What three packets comprise the standard TCP three-way handshake used to establish a connection?"
+    objectives: ["netplus:1.4"]
+    options:
+      - text: "SYN from client, SYN-ACK from server, ACK from client"
+        correct: true
+        explanation: "Correct. The client initiates with SYN, the server responds with SYN-ACK, and the client confirms with ACK to establish the session."
+      - text: "ACK from client, SYN from server, FIN from client"
+        correct: false
+        explanation: "ACK cannot begin a connection; FIN is used to close an existing connection."
+      - text: "SYN from client, ACK from server, RST from client"
+        correct: false
+        explanation: "RST resets and tears down a connection rather than completing handshake establishment."
+      - text: "PING from client, ECHO from server, ACK from client"
+        correct: false
+        explanation: "Ping and Echo belong to ICMP at Layer 3, not the TCP handshake at Layer 4."
+  - id: q2
+    prompt: "Why are UDP services frequently weaponized for reflection and amplification DDoS attacks?"
+    objectives: ["netplus:1.4"]
+    options:
+      - text: "UDP is connectionless and does not verify source IPs with a handshake, allowing attackers to spoof the victim's address."
+        correct: true
+        explanation: "Correct. Because UDP lacks handshakes, an attacker can spoof the victim's IP as the sender, directing amplified responses at the victim."
+      - text: "UDP encrypts all traffic by default, preventing firewalls from inspecting packets."
+        correct: false
+        explanation: "UDP does not provide built-in encryption."
+      - text: "UDP operates only on internal private subnets."
+        correct: false
+        explanation: "UDP routes across the public internet just like TCP."
+      - text: "UDP packets cannot be fragmented or filtered."
+        correct: false
+        explanation: "UDP packets can be fragmented and are easily filtered by firewalls."
+  - id: q3
+    prompt: "In a TCP SYN port scan, what response from a target port indicates that the service is open and listening?"
+    objectives: ["netplus:1.4"]
+    options:
+      - text: "A TCP packet with SYN and ACK flags set (SYN-ACK)"
+        correct: true
+        explanation: "Correct. An open port welcomes the connection with a SYN-ACK packet, whereas a closed port replies with a RST packet."
+      - text: "A TCP packet with the RST flag set"
+        correct: false
+        explanation: "RST indicates that the port is closed and rejecting connections."
+      - text: "An ICMP Destination Unreachable message"
+        correct: false
+        explanation: "ICMP Destination Unreachable indicates filtering, blocking, or non-routable hosts."
+      - text: "A TCP packet with only the FIN flag set"
+        correct: false
+        explanation: "FIN teardown packets are not sent in response to initial SYN probes."
+  - id: q4
+    prompt: "Which port number is the standardized well-known port for SSH (Secure Shell) administration?"
+    objectives: ["netplus:1.4"]
+    options:
+      - text: "Port 22"
+        correct: true
+        explanation: "Correct. Port 22 is the standard well-known port for SSH."
+      - text: "Port 23"
+        correct: false
+        explanation: "Port 23 is the legacy unencrypted Telnet port."
+      - text: "Port 80"
+        correct: false
+        explanation: "Port 80 is standard HTTP."
+      - text: "Port 443"
+        correct: false
+        explanation: "Port 443 is standard HTTPS."

@@ -1,0 +1,123 @@
+---
+id: core-r1-net-dhcp-nat-01
+title: "DHCP and NAT"
+track: core
+rank: 1
+module: networking
+order: 6
+estimated_minutes: 30
+objectives_covered: ["netplus:3.5", "netplus:1.7"]
+mitre: []
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+Two foundational protocols make modern plug-and-play networking possible while preserving scarce IPv4 address space:
+
+- **DHCP (Dynamic Host Configuration Protocol)**: An automated client/server protocol that assigns IP addresses, subnet masks, default gateways, and DNS resolvers to newly joined network devices without manual configuration. DHCP operates over **UDP ports 67 (server) and 68 (client)**.
+- **NAT (Network Address Translation)**: A technique used by routers and firewalls to rewrite IP packet headers as they traverse network boundaries. Most commonly deployed as **NAPT / PAT (Port Address Translation)**, it enables thousands of private RFC 1918 internal devices to share a single public IPv4 address.
+
+### 2. Why it exists
+
+- **Without DHCP**: Network administrators would have to manually configure every laptop, smartphone, and printer with a unique static IP, correct subnet mask, gateway, and DNS servers. IP collisions and configuration errors would paralyze networks.
+- **Without NAT**: The global IPv4 address pool (4.29 billion addresses) would have been completely exhausted by the late 1990s. NAT allowed corporate and home networks to reuse the private `10.0.0.0/8`, `172.16.0.0/12`, and `192.168.0.0/16` spaces internally while routing onto the internet through one public IP.
+- **Inherent perimeter masking**: Because external internet hosts cannot initiate unsolicited connections directly to private RFC 1918 IPs behind a NAT router, NAT accidentally became a basic boundary filter.
+
+### 3. How it works
+
+**The DHCP 4-Step Process (DORA):**
+
+When a new device connects to an Ethernet or Wi-Fi network, it exchanges four UDP broadcast packets:
+
+```text
+Client (0.0.0.0:68)                         DHCP Server (255.255.255.255:67)
+───────────────────                         ────────────────────────────────
+1. [Discover] "I need an IP address" ─────►
+                                     ◄─────  2. [Offer] "You can lease 10.0.2.15"
+3. [Request] "I accept 10.0.2.15"    ─────►
+                                     ◄─────  4. [Acknowledge] "Confirmed for 24h"
+```
+
+1. **Discover**: Client broadcasts looking for available DHCP servers.
+2. **Offer**: Server reserves an unallocated IP from its address pool and broadcasts an offer.
+3. **Request**: Client confirms acceptance of the offered lease and options.
+4. **Acknowledge (ACK)**: Server finalizes the lease timer and returns network options.
+
+**DHCP Options**: Along with the IP lease, DHCP delivers configuration parameters:
+- Option 3: Default Router (Gateway) IP
+- Option 6: Domain Name Server (DNS) IPs
+- Option 121: Classless Static Routes (used to push custom subnet routing tables directly into client operating systems)
+
+**How PAT (Port Address Translation) Works:**
+
+When an internal host (`10.0.2.15:51520`) sends an HTTP packet to an external server (`203.0.113.10:80`):
+1. The NAT gateway replaces the source IP with its own public IP (`198.51.100.1`) and assigns a unique source port (`40105`).
+2. The NAT state table records: `10.0.2.15:51520 <-> 198.51.100.1:40105 <-> 203.0.113.10:80`.
+3. When the web server replies to `198.51.100.1:40105`, the NAT gateway translates the destination back to `10.0.2.15:51520`.
+
+Let's check our local network settings and DNS resolver configuration:
+
+```console
+$ cat /etc/resolv.conf
+$ ip route
+```
+
+The output shows the nameserver configured by the network stack and the default route learned during initialization.
+
+### 4. How attackers abuse it
+
+- **Rogue DHCP Servers (MITM)**: An attacker on a local network runs a rogue DHCP daemon. Because DHCP replies are unauthenticated broadcasts, the attacker races the legitimate server. If the rogue server answers first, it sets the client's default gateway and DNS server to the attacker's IP, intercepting all outbound client traffic.
+- **DHCP Starvation**: An attacker generates thousands of DHCP Discover requests with spoofed MAC addresses, exhausting the DHCP server's entire IP pool and causing a Denial of Service for legitimate new devices.
+- **Route Injection via DHCP Option 121 (CVE-2024-3661 / TunnelVision)**: Attackers on local networks push custom static routes via DHCP Option 121. Because operating systems prioritize more specific routes over default VPN routes, this diverts VPN traffic onto the local interface unencrypted.
+
+### 5. How defenders detect it
+
+- **DHCP Snooping**: Managed switches inspect DHCP traffic. Switch ports connected to clients are configured as **untrusted**; only designated uplink ports connected to real DHCP servers are marked **trusted**. The switch drops DHCP Offer/ACK packets appearing on untrusted ports, blocking rogue servers.
+- **DHCP Rate Limiting**: Switches limit the rate of DHCP Discover packets per port, defeating DHCP starvation attacks.
+- **NAT connection table monitoring**: Firewalls alert when a single internal IP opens thousands of simultaneous NAT state table entries (indicative of port scanning or malware botnet activity).
+
+### 6. How to prevent/fix it
+
+- **Enable DHCP Snooping on all Layer 2 switches**: This single switch feature neutralizes both rogue DHCP servers and DHCP starvation attacks.
+- **Bind static IP assignments for servers**: Critical infrastructure (domain controllers, database clusters) should always use static IP configurations or DHCP reservations to avoid dynamic changes.
+- **Harden VPN clients against route hijacking**: Modern VPN configurations (such as tunnel firewalls) must drop local traffic and refuse unverified DHCP Option 121 route injections.
+
+### 7. Common mistakes
+
+- **Believing NAT replaces a firewall**: NAT is an address translation mechanism, not a security boundary. If port forwarding (DNAT) is enabled, or if malware initiates an outbound connection, NAT provides no filtering protection.
+- **Overlapping subnets across NAT boundaries**: Organizations merging networks often discover both sides used `192.168.1.0/24`, requiring complex dual-NAT architectures to resolve collisions.
+- **Short DHCP leases on static server subnets**: Setting short lease times on servers causes intermittent reachability hiccups if the DHCP service temporarily reboots.
+
+### Remember it like this
+
+> **DHCP = DORA (Discover, Offer, Request, ACK) · UDP 67/68. NAT = Many private RFC 1918 IPs sharing one public IP via port translation.**
+
+### Interview answer
+
+> "DHCP automates network configuration using the four-step DORA handshake (Discover, Offer, Request, Acknowledge) over UDP ports 67 and 68, delivering IP leases, gateway addresses, and DNS resolvers. NAT, particularly Port Address Translation (PAT), allows multiple private RFC 1918 internal hosts to share a single public IP address by mapping internal IP-port pairs to unique external ports in a connection state table. In network security, DHCP is vulnerable to rogue server and starvation attacks on Layer 2, which we mitigate using DHCP Snooping on managed switches, while NAT provides address masking but is never a substitute for a stateful firewall."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no scored lab. **Field exercise (not scored):** Open your workstation command line. Run `ipconfig /all` (Windows) or `ip route` and `resolvectl status` (Linux). Identify whether your IP was dynamically assigned via DHCP, look up your lease expiration time, and observe which internal IP address functions as your default gateway.
+
+## Debrief
+
+**What a professional does here.** Network administrators manage IP address scopes and DHCP reservations, while security analysts investigate rogue devices using switch DHCP snooping logs and ARP binding tables.
+
+**Real incident: TunnelVision (CVE-2024-3661, May 2024).** Security researchers revealed a technique named TunnelVision that bypassed VPN encryption on untrusted local networks (such as hotel or coffee shop Wi-Fi). An attacker running a rogue DHCP server pushed custom routing entries using DHCP Option 121 (Classless Static Route). Because operating systems give preference to higher-prefix routes over the default route (`0.0.0.0/0`) used by VPN virtual adapters, the victim's traffic flowed directly onto the local Wi-Fi unencrypted, completely bypassing the VPN tunnel. The vulnerability demonstrated that legacy DHCP protocol options can undermine higher-layer cryptographic controls.
+
+**Key takeaways**
+
+- DHCP uses the DORA handshake (UDP 67/68) to automatically deliver IP leases and options.
+- NAT/PAT maps multiple internal private addresses to a shared public IP using state tables.
+- Rogue DHCP servers can hijack gateway and DNS settings; defend using DHCP Snooping.
+- DHCP Option 121 can inject static routes that hijack traffic unless VPN clients actively enforce firewall isolation.

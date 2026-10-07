@@ -1,0 +1,66 @@
+lesson: core-r1-net-routing-fw-01
+questions:
+  - id: q1
+    prompt: "How does a router determine which route to select when an IP destination matches multiple entries in its routing table?"
+    objectives: ["netplus:2.1"]
+    options:
+      - text: "It selects the route with the Longest Prefix Match (the most specific CIDR prefix length)."
+        correct: true
+        explanation: "Correct. Routers prioritize routes with the longest prefix length (e.g., /24 over /16) because they represent more specific network destinations."
+      - text: "It always chooses the default route 0.0.0.0/0 first."
+        correct: false
+        explanation: "The default route is the least specific (prefix length /0) and is only used as a last resort."
+      - text: "It selects the route that was added most recently to the table."
+        correct: false
+        explanation: "Route selection is governed by prefix length and administrative distance/metric, not timestamp."
+      - text: "It randomly alternates between all matching routes."
+        correct: false
+        explanation: "Load balancing only occurs between routes with identical prefix lengths and metrics."
+  - id: q2
+    prompt: "What is the primary advantage of a stateful inspection firewall over a basic stateless packet filter?"
+    objectives: ["netplus:1.2"]
+    options:
+      - text: "It tracks connection state tables, automatically permitting legitimate inbound return traffic for established outbound sessions."
+        correct: true
+        explanation: "Correct. Stateful firewalls monitor session handshakes and automatically allow return responses without needing open inbound ports."
+      - text: "It decrypts all TLS traffic using hardware-accelerated quantum chips."
+        correct: false
+        explanation: "Stateful inspection refers to tracking connection states, not quantum TLS decryption."
+      - text: "It operates exclusively at Layer 2 using MAC addresses."
+        correct: false
+        explanation: "Firewalls operate primarily at Layer 3 and Layer 4 (and Layer 7 for NGFW)."
+      - text: "It eliminates the need for access control lists."
+        correct: false
+        explanation: "Stateful firewalls still require defined access control policies."
+  - id: q3
+    prompt: "What architectural role does a reverse proxy serve in enterprise network environments?"
+    objectives: ["secplus:3.2"]
+    options:
+      - text: "It intercepts requests from the internet to distribute traffic across backend origin servers, terminate TLS, and shield servers from direct exposure."
+        correct: true
+        explanation: "Correct. Reverse proxies front-end internal web servers, handling load balancing, SSL/TLS termination, and security filtering."
+      - text: "It filters outbound employee web browsing from office laptops."
+        correct: false
+        explanation: "Filtering outbound client browsing is the role of a forward proxy."
+      - text: "It dynamically assigns IP addresses to devices joining the local subnet."
+        correct: false
+        explanation: "Dynamic IP assignment is performed by a DHCP server."
+      - text: "It resolves domain names into IP addresses for external clients."
+        correct: false
+        explanation: "Resolving domain names is the role of an authoritative or recursive DNS server."
+  - id: q4
+    prompt: "Why did Pakistan Telecom's accidental BGP route announcement in 2008 cause YouTube to become unreachable worldwide?"
+    objectives: ["netplus:2.1"]
+    options:
+      - text: "Their announced /24 prefix was more specific than YouTube's legitimate /22 prefix, causing global routers to redirect YouTube traffic to Pakistan Telecom."
+        correct: true
+        explanation: "Correct. Due to Longest Prefix Match rules, global BGP routers preferred the rogue /24 route over YouTube's /22, routing all traffic into a black hole."
+      - text: "They physically severed the transatlantic undersea fiber cables."
+        correct: false
+        explanation: "Undersea cables were unharmed; the failure was a logical BGP routing leak."
+      - text: "They compromised YouTube's master administrative passwords."
+        correct: false
+        explanation: "Account passwords were not compromised; routing tables directed traffic away from YouTube."
+      - text: "They flooded YouTube's DNS servers with 10 Terabits per second of UDP traffic."
+        correct: false
+        explanation: "The incident was a BGP route hijack, not a UDP volumetric flood."

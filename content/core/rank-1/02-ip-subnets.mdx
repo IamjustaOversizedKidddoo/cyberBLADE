@@ -1,0 +1,132 @@
+---
+id: core-r1-net-ip-01
+title: "IP Addresses, Subnets and CIDR (IPv4 + IPv6)"
+track: core
+rank: 1
+module: networking
+order: 2
+estimated_minutes: 35
+objectives_covered: ["netplus:1.7", "netplus:1.8", "netplus:5.5"]
+mitre: []
+lab: core-r1-net-ip-lab-01
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+An **IP (Internet Protocol) address** is a numerical identifier assigned to every device connected to a computer network that uses the Internet Protocol for communication.
+
+Two major versions are deployed worldwide:
+
+- **IPv4 (32-bit)**: Formatted as 4 octets separated by dots (e.g., `192.0.2.15`). It provides 2^32 ≈ 4.29 billion possible addresses.
+- **IPv6 (128-bit)**: Formatted as 8 groups of 4 hexadecimal digits separated by colons (e.g., `2001:0db8:85a3::8a2e:0370:7334`). It provides 2^128 addresses — virtually limitless space.
+
+Networks are grouped into **subnets** using **CIDR (Classless Inter-Domain Routing)** notation, where a suffix specifies how many leading bits belong to the network prefix (e.g., `/24`).
+
+### 2. Why it exists
+
+Without hierarchical addressing, every router on the planet would need an entry for every individual computer on Earth. Routers would exhaust their memory within minutes.
+
+Subnetting divides address space into manageable clusters:
+
+- The **network portion** identifies the subnet. Routers only need to know how to reach the network prefix.
+- The **host portion** identifies the specific machine within that subnet.
+- The **subnet mask** tells the operating system where the network portion ends and the host portion begins.
+
+Special-purpose ranges segregate private internal networks from the public internet (RFC 1918) and reserve addresses for link-local or loopback communications.
+
+### 3. How it works
+
+**Subnet calculation fundamentals:**
+
+In an IPv4 address, the total bits equal 32. If a subnet is `/26`:
+
+- Host bits remaining: 32 - 26 = 6 bits.
+- Total IP addresses: 2^6 = 64.
+- **Usable host addresses**: 2^(host bits) - 2 (subtracting the network address where host bits are all 0, and the broadcast address where host bits are all 1). For `/26`, usable hosts = 64 - 2 = 62.
+
+**Reserved IPv4 address blocks you must know:**
+
+| Range | Purpose | RFC / Standard |
+|---|---|---|
+| `10.0.0.0/8` | Private network (Class A) | RFC 1918 |
+| `172.16.0.0/12` | Private network (Class B) | RFC 1918 |
+| `192.168.0.0/16` | Private network (Class C) | RFC 1918 |
+| `127.0.0.0/8` | Loopback (`127.0.0.1` = localhost) | RFC 1122 |
+| `169.254.0.0/16` | Link-local (APIPA / Cloud metadata) | RFC 3927 |
+| `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24` | Documentation & test examples | RFC 5737 |
+
+**IPv6 structure:**
+
+IPv6 addresses use 128 bits. Consecutive blocks of zeroes can be compressed with `::` once per address.
+- `::1` is the loopback address (equivalent to `127.0.0.1`).
+- `fe80::/10` is link-local (usable only on the local link).
+- `2000::/3` is global unicast (routable on the internet).
+
+Let's inspect our simulated network interface and routing table:
+
+```console
+$ ip a
+$ ip route
+```
+
+The output shows your assigned IP address, the CIDR prefix length, and the default gateway through which all remote traffic is forwarded.
+
+### 4. How attackers abuse it
+
+- **Server-Side Request Forgery (SSRF) against Cloud Metadata**: Cloud providers (AWS, GCP, Azure) expose instance metadata at the link-local address `169.254.169.254`. If an application accepts user-supplied URLs, attackers force the server to fetch `http://169.254.169.254/latest/meta-data/` to steal IAM credentials and security tokens.
+- **IP Spoofing**: In UDP-based protocols without handshakes, attackers forge the source IP header to redirect responses or impersonate trusted systems.
+- **Subnet scanning**: Once attackers gain a foothold, they sweep local CIDR ranges (e.g., `10.0.0.0/24`) to discover adjacent unhardened servers.
+
+### 5. How defenders detect it
+
+- **Egress filtering logs**: Firewalls block and alert on internal packets destined for invalid or forbidden IP ranges (such as outbound traffic to `169.254.169.254` from unauthorized containers).
+- **Network telemetry (NetFlow/IPFIX)**: Unusually high numbers of connection attempts across contiguous IP addresses indicate an active subnet sweep.
+- **Ingress validation**: Border routers drop incoming packets claiming to originate from private RFC 1918 or loopback addresses (anti-spoofing / BCP 38).
+
+### 6. How to prevent/fix it
+
+- **Block access to metadata services**: Enforce host-level firewall rules or IMDSv2 (requiring session tokens) to prevent SSRF queries to `169.254.169.254`.
+- **Implement RFC 1918 filtering at edge firewalls**: Never allow private IP space to route out to or in from the public internet.
+- **Design least-privilege subnets**: Segment sensitive workloads (databases, payment processing) into distinct `/28` or `/24` subnets with restrictive inter-VLAN firewall rules.
+
+### 7. Common mistakes
+
+- **Forgetting to subtract 2 for usable hosts**: 2^(32 - prefix) gives total addresses; usable host capacity is always 2^(32 - prefix) - 2.
+- **Assuming cloud metadata is private to the network**: The link-local `169.254.169.254` address is accessible by any process on the virtual machine unless explicitly restricted.
+- **Exposing internal subnets via default routing**: Misconfiguring a router interface to route internal subnets out the default gateway exposes internal packets to upstream ISPs.
+
+### Remember it like this
+
+> **Prefix bits = Network. Remaining bits = Hosts. Usable hosts = 2^(32 - prefix) - 2. `169.254.169.254` = Cloud metadata link-local.**
+
+### Interview answer
+
+> "IPv4 uses 32-bit addresses divided into network and host portions by a subnet mask or CIDR prefix, while IPv6 expands to 128-bit addresses to eliminate address exhaustion. Usable IPv4 host capacity on a subnet is calculated as 2^(32 - prefix) - 2, reserving the network and broadcast addresses. Key special address ranges include RFC 1918 private spaces (10/8, 172.16/12, 192.168/16) and link-local addresses like 169.254.0.0/16. In cloud security, 169.254.169.254 is especially critical because it hosts the instance metadata service, a frequent target of Server-Side Request Forgery attacks."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+In this hands-on terminal lab, inspect your network interfaces, determine your assigned IPv4 address and CIDR prefix, calculate your subnet's usable host count, and locate the default gateway.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** Network architects size subnets according to workload growth, while security analysts investigate traffic alerts by immediately distinguishing public internet IPs from RFC 1918 internal addresses and link-local ranges.
+
+**Real incident: Capital One Breach (2019).** An attacker exploited an SSRF vulnerability in a misconfigured open-source Web Application Firewall (WAF) running on an Amazon EC2 instance. The attacker sent an HTTP request directing the WAF to fetch `http://169.254.169.254/latest/meta-data/iam/security-credentials/`. Because link-local traffic was not blocked from the container, the server returned temporary AWS credentials. The attacker used those credentials to access Amazon S3 buckets containing over 100 million customer credit applications. This incident prompted cloud providers to introduce token-based protections (IMDSv2) for link-local metadata endpoints.
+
+**Key takeaways**
+
+- IPv4 is 32 bits; IPv6 is 128 bits.
+- CIDR prefix denotes network bits; usable hosts on IPv4 are 2^(32 - prefix) - 2.
+- RFC 1918 reserves 10/8, 172.16/12, and 192.168/16 for private use.
+- `169.254.169.254` is the cloud metadata endpoint and must be secured against SSRF.

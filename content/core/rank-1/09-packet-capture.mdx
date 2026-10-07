@@ -1,0 +1,139 @@
+---
+id: core-r1-net-capture-01
+title: "Capturing and Reading Packets"
+track: core
+rank: 1
+module: networking
+order: 9
+estimated_minutes: 35
+objectives_covered: ["netplus:5.5"]
+mitre: ["T1040"]
+lab: core-r1-pkt-http-lab-01
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+**Packet capture (PCAP)** is the process of intercepting and recording raw data packets as they travel across a computer network interface.
+
+By default, an operating system's Network Interface Card (NIC) only processes frames addressed to its own MAC address, multicast groups, or the broadcast address (`FF:FF:FF:FF:FF:FF`). To capture all traffic traveling across the physical or wireless medium, the NIC must be placed into **promiscuous mode** (or monitor mode on wireless adapters).
+
+Captured packets are stored in standardized file formats (`.pcap` or `.pcapng`) and inspected using two primary industry tools:
+- **tcpdump**: A command-line packet analyzer for Linux/Unix used for fast, automated packet capture on headless servers.
+- **Wireshark**: The world's foremost graphical network protocol analyzer, providing deep protocol dissection, stream following, and display filtering.
+
+> **Legal and Authorization Note**: Packet sniffing captures raw data traversing communication channels, including passwords, private emails, and proprietary data. Capturing or intercepting network traffic without explicit authorization from the network owner violates privacy and cybercrime legislation, including Section 43/66 of India's Information Technology Act and global wiretap laws. Only sniff networks you own or have written permission to assess.
+
+### 2. Why it exists
+
+Network telemetry (like NetFlow or firewall logs) only tells you *metadata*: who talked to whom, when, and how many bytes were exchanged. Metadata cannot tell you:
+- What specific SQL query was sent inside an unencrypted database connection.
+- What error code an HTTP server returned inside an unexpected application failure.
+- What malware payload or reverse shell command was executed across the wire.
+
+Packet capture provides the ultimate, ground-truth forensic evidence. When troubleshooting obscure network performance issues or investigating advanced cyber intrusions, the raw packets never lie.
+
+### 3. How it works
+
+**Capturing on real Linux systems:**
+
+On a real production Linux server (which requires root/sudo privileges), administrators capture traffic using `tcpdump`:
+
+```text
+# On a real Linux machine (needs root):
+$ sudo tcpdump -i eth0 -n -w capture.pcap port 80 or port 443
+```
+
+- `-i eth0`: Specifies the network interface.
+- `-n`: Disables DNS reverse lookups for speed.
+- `-w capture.pcap`: Writes raw packets to a file.
+- `port 80 or port 443`: BPF (Berkeley Packet Filter) syntax to capture only web traffic.
+
+**Reading and Filtering with Display Filters:**
+
+When analyzing captures in an interactive viewer (like our lab's Wireshark-style capture viewer), analysts apply **display filters** to isolate relevant conversations among thousands of packets.
+
+Our learning platform supports the core Wireshark display-filter subset:
+
+| Filter Expression | Matches Packets Where |
+|---|---|
+| `http` or `dns` or `tls` | Protocol matches the specified application layer |
+| `ip.addr == 10.0.2.15` | Either source IP or destination IP is 10.0.2.15 |
+| `ip.src == 198.51.100.1` | Source IP exactly matches 198.51.100.1 |
+| `tcp.port == 80` | Either source or destination TCP port is 80 |
+| `tcp.flags.syn == 1 && tcp.flags.ack == 0` | Initial TCP SYN connection request probes |
+| `http.request.method == "POST"` | HTTP request method is POST (submitting form data) |
+| `http.response.code == 200` | HTTP response status is 200 OK |
+| `tls.handshake.extensions_server_name` | TLS Client Hello contains Server Name Indication (SNI) |
+| `frame contains "password"` | Packet payload or headers contain the substring "password" |
+
+**Following TCP Streams:**
+
+A single HTTP transaction or file download is split across dozens of TCP segments. In Wireshark, right-clicking a packet and selecting **Follow TCP Stream** reassembles the conversation in chronological order, displaying client requests (cyan) and server responses (pink) as human-readable text.
+
+Let's check our local interface name before starting the lab:
+
+```console
+$ ip a
+```
+
+The output confirms our interface names and link states.
+
+### 4. How attackers abuse it
+
+- **Network Sniffing (ATT&CK T1040)**: Attackers with local access (or who have compromised a router or switch) place interfaces into promiscuous mode to sniff network traffic. Any legacy unencrypted protocol (HTTP, Telnet, FTP, LDAP, basic SMTP) leaks plain-text credentials and session tokens to the attacker.
+- **Credential Harvesting from Clear-Text Sessions**: Tools like Ettercap or Wireshark automatically extract user credentials submitted via plain-text HTTP POST requests or basic authentication headers.
+- **Rogue Wi-Fi Access Points (Evil Twin)**: Attackers deploy rogue access points in public venues (coffee shops, airports) to capture and inspect all data sent by connecting users.
+
+### 5. How defenders detect it
+
+- **Promiscuous mode detection**: Host monitoring tools flag NICs that enter promiscuous mode or detect local packet capture drivers (libpcap / WinPcap / Npcap) installed on unauthorized workstations.
+- **Network access control**: Enterprise switches prevent unauthorized laptops from connecting to network ports and running packet sniffers.
+- **Encrypted traffic baselining**: Defenders monitor the proportion of unencrypted traffic on internal networks, aiming for 100% encryption in transit.
+
+### 6. How to prevent/fix it
+
+- **Encrypt all network traffic**: Transition every internal service to HTTPS, SSH, SFTP, and LDAPS. When traffic is encrypted with modern TLS, a sniffer only observes indecipherable ciphertext.
+- **Use switched networks with 802.1X port authentication**: Ensure rogue devices cannot join the local Ethernet broadcast domain.
+- **Deploy VPNs on untrusted networks**: Instruct remote employees to always tunnel traffic through a secure, encrypted VPN when connecting to public or hospitality Wi-Fi networks.
+
+### 7. Common mistakes
+
+- **Confusing capture filters with display filters**: Capture filters (BPF syntax, like `port 80`) dictate what packets tcpdump saves to disk. Display filters (Wireshark syntax, like `http.request.method == "POST"`) filter packets already loaded in memory.
+- **Assuming switched networks prevent all sniffing**: While switches isolate unicast traffic under normal conditions, attacks like ARP poisoning or MAC flooding turn switches into hubs, exposing unicast traffic to sniffers.
+- **Overlooking plain-text internal traffic**: Thinking "we are behind the corporate firewall, so plain HTTP is fine" ignores the fact that most data breaches involve attackers who already established an internal foothold.
+
+### Remember it like this
+
+> **tcpdump = CLI capture on servers · Wireshark = GUI dissection and display filters · Follow TCP Stream = Reassembles full conversation · Promiscuous mode = Captures all local wire traffic.**
+
+### Interview answer
+
+> "Packet capture records raw network frames at the Network Interface Card, typically by enabling promiscuous mode to capture all local link traffic. On servers, we use tcpdump to capture traffic to PCAP files using Berkeley Packet Filters (BPF), and Wireshark to perform deep packet dissection, display filtering, and TCP stream reassembly. In security assessments, Network Sniffing (ATT&CK T1040) exposes plain-text credentials, session cookies, and sensitive payloads transmitted over unencrypted protocols. The primary defense against packet sniffing is universal encryption in transit — using TLS, SSH, and VPNs — so that even if packets are intercepted, the payload remains unreadable."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+In this packet capture lab, inspect a recording of a clear-text HTTP login session followed by a secure TLS connection. Filter for the HTTP POST request, follow the TCP stream to extract the submitted plain-text username and the server's verification flag, and identify the Server Name Indication (SNI) contacted in the subsequent TLS handshake.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** Digital forensics and incident response (DFIR) specialists analyze full packet captures (FPC) during active intrusions to reconstruct attacker commands, verify data exfiltration, and extract malware samples.
+
+**Real incident: Firesheep and the Death of Clear-Text Web (2010).** In 2010, security researcher Eric Butler released **Firesheep**, a Firefox browser extension that automated packet sniffing on open Wi-Fi networks. When users at a coffee shop logged into Facebook, Twitter, or Yahoo, their initial logins used HTTPS, but subsequent page browsing defaulted to plain HTTP. Firesheep captured the unencrypted session cookies floating across the Wi-Fi airwaves and gave the attacker a one-click button to hijack the victim's social media accounts. Firesheep caused a global uproar and single-handedly forced the technology industry (Google, Facebook, Twitter) to adopt **HTTPS everywhere**, ensuring all session cookies are permanently encrypted.
+
+**Key takeaways**
+
+- Packet capture records raw wire data for forensic investigation and protocol debugging.
+- tcpdump is used for CLI capture; Wireshark is used for deep dissection and display filters.
+- Following a TCP stream reassembles fragmented packets into a readable conversation.
+- Clear-text protocols leak credentials and session cookies; universal TLS encryption is mandatory.

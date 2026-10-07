@@ -1,0 +1,66 @@
+lesson: core-r1-net-dhcp-nat-01
+questions:
+  - id: q1
+    prompt: "What is the four-step sequence exchanged between a client and a DHCP server to obtain an IP lease?"
+    objectives: ["netplus:3.5"]
+    options:
+      - text: "Discover, Offer, Request, Acknowledge (DORA)"
+        correct: true
+        explanation: "Correct. The client broadcasts Discover, the server replies with Offer, the client sends Request, and the server confirms with Acknowledge."
+      - text: "SYN, SYN-ACK, ACK, FIN"
+        correct: false
+        explanation: "This is the TCP connection establishment and teardown sequence."
+      - text: "Query, Response, Authorize, Bind"
+        correct: false
+        explanation: "This does not correspond to the standard DHCP protocol handshake."
+      - text: "Probe, Announce, Verify, Lease"
+        correct: false
+        explanation: "The standard DHCP protocol steps are Discover, Offer, Request, and Acknowledge."
+  - id: q2
+    prompt: "How does Port Address Translation (PAT / NAPT) allow hundreds of internal devices to share a single public IPv4 address?"
+    objectives: ["netplus:1.7"]
+    options:
+      - text: "It maps each internal host's private IP and port to a unique source port on the public IP in a stateful translation table."
+        correct: true
+        explanation: "Correct. PAT rewrites the source port on outbound packets and maintains a table mapping internal socket addresses to external ports."
+      - text: "It compresses IP headers into 8-bit tokens."
+        correct: false
+        explanation: "NAT rewrites IP and port headers; it does not compress headers."
+      - text: "It assigns a permanent public IPv4 address to every internal device sequentially."
+        correct: false
+        explanation: "This describes Static 1:1 NAT, which requires a separate public IP for each internal host."
+      - text: "It encrypts internal IP addresses so routers cannot read them."
+        correct: false
+        explanation: "NAT does not encrypt addresses; it rewrites them in clear text."
+  - id: q3
+    prompt: "Which switch security feature prevents an attacker from deploying a rogue DHCP server on a local Ethernet segment?"
+    objectives: ["netplus:3.5"]
+    options:
+      - text: "DHCP Snooping"
+        correct: true
+        explanation: "Correct. DHCP Snooping classifies switch ports as trusted or untrusted, discarding unauthorized DHCP server replies appearing on untrusted ports."
+      - text: "Port mirroring (SPAN)"
+        correct: false
+        explanation: "Port mirroring copies packets for analysis; it does not block rogue DHCP packets."
+      - text: "Spanning Tree Protocol (STP)"
+        correct: false
+        explanation: "STP prevents Layer 2 switching loops, not rogue DHCP servers."
+      - text: "Link Aggregation (LACP)"
+        correct: false
+        explanation: "LACP combines multiple physical switch links for redundancy and bandwidth."
+  - id: q4
+    prompt: "How was DHCP Option 121 exploited in the 2024 TunnelVision vulnerability (CVE-2024-3661)?"
+    objectives: ["netplus:3.5"]
+    options:
+      - text: "A rogue DHCP server pushed specific static routes that took precedence over the client's default VPN tunnel route, leaking traffic unencrypted."
+        correct: true
+        explanation: "Correct. DHCP Option 121 allows pushing classless static routes. Because OS route tables prefer higher CIDR prefixes over default 0.0.0.0/0 routes, traffic was diverted outside the VPN."
+      - text: "It crashed the VPN client software via a buffer overflow in the DNS parser."
+        correct: false
+        explanation: "The attack did not crash the software; it used valid routing protocol behavior to decloak traffic."
+      - text: "It cracked the AES-256 encryption keys used by the VPN tunnel."
+        correct: false
+        explanation: "The tunnel's cryptography remained unbroken; traffic was simply routed around the tunnel."
+      - text: "It spoofed the VPN provider's SSL certificate."
+        correct: false
+        explanation: "Certificate validation was not bypassed; routing rules directed traffic away from the tunnel."
