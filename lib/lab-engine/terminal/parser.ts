@@ -1,8 +1,11 @@
 import { resolvePath, type Vfs } from "./vfs";
 
+/** A redirect, in the order written: `> f`, `>> f`, `2> f`, `2>> f` or `2>&1` (stderr joins stdout). */
+export type Redirect = { fd: 1 | 2; op: ">" | ">>"; path: string } | { fd: 2; toStdout: true };
+
 export type ParsedCommand = {
   argv: string[];
-  redirect?: { op: ">" | ">>"; path: string };
+  redirects?: Redirect[];
   /** Indexes of args whose wildcards were quoted, so they must not be glob-expanded. */
   literal?: number[];
 };
@@ -11,7 +14,8 @@ export type ParseError = { error: string };
 
 const UNSUPPORTED = "syntax error: ';' and '&&' are not supported in this lab shell";
 
-type Token = { kind: "word"; value: string; quotedWildcard: boolean } | { kind: "op"; value: "|" | ">" | ">>" };
+type RedirectOp = ">" | ">>" | "2>" | "2>>" | "2>&1";
+type Token = { kind: "word"; value: string; quotedWildcard: boolean } | { kind: "op"; value: "|" | RedirectOp };
 
 function isNameChar(c: string | undefined, first: boolean): boolean {
   return !!c && (first ? /[A-Za-z_]/.test(c) : /[A-Za-z0-9_]/.test(c));
@@ -67,6 +71,11 @@ function tokenize(line: string, env: Record<string, string>): Token[] | ParseErr
         tokens.push({ kind: "op", value: c });
         i++;
       }
+    } else if (c === "2" && !inWord && line[i + 1] === ">") {
+      // "2>" only means stderr at the start of a word, like bash.
+      const op = line.startsWith("2>&1", i) ? "2>&1" : line.startsWith("2>>", i) ? "2>>" : "2>";
+      tokens.push({ kind: "op", value: op });
+      i += op.length;
     } else if (c === ";" || (c === "&" && line[i + 1] === "&")) {
       return { error: UNSUPPORTED };
     } else if (c === "\\") {
@@ -147,12 +156,16 @@ export function parseLine(line: string, env: Record<string, string>): Pipeline |
       if (current.argv.length === 0) return { error: "syntax error near unexpected token `|'" };
       commands.push(current);
       current = { argv: [] };
+    } else if (t.value === "2>&1") {
+      (current.redirects ??= []).push({ fd: 2, toStdout: true });
     } else {
       const target = tokens[i + 1];
       if (!target || target.kind !== "word") {
         return { error: `syntax error near unexpected token \`${target ? target.value : "newline"}'` };
       }
-      current.redirect = { op: t.value, path: target.value };
+      const fd = t.value.startsWith("2") ? 2 : 1;
+      const op = t.value.endsWith(">>") ? ">>" : ">";
+      (current.redirects ??= []).push({ fd, op, path: target.value });
       i++;
     }
   }

@@ -5,13 +5,13 @@ import { fixtureWorld } from "./fixture-world";
 describe("parseLine", () => {
   test("quotes, variables, pipes and redirects", () => {
     expect(parseLine(`echo "a b" 'c $HOME' $HOME | grep a > out.txt`, { HOME: "/h" })).toEqual({
-      commands: [{ argv: ["echo", "a b", "c $HOME", "/h"] }, { argv: ["grep", "a"], redirect: { op: ">", path: "out.txt" } }],
+      commands: [{ argv: ["echo", "a b", "c $HOME", "/h"] }, { argv: ["grep", "a"], redirects: [{ fd: 1, op: ">", path: "out.txt" }] }],
     });
   });
 
   test("append redirect and ${VAR}", () => {
     expect(parseLine("echo ${USER}x >> log", { USER: "op" })).toEqual({
-      commands: [{ argv: ["echo", "opx"], redirect: { op: ">>", path: "log" } }],
+      commands: [{ argv: ["echo", "opx"], redirects: [{ fd: 1, op: ">>", path: "log" }] }],
     });
   });
 
@@ -41,7 +41,7 @@ describe("parseLine", () => {
 
   test("operators glued to words", () => {
     expect(parseLine("cat a|grep b>c", {})).toEqual({
-      commands: [{ argv: ["cat", "a"] }, { argv: ["grep", "b"], redirect: { op: ">", path: "c" } }],
+      commands: [{ argv: ["cat", "a"] }, { argv: ["grep", "b"], redirects: [{ fd: 1, op: ">", path: "c" }] }],
     });
   });
 
@@ -85,5 +85,24 @@ describe("expandGlobs", () => {
 
   test("unreadable directories match nothing", () => {
     expect(expandGlobs(["ls", "/srv/locked/*"], "/", vfs(), "/home/op", { user: "op" })).toEqual(["ls", "/srv/locked/*"]);
+  });
+});
+
+describe("stderr redirects", () => {
+  const p = (line: string) => parseLine(line, {});
+  test("2>, 2>> and 2>&1 are kept in order, after any argument", () => {
+    expect(p("cat a 2> err")).toEqual({ commands: [{ argv: ["cat", "a"], redirects: [{ fd: 2, op: ">", path: "err" }] }] });
+    expect(p("cat a 2>>err > out")).toEqual({
+      commands: [{ argv: ["cat", "a"], redirects: [{ fd: 2, op: ">>", path: "err" }, { fd: 1, op: ">", path: "out" }] }],
+    });
+    expect(p("ls x > f 2>&1")).toEqual({ commands: [{ argv: ["ls", "x"], redirects: [{ fd: 1, op: ">", path: "f" }, { fd: 2, toStdout: true }] }] });
+    expect(p("ls x 2>&1 | wc -l")).toEqual({ commands: [{ argv: ["ls", "x"], redirects: [{ fd: 2, toStdout: true }] }, { argv: ["wc", "-l"] }] });
+  });
+  test("a 2 inside a word is just text", () => {
+    expect(p("echo a2>f")).toEqual({ commands: [{ argv: ["echo", "a2"], redirects: [{ fd: 1, op: ">", path: "f" }] }] });
+    expect(p("echo 2")).toEqual({ commands: [{ argv: ["echo", "2"] }] });
+  });
+  test("a redirect without a target", () => {
+    expect(p("ls 2>")).toEqual({ error: "syntax error near unexpected token `newline'" });
   });
 });
