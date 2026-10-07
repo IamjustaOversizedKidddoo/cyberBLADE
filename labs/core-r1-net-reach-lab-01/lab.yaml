@@ -1,0 +1,35 @@
+id: core-r1-net-reach-lab-01
+title: "Network Reachability & Hops"
+type: terminal
+track: core
+rank: 1
+estimated_minutes: 20
+briefing: briefing.md
+dataset:
+  generator: reach_lab
+  params: {}
+objectives:
+  - id: o1
+    prompt: "Which server listed in ~/servers.txt fails to respond to ICMP ping?"
+    check: { kind: flag, answer_from: generator.unreachable }
+  - id: o2
+    prompt: "How many network hops are between your host and beacon.example?"
+    check: { kind: flag, answer_from: generator.hops }
+  - id: o3
+    prompt: "What is the MAC address of your default gateway?"
+    check: { kind: flag, answer_from: generator.gwMac, case_sensitive: false }
+hints:
+  o1:
+    - "Read the list of servers in your home directory."
+    - "Send test ICMP packets to each host to verify if they reply."
+    - "Run cat ~/servers.txt and test each with ping -c 1 <hostname>."
+  o2:
+    - "Trace the network path routers take to reach the target host."
+    - "Count each numbered hop displayed in the output path."
+    - "Run traceroute beacon.example and count the total hops."
+  o3:
+    - "The ARP/neighbor table caches MAC addresses of local nodes."
+    - "Find the hardware address corresponding to your default gateway IP."
+    - "Run ip neigh to view the gateway MAC address."
+xp: 100
+mitre: []

@@ -52,13 +52,14 @@ test("normalizeAnswer trims and collapses inner whitespace", () => {
 describe("generateLab", () => {
   const fixtureGen: Generator = (rng, params) => {
     const flag = `NEON{${rng.hex(12)}}`;
+    const world = {
+      hostname: "h",
+      user: "op",
+      home: "/home/op",
+      root: dir({ home: dir({ op: dir({ "flag.txt": file(flag) }, { owner: "op" }) }) }),
+    };
     return {
-      world: {
-        hostname: "h",
-        user: "op",
-        home: "/home/op",
-        root: dir({ home: dir({ op: dir({ "flag.txt": file(flag) }, { owner: "op" }) }) }),
-      },
+      env: { kind: "terminal" as const, world },
       answers: { flag, user: String(params.name) },
     };
   };

@@ -48,9 +48,9 @@
   - Lesson and lab pages: when `!canAccessRank`, `redirect("/learn/core?locked=" + rank)` *before* `startLab` runs (no attempt created). The rank map shows `lockedNotice` in a `role="status"` box when `?locked=` is a valid rank.
   - Rank map: section per rank with id `rank-<n>`, heading `rank_<n> · <name>`; ranks above the operator's show their lesson titles greyed with a padlock and no links; each rank shows its challenge card (`getRankSummary(ctx, id, n)`) only when a challenge lab for that rank exists (`findChallengeLab` throws → no card).
 
-- [ ] **Step 1: Failing tests:** `canAccessRank(0,0)` true, `(0,1)` false, `(1,0)` true, `(2,2)` true; `lockedNotice(1) === "Locked — pass the Rank 0 challenge to open this."`. E2E (desktop): new operator visits `/learn/core-r1-net-osi-01` → URL `/learn/core?locked=1` and the notice is visible; `/labs/core-r1-net-ip-lab-01` → same; `.data-e2e/progress.json` gains no attempt for that lab (read via the rank map showing no lab state — assert the lab page never rendered a terminal).
-- [ ] **Step 2:** Run → FAIL. Implement. Run → PASS (unit; the e2e needs Task 7's content — mark it `test.fixme` until then and un-fixme it in Task 8).
-- [ ] **Step 3:** Commit `feat(progress): rank-generic learning map and rank gating`.
+- [x] **Step 1: Failing tests:** `canAccessRank(0,0)` true, `(0,1)` false, `(1,0)` true, `(2,2)` true; `lockedNotice(1) === "Locked — pass the Rank 0 challenge to open this."`. E2E (desktop): new operator visits `/learn/core-r1-net-osi-01` → URL `/learn/core?locked=1` and the notice is visible; `/labs/core-r1-net-ip-lab-01` → same; `.data-e2e/progress.json` gains no attempt for that lab (read via the rank map showing no lab state — assert the lab page never rendered a terminal).
+- [x] **Step 2:** Run → FAIL. Implement. Run → PASS (unit; the e2e needs Task 7's content — mark it `test.fixme` until then and un-fixme it in Task 8).
+- [x] **Step 3:** Commit `feat(progress): rank-generic learning map and rank gating`.
 
 ---
 
@@ -79,10 +79,10 @@
   - `traceroute <host>`: `traceroute to <name> (<ip>), 30 hops max, 60 byte packets`, then ` 1  _gateway (<gw>)  0.412 ms  0.398 ms  0.381 ms`, router hops ` N  <ip> (<ip>)  a ms  b ms  c ms`, silent hops ` N  * * *`, last hop the target.
   - All commands read only `world.network`; a world without one → `ip`: shows only `lo`; others behave as "no network" (`connect: Network is unreachable` for ping, code 2; `curl: (7) …`).
 
-- [ ] **Step 1: Failing tests** per command — pinned strings above for the fixture network (eth0 `10.0.2.15/24`, gw `10.0.2.2`, resolver `127.0.0.53`, hosts `www.example.com` (CNAME `example.com`), `example.com A 203.0.113.10` — RFC 5737 addresses only), plus: ping without `-c`; unknown name; unreachable host; `dig` NXDOMAIN; `curl -I` redirect + `-L`; `ss -tulnp`; traceroute with a `* * *` hop; a world with no network.
-- [ ] **Step 2:** Run → FAIL. Implement `network.ts`, then one command at a time until its tests pass.
-- [ ] **Step 3:** Extend `demoWorld()` with a network (eth0 `10.0.2.15/24` DHCP, gw `10.0.2.2`, resolver `127.0.0.53`, hosts `example.com`, `www.example.com`, `intranet.corp.example` with HTTP pages, one unreachable host, listeners sshd 22 and systemd-resolved 53) and `/etc/resolv.conf` (`nameserver 127.0.0.53`), `/etc/hosts`. `npm test` → PASS (existing tests unaffected: `help` lists the new commands — update its expected list).
-- [ ] **Step 4:** Commit `feat(terminal): simulated network and ip/ping/dig/curl/ss/traceroute`.
+- [x] **Step 1: Failing tests** per command — pinned strings above for the fixture network (eth0 `10.0.2.15/24`, gw `10.0.2.2`, resolver `127.0.0.53`, hosts `www.example.com` (CNAME `example.com`), `example.com A 203.0.113.10` — RFC 5737 addresses only), plus: ping without `-c`; unknown name; unreachable host; `dig` NXDOMAIN; `curl -I` redirect + `-L`; `ss -tulnp`; traceroute with a `* * *` hop; a world with no network.
+- [x] **Step 2:** Run → FAIL. Implement `network.ts`, then one command at a time until its tests pass.
+- [x] **Step 3:** Extend `demoWorld()` with a network (eth0 `10.0.2.15/24` DHCP, gw `10.0.2.2`, resolver `127.0.0.53`, hosts `example.com`, `www.example.com`, `intranet.corp.example` with HTTP pages, one unreachable host, listeners sshd 22 and systemd-resolved 53) and `/etc/resolv.conf` (`nameserver 127.0.0.53`), `/etc/hosts`. `npm test` → PASS (existing tests unaffected: `help` lists the new commands — update its expected list).
+- [x] **Step 4:** Commit `feat(terminal): simulated network and ip/ping/dig/curl/ss/traceroute`.
 
 ---
 
@@ -102,9 +102,9 @@
   - `LabWorkspace` props: `env: LabEnv` (terminal → `TerminalLab`; packet → `PacketLab` from Task 5, rendered as "Coming in this phase" placeholder until Task 5).
   - Content gate: lessons whose lab is not a terminal lab run their console commands against `demoWorld()`.
 
-- [ ] **Step 1: Failing test** `env.test.ts`: `generateLab` on a `type: packet` lab whose generator returns a terminal env throws `"lab x: generator returned terminal env for a packet lab"`.
-- [ ] **Step 2:** Refactor to `env` everywhere; run `npm test`, `npm run check:content` and `npx playwright test tests/e2e/rank-0.spec.ts tests/e2e/lab-terminal.spec.ts` → all PASS (behaviour unchanged for Rank 0).
-- [ ] **Step 3:** Commit `refactor(labs): environment-generic labs (terminal | packet)`.
+- [x] **Step 1: Failing test** `env.test.ts`: `generateLab` on a `type: packet` lab whose generator returns a terminal env throws `"lab x: generator returned terminal env for a packet lab"`.
+- [x] **Step 2:** Refactor to `env` everywhere; run `npm test`, `npm run check:content` and `npx playwright test tests/e2e/rank-0.spec.ts tests/e2e/lab-terminal.spec.ts` → all PASS (behaviour unchanged for Rank 0).
+- [x] **Step 3:** Commit `refactor(labs): environment-generic labs (terminal | packet)`.
 
 ---
 
@@ -128,9 +128,9 @@
   - empty string → matches everything
 - `stream.ts`: `followTcpStream(packets, packetNo): { client: string; server: string; text: string } | null` — the conversation (4-tuple) of that packet, payloads in order, client→server first; non-TCP → `null`.
 
-- [ ] **Step 1: Failing tests:** each field/operator on a fixture capture (≈12 packets: ARP pair, DNS query/response, TCP handshake, HTTP POST + 200, TLS ClientHello, a RST); `ip.addr == 10.0.2.15 && tcp.port == 80`; `!dns`; `dns.qry.name contains "example"`; `frame contains "password"`; each exact error above (Review Focus #2); `""` matches all; `followTcpStream` returns the HTTP request+response text; performance — build 3,000 packets, `compileFilter('tcp.port == 80 and frame contains "x"')` over all < 50 ms (Review Focus #5); `infoOf` strings for each protocol.
-- [ ] **Step 2:** Run → FAIL. Implement (hand-written tokenizer + recursive-descent parser → predicate). Run → PASS.
-- [ ] **Step 3:** Commit `feat(packet): capture model, Wireshark-style display filters, follow TCP stream`.
+- [x] **Step 1: Failing tests:** each field/operator on a fixture capture (≈12 packets: ARP pair, DNS query/response, TCP handshake, HTTP POST + 200, TLS ClientHello, a RST); `ip.addr == 10.0.2.15 && tcp.port == 80`; `!dns`; `dns.qry.name contains "example"`; `frame contains "password"`; each exact error above (Review Focus #2); `""` matches all; `followTcpStream` returns the HTTP request+response text; performance — build 3,000 packets, `compileFilter('tcp.port == 80 and frame contains "x"')` over all < 50 ms (Review Focus #5); `infoOf` strings for each protocol.
+- [x] **Step 2:** Run → FAIL. Implement (hand-written tokenizer + recursive-descent parser → predicate). Run → PASS.
+- [x] **Step 3:** Commit `feat(packet): capture model, Wireshark-style display filters, follow TCP stream`.
 
 ---
 
@@ -145,9 +145,9 @@
 - Consumes: Task 4 (`compileFilter`, `infoOf`, `protocolOf`, `followTcpStream`), Task 3 (`LabEnv`).
 - Produces: `<PacketLab capture />` — filter bar (input + Apply; Enter applies; invalid filter shows the error in `role="alert"` and keeps the last good list; filter input border pink when invalid), table columns **No. · Time · Source · Destination · Protocol · Length · Info** (`Time` with 6 decimals), row click selects and shows a details tree (one collapsible section per layer, field `name: value` lines in mono), "Follow TCP stream" button for TCP packets opens `StreamView` (client text cyan, server text pink, a "Back to packets" button), status line `Displayed: <shown> of <total> packets`. Keyboard: rows are buttons, arrow keys move selection. Mobile: table scrolls horizontally inside its own container; the page itself never scrolls sideways.
 
-- [ ] **Step 1: Failing tests:** renders all packets and `Displayed: 12 of 12`; applying `dns` shows only DNS rows and `Displayed: 2 of 12`; invalid filter `ip.addr = 1.2.3.4` shows the exact error and still lists the previous rows; clicking an HTTP packet shows an `Hypertext Transfer Protocol` section; "Follow TCP stream" shows the request line.
-- [ ] **Step 2:** Run → FAIL. Implement. Run → PASS.
-- [ ] **Step 3:** Commit `feat(packet): packet lab UI — filter bar, packet list, details, follow stream`.
+- [x] **Step 1: Failing tests:** renders all packets and `Displayed: 12 of 12`; applying `dns` shows only DNS rows and `Displayed: 2 of 12`; invalid filter `ip.addr = 1.2.3.4` shows the exact error and still lists the previous rows; clicking an HTTP packet shows an `Hypertext Transfer Protocol` section; "Follow TCP stream" shows the request line.
+- [x] **Step 2:** Run → FAIL. Implement. Run → PASS.
+- [x] **Step 3:** Commit `feat(packet): packet lab UI — filter bar, packet list, details, follow stream`.
 
 ---
 
@@ -168,9 +168,9 @@
 | `core-r1-pkt-dns-lab-01` | packet | DNS | o1 the domain that returned NXDOMAIN (`nxdomain`, case-insensitive), o2 the IP that `<name>` resolved to (`resolved`), o3 the host that sent the most DNS queries (`chatty`) |
 | `core-r1-pkt-http-lab-01` | packet | Packet capture | o1 the username sent in the plain-HTTP login (`username`, case-sensitive), o2 the flag in the server's reply (`flag`), o3 the TLS server name (SNI) contacted right after (`sni`, case-insensitive) — xp 150 |
 
-- [ ] **Step 1: Failing solve tests** — 5 seeds each, solving like a learner: terminal labs via `createShell(env.world)` commands (`ip a`, `ip route`, `cat ~/servers.txt` + `ping -c 1 …`, `traceroute`, `ip neigh`, `curl -I`, `curl -L`, `curl`); packet labs via `compileFilter` + reading `infoOf`/fields (`tcp.flags.syn == 1 && tcp.flags.ack == 0` to find the scanner and probes; `tcp.flags.syn == 1 && tcp.flags.ack == 1` for open ports; `dns.flags.response == 1` and `NXDOMAIN` in info; `http.request.method == "POST"` + `followTcpStream`; `tls.handshake.extensions_server_name`). Plus Review Focus #4: `checkObjective(dnsLab, answers, "o1", answer.toUpperCase())` true; `checkObjective(ipLab, answers, "o1", " " + ip + " ")` true; `ip + "."` false.
-- [ ] **Step 2:** Run → FAIL. Implement builder + generators + yaml/briefings (briefings say the network is simulated and the learner is authorised to inspect it). Run → PASS. Captures stay ≤ 3,000 packets (assert in the builder test).
-- [ ] **Step 3:** Commit `feat(labs): rank 1 networking labs (3 terminal, 3 packet) with solve tests`.
+- [x] **Step 1: Failing solve tests** — 5 seeds each, solving like a learner: terminal labs via `createShell(env.world)` commands (`ip a`, `ip route`, `cat ~/servers.txt` + `ping -c 1 …`, `traceroute`, `ip neigh`, `curl -I`, `curl -L`, `curl`); packet labs via `compileFilter` + reading `infoOf`/fields (`tcp.flags.syn == 1 && tcp.flags.ack == 0` to find the scanner and probes; `tcp.flags.syn == 1 && tcp.flags.ack == 1` for open ports; `dns.flags.response == 1` and `NXDOMAIN` in info; `http.request.method == "POST"` + `followTcpStream`; `tls.handshake.extensions_server_name`). Plus Review Focus #4: `checkObjective(dnsLab, answers, "o1", answer.toUpperCase())` true; `checkObjective(ipLab, answers, "o1", " " + ip + " ")` true; `ip + "."` false.
+- [x] **Step 2:** Run → FAIL. Implement builder + generators + yaml/briefings (briefings say the network is simulated and the learner is authorised to inspect it). Run → PASS. Captures stay ≤ 3,000 packets (assert in the builder test).
+- [x] **Step 3:** Commit `feat(labs): rank 1 networking labs (3 terminal, 3 packet) with solve tests`.
 
 ---
 
@@ -194,10 +194,10 @@ Rules: `track: core`, `rank: 1`, `module: networking`, `order` = #, `estimated_m
 
 Coverage additions (`target_rank: 1` unless noted; mark these new ids "verify" in the file header): `netplus:1.2` appliances/functions (firewalls, proxies), `netplus:1.7` IPv4 addressing, `netplus:1.8` modern environments incl. IPv6, `netplus:2.1` routing, `netplus:2.2` switching (MAC/ARP/VLAN basics), `netplus:3.5` network services (DHCP, DNS, NTP), `netplus:5.5` troubleshooting tools (ping, traceroute, dig, packet capture); `secplus:1.4` cryptographic solutions (TLS) `target_rank: 2`; `secplus:3.2` securing infrastructure (firewalls, proxies) `target_rank: 2`. Keep `built_ranks: [0]` until Rank 1 is complete (Plan 2C).
 
-- [ ] **Step 1:** Write lessons 1–3 + checks; all `console` examples run against `demoWorld()` (capture real output with a scratch script before pasting); `npm run check:content` → PASS.
-- [ ] **Step 2:** Lessons 4–6 + checks → PASS.
-- [ ] **Step 3:** Lessons 7–9 + checks → PASS.
-- [ ] **Step 4:** Commit `content(core): rank 1 networking lessons (draft, pending expert review)`.
+- [x] **Step 1:** Write lessons 1–3 + checks; all `console` examples run against `demoWorld()` (capture real output with a scratch script before pasting); `npm run check:content` → PASS.
+- [x] **Step 2:** Lessons 4–6 + checks → PASS.
+- [x] **Step 3:** Lessons 7–9 + checks → PASS.
+- [x] **Step 4:** Commit `content(core): rank 1 networking lessons (draft, pending expert review)`.
 
 ---
 
@@ -207,7 +207,7 @@ Coverage additions (`target_rank: 1` unless noted; mark these new ids "verify" i
 - Modify: `tests/e2e/rank-gate.spec.ts` (un-`fixme`), `tests/e2e/helpers/` (add `promoteToRank(page, n)` that drives the Rank 0 journey via the existing recipe module — extract the recipe functions from `rank-0.spec.ts` into `tests/e2e/helpers/rank0.ts`)
 - Create: `tests/e2e/rank-1-networking.spec.ts`, `tests/e2e/helpers/packet.ts` (`applyFilter(page, filter)`, `rows(page)` → visible Info/Source/Destination texts)
 
-- [ ] **Step 1: Write the tests** (desktop): a promoted operator sees `rank_1 · Operator` on the rank map with 9 networking lessons; opens lesson 4, answers its checks (`answerAllChecks`), opens the scan packet lab, applies `tcp.flags.syn == 1 && tcp.flags.ack == 1`, reads the open ports and the scanner from the rows, submits all three objectives, sees "Lab complete" and "Continue to next lesson: DNS — The Internet's Phonebook →". Mobile: a packet lab page has no horizontal page scroll (the table scrolls inside its own box).
-- [ ] **Step 2:** `npm run test:e2e` → PASS. Full gate: `npm run lint && npm run typecheck && npm test && npm run check:content && npm run build` → all exit 0.
-- [ ] **Step 3:** Commit `test(e2e): rank gate and rank 1 networking journey`.
-- [ ] **Step 4:** Owner gate: the 9 networking lessons stay `draft` pending human expert review; list them in the final message.
+- [x] **Step 1: Write the tests** (desktop): a promoted operator sees `rank_1 · Operator` on the rank map with 9 networking lessons; opens lesson 4, answers its checks (`answerAllChecks`), opens the scan packet lab, applies `tcp.flags.syn == 1 && tcp.flags.ack == 1`, reads the open ports and the scanner from the rows, submits all three objectives, sees "Lab complete" and "Continue to next lesson: DNS — The Internet's Phonebook →". Mobile: a packet lab page has no horizontal page scroll (the table scrolls inside its own box).
+- [x] **Step 2:** `npm run test:e2e` → PASS. Full gate: `npm run lint && npm run typecheck && npm test && npm run check:content && npm run build` → all exit 0.
+- [x] **Step 3:** Commit `test(e2e): rank gate and rank 1 networking journey`.
+- [x] **Step 4:** Owner gate: the 9 networking lessons stay `draft` pending human expert review; list them in the final message.

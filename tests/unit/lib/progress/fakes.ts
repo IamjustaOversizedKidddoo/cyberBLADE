@@ -3,6 +3,7 @@ import type { Lesson } from "@/lib/content/schema";
 import type { Generator } from "@/lib/generators";
 import { dir, file } from "@/lib/lab-engine/terminal/build";
 import { labSchema, type LoadedLab } from "@/lib/lab-engine/lab-schema";
+import type { LabEnv } from "@/lib/lab-engine/env";
 import type { OperatorStore } from "@/lib/identity/operator-store";
 import type { Operator } from "@/lib/identity/types";
 import type { ContentSource, Ctx } from "@/lib/progress/service";
@@ -61,13 +62,14 @@ const checks = (lessonId: string): CheckSet =>
 const flagGen: Generator = (rng) => {
   const flag = `NEON{${rng.hex(12)}}`;
   const word = rng.pick(["alpha", "bravo", "charlie", "delta"]);
+  const world = {
+    hostname: "lab",
+    user: "op",
+    home: "/home/op",
+    root: dir({ home: dir({ op: dir({ "flag.txt": file(`${flag}\n`), "word.txt": file(`${word}\n`) }, { owner: "op" }) }) }),
+  };
   return {
-    world: {
-      hostname: "lab",
-      user: "op",
-      home: "/home/op",
-      root: dir({ home: dir({ op: dir({ "flag.txt": file(`${flag}\n`), "word.txt": file(`${word}\n`) }, { owner: "op" }) }) }),
-    },
+    env: { kind: "terminal" as const, world },
     answers: { flag, word },
   };
 };
@@ -136,9 +138,16 @@ export function makeCtx(now = new Date("2026-10-07T10:00:00Z")) {
 }
 
 /** Reads an answer out of the world the browser got, like a learner would. */
-export function readFromWorld(world: { root: unknown }, name: "flag.txt" | "word.txt"): string {
-  const root = world.root as { children: { home: { children: { op: { children: Record<string, { content: string }> } } } } };
-  return root.children.home.children.op.children[name].content.trim();
+export function readFromWorld(envOrWorld: LabEnv | { root: unknown }, name: "flag.txt" | "word.txt"): string {
+  if ("kind" in envOrWorld && envOrWorld.kind === "terminal") {
+    const root = envOrWorld.world.root as unknown as { children: { home: { children: { op: { children: Record<string, { content: string }> } } } } };
+    return root.children.home.children.op.children[name].content.trim();
+  }
+  if ("root" in envOrWorld) {
+    const root = envOrWorld.root as unknown as { children: { home: { children: { op: { children: Record<string, { content: string }> } } } } };
+    return root.children.home.children.op.children[name].content.trim();
+  }
+  throw new Error("readFromWorld called on non-terminal env");
 }
 
 /** Where the correct option ("right", option 0 in the file) is shown to this learner. */

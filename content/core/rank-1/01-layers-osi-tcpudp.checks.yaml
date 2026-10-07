@@ -1,0 +1,66 @@
+lesson: core-r1-net-osi-01
+questions:
+  - id: q1
+    prompt: "At which OSI layer do IP addresses and packet routing operate?"
+    objectives: ["netplus:1.1"]
+    options:
+      - text: "Layer 3 (Network layer)"
+        correct: true
+        explanation: "Correct. Layer 3 handles logical addressing (IPv4/IPv6) and routes packets across different networks."
+      - text: "Layer 2 (Data Link layer)"
+        correct: false
+        explanation: "Layer 2 uses physical MAC addresses to deliver frames within a local network segment."
+      - text: "Layer 4 (Transport layer)"
+        correct: false
+        explanation: "Layer 4 handles end-to-end communication and port numbers (TCP/UDP), not IP routing."
+      - text: "Layer 7 (Application layer)"
+        correct: false
+        explanation: "Layer 7 contains user-facing protocols like HTTP and DNS, sitting well above IP routing."
+  - id: q2
+    prompt: "What is the Protocol Data Unit (PDU) name at Layer 2 (Data Link) of the OSI model?"
+    objectives: ["netplus:1.1"]
+    options:
+      - text: "Frame"
+        correct: true
+        explanation: "Correct. Layer 2 units of transmission are called frames, which encapsulate Layer 3 packets."
+      - text: "Packet"
+        correct: false
+        explanation: "Packets are the PDU at Layer 3 (Network)."
+      - text: "Segment"
+        correct: false
+        explanation: "Segments are the PDU at Layer 4 (Transport for TCP)."
+      - text: "Bit"
+        correct: false
+        explanation: "Bits are the raw units at Layer 1 (Physical)."
+  - id: q3
+    prompt: "During data transmission from client to server, in what order does encapsulation occur?"
+    objectives: ["netplus:1.1"]
+    options:
+      - text: "Data -> Segment -> Packet -> Frame -> Bits"
+        correct: true
+        explanation: "Correct. Data flows down the stack: Application creates data, Transport adds segments, Network adds packets, Data Link adds frames, and Physical sends bits."
+      - text: "Bits -> Frame -> Packet -> Segment -> Data"
+        correct: false
+        explanation: "This is decapsulation, which happens when receiving data at the destination."
+      - text: "Data -> Frame -> Packet -> Segment -> Bits"
+        correct: false
+        explanation: "Frame belongs to Layer 2, which comes after Layer 4 (Segment) and Layer 3 (Packet)."
+      - text: "Packet -> Segment -> Frame -> Data -> Bits"
+        correct: false
+        explanation: "Segment (Layer 4) is created before Packet (Layer 3) during outbound transmission."
+  - id: q4
+    prompt: "Why did the 2021 Meta/Facebook outage prevent users worldwide from resolving facebook.com via DNS?"
+    objectives: ["netplus:1.1"]
+    options:
+      - text: "A lower-layer BGP routing change withdrew routes to DNS servers, making them unreachable over the network."
+        correct: true
+        explanation: "Correct. When Layer 3 routing withdrew paths to the DNS servers, client resolvers could no longer reach them, illustrating how lower-layer failures disrupt higher layers."
+      - text: "Attackers deleted Meta's domain registration at the registrar level."
+        correct: false
+        explanation: "The domain registration remained intact; network routes to the servers were lost."
+      - text: "A physical cable cut severed all fiber connections simultaneously."
+        correct: false
+        explanation: "The root cause was a configuration command on internal routing backbones, not physical cable cuts."
+      - text: "Meta's web servers ran out of disk space to serve HTTP responses."
+        correct: false
+        explanation: "The web servers were running, but network traffic could not route to them."

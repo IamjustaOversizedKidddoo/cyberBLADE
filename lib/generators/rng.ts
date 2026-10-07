@@ -3,6 +3,8 @@ export type Rng = {
   next(): number;
   /** Integer in [min, max], both inclusive. */
   int(min: number, max: number): number;
+  /** Uniform float in [min, max). */
+  float(min: number, max: number): number;
   pick<T>(xs: readonly T[]): T;
   /** `n` lowercase hex characters. */
   hex(n: number): string;
@@ -42,6 +44,7 @@ export function createRng(seed: string): Rng {
   return {
     next,
     int,
+    float: (min: number, max: number) => min + next() * (max - min),
     pick: (xs) => xs[int(0, xs.length - 1)],
     hex: (n) => Array.from({ length: n }, () => int(0, 15).toString(16)).join(""),
     shuffle: (xs) => {

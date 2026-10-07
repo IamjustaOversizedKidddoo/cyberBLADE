@@ -4,10 +4,14 @@
 # objective documents before relying on this file (CompTIA and ISC2 revise exams every few years).
 # Summaries are our own words — never paste vendor text here.
 #
-# 2026-10-07: exam codes and the objective ids below were checked against public CompTIA/ISC2
+# 2026-10-07: the exam codes and the Rank 0 objective ids were checked against public CompTIA/ISC2
 # information by an AI tool (web search) and found consistent (220-1201/1202, N10-009, SY0-701, CC).
 # That is NOT a human verification — confirm against the official objective PDFs before Phase 2
 # builds Security+ exam prep on this file.
+#
+# VERIFY — added 2026-10-07 for Rank 1 and NOT checked by anyone yet: netplus:1.2, 1.7, 1.8, 2.1, 2.2, 3.4,
+# 5.5 and secplus:1.4, 3.2. The plan listed DHCP/DNS/NTP as netplus:3.5; public N10-009 study material
+# puts them in 3.4 (IPv4 and IPv6 network services), so 3.4 is used — confirm in the official PDF.
 #
 # built_ranks: objectives whose target_rank is listed here must already have ≥1 lesson (CI fails otherwise).
 # A+ ids are domain-level (aplus1201:<domain>, aplus1202:<domain>) until objective-level mapping is done.
@@ -43,6 +47,27 @@ objectives:
   - id: "netplus:1.4"
     summary: "Common ports and protocols and what each is used for"
     target_rank: 1
+  - id: "netplus:1.2"
+    summary: "Network appliances and functions (firewalls, proxies, gateways)"
+    target_rank: 1
+  - id: "netplus:1.7"
+    summary: "IPv4 addressing, subnets and CIDR notation"
+    target_rank: 1
+  - id: "netplus:1.8"
+    summary: "Modern network environments including IPv6"
+    target_rank: 1
+  - id: "netplus:2.1"
+    summary: "Routing concepts, default gateways, and static routing"
+    target_rank: 1
+  - id: "netplus:2.2"
+    summary: "Switching concepts: MAC addresses, ARP, and VLAN basics"
+    target_rank: 1
+  - id: "netplus:3.4"
+    summary: "Core network services: DHCP, DNS, and NTP"
+    target_rank: 1
+  - id: "netplus:5.5"
+    summary: "Network troubleshooting tools: ping, traceroute, dig, ip, and packet capture"
+    target_rank: 1
 
   # --- Introduced in Rank 0, completed in Rank 2 ------------------------------
   - id: "secplus:1.2"
@@ -53,4 +78,10 @@ objectives:
     target_rank: 2
   - id: "secplus:1.1"
     summary: "Types and categories of security controls"
+    target_rank: 2
+  - id: "secplus:1.4"
+    summary: "Cryptographic solutions and secure communication protocols (TLS/HTTPS)"
+    target_rank: 2
+  - id: "secplus:3.2"
+    summary: "Securing network infrastructure (firewalls, proxies, and network segmentation)"
     target_rank: 2

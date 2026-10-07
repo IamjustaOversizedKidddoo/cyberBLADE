@@ -3,7 +3,8 @@
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import type { World } from "@/lib/lab-engine/terminal/types";
+import type { LabEnv } from "@/lib/lab-engine/env";
+import { PacketLab } from "./packet/PacketLab";
 import { ObjectivesPanel, type Objective, type SubmitResult } from "./ObjectivesPanel";
 
 // xterm.js needs the DOM: render the terminal in the browser only.
@@ -13,15 +14,15 @@ const TerminalLab = dynamic(() => import("./terminal/TerminalLab"), {
 });
 
 type Props = {
-  world: World;
+  env: LabEnv;
   objectives: Objective[];
   onSubmit: (objectiveId: string, answer: string) => Promise<SubmitResult>;
   doneMessage?: string;
   continueTo?: { href: string; label: string } | null;
 };
 
-/** Terminal + objectives. Answers may come from either; this component owns what is solved. */
-export function LabWorkspace({ world, objectives, onSubmit, doneMessage = "Lab complete! XP added to your profile.", continueTo }: Props) {
+/** Terminal or packet viewer + objectives. Answers may come from either; this component owns what is solved. */
+export function LabWorkspace({ env, objectives, onSubmit, doneMessage = "Lab complete! XP added to your profile.", continueTo }: Props) {
   const router = useRouter();
   const [solved, setSolved] = useState(() => new Set(objectives.filter((o) => o.solved).map((o) => o.id)));
   const [status, setStatus] = useState(objectives.every((o) => o.solved) ? doneMessage : "");
@@ -46,10 +47,16 @@ export function LabWorkspace({ world, objectives, onSubmit, doneMessage = "Lab c
 
   return (
     <div className="space-y-8">
-      <p className="border border-line px-3 py-2 text-sm text-muted md:hidden">
-        Labs work best on a laptop. You can still type here, but a keyboard helps.
-      </p>
-      <TerminalLab world={world} objectives={objectives} onSubmit={submit} />
+      {env.kind === "terminal" ? (
+        <>
+          <p className="border border-line px-3 py-2 text-sm text-muted md:hidden">
+            Labs work best on a laptop. You can still type here, but a keyboard helps.
+          </p>
+          <TerminalLab world={env.world} objectives={objectives} onSubmit={submit} />
+        </>
+      ) : (
+        <PacketLab capture={env.capture} />
+      )}
       <ObjectivesPanel objectives={objectives} solved={solved} onSubmit={submit} status={status} continueTo={continueTo} />
     </div>
   );

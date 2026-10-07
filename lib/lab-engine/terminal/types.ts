@@ -1,3 +1,5 @@
+import type { Network } from "./network";
+
 type Meta = { owner: string; group: string; mode: number; mtime: string };
 
 export type FileNode = Meta & { kind: "file"; content: string };
@@ -11,4 +13,6 @@ export type World = {
   home: string;
   root: DirNode;
   env?: Record<string, string>;
+  /** Simulated network for ip/ping/dig/curl/ss/traceroute; absent = no network. */
+  network?: Network;
 };

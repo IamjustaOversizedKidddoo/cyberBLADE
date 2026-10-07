@@ -90,7 +90,7 @@ async function sessionFor(ctx: Ctx, lab: LoadedLab, attemptId: string): Promise<
   const attempt = await ctx.repo.getAttempt(attemptId);
   if (!attempt?.expiresAt) throw new Error("not found");
   return {
-    ...toSession(lab, attempt, generateLab(lab, attempt.seed, ctx.content.generators).world),
+    ...toSession(lab, attempt, generateLab(lab, attempt.seed, ctx.content.generators).env),
     expiresAt: attempt.expiresAt,
     labTitle: lab.title,
     briefingText: lab.briefingText,
