@@ -61,7 +61,7 @@ export default async function LabPage(props: PageProps<"/labs/[labId]">) {
           {briefing}
         </section>
         <LabWorkspace
-          world={session.world}
+          env={session.env}
           objectives={session.objectives}
           onSubmit={submitObjectiveAction.bind(null, session.attemptId)}
           continueTo={continueTo}

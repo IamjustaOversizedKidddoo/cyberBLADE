@@ -5,9 +5,9 @@ const [ALPHA, BETA] = LESSONS.map((l) => l.id);
 const USER = "op-1";
 
 async function solveLab(ctx: ReturnType<typeof makeCtx>["ctx"], user = USER) {
-  const { attemptId, world } = await startLab(ctx, user, LAB.id);
-  await submitObjective(ctx, user, attemptId, "o1", readFromWorld(world, "flag.txt"));
-  return submitObjective(ctx, user, attemptId, "o2", readFromWorld(world, "word.txt"));
+  const { attemptId, env } = await startLab(ctx, user, LAB.id);
+  await submitObjective(ctx, user, attemptId, "o1", readFromWorld(env, "flag.txt"));
+  return submitObjective(ctx, user, attemptId, "o2", readFromWorld(env, "word.txt"));
 }
 
 describe("terminal checks and lesson completion", () => {
@@ -60,7 +60,7 @@ describe("labs", () => {
     const first = await startLab(ctx, USER, LAB.id);
     const second = await startLab(ctx, USER, LAB.id);
     expect(second.attemptId).toBe(first.attemptId);
-    expect(second.world).toEqual(first.world);
+    expect(second.env).toEqual(first.env);
     const json = JSON.stringify(first);
     expect(json).not.toMatch(/"seed"|"answers"/);
     expect(first.objectives).toEqual([
@@ -73,13 +73,13 @@ describe("labs", () => {
     const { ctx } = makeCtx();
     const a = await startLab(ctx, "op-1", LAB.id);
     const b = await startLab(ctx, "op-2", LAB.id);
-    expect(readFromWorld(a.world, "flag.txt")).not.toBe(readFromWorld(b.world, "flag.txt"));
+    expect(readFromWorld(a.env, "flag.txt")).not.toBe(readFromWorld(b.env, "flag.txt"));
   });
 
   test("solved objectives survive a refresh", async () => {
     const { ctx } = makeCtx();
-    const { attemptId, world } = await startLab(ctx, USER, LAB.id);
-    await submitObjective(ctx, USER, attemptId, "o1", ` ${readFromWorld(world, "flag.txt")}\n`);
+    const { attemptId, env } = await startLab(ctx, USER, LAB.id);
+    await submitObjective(ctx, USER, attemptId, "o1", ` ${readFromWorld(env, "flag.txt")}\n`);
     const again = await startLab(ctx, USER, LAB.id);
     expect(again.objectives.map((o) => o.solved)).toEqual([true, false]);
   });
@@ -97,17 +97,17 @@ describe("labs", () => {
   test("solving every objective completes the lab once and awards XP once", async () => {
     const { ctx } = makeCtx();
     expect(await solveLab(ctx)).toEqual({ correct: true, labCompleted: true, solved: ["o1", "o2"] });
-    const { attemptId, world } = await startLab(ctx, USER, LAB.id);
-    await submitObjective(ctx, USER, attemptId, "o2", readFromWorld(world, "word.txt"));
+    const { attemptId, env } = await startLab(ctx, USER, LAB.id);
+    await submitObjective(ctx, USER, attemptId, "o2", readFromWorld(env, "word.txt"));
     expect(await ctx.repo.getXpTotal(USER)).toBe(150);
   });
 
   test("concurrent submissions for different objectives keep both", async () => {
     const { ctx } = makeCtx();
-    const { attemptId, world } = await startLab(ctx, USER, LAB.id);
+    const { attemptId, env } = await startLab(ctx, USER, LAB.id);
     await Promise.all([
-      submitObjective(ctx, USER, attemptId, "o1", readFromWorld(world, "flag.txt")),
-      submitObjective(ctx, USER, attemptId, "o2", readFromWorld(world, "word.txt")),
+      submitObjective(ctx, USER, attemptId, "o1", readFromWorld(env, "flag.txt")),
+      submitObjective(ctx, USER, attemptId, "o2", readFromWorld(env, "word.txt")),
     ]);
     expect((await ctx.repo.getAttempt(attemptId))?.objectivesSolved.sort()).toEqual(["o1", "o2"]);
     expect(await ctx.repo.getXpTotal(USER)).toBe(150);
@@ -125,5 +125,5 @@ test("opening a lab in two tabs at once creates one attempt (same world in both)
   const { ctx } = makeCtx();
   const [a, b] = await Promise.all([startLab(ctx, USER, LAB.id), startLab(ctx, USER, LAB.id)]);
   expect(b.attemptId).toBe(a.attemptId);
-  expect(b.world).toEqual(a.world);
+  expect(b.env).toEqual(a.env);
 });

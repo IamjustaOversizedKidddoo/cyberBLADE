@@ -36,5 +36,5 @@ export const filesPerms: Generator = (rng) => {
     otherUsers: [colleague],
     home: { shared: { kind: "dir", children: shared, owner: user, group: user, mode: 0o755, mtime: "2026-10-06T09:14:00.000Z" } },
   });
-  return { world, answers: { unreadable: secretName, flag } };
+  return { env: { kind: "terminal", world }, answers: { unreadable: secretName, flag } };
 };
