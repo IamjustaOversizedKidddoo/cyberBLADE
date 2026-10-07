@@ -15,6 +15,7 @@ export type ContentSource = {
   getLessons(filter?: { rank?: number }): Promise<Lesson[]>;
   loadChecks(lessonId: string): Promise<CheckSet>;
   loadLab(id: string): Promise<LoadedLab>;
+  listLabs(): Promise<LoadedLab[]>;
   generators?: Record<string, Generator>;
 };
 

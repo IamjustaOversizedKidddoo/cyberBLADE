@@ -2,7 +2,7 @@ import "server-only";
 import { loadChecks } from "@/lib/content/checks-server";
 import { getLesson, getLessons } from "@/lib/content/lessons";
 import { getOperatorStore } from "@/lib/identity/operator-store";
-import { loadLab } from "@/lib/lab-engine/labs";
+import { listLabs, loadLab } from "@/lib/lab-engine/labs";
 import { FileProgressRepo } from "./file-repo";
 import type { Ctx } from "./service";
 
@@ -11,7 +11,7 @@ export function getCtx(): Ctx {
   return {
     repo: new FileProgressRepo(),
     operators: getOperatorStore(),
-    content: { getLesson, getLessons, loadChecks, loadLab: (id) => loadLab(id) },
+    content: { getLesson, getLessons, loadChecks, loadLab: (id) => loadLab(id), listLabs: () => listLabs() },
     now: () => new Date(),
   };
 }
