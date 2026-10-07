@@ -1,0 +1,39 @@
+id: core-r0-challenge-01
+title: "Night Shift"
+type: terminal
+track: core
+rank: 0
+estimated_minutes: 45
+briefing: briefing.md
+dataset:
+  generator: r0_challenge
+  params: {}
+objectives:
+  - id: o1
+    prompt: "Someone is trying to guess passwords over SSH. Which account has the most failed login attempts in /var/log/auth.log?"
+    check: { kind: flag, answer_from: generator.attacked, case_sensitive: false }
+  - id: o2
+    prompt: "The day shift left you a file in /srv/drop. Recover it and submit the flag inside."
+    check: { kind: flag, answer_from: generator.flag }
+  - id: o3
+    prompt: "How many IP addresses are on the firewall allow-list?"
+    check: { kind: flag, answer_from: generator.ips }
+hints:
+  o1:
+    - "Failed logins are written to auth.log with the words Failed password."
+    - "Filter the log for those lines first, then count how often each account name appears."
+    - "Try grep \"Failed password\" /var/log/auth.log, then pipe it into grep -c with an account name."
+  o2:
+    - "You may not be able to list a folder but still open a file in it — if you know its exact name."
+    - "Did anyone leave you a note?"
+    - "Read ~/notes.txt, then cat the full path it gives you."
+  o3:
+    - "Not every line in the allow-list is an IP address."
+    - "Lines starting with # are comments. grep can count the lines that do NOT match a pattern."
+    - "Try grep -vc \"^#\" on the allow-list file."
+xp: 300
+mitre: [T1110.001]
+challenge:
+  rank: 0
+  time_limit_minutes: 45
+  cooldown_minutes: 30

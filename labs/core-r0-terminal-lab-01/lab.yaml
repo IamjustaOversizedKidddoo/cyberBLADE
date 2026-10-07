@@ -1,0 +1,35 @@
+id: core-r0-terminal-lab-01
+title: "First Login"
+type: terminal
+track: core
+rank: 0
+estimated_minutes: 20
+briefing: briefing.md
+dataset:
+  generator: first_terminal
+  params: {}
+objectives:
+  - id: o1
+    prompt: "Somebody left a note in a hidden file in your home folder. Submit the flag written in it."
+    check: { kind: flag, answer_from: generator.flag1 }
+  - id: o2
+    prompt: "The backup job writes a verification code on the very last line of /var/log/backup.log. Submit it."
+    check: { kind: flag, answer_from: generator.flag2 }
+  - id: o3
+    prompt: "How many lines in /var/log/app.log contain the word ERROR?"
+    check: { kind: flag, answer_from: generator.errors }
+hints:
+  o1:
+    - "Hidden files on Linux are files whose names start with a dot. A normal ls does not show them."
+    - "ls has an option that shows all files, including hidden ones."
+    - "Run ls -a ~ and then cat the file that is not .bashrc or .profile."
+  o2:
+    - "The file is long — you only need its end."
+    - "There is a command that shows the last lines of a file."
+    - "Run tail -n 1 /var/log/backup.log."
+  o3:
+    - "You need to search inside a file for a word and count the matches."
+    - "grep finds matching lines; it also has an option to count them instead of printing them."
+    - "Run grep -c ERROR /var/log/app.log."
+xp: 150
+mitre: []
