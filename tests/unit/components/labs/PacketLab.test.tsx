@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { PacketLab } from "@/components/labs/packet/PacketLab";
 import { FIXTURE_CAPTURE } from "../../lib/lab-engine/packet/fixture-capture";
 
@@ -65,5 +65,17 @@ describe("PacketLab component", () => {
 
     await userEvent.click(backBtn);
     expect(screen.getByText("Displayed: 12 of 12 packets")).toBeInTheDocument();
+  });
+});
+
+describe("PacketLab never moves the page by itself", () => {
+  it("opening the lab and applying a filter do not scroll anything into view", async () => {
+    const spy = vi.fn();
+    Element.prototype.scrollIntoView = spy;
+    render(<PacketLab capture={FIXTURE_CAPTURE} />);
+    const input = screen.getByPlaceholderText(/apply a display filter/i);
+    await userEvent.clear(input);
+    await userEvent.type(input, "dns{enter}");
+    expect(spy).not.toHaveBeenCalled();
   });
 });

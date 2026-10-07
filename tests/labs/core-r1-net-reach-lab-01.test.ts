@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { openLab, SEEDS } from "./helpers";
+import { MANY_SEEDS, openLab, SEEDS } from "./helpers";
 
 describe("core-r1-net-reach-lab-01", () => {
   it.each(SEEDS)("solves lab with seed %s using shell commands", async (seed) => {
@@ -42,4 +42,18 @@ describe("core-r1-net-reach-lab-01", () => {
     expect(check("o3", mac)).toBe(true);
     expect(check("o3", mac.toUpperCase())).toBe(true);
   });
+});
+
+describe("core-r1-net-reach-lab-01 across many seeds", () => {
+  it("exactly one listed server is down, and beacon's traceroute gives the answer", async () => {
+    const bad: string[] = [];
+    for (const seed of MANY_SEEDS) {
+      const { run, check } = await openLab("core-r1-net-reach-lab-01", seed);
+      const servers = run("cat ~/servers.txt").stdout.trim().split("\n");
+      const down = servers.filter((s) => run(`ping -c 1 ${s}`).code !== 0);
+      const hops = run("traceroute beacon.example").stdout.trim().split("\n").filter((l) => /^\s*\d+\s+/.test(l)).length;
+      if (down.length !== 1 || !check("o1", down[0]) || !check("o2", String(hops))) bad.push(`${seed}: down=${down.join(",")} hops=${hops}`);
+    }
+    expect(bad).toEqual([]);
+  }, 120_000);
 });

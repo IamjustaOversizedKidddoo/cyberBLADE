@@ -2,7 +2,7 @@ lesson: core-r1-net-dhcp-nat-01
 questions:
   - id: q1
     prompt: "What is the four-step sequence exchanged between a client and a DHCP server to obtain an IP lease?"
-    objectives: ["netplus:3.5"]
+    objectives: ["netplus:3.4"]
     options:
       - text: "Discover, Offer, Request, Acknowledge (DORA)"
         correct: true
@@ -34,7 +34,7 @@ questions:
         explanation: "NAT does not encrypt addresses; it rewrites them in clear text."
   - id: q3
     prompt: "Which switch security feature prevents an attacker from deploying a rogue DHCP server on a local Ethernet segment?"
-    objectives: ["netplus:3.5"]
+    objectives: ["netplus:3.4"]
     options:
       - text: "DHCP Snooping"
         correct: true
@@ -50,7 +50,7 @@ questions:
         explanation: "LACP combines multiple physical switch links for redundancy and bandwidth."
   - id: q4
     prompt: "How was DHCP Option 121 exploited in the 2024 TunnelVision vulnerability (CVE-2024-3661)?"
-    objectives: ["netplus:3.5"]
+    objectives: ["netplus:3.4"]
     options:
       - text: "A rogue DHCP server pushed specific static routes that took precedence over the client's default VPN tunnel route, leaking traffic unencrypted."
         correct: true

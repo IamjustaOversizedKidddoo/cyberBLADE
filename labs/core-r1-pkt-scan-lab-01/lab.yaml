@@ -13,14 +13,14 @@ objectives:
     prompt: "What is the IP address of the scanner performing the port scan?"
     check: { kind: flag, answer_from: generator.scanner }
   - id: o2
-    prompt: "Which ports were found open? (comma-separated, ascending, e.g. 22,80)"
+    prompt: "Which ports were found open? (comma-separated, smallest first)"
     check: { kind: flag, answer_from: generator.openPorts }
   - id: o3
     prompt: "How many total ports were probed during the scan?"
     check: { kind: flag, answer_from: generator.probed }
 hints:
   o1:
-    - "A SYN scan sends TCP SYN packets (SYN=1, ACK=0) to probe target ports."
+    - "Every probe in this scan starts with a TCP SYN packet (SYN=1, ACK=0) sent to one target port."
     - "Look at the source IP sending the initial SYN packets."
     - "Apply filter tcp.flags.syn == 1 && tcp.flags.ack == 0."
   o2:
@@ -32,4 +32,4 @@ hints:
     - "Filter for probe packets from the scanner and count the rows."
     - "Apply filter tcp.flags.syn == 1 && tcp.flags.ack == 0."
 xp: 100
-mitre: []
+mitre: ["T1046"]

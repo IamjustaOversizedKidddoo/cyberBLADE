@@ -10,6 +10,8 @@ export type BaseNetworkOptions = {
   learnerIp?: string;
   extraHosts?: Record<string, Host>;
   extraDns?: Record<string, { A?: string[]; CNAME?: string }>;
+  /** Addresses (and host names) the caller adds itself; base hosts never use them. */
+  reserved?: { ips?: string[]; names?: string[] };
 };
 
 /**
@@ -47,7 +49,9 @@ export function baseNetwork(rng: Rng, opts: BaseNetworkOptions = {}): {
     "matrix",
     "proxy",
   ];
-  const chosenNames = rng.shuffle(hostNames).slice(0, rng.int(6, 8));
+  const reservedNames = new Set(opts.reserved?.names ?? []);
+  const chosenNames = rng.shuffle(hostNames).filter((n) => !reservedNames.has(n)).slice(0, rng.int(6, 8));
+  const taken = new Set(opts.reserved?.ips ?? []);
 
   const hostList: { name: string; ip: string; hops: number; reachable: boolean }[] = [];
   const networkHosts: Record<string, Host> = { ...opts.extraHosts };
@@ -56,7 +60,11 @@ export function baseNetwork(rng: Rng, opts: BaseNetworkOptions = {}): {
   chosenNames.forEach((name, idx) => {
     const fqdn = `${name}.example`;
     const rfcBlock = idx % 3 === 0 ? "192.0.2" : idx % 3 === 1 ? "198.51.100" : "203.0.113";
-    const ip = `${rfcBlock}.${rng.int(10, 250)}`;
+    // Each host gets its own address: two names on one IP would make one outage look like two.
+    let ip: string;
+    do ip = `${rfcBlock}.${rng.int(10, 250)}`;
+    while (taken.has(ip));
+    taken.add(ip);
     const hopCount = rng.int(2, 5);
 
     const routers: (string | null)[] = [gatewayIp];

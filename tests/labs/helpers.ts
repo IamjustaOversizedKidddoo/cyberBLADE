@@ -26,3 +26,6 @@ export async function openPacketLab(labId: string, seed: string) {
 }
 
 export const SEEDS = ["seed-a", "seed-b", "seed-c", "learner-42", "exam-7"];
+
+/** Many seeds, for properties that must hold for every learner (uniqueness, solvability). */
+export const MANY_SEEDS = Array.from({ length: 1000 }, (_, i) => `s${i}`);

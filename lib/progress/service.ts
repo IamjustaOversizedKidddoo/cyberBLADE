@@ -6,6 +6,7 @@ import { checkObjective, generateLab } from "@/lib/lab-engine/checks";
 import type { LoadedLab } from "@/lib/lab-engine/lab-schema";
 import type { LabEnv } from "@/lib/lab-engine/env";
 import type { OperatorStore } from "@/lib/identity/operator-store";
+import { canAccessRank } from "./access";
 import type { ProgressRepo } from "./repo";
 import type { LabAttempt } from "./types";
 
@@ -30,6 +31,13 @@ async function requireLesson(ctx: Ctx, lessonId: string): Promise<Lesson> {
   return lesson;
 }
 
+/** The pages redirect locked learners; this is the same rule for the server actions behind them. */
+async function requireRankOpen(ctx: Ctx, userId: string, rank: number): Promise<void> {
+  if (rank === 0) return;
+  const operator = await ctx.operators.get(userId);
+  if (!operator || !canAccessRank(operator.rank, rank)) throw new Error(`locked: rank ${rank}`);
+}
+
 export async function answerCheck(
   ctx: Ctx,
   userId: string,
@@ -37,7 +45,8 @@ export async function answerCheck(
   questionId: string,
   optionIndex: number,
 ): Promise<{ correct: boolean; explanations: string[]; lessonCompleted: boolean }> {
-  await requireLesson(ctx, lessonId);
+  const lesson = await requireLesson(ctx, lessonId);
+  await requireRankOpen(ctx, userId, lesson.rank);
   const { correct, explanations } = gradeCheck(await ctx.content.loadChecks(lessonId), questionId, optionIndex, userId);
   if (correct) await ctx.repo.addCheckPassed(userId, lessonId, questionId);
   else await ctx.repo.touchLesson(userId, lessonId);
@@ -70,6 +79,7 @@ export function toSession(lab: LoadedLab, attempt: LabAttempt, env: LabEnv): Lab
 /** Opens (or reopens) the learner's practice attempt. Returns the env only — never the seed or answers. */
 export async function startLab(ctx: Ctx, userId: string, labId: string): Promise<LabSession> {
   const lab = await ctx.content.loadLab(labId);
+  await requireRankOpen(ctx, userId, lab.rank);
   const attempt = await ctx.repo.findOrCreateAttempt(userId, labId, "practice", () => ({
       userId,
       labId,

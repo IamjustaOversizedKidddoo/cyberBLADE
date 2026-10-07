@@ -22,7 +22,7 @@ hints:
   o1:
     - "DNS response packets carry a reply code indicating success or error."
     - "Look for responses mentioning NXDOMAIN or No such name."
-    - "Apply filter dns.flags.response == 1 and inspect the Info column for NXDOMAIN."
+    - 'Apply filter dns.flags.response == 1 and look in the Info column for "No such name".'
   o2:
     - "Filter for DNS queries or responses concerning beacon.example."
     - "Inspect the Answers field of the response packet."

@@ -18,15 +18,8 @@ export const scanLab: Generator = (rng) => {
   const probedPorts = rng.shuffle(allCandidatePorts).slice(0, rng.int(10, 16));
   const probedCount = probedPorts.length;
 
-  const openPortCandidates = [22, 80, 443, 8080].filter((p) => probedPorts.includes(p));
-  const openPortsList = openPortCandidates.length >= 2
-    ? openPortCandidates.slice(0, rng.int(2, 3)).sort((a, b) => a - b)
-    : [22, 80].filter((p) => probedPorts.includes(p)).sort((a, b) => a - b);
-
-  if (openPortsList.length === 0) {
-    openPortsList.push(probedPorts[0]);
-    openPortsList.sort((a, b) => a - b);
-  }
+  // Any 2–4 of the probed ports are open, so no particular set is common enough to guess.
+  const openPortsList = rng.shuffle(probedPorts).slice(0, rng.int(2, 4)).sort((x, y) => x - y);
 
   const builder = new CaptureBuilder("port-scan.pcap");
 
