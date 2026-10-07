@@ -15,4 +15,6 @@ export type World = {
   env?: Record<string, string>;
   /** Simulated network for ip/ping/dig/curl/ss/traceroute; absent = no network. */
   network?: Network;
+  /** Starting umask for the learner's shell; default 0o022. */
+  umask?: number;
 };
