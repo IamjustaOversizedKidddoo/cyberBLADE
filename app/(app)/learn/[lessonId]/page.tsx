@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Callout } from "@/components/lesson/Callout";
 import { DraftBanner } from "@/components/lesson/DraftBanner";
 import { LessonNav } from "@/components/lesson/LessonNav";
@@ -12,6 +12,7 @@ import { loadChecks } from "@/lib/content/checks-server";
 import { getLesson, getLessons } from "@/lib/content/lessons";
 import { renderMdx } from "@/lib/content/mdx";
 import { requireOperator } from "@/lib/identity/session";
+import { canAccessRank } from "@/lib/progress/access";
 import { getCtx } from "@/lib/progress/context";
 import { answerCheckAction } from "../actions";
 
@@ -26,6 +27,7 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
   if (!lesson) notFound();
 
   const operator = await requireOperator();
+  if (!canAccessRank(operator.rank, lesson.rank)) redirect(`/learn/core?locked=${lesson.rank}`);
   const ctx = getCtx();
   const [checks, progress, siblings] = await Promise.all([
     loadChecks(lesson.id),
