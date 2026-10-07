@@ -48,9 +48,9 @@
   - Lesson and lab pages: when `!canAccessRank`, `redirect("/learn/core?locked=" + rank)` *before* `startLab` runs (no attempt created). The rank map shows `lockedNotice` in a `role="status"` box when `?locked=` is a valid rank.
   - Rank map: section per rank with id `rank-<n>`, heading `rank_<n> · <name>`; ranks above the operator's show their lesson titles greyed with a padlock and no links; each rank shows its challenge card (`getRankSummary(ctx, id, n)`) only when a challenge lab for that rank exists (`findChallengeLab` throws → no card).
 
-- [ ] **Step 1: Failing tests:** `canAccessRank(0,0)` true, `(0,1)` false, `(1,0)` true, `(2,2)` true; `lockedNotice(1) === "Locked — pass the Rank 0 challenge to open this."`. E2E (desktop): new operator visits `/learn/core-r1-net-osi-01` → URL `/learn/core?locked=1` and the notice is visible; `/labs/core-r1-net-ip-lab-01` → same; `.data-e2e/progress.json` gains no attempt for that lab (read via the rank map showing no lab state — assert the lab page never rendered a terminal).
-- [ ] **Step 2:** Run → FAIL. Implement. Run → PASS (unit; the e2e needs Task 7's content — mark it `test.fixme` until then and un-fixme it in Task 8).
-- [ ] **Step 3:** Commit `feat(progress): rank-generic learning map and rank gating`.
+- [x] **Step 1: Failing tests:** `canAccessRank(0,0)` true, `(0,1)` false, `(1,0)` true, `(2,2)` true; `lockedNotice(1) === "Locked — pass the Rank 0 challenge to open this."`. E2E (desktop): new operator visits `/learn/core-r1-net-osi-01` → URL `/learn/core?locked=1` and the notice is visible; `/labs/core-r1-net-ip-lab-01` → same; `.data-e2e/progress.json` gains no attempt for that lab (read via the rank map showing no lab state — assert the lab page never rendered a terminal).
+- [x] **Step 2:** Run → FAIL. Implement. Run → PASS (unit; the e2e needs Task 7's content — mark it `test.fixme` until then and un-fixme it in Task 8).
+- [x] **Step 3:** Commit `feat(progress): rank-generic learning map and rank gating`.
 
 ---
 
@@ -79,10 +79,10 @@
   - `traceroute <host>`: `traceroute to <name> (<ip>), 30 hops max, 60 byte packets`, then ` 1  _gateway (<gw>)  0.412 ms  0.398 ms  0.381 ms`, router hops ` N  <ip> (<ip>)  a ms  b ms  c ms`, silent hops ` N  * * *`, last hop the target.
   - All commands read only `world.network`; a world without one → `ip`: shows only `lo`; others behave as "no network" (`connect: Network is unreachable` for ping, code 2; `curl: (7) …`).
 
-- [ ] **Step 1: Failing tests** per command — pinned strings above for the fixture network (eth0 `10.0.2.15/24`, gw `10.0.2.2`, resolver `127.0.0.53`, hosts `www.example.com` (CNAME `example.com`), `example.com A 203.0.113.10` — RFC 5737 addresses only), plus: ping without `-c`; unknown name; unreachable host; `dig` NXDOMAIN; `curl -I` redirect + `-L`; `ss -tulnp`; traceroute with a `* * *` hop; a world with no network.
-- [ ] **Step 2:** Run → FAIL. Implement `network.ts`, then one command at a time until its tests pass.
-- [ ] **Step 3:** Extend `demoWorld()` with a network (eth0 `10.0.2.15/24` DHCP, gw `10.0.2.2`, resolver `127.0.0.53`, hosts `example.com`, `www.example.com`, `intranet.corp.example` with HTTP pages, one unreachable host, listeners sshd 22 and systemd-resolved 53) and `/etc/resolv.conf` (`nameserver 127.0.0.53`), `/etc/hosts`. `npm test` → PASS (existing tests unaffected: `help` lists the new commands — update its expected list).
-- [ ] **Step 4:** Commit `feat(terminal): simulated network and ip/ping/dig/curl/ss/traceroute`.
+- [x] **Step 1: Failing tests** per command — pinned strings above for the fixture network (eth0 `10.0.2.15/24`, gw `10.0.2.2`, resolver `127.0.0.53`, hosts `www.example.com` (CNAME `example.com`), `example.com A 203.0.113.10` — RFC 5737 addresses only), plus: ping without `-c`; unknown name; unreachable host; `dig` NXDOMAIN; `curl -I` redirect + `-L`; `ss -tulnp`; traceroute with a `* * *` hop; a world with no network.
+- [x] **Step 2:** Run → FAIL. Implement `network.ts`, then one command at a time until its tests pass.
+- [x] **Step 3:** Extend `demoWorld()` with a network (eth0 `10.0.2.15/24` DHCP, gw `10.0.2.2`, resolver `127.0.0.53`, hosts `example.com`, `www.example.com`, `intranet.corp.example` with HTTP pages, one unreachable host, listeners sshd 22 and systemd-resolved 53) and `/etc/resolv.conf` (`nameserver 127.0.0.53`), `/etc/hosts`. `npm test` → PASS (existing tests unaffected: `help` lists the new commands — update its expected list).
+- [x] **Step 4:** Commit `feat(terminal): simulated network and ip/ping/dig/curl/ss/traceroute`.
 
 ---
 
@@ -207,7 +207,7 @@ Coverage additions (`target_rank: 1` unless noted; mark these new ids "verify" i
 - Modify: `tests/e2e/rank-gate.spec.ts` (un-`fixme`), `tests/e2e/helpers/` (add `promoteToRank(page, n)` that drives the Rank 0 journey via the existing recipe module — extract the recipe functions from `rank-0.spec.ts` into `tests/e2e/helpers/rank0.ts`)
 - Create: `tests/e2e/rank-1-networking.spec.ts`, `tests/e2e/helpers/packet.ts` (`applyFilter(page, filter)`, `rows(page)` → visible Info/Source/Destination texts)
 
-- [ ] **Step 1: Write the tests** (desktop): a promoted operator sees `rank_1 · Operator` on the rank map with 9 networking lessons; opens lesson 4, answers its checks (`answerAllChecks`), opens the scan packet lab, applies `tcp.flags.syn == 1 && tcp.flags.ack == 1`, reads the open ports and the scanner from the rows, submits all three objectives, sees "Lab complete" and "Continue to next lesson: DNS — The Internet's Phonebook →". Mobile: a packet lab page has no horizontal page scroll (the table scrolls inside its own box).
-- [ ] **Step 2:** `npm run test:e2e` → PASS. Full gate: `npm run lint && npm run typecheck && npm test && npm run check:content && npm run build` → all exit 0.
-- [ ] **Step 3:** Commit `test(e2e): rank gate and rank 1 networking journey`.
-- [ ] **Step 4:** Owner gate: the 9 networking lessons stay `draft` pending human expert review; list them in the final message.
+- [x] **Step 1: Write the tests** (desktop): a promoted operator sees `rank_1 · Operator` on the rank map with 9 networking lessons; opens lesson 4, answers its checks (`answerAllChecks`), opens the scan packet lab, applies `tcp.flags.syn == 1 && tcp.flags.ack == 1`, reads the open ports and the scanner from the rows, submits all three objectives, sees "Lab complete" and "Continue to next lesson: DNS — The Internet's Phonebook →". Mobile: a packet lab page has no horizontal page scroll (the table scrolls inside its own box).
+- [x] **Step 2:** `npm run test:e2e` → PASS. Full gate: `npm run lint && npm run typecheck && npm test && npm run check:content && npm run build` → all exit 0.
+- [x] **Step 3:** Commit `test(e2e): rank gate and rank 1 networking journey`.
+- [x] **Step 4:** Owner gate: the 9 networking lessons stay `draft` pending human expert review; list them in the final message.
