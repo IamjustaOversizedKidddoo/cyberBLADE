@@ -37,6 +37,18 @@ export const ip: Command = {
       return ok(lines.join("\n") + "\n");
     }
 
+    if (["l", "link"].includes(object) && (sub === undefined || sub === "show")) {
+      const lines = [LOOPBACK[0], LOOPBACK[1]];
+      (net?.interfaces ?? []).forEach((iface, i) => {
+        const up = iface.state === "UP";
+        lines.push(
+          `${i + 2}: ${iface.name}: <BROADCAST,MULTICAST${up ? ",UP,LOWER_UP" : ""}> mtu 1500 qdisc ${up ? "fq_codel" : "noop"} state ${iface.state} group default qlen 1000`,
+          `    link/ether ${iface.mac} brd ff:ff:ff:ff:ff:ff`,
+        );
+      });
+      return ok(lines.join("\n") + "\n");
+    }
+
     if (["r", "route"].includes(object)) {
       if (!net) return ok("");
       const lines: string[] = [];

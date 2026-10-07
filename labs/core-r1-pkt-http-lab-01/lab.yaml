@@ -1,0 +1,35 @@
+id: core-r1-pkt-http-lab-01
+title: "HTTP Credentials & TLS Analysis"
+type: packet
+track: core
+rank: 1
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: http_lab
+  params: {}
+objectives:
+  - id: o1
+    prompt: "What username was sent in the plain-HTTP login POST request?"
+    check: { kind: flag, answer_from: generator.username, case_sensitive: true }
+  - id: o2
+    prompt: "Submit the authorization flag returned in the HTTP server response."
+    check: { kind: flag, answer_from: generator.flag }
+  - id: o3
+    prompt: "What TLS server name (SNI) was contacted immediately after the HTTP session?"
+    check: { kind: flag, answer_from: generator.sni, case_sensitive: false }
+hints:
+  o1:
+    - "Unencrypted HTTP POST requests send form data in the body in clear text."
+    - "Inspect the packet payload or follow the TCP conversation stream."
+    - "Apply filter http.request.method == \"POST\" and follow the TCP stream."
+  o2:
+    - "The server responds with an HTTP 200 OK message containing the flag."
+    - "Look in the response body or use stream viewer."
+    - "Apply filter http.response.code == 200 or use Follow TCP stream."
+  o3:
+    - "TLS handshakes indicate the requested hostname using Server Name Indication."
+    - "Inspect the Client Hello packet that followed the HTTP traffic."
+    - "Apply filter tls.handshake.extensions_server_name or tls."
+xp: 150
+mitre: []

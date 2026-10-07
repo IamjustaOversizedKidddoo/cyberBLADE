@@ -1,0 +1,42 @@
+id: core-r1-net-ip-lab-01
+title: "IP Addresses & Subnets"
+type: terminal
+track: core
+rank: 1
+estimated_minutes: 20
+briefing: briefing.md
+dataset:
+  generator: ip_lab
+  params: {}
+objectives:
+  - id: o1
+    prompt: "What is your host's IPv4 address on its active network interface?"
+    check: { kind: flag, answer_from: generator.ip }
+  - id: o2
+    prompt: "What is the IP address of your subnet's default gateway?"
+    check: { kind: flag, answer_from: generator.gateway }
+  - id: o3
+    prompt: "How many usable host addresses exist on your subnet?"
+    check: { kind: flag, answer_from: generator.usable }
+  - id: o4
+    prompt: "Which network interface is currently DOWN?"
+    check: { kind: flag, answer_from: generator.downIface }
+hints:
+  o1:
+    - "Check your network configuration using the modern Linux network management tool."
+    - "Look for the inet line under your active interface."
+    - "Run ip addr or ip a to view your IPv4 address."
+  o2:
+    - "The routing table specifies where non-local traffic is forwarded."
+    - "Look for the default route entry (default via ...)."
+    - "Run ip route to locate the gateway IP."
+  o3:
+    - "Look at the subnet CIDR prefix (e.g., /24) on your interface in ip a."
+    - "Calculate usable addresses using the formula 2^(32 - prefix) - 2."
+    - "Calculate 2^(32 - prefix) - 2 based on the prefix shown in ip a."
+  o4:
+    - "Network interfaces list their operational status (UP or DOWN)."
+    - "Check the state flag in brackets or after state."
+    - "Run ip link to find the interface marked DOWN."
+xp: 100
+mitre: []

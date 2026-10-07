@@ -1,0 +1,35 @@
+id: core-r1-pkt-scan-lab-01
+title: "Port Scan Analysis"
+type: packet
+track: core
+rank: 1
+estimated_minutes: 20
+briefing: briefing.md
+dataset:
+  generator: scan_lab
+  params: {}
+objectives:
+  - id: o1
+    prompt: "What is the IP address of the scanner performing the port scan?"
+    check: { kind: flag, answer_from: generator.scanner }
+  - id: o2
+    prompt: "Which ports were found open? (comma-separated, ascending, e.g. 22,80)"
+    check: { kind: flag, answer_from: generator.openPorts }
+  - id: o3
+    prompt: "How many total ports were probed during the scan?"
+    check: { kind: flag, answer_from: generator.probed }
+hints:
+  o1:
+    - "A SYN scan sends TCP SYN packets (SYN=1, ACK=0) to probe target ports."
+    - "Look at the source IP sending the initial SYN packets."
+    - "Apply filter tcp.flags.syn == 1 && tcp.flags.ack == 0."
+  o2:
+    - "Open ports respond with SYN-ACK (SYN=1, ACK=1) packets from the target."
+    - "Check which source ports sent SYN-ACK packets back to the scanner."
+    - "Apply filter tcp.flags.syn == 1 && tcp.flags.ack == 1."
+  o3:
+    - "Count each unique destination port targeted by the scanner's initial SYN probes."
+    - "Filter for probe packets from the scanner and count the rows."
+    - "Apply filter tcp.flags.syn == 1 && tcp.flags.ack == 0."
+xp: 100
+mitre: []
