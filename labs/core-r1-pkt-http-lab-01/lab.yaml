@@ -32,4 +32,4 @@ hints:
     - "Inspect the Client Hello packet that followed the HTTP traffic."
     - "Apply filter tls.handshake.extensions_server_name or tls."
 xp: 150
-mitre: []
+mitre: ["T1040"]

@@ -17,82 +17,165 @@ last_reviewed: null
 
 ### 1. What it is
 
-Data packets traversing the global internet rely on three foundational network appliances and architectural components to reach destinations securely:
+Three kinds of devices decide where traffic goes and whether it may go there at all:
 
-- **Routers**: Layer 3 forwarding devices that inspect destination IP addresses and consult routing tables to determine the next hop across network boundaries. Routers use interior gateway protocols (OSPF, EIGRP) within enterprises and **BGP (Border Gateway Protocol)** across autonomous systems on the global internet.
-- **Firewalls**: Network security devices that monitor incoming and outgoing traffic, applying predefined rule sets to allow, drop, or reject packets based on inspection depth (packet filtering, stateful inspection, or next-generation application awareness).
-- **Proxies**: Intermediary servers that terminate client connections, evaluate application requests, and initiate separate outbound connections on the client's behalf (Forward Proxies and Reverse Proxies).
+- A **router** chooses the **path**. It looks at a packet's destination IP and sends it one step closer.
+- A **firewall** is a security gate. It checks traffic against rules and **allows or blocks** it.
+- A **proxy** is a middleman. Instead of you talking to a website directly, you talk to the proxy, and the proxy talks to the website **for you**.
 
-> **Legal and Authorization Note**: Network routing manipulation, proxy chaining, and firewall evasion techniques must strictly be performed in authorized test environments or on networks you own. Intercepting or rerouting third-party internet traffic without legal authorization is prohibited under Section 43/66 of India's Information Technology Act and international cybersecurity statutes.
+An analogy: think of a city. Routers are the signposts at every junction ("airport → turn left"). A firewall is the security guard at a building's entrance, checking each visitor against a list. A proxy is a receptionist who takes your request, goes to fetch what you asked for, and brings it back, so the outside world only ever meets the receptionist.
+
+The real meaning: routers work at Layer 3 using **routing tables**. Firewalls filter using addresses and ports (Layers 3–4) and, in modern ones, the application itself (Layer 7). Proxies work at Layer 7: they end your connection and open a new one of their own.
 
 ### 2. Why it exists
 
-- **Without Routing**: Networks would be restricted to isolated local broadcast domains. The internet only functions because routers exchange topological paths and forward packets hop-by-hop toward their destinations.
-- **Without Firewalls**: Every host exposed to the internet would receive unrestricted incoming connection attempts on all 65,535 TCP and UDP ports, rendering perimeter defense impossible.
-- **Without Proxies**: Internal client IP addresses would be exposed directly to all external web services, and organizations could not centrally inspect outbound content, enforce access policies, or cache frequent downloads.
+**Routers exist because the internet is millions of separate networks**, and no single device can be connected to all of them. Each router only needs to know the next step; together, hop by hop, they get a packet anywhere.
+
+**Firewalls exist because being reachable is dangerous.** Without one, every service on every machine could be contacted by anyone on the internet. A firewall puts a deliberate decision, *should this be allowed?*, in front of every connection.
+
+**Proxies exist for control and protection.** A company can filter and log all outbound web traffic in one place (a forward proxy), and can hide and shield its web servers behind one front door (a reverse proxy).
+
+When these are misconfigured, you get traffic sent the wrong way across the world, rules that quietly allow everything, and proxies that let anyone relay attacks through them.
 
 ### 3. How it works
 
-**Routing Decision Hierarchy:**
+**Level 1 — your own routing table.** Every computer is a tiny router with its own table. You met it in lesson 2:
 
-When a router receives an IP packet, it looks up the destination address in its routing table using **Longest Prefix Match (LPM)**:
-1. It compares the destination IP against all known routes.
-2. If multiple routes match, it chooses the route with the most specific (highest) CIDR prefix length (e.g., a `/24` route beats a `/16` route).
-3. If no specific route matches, the packet follows the **Default Route (`0.0.0.0/0`)** to the upstream gateway.
-
-**Firewall Architecture Generations:**
-
-| Type | Inspection Layer | Mechanism | Capabilities & Limitations |
-|---|---|---|---|
-| **Stateless Packet Filter** | Layer 3 & 4 | Checks IP headers, ports, and flags in isolation | Very fast; cannot track whether a packet is part of an established TCP session. |
-| **Stateful Inspection** | Layer 3, 4, & connection state | Tracks connection state table (SYN, ESTABLISHED) | Automatically allows return traffic for established sessions; drops out-of-state packets. |
-| **Next-Generation Firewall (NGFW)** | Layer 3 through Layer 7 | Deep Packet Inspection (DPI), user identity, app decoding | Identifies applications (e.g., distinguishes BitTorrent from HTTPS on port 443); higher CPU load. |
-
-**Forward vs. Reverse Proxies:**
-
-- **Forward Proxy (Client-facing)**: Sits in front of internal clients to filter outbound web browsing, enforce corporate data loss prevention (DLP), and hide internal IP addresses.
-- **Reverse Proxy (Server-facing)**: Sits in front of web servers to distribute load (load balancer), terminate TLS encryption, and protect origin servers from direct exposure.
-
-Let's inspect the kernel routing table and trace path decisions on our demo machine:
+#### Command
 
 ```console
 $ ip route
-$ traceroute example.com
+default via 10.0.2.2 dev eth0 proto dhcp src 10.0.2.15 metric 100
+10.0.2.0/24 dev eth0 proto kernel scope link src 10.0.2.15 metric 100
 ```
 
-The output shows our default route metric, network interface bindings, and the hop-by-hop router path toward the destination.
+#### In simple English
+
+Show the rules this machine uses to decide where each packet goes.
+
+#### Why do I care?
+
+If traffic goes the wrong way, or an attacker has added a route (lesson 6's option 121), this is where it shows.
+
+#### Important part
+
+- `10.0.2.0/24 dev eth0 … scope link`: destinations in my own network are delivered directly, no router needed.
+- `default via 10.0.2.2`: everything else goes to the gateway. `default` is the same as `0.0.0.0/0`, "any address".
+- `metric 100`: a cost; if two routes are equally specific, the lower metric wins.
+
+#### What should I look for?
+
+One default route, to the gateway you expect, and nothing you can't explain.
+
+**Level 2 — how a router chooses: longest prefix match.** A router may have several routes that match one destination. It always picks the **most specific** one, the one with the longest prefix:
+
+```text
+ destination 10.20.30.40
+
+ route 0.0.0.0/0      via ISP          matches (everything does)        prefix 0
+ route 10.0.0.0/8     via core router  matches                          prefix 8
+ route 10.20.30.0/24  via lab router   matches  ← chosen: most specific  prefix 24
+```
+
+In plain English: "the more exactly a route describes the destination, the more it is trusted." This simple rule runs the whole internet, and, as the Debrief shows, it is also how a mistake in one country took a website offline everywhere.
+
+Routers learn routes three ways: **directly connected** networks, **static routes** an admin types in, and **routing protocols** where routers tell each other what they can reach. Inside a company that is often **OSPF (Open Shortest Path First)**. Between the internet's big networks it is **BGP (Border Gateway Protocol)**. Each of those big networks, such as an ISP, a cloud provider or a large company, is an **AS (Autonomous System)** with its own number.
+
+**Watching the path.** `traceroute` (lesson 3) shows the routers your packets actually cross:
+
+```console
+$ traceroute example.com
+traceroute to example.com (203.0.113.10), 30 hops max, 60 byte packets
+ 1  _gateway (10.0.2.2)  0.412 ms  0.398 ms  0.381 ms
+ 2  192.0.2.1 (192.0.2.1)  7.360 ms  7.460 ms  7.560 ms
+ 3  * * *
+ 4  198.51.100.1 (198.51.100.1)  14.720 ms  14.820 ms  14.920 ms
+ 5  example.com (203.0.113.10)  18.400 ms  18.500 ms  18.600 ms
+```
+
+Hop 1 is your default gateway from the routing table. Each later hop is another router using *its own* table. Hop 3 is a router that doesn't answer probes, and is often a firewall doing its job.
+
+**Level 2 — how a firewall decides.** A firewall holds an ordered list of **rules**. Each rule matches some traffic and has an **action**: **allow**, **deny/drop** (silently discard), or **reject** (discard and tell the sender). The first matching rule wins, and a well-built firewall ends with **default deny**: whatever wasn't explicitly allowed is blocked.
+
+```text
+ #  direction  source         destination     port      action
+ 1  in         any            203.0.113.10    tcp/443   allow    ← the public website
+ 2  in         10.0.5.0/24    203.0.113.10    tcp/22    allow    ← SSH only from the admin network
+ 3  in         any            any             any       deny     ← default deny (and log it)
+```
+
+Read rule 2 as: "allow SSH to the web server only from the admin network." Someone on the internet who tries port 22 falls through to rule 3 and is blocked.
+
+Firewalls come in generations:
+
+| Type | Looks at | Strength | Weakness |
+|---|---|---|---|
+| **Stateless packet filter** | each packet alone: IPs, ports, flags | very fast | can't tell a real reply from a forged one |
+| **Stateful firewall** | packets *plus* a table of open connections | automatically allows replies to connections you started, drops out-of-place packets | doesn't understand applications |
+| **NGFW (Next-Generation Firewall)** | up to Layer 7: application, user, content | can tell a web browser from a hidden tunnel on port 443 | slower, more complex, needs TLS inspection to see inside HTTPS |
+
+On Linux, the built-in firewall is managed with **nftables** (older: iptables). A rule like the one below is shown for reading only. It runs on a real Linux machine with root rights, not in this course's lab shell:
+
+```text
+# on a real Linux machine (needs root): allow SSH only from the admin network
+nft add rule inet filter input ip saddr 10.0.5.0/24 tcp dport 22 accept
+```
+
+**Level 2 — proxies.**
+
+```text
+ forward proxy (protects users)            reverse proxy (protects servers)
+
+ laptop ─▶ [ proxy ] ─▶ internet           internet ─▶ [ reverse proxy ] ─▶ web server 1
+ laptop ─▶ [ proxy ]                                                   └──▶ web server 2
+ - filters and logs browsing               - hides the real servers
+ - hides internal addresses                - spreads load, ends TLS, can host a WAF
+```
+
+A **forward proxy** sits in front of *users*: the company's browsers send web requests to it, and it applies policy (block malware sites, log who went where). A **reverse proxy** sits in front of *servers*: the internet connects to it, and it passes requests to the real servers behind. It can also act as a **load balancer** and a **WAF**.
+
+**Level 3 — professional.** Security architects design **segmentation**: separate networks for users, servers, payments and management, with firewalls between them and default deny everywhere. The goal is that one hacked laptop can reach only the few things it truly needs. Every rule should have an owner and a reason, and be reviewed regularly; old "temporary" allow-all rules are a classic finding.
+
+> **Authorisation note.** Testing firewall rules, rerouting traffic or relaying through proxies is only done on networks you own or have written permission to test. Interfering with other people's traffic or systems without permission can be an offence under India's IT Act (sections 43 and 66) and similar laws elsewhere.
 
 ### 4. How attackers abuse it
 
-- **Proxy and Tunneling for Evasion (ATT&CK T1090)**: Adversaries route Command and Control (C2) traffic through multi-hop proxy chains, compromised jump hosts, or SOCKS5 tunnels to conceal their true geographical location and IP origins.
-- **BGP Route Hijacking**: BGP historically lacked cryptographic origin authentication. Attackers announce more specific IP prefixes (e.g., announcing `/24` when the legitimate owner announces `/22`) into global BGP tables. Internet routers worldwide redirect traffic for that prefix to the attacker's network.
-- **Egress Filtering Evasion**: If a corporate firewall blocks outbound SSH (port 22), attackers configure their external servers to listen on port 443 or port 53, establishing reverse shells over permitted egress ports.
+- **Proxies to hide.** Attackers relay their traffic through chains of proxies, VPNs or hacked machines so that logs show the proxy, not them. Inside networks, they set up internal proxies on compromised hosts to reach segments they couldn't otherwise. ATT&CK: **T1090, Proxy**.
+- **Hiding in allowed traffic.** If the firewall allows outbound 443 to anywhere, malware simply talks over 443. Stateless rules that only check ports can't tell the difference.
+- **Route hijacking.** Announcing someone else's addresses via BGP, by mistake or on purpose, pulls their traffic to you (the MyEtherWallet attack in lesson 5, and the Debrief incident below).
+- **Weak rules.** "Any-any" rules, forgotten test rules, and management interfaces (SSH, RDP, admin web pages) open to the internet.
 
 ### 5. How defenders detect it
 
-- **BGP Monitoring & RPKI**: Network teams monitor BGP routing announcements using **RPKI (Resource Public Key Infrastructure)** to detect unauthorized Route Origin Authorizations (ROAs).
-- **Firewall rule hit-count auditing**: Analysts review firewall logs for denied outbound connection attempts to unusual ports or spikes in dropped ingress traffic.
-- **Proxy access logs**: Web proxy logs record HTTP methods, full URLs, user agents, and transmitted byte counts, exposing anomalous outbound data transfers.
+- **Firewall logs**, especially **denies**: repeated blocked attempts show scanning; a sudden flood of allows on an unusual port shows a new channel.
+- **Proxy logs**: every URL every user's machine requested. Watch for connections to brand-new domains, regular "beaconing" intervals, and uploads that are far too big.
+- **Route monitoring**: services that alert when someone else announces your addresses on BGP.
+- **Rule reviews**: tools that flag unused, overlapping and overly broad rules.
+
+Imagine the SOC receives the alert "workstation 10.0.2.44 contacted 300 different internal hosts on port 445 in 5 minutes, all denied by the internal firewall." The segmentation worked, and the alert tells you which machine to isolate.
 
 ### 6. How to prevent/fix it
 
-- **Implement Strict Egress Filtering**: Restrict outbound traffic from internal networks. Servers in a database subnet should never be permitted to initiate outbound connections to arbitrary public internet IPs.
-- **Deploy RPKI Route Origin Validation (ROV)**: Configure edge routers to drop invalid BGP route announcements that lack valid cryptographic signatures.
-- **Enforce Default-Deny firewall rules**: Configure all firewall policy sets with an explicit final rule: `deny any any`. Only explicitly approved protocols, sources, and destinations should be allowed.
+- **Default deny, inbound *and* outbound.** Allow only what each system needs; force web traffic through the proxy.
+- **Segment** the network and filter between segments, not just at the internet edge.
+- **Never expose management interfaces** to the internet; use a VPN or a bastion host.
+- **Protect routing**: BGP route filtering and **RPKI (Resource Public Key Infrastructure)**, which lets networks check that an announcement comes from the real owner of the addresses.
+- **Review rules** on a schedule and remove anything nobody can justify.
 
 ### 7. Common mistakes
 
-- **Relying solely on port-based firewall rules**: Blocking port 80 and 443 does not prevent malicious communication if attackers tunnel unauthorized protocols over permitted ports. NGFW application identification is required.
-- **Overlooking internal east-west traffic**: Traditional perimeter firewalls only filter north-south traffic (entering or leaving the data center). Attackers who breach one server move laterally unhindered unless internal micro-segmentation firewalls are deployed.
-- **Placing proxy servers directly on sensitive database networks**: Proxies should reside in a dedicated Demilitarized Zone (DMZ) to prevent bridge-head attacks into production data tiers.
+- **Rule order.** An early "allow any" makes every later deny useless; the first match wins.
+- **Forgetting outbound.** Many breaches are visible only in outbound traffic, so filter and log it too.
+- **"We have a firewall, so we're safe."** A firewall that allows 443 everywhere with no inspection lets most attacks through.
+- **Mixing up forward and reverse proxies.** Forward = for your users going out. Reverse = for your servers being reached.
 
 ### Remember it like this
 
-> **Router = Chooses next hop (Longest Prefix Match) · Firewall = Filters traffic (Default Deny) · Proxy = Acts on behalf of clients (Forward) or servers (Reverse).**
+> **Router = signpost (which way), most specific route wins. Firewall = security guard (allow or block), first match wins, default deny. Proxy = receptionist (talks to the outside for you).**
 
 ### Interview answer
 
-> "Routers operate at Layer 3 to forward packets across networks using routing tables and the Longest Prefix Match principle, communicating via interior protocols like OSPF and the global exterior protocol BGP. Firewalls enforce access control, evolving from basic stateless packet filters to stateful firewalls that track connection tables, and Next-Generation Firewalls (NGFWs) that perform deep packet inspection at Layer 7. Proxies terminate connections as intermediaries: forward proxies protect internal clients, while reverse proxies balance load and terminate TLS for web servers. In network security, adversaries evade perimeter defenses using multi-hop proxy chains (ATT&CK T1090) or BGP route hijacking. Defenders mitigate these threats by enforcing strict default-deny egress filtering, deploying RPKI to validate BGP routes, and inspecting Layer 7 traffic with NGFWs."
+> "Routers forward packets using longest prefix match, falling back to the default route, and learn routes statically or through protocols like OSPF inside an organisation and BGP between autonomous systems. Firewalls apply ordered rules with default deny. Stateful firewalls track connections, and NGFWs add application and user awareness. A forward proxy controls and logs users' outbound traffic; a reverse proxy fronts servers for load balancing, TLS termination and WAF protection. Attackers abuse proxies to hide (T1090) and hide inside allowed ports, so I segment networks, filter outbound as well as inbound, keep firewall and proxy logs, and protect routing with filtering and RPKI."
 
 ## Terminal Check
 
@@ -100,17 +183,17 @@ The output shows our default route metric, network interface bindings, and the h
 
 ## Lab
 
-This lesson has no scored lab. **Field exercise (not scored):** Open your workstation terminal and run `traceroute` (Linux/macOS) or `tracert` (Windows) to `1.1.1.1`. Count the number of router hops. Note where latency increases (indicating transitions across external ISP backbone routers) and observe how intermediate routers forward packets across autonomous system boundaries.
+This lesson has no scored lab. **Field exercise (not scored):** on your own computer, run `traceroute example.com` on Linux or macOS, or `tracert example.com` on Windows. Count the hops, find your own router at hop 1, and note any `* * *` lines. Then open your router's or computer's firewall settings and list three rules you find. For each, decide whether it allows or blocks, and which traffic.
 
 ## Debrief
 
-**What a professional does here.** Network security architects design DMZ topologies and segmentation policies, while firewall administrators audit access control lists (ACLs) to eliminate overly permissive rules.
+**What a professional does here.** Network security engineers own the rules: they design segments, write least-privilege rules with a reason for each, and review them. SOC analysts live in firewall and proxy logs, where most of the evidence of an intrusion sits. Routing teams watch BGP for announcements of their addresses that they didn't make.
 
-**Real incident: Pakistan Telecom / YouTube BGP Hijack (24 February 2008).** The Pakistani government ordered Pakistan Telecom (PTCL) to block domestic access to YouTube. To implement the block locally, PTCL created a BGP route announcing YouTube's IP prefix `208.65.153.0/24`. However, PTCL accidentally leaked this announcement to its upstream internet transit provider (PCCW). Because PTCL's `/24` route was more specific than YouTube's own legitimate `/22` announcement, internet routers worldwide updated their tables to send all global YouTube traffic to Pakistan Telecom. Within minutes, Pakistan Telecom's routers were overwhelmed, and YouTube was knocked offline for the entire world for over two hours until YouTube counter-announced more specific sub-prefixes and upstream providers filtered the rogue route.
+**Real incident: Pakistan Telecom and YouTube, 24 February 2008.** Pakistan's government ordered YouTube blocked inside the country. Pakistan Telecom did this by announcing a BGP route for `208.65.153.0/24`, part of YouTube's address space, intending to send local YouTube traffic nowhere. But the announcement leaked to its upstream provider, PCCW, which passed it on to the rest of the internet. YouTube itself announced the larger block `208.65.152.0/22`. Pakistan Telecom's `/24` was **more specific**, so by longest prefix match routers across much of the world preferred it, and sent YouTube's traffic to Pakistan, where it was dropped. YouTube was unreachable for most of the internet for about two hours, until YouTube announced even more specific routes and PCCW withdrew the bad one. Longest prefix match did exactly what it was designed to do. Nothing checked whether the announcer owned the addresses, which is the gap RPKI now fills.
 
 **Key takeaways**
 
-- Routers make forwarding decisions using Longest Prefix Match (LPM).
-- Firewalls track connection state; modern NGFWs inspect Layer 7 applications.
-- Forward proxies protect internal clients; reverse proxies protect origin servers.
-- BGP lacks built-in authentication; RPKI is required to prevent global route hijacking.
+- Routers pick the most specific matching route; `default` (`0.0.0.0/0`) catches the rest.
+- Firewall rules are checked in order, first match wins, and should end in default deny; stateful and NGFW firewalls understand more than single packets.
+- Forward proxies control users' outbound traffic; reverse proxies front and protect servers.
+- Attackers proxy to hide (T1090) and hijack routes; defenders segment, filter both directions, log, and protect BGP with RPKI.
