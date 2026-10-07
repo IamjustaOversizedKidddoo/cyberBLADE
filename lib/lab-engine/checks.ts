@@ -1,5 +1,6 @@
 import { GENERATORS, type Generator, type GeneratorOutput } from "@/lib/generators";
 import { createRng } from "@/lib/generators/rng";
+import { assertEnvMatchesLab } from "./env";
 import type { Lab } from "./lab-schema";
 
 /** Builds the lab's machine and its answer key from a seed. Same seed → same lab. */
@@ -7,7 +8,9 @@ export function generateLab(lab: Lab, seed: string, registry: Record<string, Gen
   const generator = Object.hasOwn(registry, lab.dataset.generator) ? registry[lab.dataset.generator] : undefined;
   if (!generator) throw new Error(`lab ${lab.id}: unknown generator ${lab.dataset.generator}`);
   // Namespacing by lab id keeps two labs with the same seed from producing the same data.
-  return generator(createRng(`${lab.id}:${seed}`), lab.dataset.params);
+  const out = generator(createRng(`${lab.id}:${seed}`), lab.dataset.params);
+  assertEnvMatchesLab(lab, out.env);
+  return out;
 }
 
 /** Trims (incl. newlines from copy-paste) and collapses inner runs of whitespace. */

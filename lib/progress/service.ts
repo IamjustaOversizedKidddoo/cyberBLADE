@@ -4,7 +4,7 @@ import type { Generator } from "@/lib/generators";
 import { newSeed } from "@/lib/generators/rng";
 import { checkObjective, generateLab } from "@/lib/lab-engine/checks";
 import type { LoadedLab } from "@/lib/lab-engine/lab-schema";
-import type { World } from "@/lib/lab-engine/terminal/types";
+import type { LabEnv } from "@/lib/lab-engine/env";
 import type { OperatorStore } from "@/lib/identity/operator-store";
 import type { ProgressRepo } from "./repo";
 import type { LabAttempt } from "./types";
@@ -22,7 +22,7 @@ export type ContentSource = {
 export type Ctx = { repo: ProgressRepo; operators: OperatorStore; content: ContentSource; now: () => Date };
 
 export type PublicObjective = { id: string; prompt: string; solved: boolean };
-export type LabSession = { attemptId: string; world: World; objectives: PublicObjective[]; completed: boolean };
+export type LabSession = { attemptId: string; env: LabEnv; objectives: PublicObjective[]; completed: boolean };
 
 async function requireLesson(ctx: Ctx, lessonId: string): Promise<Lesson> {
   const lesson = await ctx.content.getLesson(lessonId);
@@ -58,16 +58,16 @@ export async function tryCompleteLesson(ctx: Ctx, userId: string, lessonId: stri
   return true;
 }
 
-export function toSession(lab: LoadedLab, attempt: LabAttempt, world: World): LabSession {
+export function toSession(lab: LoadedLab, attempt: LabAttempt, env: LabEnv): LabSession {
   return {
     attemptId: attempt.id,
-    world,
+    env,
     objectives: lab.objectives.map((o) => ({ id: o.id, prompt: o.prompt, solved: attempt.objectivesSolved.includes(o.id) })),
     completed: attempt.completedAt !== null,
   };
 }
 
-/** Opens (or reopens) the learner's practice attempt. Returns the world only — never the seed or answers. */
+/** Opens (or reopens) the learner's practice attempt. Returns the env only — never the seed or answers. */
 export async function startLab(ctx: Ctx, userId: string, labId: string): Promise<LabSession> {
   const lab = await ctx.content.loadLab(labId);
   const attempt = await ctx.repo.findOrCreateAttempt(userId, labId, "practice", () => ({
@@ -82,7 +82,7 @@ export async function startLab(ctx: Ctx, userId: string, labId: string): Promise
       completedAt: null,
       failedAt: null,
   }));
-  return toSession(lab, attempt, generateLab(lab, attempt.seed, ctx.content.generators).world);
+  return toSession(lab, attempt, generateLab(lab, attempt.seed, ctx.content.generators).env);
 }
 
 /** Checks one answer for an attempt the learner owns; returns the solved list after this submission. */

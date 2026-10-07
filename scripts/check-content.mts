@@ -39,7 +39,11 @@ async function main(): Promise<number> {
     generators: Object.keys(GENERATORS),
     runLessonCommands: (lesson) => {
       const lab = lesson.lab ? labsById.get(lesson.lab) : undefined;
-      const world = lab && Object.hasOwn(GENERATORS, lab.dataset.generator) ? generateLab(lab, "content-check").world : demoWorld();
+      let world = demoWorld();
+      if (lab && Object.hasOwn(GENERATORS, lab.dataset.generator)) {
+        const out = generateLab(lab, "content-check");
+        if (out.env.kind === "terminal") world = out.env.world;
+      }
       return runConsoleCommands(consoleCommands(lesson.body), world);
     },
     now: new Date(),

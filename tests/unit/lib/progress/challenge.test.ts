@@ -56,9 +56,9 @@ describe("challengeState (pure)", () => {
 
 async function completeLessons(ctx: ReturnType<typeof makeCtx>["ctx"]) {
   for (const lesson of LESSONS) for (const q of ["q1", "q2", "q3"]) await answerCheck(ctx, USER, lesson.id, q, RIGHT(USER, lesson.id, q));
-  const { attemptId, world } = await startLab(ctx, USER, LAB.id);
-  await submitObjective(ctx, USER, attemptId, "o1", readFromWorld(world, "flag.txt"));
-  await submitObjective(ctx, USER, attemptId, "o2", readFromWorld(world, "word.txt"));
+  const { attemptId, env } = await startLab(ctx, USER, LAB.id);
+  await submitObjective(ctx, USER, attemptId, "o1", readFromWorld(env, "flag.txt"));
+  await submitObjective(ctx, USER, attemptId, "o2", readFromWorld(env, "word.txt"));
 }
 
 describe("rank challenge service", () => {
@@ -81,8 +81,8 @@ describe("rank challenge service", () => {
     expect(started.expiresAt).toBe(minutes(T0, 45).toISOString());
     expect(JSON.stringify(started)).not.toMatch(/"seed"|"answers"/);
 
-    const flag = readFromWorld(started.world, "flag.txt");
-    const word = readFromWorld(started.world, "word.txt");
+    const flag = readFromWorld(started.env, "flag.txt");
+    const word = readFromWorld(started.env, "word.txt");
     expect(await submitChallengeObjective(ctx, USER, started.attemptId, "o1", flag)).toEqual({ correct: true, passed: false });
     expect(await submitChallengeObjective(ctx, USER, started.attemptId, "o2", word)).toEqual({ correct: true, passed: true });
 
@@ -101,7 +101,7 @@ describe("rank challenge service", () => {
     const started = await startChallenge(ctx, USER, 0);
 
     clock.now = minutes(T0, 46);
-    const flag = readFromWorld(started.world, "flag.txt");
+    const flag = readFromWorld(started.env, "flag.txt");
     expect(await submitChallengeObjective(ctx, USER, started.attemptId, "o1", flag)).toEqual({
       correct: false,
       expired: true,
@@ -124,7 +124,7 @@ describe("rank challenge service", () => {
     clock.now = minutes(T0, 31);
     const second = await startChallenge(ctx, USER, 0);
     expect(second.attemptId).not.toBe(first.attemptId);
-    expect(readFromWorld(second.world, "flag.txt")).not.toBe(readFromWorld(first.world, "flag.txt"));
+    expect(readFromWorld(second.env, "flag.txt")).not.toBe(readFromWorld(first.env, "flag.txt"));
   });
 
   test("an expired-but-unsubmitted attempt is marked failed when the summary is read", async () => {
@@ -143,7 +143,7 @@ describe("rank challenge service", () => {
     const started = await startChallenge(ctx, USER, 0);
     const again = await getChallengeSession(ctx, USER, 0);
     expect(again?.attemptId).toBe(started.attemptId);
-    expect(again?.world).toEqual(started.world);
+    expect(again?.env).toEqual(started.env);
   });
 
   test("starting twice while active is refused", async () => {

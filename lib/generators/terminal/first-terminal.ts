@@ -48,5 +48,5 @@ export const firstTerminal: Generator = (rng) => {
       "backup.log": file(backup),
     },
   });
-  return { world, answers: { flag1, flag2, errors: String(errorCount) } };
+  return { env: { kind: "terminal", world }, answers: { flag1, flag2, errors: String(errorCount) } };
 };

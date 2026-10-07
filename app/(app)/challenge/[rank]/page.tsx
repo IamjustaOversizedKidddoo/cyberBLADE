@@ -63,7 +63,7 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
         <div className="mx-auto max-w-5xl space-y-10 px-4 py-10">
           <section className="max-w-[72ch]">{briefing}</section>
           <LabWorkspace
-            world={session.world}
+            env={session.env}
             objectives={session.objectives}
             onSubmit={submitChallengeObjectiveAction.bind(null, session.attemptId)}
             doneMessage={`Rank ${rank + 1} · ${next} unlocked`}
