@@ -314,9 +314,13 @@ class Parser {
         return { pred: comp.pred };
       }
 
-      // Bare identifier: must be a protocol name
+      // Bare identifier: protocol name or field presence
       if (PROTOCOLS.has(name)) {
         return { pred: buildProtocolCheck(name) };
+      }
+
+      if (FIELDS.has(name)) {
+        return { pred: buildFieldPresenceCheck(name) };
       }
 
       return { error: `"${name}" is not a valid protocol or field` };
@@ -342,6 +346,61 @@ function buildProtocolCheck(protocol: string): Predicate {
       return (p) => Boolean(p.http);
     case "tls":
       return (p) => Boolean(p.tls);
+    default:
+      return () => false;
+  }
+}
+
+function buildFieldPresenceCheck(field: string): Predicate {
+  switch (field) {
+    case "tls.handshake.extensions_server_name":
+      return (p) => Boolean(p.tls?.sni);
+    case "http.request.method":
+      return (p) => Boolean(p.http?.request?.method);
+    case "http.request.uri":
+      return (p) => Boolean(p.http?.request?.uri);
+    case "http.host":
+      return (p) => Boolean(p.http?.request?.host);
+    case "http.response.code":
+      return (p) => p.http?.response?.code !== undefined;
+    case "dns.qry.name":
+      return (p) => Boolean(p.dns?.qname);
+    case "dns.flags.response":
+      return (p) => p.dns?.response !== undefined;
+    case "dns.a":
+      return (p) => Boolean(p.dns?.answers?.some((a) => a.type === "A"));
+    case "ip.src":
+      return (p) => Boolean(p.ip?.src);
+    case "ip.dst":
+      return (p) => Boolean(p.ip?.dst);
+    case "ip.addr":
+      return (p) => Boolean(p.ip);
+    case "ip.ttl":
+      return (p) => p.ip?.ttl !== undefined;
+    case "tcp.port":
+      return (p) => Boolean(p.tcp);
+    case "tcp.srcport":
+      return (p) => p.tcp?.srcport !== undefined;
+    case "tcp.dstport":
+      return (p) => p.tcp?.dstport !== undefined;
+    case "udp.port":
+      return (p) => Boolean(p.udp);
+    case "udp.srcport":
+      return (p) => p.udp?.srcport !== undefined;
+    case "udp.dstport":
+      return (p) => p.udp?.dstport !== undefined;
+    case "tcp.flags.syn":
+      return (p) => Boolean(p.tcp?.flags?.syn);
+    case "tcp.flags.ack":
+      return (p) => Boolean(p.tcp?.flags?.ack);
+    case "tcp.flags.fin":
+      return (p) => Boolean(p.tcp?.flags?.fin);
+    case "tcp.flags.reset":
+      return (p) => Boolean(p.tcp?.flags?.rst);
+    case "frame.number":
+      return (p) => p.no !== undefined;
+    case "frame":
+      return () => true;
     default:
       return () => false;
   }

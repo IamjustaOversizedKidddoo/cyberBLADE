@@ -1,0 +1,35 @@
+id: core-r1-net-web-lab-01
+title: "Web Services & Intranet Inspection"
+type: terminal
+track: core
+rank: 1
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: web_lab
+  params: {}
+objectives:
+  - id: o1
+    prompt: "What is the Server header returned by http://intranet.corp.example/?"
+    check: { kind: flag, answer_from: generator.server }
+  - id: o2
+    prompt: "To what full URL does http://intranet.corp.example/ redirect?"
+    check: { kind: flag, answer_from: generator.redirect }
+  - id: o3
+    prompt: "Submit the verification flag found in the body of http://intranet.corp.example/admin/notes."
+    check: { kind: flag, answer_from: generator.flag }
+hints:
+  o1:
+    - "You can request HTTP headers without downloading the full page body."
+    - "Look for the Server: response header in the HTTP reply."
+    - "Run curl -I http://intranet.corp.example/."
+  o2:
+    - "Inspect the HTTP redirect Location header or tell curl to follow redirects."
+    - "Look at the Location: header in a HEAD request."
+    - "Run curl -I http://intranet.corp.example/ to read the Location header."
+  o3:
+    - "Fetch the admin notes endpoint and examine the response body."
+    - "Submit the NEON flag string inside the response."
+    - "Run curl http://intranet.corp.example/admin/notes."
+xp: 100
+mitre: []
