@@ -46,8 +46,9 @@ export const curl: Command = {
       if (!host?.reachable || !host.openPorts?.includes(target.port)) {
         return fail(`curl: (7) Failed to connect to ${target.host} port ${target.port} after 3 ms: Couldn't connect to server\n`, 7);
       }
-      const server = host.http?.["/"]?.headers.find(([k]) => k.toLowerCase() === "server");
-      const res: HttpResponse = host.http?.[target.path] ?? {
+      const pages = (target.scheme === "https" ? host.https : undefined) ?? host.http;
+      const server = pages?.["/"]?.headers.find(([k]) => k.toLowerCase() === "server");
+      const res: HttpResponse = pages?.[target.path] ?? {
         status: 404,
         reason: "Not Found",
         headers: server ? [server] : [],

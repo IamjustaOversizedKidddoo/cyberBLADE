@@ -28,6 +28,14 @@ function demoNetwork(): Network {
         http: {
           "/": { status: 301, reason: "Moved Permanently", headers: [["Server", "nginx/1.24.0"], ["Location", "https://example.com/"]], body: "" },
         },
+        https: {
+          "/": {
+            status: 200,
+            reason: "OK",
+            headers: [...nginx, ["Strict-Transport-Security", "max-age=31536000"]],
+            body: "<h1>Example Domain</h1>\n",
+          },
+        },
       },
       "203.0.113.25": { name: "mail.example.com", reachable: true, rttMs: 21.7, ttl: 54, hops: ["10.0.2.2", "192.0.2.1", "203.0.113.25"], openPorts: [25] },
       "10.0.2.50": {
