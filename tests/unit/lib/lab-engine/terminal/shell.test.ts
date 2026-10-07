@@ -63,3 +63,7 @@ test("command output is never mutated into the world", () => {
   createShell(world).exec("echo x > /tmp/new");
   expect(JSON.stringify(world)).toBe(before);
 });
+
+test.each(["toString", "constructor", "__proto__", "hasOwnProperty"])("built-in object names are not commands: %s", (name) => {
+  expect(sh().exec(name)).toEqual({ stdout: "", stderr: `${name}: command not found\n`, code: 127 });
+});

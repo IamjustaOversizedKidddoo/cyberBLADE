@@ -96,7 +96,7 @@ At this level, defenders mostly detect hardware-related attacks indirectly:
 
 - **Asset inventory** — knowing every device you own, its model and firmware version. You cannot protect what you do not know exists.
 - **Firmware and update monitoring** — tools that report outdated firmware or CPU **microcode** (the CPU's own built-in update layer) across all machines.
-- **Boot integrity checks** — **Secure Boot** checks that the firmware and operating system loader are signed by a trusted vendor; a **TPM (Trusted Platform Module)** chip can record measurements of the boot process so changes are visible.
+- **Boot integrity checks** — **Secure Boot** is a firmware feature that refuses to start a boot loader or operating system component unless it is signed by a trusted key; firmware updates themselves are normally signed by the device maker. A **TPM (Trusted Platform Module)** chip can record measurements of each boot stage so unexpected changes become visible.
 - **Memory capture in investigations** — when malware is suspected, responders capture RAM before turning the machine off, because shutting down destroys that evidence.
 
 ### 6. How to prevent/fix it
@@ -109,7 +109,7 @@ At this level, defenders mostly detect hardware-related attacks indirectly:
 
 ### 7. Common mistakes
 
-- Believing that **deleting a file erases it**. Usually the space is only marked as free; the data stays until something overwrites it.
+- Believing that **deleting a file erases it**. Usually the space is only marked as free; the data stays until something overwrites it. (On SSDs, a feature called TRIM may clear it sooner — but you can never count on that.)
 - **Turning off a hacked machine immediately**. That destroys the evidence in RAM. In an investigation, ask the incident response team first.
 - **Patching the operating system but never the firmware**.
 - Confusing **memory (RAM)** with **storage (disk)** — "my laptop has 512 GB of memory" usually means storage.

@@ -9,8 +9,15 @@ function authLog(rng: Rng, hostname: string, counts: Map<string, number>, learne
   for (const [name, n] of counts) {
     const ip = pickIp(rng, "203.0");
     for (let i = 0; i < n; i++) {
-      const invalid = rng.next() < 0.3 ? "invalid user " : "";
-      events.push(`sshd[${rng.int(1000, 9999)}]: Failed password for ${invalid}${name} from ${ip} port ${rng.int(30000, 60000)} ssh2`);
+      events.push(`sshd[${rng.int(1000, 9999)}]: Failed password for ${name} from ${ip} port ${rng.int(30000, 60000)} ssh2`);
+    }
+  }
+  // sshd says "invalid user" only for names that don't exist on the machine. A few guesses at
+  // common default names, always fewer than the real target, keep the log realistic.
+  for (const ghost of rng.shuffle(["admin", "oracle", "test", "ubuntu"]).slice(0, 2)) {
+    const ip = pickIp(rng, "198.51");
+    for (let i = 0; i < rng.int(1, 4); i++) {
+      events.push(`sshd[${rng.int(1000, 9999)}]: Failed password for invalid user ${ghost} from ${ip} port ${rng.int(30000, 60000)} ssh2`);
     }
   }
   for (let i = 0; i < rng.int(6, 12); i++) {

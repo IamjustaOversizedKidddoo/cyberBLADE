@@ -12,6 +12,8 @@ export type CmdContext = {
   hostname: string;
   env: Record<string, string>;
   history: string[];
+  /** True when stdout goes to the screen; false into a pipe or a file (GNU ls changes format). */
+  isTty: boolean;
   setCwd(path: string): void;
 };
 

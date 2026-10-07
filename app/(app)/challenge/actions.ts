@@ -11,7 +11,11 @@ const rankSchema = z.number().int().min(0).max(2);
 export async function startChallengeAction(rank: number) {
   const r = rankSchema.parse(rank);
   const operator = await requireOperator();
-  await startChallenge(getCtx(), operator.id, r);
+  try {
+    await startChallenge(getCtx(), operator.id, r);
+  } catch {
+    // Already running, cooling down or passed (stale tab, double click): the page shows the real state.
+  }
   redirect(`/challenge/${r}`);
 }
 

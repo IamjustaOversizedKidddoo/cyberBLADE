@@ -27,25 +27,41 @@ export function createShell(world: World): Shell {
     let stdin = "";
     let stderr = "";
     let last: CmdResult = { stdout: "", stderr: "", code: 0 };
-    for (const command of parsed.commands) {
+    parsed.commands.forEach((command, index) => {
       const argv = expandGlobs(command.argv, cwd, vfs, home, { user, literal: command.literal });
-      const impl = COMMANDS[argv[0]];
+      const redirect = command.redirect;
+      const target = redirect ? resolvePath(cwd, redirect.path, home) : null;
+
+      if (redirect && target) {
+        // Like bash: open (create or truncate) the target before the command runs.
+        try {
+          vfs.write(target, "", user, redirect.op === ">>");
+        } catch (err) {
+          last = { stdout: "", stderr: `bash: ${redirect.path}: ${errorText(err)}\n`, code: 1 };
+          stderr += last.stderr;
+          stdin = "";
+          return;
+        }
+      }
+
+      // Own keys only: "toString" or "constructor" must not resolve to Object.prototype members.
+      const impl = Object.hasOwn(COMMANDS, argv[0]) ? COMMANDS[argv[0]] : undefined;
+      const isTty = index === parsed.commands.length - 1 && !redirect;
       last = impl
-        ? impl.run({ argv, stdin, vfs, cwd, user, home, hostname, env, history, setCwd })
+        ? impl.run({ argv, stdin, vfs, cwd, user, home, hostname, env, history, isTty, setCwd })
         : { stdout: "", stderr: `${argv[0]}: command not found\n`, code: 127 };
 
-      if (command.redirect) {
-        const { op, path } = command.redirect;
+      if (redirect && target) {
         try {
-          vfs.write(resolvePath(cwd, path, home), last.stdout, user, op === ">>");
+          vfs.write(target, last.stdout, user, true);
           last = { ...last, stdout: "" };
         } catch (err) {
-          last = { stdout: "", stderr: last.stderr + `bash: ${path}: ${errorText(err)}\n`, code: 1 };
+          last = { stdout: "", stderr: last.stderr + `bash: ${redirect.path}: ${errorText(err)}\n`, code: 1 };
         }
       }
       stderr += last.stderr;
       stdin = last.stdout;
-    }
+    });
     const result: CmdResult = { stdout: last.stdout, stderr, code: last.code };
     if (last.clear) result.clear = true;
     return result;

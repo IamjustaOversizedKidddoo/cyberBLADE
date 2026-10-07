@@ -1,5 +1,6 @@
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
+import { createRng } from "@/lib/generators/rng";
 
 const optionSchema = z.object({
   text: z.string().min(1),
@@ -35,19 +36,41 @@ export function parseChecks(yamlText: string, source: string): CheckSet {
   return parsed.data;
 }
 
-/** What the browser may see: prompts and option texts, never which is correct or why. */
-export function toPublicChecks(set: CheckSet): PublicQuestion[] {
-  return set.questions.map((q) => ({ id: q.id, prompt: q.prompt, options: q.options.map((o) => o.text) }));
+/**
+ * Display order of a question's options for one learner: shuffled (so "the answer is always A"
+ * can't be learned) but stable, so a refresh shows the same order.
+ */
+export function optionOrder(learnerId: string, lessonId: string, questionId: string, count: number): number[] {
+  return createRng(`checks:${learnerId}:${lessonId}:${questionId}`).shuffle(Array.from({ length: count }, (_, i) => i));
 }
 
-export function gradeCheck(set: CheckSet, questionId: string, optionIndex: number): { correct: boolean; explanations: string[] } {
+const orderFor = (set: CheckSet, q: CheckSet["questions"][number], learnerId?: string) =>
+  learnerId ? optionOrder(learnerId, set.lesson, q.id, q.options.length) : q.options.map((_, i) => i);
+
+/** What the browser may see: prompts and option texts in the learner's order, never which is correct or why. */
+export function toPublicChecks(set: CheckSet, learnerId?: string): PublicQuestion[] {
+  return set.questions.map((q) => ({
+    id: q.id,
+    prompt: q.prompt,
+    options: orderFor(set, q, learnerId).map((i) => q.options[i].text),
+  }));
+}
+
+/** `shownIndex` is the position the learner saw (see toPublicChecks); explanations come back in that order. */
+export function gradeCheck(
+  set: CheckSet,
+  questionId: string,
+  shownIndex: number,
+  learnerId?: string,
+): { correct: boolean; explanations: string[] } {
   const question = set.questions.find((q) => q.id === questionId);
   if (!question) throw new Error(`unknown question ${questionId}`);
-  if (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex >= question.options.length) {
-    throw new Error(`option ${optionIndex} out of range for ${questionId}`);
+  if (!Number.isInteger(shownIndex) || shownIndex < 0 || shownIndex >= question.options.length) {
+    throw new Error(`option ${shownIndex} out of range for ${questionId}`);
   }
+  const order = orderFor(set, question, learnerId);
   return {
-    correct: question.options[optionIndex].correct,
-    explanations: question.options.map((o) => o.explanation),
+    correct: question.options[order[shownIndex]].correct,
+    explanations: order.map((i) => question.options[i].explanation),
   };
 }

@@ -162,11 +162,13 @@ You will investigate a team's shared folder: find the one file you are not allow
 
 **What a professional does here.** When a company asks "could anyone have seen this file?", an analyst checks exactly what you did in the lab: owner, group and permissions, and then the access logs.
 
-**Real incident: WannaCry (May 2017).** WannaCry ransomware spread across the world in a single weekend, infecting hundreds of thousands of Windows computers in about 150 countries. In the UK, the National Health Service had to cancel appointments and divert ambulances. It spread through a flaw in Windows file sharing (SMBv1) that Microsoft had already patched two months earlier in bulletin MS17-010 — many organisations had simply not installed the update. Once on a machine, it encrypted every file that account could write to. Two lessons in one: **patch the operating system**, and **limit what each account can write**, because ransomware can only destroy what its account is allowed to touch.
+**Real incident: WannaCry (May 2017).** WannaCry ransomware spread across the world in a single weekend, infecting hundreds of thousands of Windows computers in about 150 countries. In the UK, the National Health Service had to cancel appointments and divert ambulances. It spread on its own, like a worm, through a flaw in Windows file sharing (SMBv1) that Microsoft had already patched two months earlier in bulletin MS17-010 — many organisations had simply not installed the update. Because it broke in through the operating system itself, it ran with the system's highest privileges and encrypted files on the machine and on network shares it could reach; user-account permissions could not stop it. The lessons: **patch the operating system quickly**, **turn off old protocols you don't need** (SMBv1), **separate networks** so one infected machine can't reach everything, and **keep backups ransomware can't touch**.
+
+Least privilege matters most for the more common case: ransomware that arrives through one person's account — a phishing email, say — can only encrypt what *that account* is allowed to write. Keeping each account's access narrow keeps that damage small.
 
 **Key takeaways**
 
 - The OS shares the hardware and checks every access against permissions.
 - Linux permissions: `r`, `w`, `x` for owner, group and others; read them with `ls -l`.
-- Least privilege limits the damage of stolen accounts and ransomware.
+- Least privilege limits the damage of stolen accounts and of ransomware that runs as a normal user; patching and network separation stop worms like WannaCry.
 - Loose permissions on files with secrets are one of the most common ways attackers find passwords.

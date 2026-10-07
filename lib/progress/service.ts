@@ -38,7 +38,7 @@ export async function answerCheck(
   optionIndex: number,
 ): Promise<{ correct: boolean; explanations: string[]; lessonCompleted: boolean }> {
   await requireLesson(ctx, lessonId);
-  const { correct, explanations } = gradeCheck(await ctx.content.loadChecks(lessonId), questionId, optionIndex);
+  const { correct, explanations } = gradeCheck(await ctx.content.loadChecks(lessonId), questionId, optionIndex, userId);
   if (correct) await ctx.repo.addCheckPassed(userId, lessonId, questionId);
   else await ctx.repo.touchLesson(userId, lessonId);
   return { correct, explanations, lessonCompleted: await tryCompleteLesson(ctx, userId, lessonId) };
@@ -70,9 +70,7 @@ export function toSession(lab: LoadedLab, attempt: LabAttempt, world: World): La
 /** Opens (or reopens) the learner's practice attempt. Returns the world only — never the seed or answers. */
 export async function startLab(ctx: Ctx, userId: string, labId: string): Promise<LabSession> {
   const lab = await ctx.content.loadLab(labId);
-  const attempt =
-    (await ctx.repo.findLatestAttempt(userId, labId, "practice")) ??
-    (await ctx.repo.createAttempt({
+  const attempt = await ctx.repo.findOrCreateAttempt(userId, labId, "practice", () => ({
       userId,
       labId,
       seed: newSeed(),
@@ -83,7 +81,7 @@ export async function startLab(ctx: Ctx, userId: string, labId: string): Promise
       expiresAt: null,
       completedAt: null,
       failedAt: null,
-    }));
+  }));
   return toSession(lab, attempt, generateLab(lab, attempt.seed, ctx.content.generators).world);
 }
 

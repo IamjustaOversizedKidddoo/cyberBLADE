@@ -4,6 +4,7 @@ import "@xterm/xterm/css/xterm.css";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import { useEffect, useMemo, useRef } from "react";
+import type { CmdResult } from "@/lib/lab-engine/terminal/commands";
 import { createShell } from "@/lib/lab-engine/terminal/shell";
 import type { World } from "@/lib/lab-engine/terminal/types";
 import { createLineEditor } from "./line-editor";
@@ -67,7 +68,13 @@ export default function TerminalLab({ world }: { world: World }) {
         } else if (ev.type === "submit") {
           if (ev.line.trim()) history.push(ev.line);
           cursor = history.length;
-          const result = shell.exec(ev.line);
+          let result: CmdResult;
+          try {
+            result = shell.exec(ev.line);
+          } catch {
+            // Never leave the learner without a prompt, whatever the engine hits.
+            result = { stdout: "", stderr: "bash: internal error — please report this command\n", code: 1 };
+          }
           if (result.clear) term.clear();
           if (result.stdout) term.write(result.stdout.endsWith("\n") ? result.stdout : `${result.stdout}\n`);
           if (result.stderr) term.write(`${PINK}${result.stderr}${RESET}`);
