@@ -102,9 +102,9 @@
   - `LabWorkspace` props: `env: LabEnv` (terminal → `TerminalLab`; packet → `PacketLab` from Task 5, rendered as "Coming in this phase" placeholder until Task 5).
   - Content gate: lessons whose lab is not a terminal lab run their console commands against `demoWorld()`.
 
-- [ ] **Step 1: Failing test** `env.test.ts`: `generateLab` on a `type: packet` lab whose generator returns a terminal env throws `"lab x: generator returned terminal env for a packet lab"`.
-- [ ] **Step 2:** Refactor to `env` everywhere; run `npm test`, `npm run check:content` and `npx playwright test tests/e2e/rank-0.spec.ts tests/e2e/lab-terminal.spec.ts` → all PASS (behaviour unchanged for Rank 0).
-- [ ] **Step 3:** Commit `refactor(labs): environment-generic labs (terminal | packet)`.
+- [x] **Step 1: Failing test** `env.test.ts`: `generateLab` on a `type: packet` lab whose generator returns a terminal env throws `"lab x: generator returned terminal env for a packet lab"`.
+- [x] **Step 2:** Refactor to `env` everywhere; run `npm test`, `npm run check:content` and `npx playwright test tests/e2e/rank-0.spec.ts tests/e2e/lab-terminal.spec.ts` → all PASS (behaviour unchanged for Rank 0).
+- [x] **Step 3:** Commit `refactor(labs): environment-generic labs (terminal | packet)`.
 
 ---
 
