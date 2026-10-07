@@ -7,7 +7,7 @@ module: networking
 order: 3
 estimated_minutes: 30
 objectives_covered: ["netplus:2.2", "netplus:5.5"]
-mitre: []
+mitre: ["T1557.002"]
 lab: core-r1-net-reach-lab-01
 xp: 100
 status: draft
@@ -18,77 +18,193 @@ last_reviewed: null
 
 ### 1. What it is
 
-While IP addresses route packets across internetworks (Layer 3), local network delivery within the same physical or virtual cable segment happens at Layer 2 using **MAC (Media Access Control) addresses**.
+This lesson covers three small things that every network depends on:
 
-- A **MAC address** is a 48-bit physical identifier burned into a Network Interface Card (NIC), represented as 6 pairs of hexadecimal digits (e.g., `52:54:00:12:34:56`). The first 3 bytes form the **OUI (Organizationally Unique Identifier)** identifying the manufacturer; the last 3 bytes are the device serial.
-- **ARP (Address Resolution Protocol)** bridges Layer 3 and Layer 2 by resolving a known IP address to its corresponding physical MAC address on the local link.
-- **ICMP (Internet Control Message Protocol)** operates alongside IP at Layer 3 to send diagnostic feedback and operational error notifications (such as "Destination Host Unreachable" or echo request/reply).
+- A **MAC address** is the hardware address of a network card. It is used to deliver data to the right device **on your local network**.
+- **ARP (Address Resolution Protocol)** is how a computer finds out "which MAC address belongs to this IP address?"
+- **ICMP (Internet Control Message Protocol)** is how the network sends short status messages, like "I'm here" or "I can't reach that."
+
+An analogy: an IP address is like a person's name on a letter, and the MAC address is like the desk they sit at in an open-plan office. The post room knows the letter is for "Priya". To actually hand it over, someone shouts "Who is Priya?", and Priya answers "Desk 14." That shout is ARP. ICMP is the note that comes back saying "delivered" or "nobody by that name here."
+
+The real meaning: IP addresses (Layer 3) say *which computer* in the whole internet. MAC addresses (Layer 2) say *which device on this one local network* gets the frame next. ARP links the two. ICMP travels alongside IP and reports reachability and errors.
 
 ### 2. Why it exists
 
-When two computers sit on the same Ethernet switch, the switch does not read IP headers. The switch only looks at Ethernet frame headers to forward data directly to the correct physical port using its internal **MAC address table (CAM table)**.
+These exist because **IP alone can't deliver anything on a cable**. A switch (the box that connects the computers in an office) does not read IP addresses at all. It only reads MAC addresses in the **frame**, the Layer 2 envelope. So before your computer can send a single packet, it needs the MAC address of the next device. ARP solves that on demand.
 
-To send a packet to another machine on the local subnet (or to the default gateway router), your computer must know the destination's MAC address. ARP provides this translation on demand:
+ICMP exists because IP has no way to report problems by itself. Without ICMP, a packet to a dead host would just vanish, and you would never know why.
 
-1. Your computer sends an **ARP Request** broadcast (`FF:FF:FF:FF:FF:FF`): "Who has IP 10.0.2.1? Tell 10.0.2.15."
-2. The owner answers with an **ARP Reply** unicast: "10.0.2.1 is at 52:55:0a:00:02:02."
-3. Your computer stores this pair in its **ARP cache** (neighbor table) to avoid repeating the broadcast for future packets.
-
-ICMP exists because IP is connectionless and unreliable; ICMP provides the diagnostic voice of the network layer.
+When these go wrong, everything above them fails. And because ARP has **no security at all**, it is one of the easiest things on a local network to abuse.
 
 ### 3. How it works
 
-**How a switch forwards frames:**
+**Level 1 — what a MAC address looks like.** A MAC address is 48 bits, written as six pairs of hexadecimal digits: `52:54:00:12:34:56`. The first three pairs are the **OUI (Organizationally Unique Identifier)**, which identifies the manufacturer. The last three are set by the manufacturer for that card. The special address `ff:ff:ff:ff:ff:ff` is **broadcast**: "every device on this network."
 
-Unlike old Ethernet hubs that repeated every electrical signal to every port, a switch inspects the source MAC of incoming frames to learn which device connects to which port. When forwarding, it matches the destination MAC against its table:
-- Known MAC: forwards frame only to that specific port (unicast).
-- Unknown MAC or broadcast: floods frame out all ports except the arrival port.
+**Level 2 — how a switch uses it.** A switch learns which MAC address is behind each of its ports, by reading the *source* MAC of every frame that arrives. It keeps this list in its **MAC address table** (also called the **CAM table**, Content Addressable Memory). When a frame arrives:
 
-**ICMP in network troubleshooting:**
+- destination MAC is in the table → send it out of that one port only;
+- destination unknown, or broadcast → send it out of every port except the one it came in on (**flooding**).
 
-- **ping**: Sends ICMP Type 8 (Echo Request). The target returns ICMP Type 0 (Echo Reply). This proves Layer 3 reachability and measures Round-Trip Time (RTT).
-- **traceroute**: Sends packets with increasing Time-To-Live (TTL) values starting at 1. Each intermediate router decrements TTL by 1. When TTL hits 0, the router discards the packet and returns ICMP Type 11 (Time Exceeded), revealing that hop's IP address.
+**ARP, step by step.** Your machine (`10.0.2.15`) wants to send a packet to its gateway (`10.0.2.2`) but only knows the IP:
 
-Let's inspect the ARP neighbor table on our simulated machine:
+```text
+ 10.0.2.15                          switch                       10.0.2.2 (gateway)
+    │  ① ARP request, to ff:ff:ff:ff:ff:ff ("everyone")              │
+    │  "Who has 10.0.2.2? Tell 10.0.2.15" ───────────────────────────▶│
+    │                                                                 │
+    │◀──────────────────────────── ② ARP reply, to 10.0.2.15 only     │
+    │        "10.0.2.2 is at 52:55:0a:00:02:02"                       │
+    │                                                                 │
+    │  ③ saved in the ARP cache; now frames can be addressed          │
+```
+
+In plain English: your machine shouts a question to everyone on the local network. Only the owner of that IP answers, directly to you. Your machine writes the answer down in its **ARP cache** (also called the **neighbour table**) so it doesn't have to ask again for a while.
+
+A key detail: **ARP never leaves your local network.** To reach a server on the internet, your machine does *not* ARP for the server. It ARPs for the **gateway**, and puts the gateway's MAC on the frame, while the IP packet inside still carries the server's IP. Every router along the way repeats this for its next hop.
+
+#### Command
 
 ```console
 $ ip neigh
-$ ping -c 1 10.0.2.1
+10.0.2.2 dev eth0 lladdr 52:55:0a:00:02:02 REACHABLE
 ```
 
-The `ip neigh` command displays the cached IP-to-MAC associations.
+#### In simple English
+
+Show the ARP cache: which IP addresses on my local network map to which MAC addresses.
+
+#### Why do I care?
+
+If an attacker poisons ARP, this table is where it shows up. The gateway's IP suddenly maps to the *attacker's* MAC.
+
+#### Important part
+
+- `10.0.2.2`: the IP address (here, the default gateway from `ip route`).
+- `lladdr 52:55:0a:00:02:02`: its **link-layer address**, meaning its MAC.
+- `REACHABLE`: the entry was confirmed recently.
+
+#### What should I look for?
+
+The gateway's MAC. Remember it. If it changes without anyone replacing the router, or if two IPs show the *same* MAC, investigate.
+
+**ICMP and ping.** `ping` sends an **ICMP Echo Request** (type 8). A host that is up replies with an **ICMP Echo Reply** (type 0). It is the simplest question you can ask a network: "are you there?"
+
+#### Command
+
+```console
+$ ping -c 2 10.0.2.2
+PING 10.0.2.2 (10.0.2.2) 56(84) bytes of data.
+64 bytes from 10.0.2.2: icmp_seq=1 ttl=64 time=0.412 ms
+64 bytes from 10.0.2.2: icmp_seq=2 ttl=64 time=0.512 ms
+
+--- 10.0.2.2 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1004ms
+rtt min/avg/max/mdev = 0.412/0.462/0.512/0.050 ms
+```
+
+#### In simple English
+
+Send two "are you there?" messages to the gateway and show the answers.
+
+#### Why do I care?
+
+It is the first reachability test in any troubleshooting, and the first thing an attacker uses to see which machines are alive.
+
+#### Important part
+
+- `-c 2`: send 2 packets, then stop. Without `-c`, Linux ping keeps going until you press Ctrl+C. In this lab shell `-c` is required.
+- `time=0.412 ms`: the **round-trip time (RTT)**, how long the answer took. Under 1 ms means "on the same local network."
+- `ttl=64`: the **Time To Live** left in the reply (explained below).
+- `0% packet loss`: every request was answered.
+
+#### What should I look for?
+
+`received` and `packet loss`. Here is a host that does not answer:
+
+```console
+$ ping -c 2 offline.example.net
+PING offline.example.net (198.51.100.99) 56(84) bytes of data.
+From 10.0.2.15 icmp_seq=1 Destination Host Unreachable
+From 10.0.2.15 icmp_seq=2 Destination Host Unreachable
+
+--- offline.example.net ping statistics ---
+2 packets transmitted, 0 received, +2 errors, 100% packet loss, time 1004ms
+```
+
+`100% packet loss` with **Destination Host Unreachable** means no answer came back. Be careful: many servers and firewalls block ping on purpose, so "no ping reply" means *unreachable or filtered*, not always "switched off."
+
+**TTL and traceroute.** Every IP packet carries a **TTL (Time To Live)**, a number that each router lowers by 1. When it hits 0, the router throws the packet away and sends back an **ICMP Time Exceeded** message (type 11). This stops lost packets circling forever. `traceroute` uses it cleverly: it sends probes with TTL 1, then 2, then 3… Each router that drops one reveals itself.
+
+#### Command
+
+```console
+$ traceroute example.com
+traceroute to example.com (203.0.113.10), 30 hops max, 60 byte packets
+ 1  _gateway (10.0.2.2)  0.412 ms  0.398 ms  0.381 ms
+ 2  192.0.2.1 (192.0.2.1)  7.360 ms  7.460 ms  7.560 ms
+ 3  * * *
+ 4  198.51.100.1 (198.51.100.1)  14.720 ms  14.820 ms  14.920 ms
+ 5  example.com (203.0.113.10)  18.400 ms  18.500 ms  18.600 ms
+```
+
+#### In simple English
+
+Show every router between me and example.com, one line per **hop**.
+
+#### Why do I care?
+
+It shows *where* along the path traffic stops or slows down, and the route your data really takes.
+
+#### Important part
+
+- Each line is one hop; the three times are three probes to that hop.
+- `_gateway` is the name Linux gives your default gateway. Hop 1 is always your own router.
+- `* * *` means that router did not answer. Many routers are set not to reply. The path still continued, as hop 4 shows.
+- The last line is the destination itself.
+
+#### What should I look for?
+
+The hop count (here **5**, the line number of the destination), and the hop where the times jump or the replies stop for good. On Linux, traceroute sends UDP probes by default; Windows `tracert` uses ICMP echo. Both rely on ICMP Time Exceeded coming back.
 
 ### 4. How attackers abuse it
 
-- **ARP Poisoning / ARP Spoofing (MITM)**: ARP has no authentication. Any machine on the local network can broadcast gratuitous ARP replies claiming: "I am the gateway router (10.0.2.1), send your traffic to my MAC." Victims update their caches and forward all outbound traffic through the attacker's machine.
-- **MAC Flooding**: Attackers flood a switch with thousands of random MAC addresses. Once the switch CAM table memory fills completely, the switch falls back to behaving like a hub — broadcasting all traffic out all ports, allowing packet sniffing.
-- **ICMP Flooding & Abuse**: Attackers flood networks with ICMP echo requests (Smurf attack or ping floods) or send malformed headers to crash legacy IP stacks.
+- **ARP spoofing / ARP cache poisoning.** ARP has no authentication: any device can send a reply nobody asked for. An attacker on the same network tells everyone "10.0.2.2 is at *my* MAC." Victims update their caches and send all their traffic through the attacker, who forwards it on so nothing seems wrong. That is an **adversary-in-the-middle** position. ATT&CK: **T1557.002, Adversary-in-the-Middle: ARP Cache Poisoning**.
+- **MAC flooding.** Sending thousands of frames with random source MACs fills the switch's CAM table. Some switches then flood all traffic to every port, so the attacker can capture it.
+- **Ping sweeps.** Pinging every address in a subnet to find live hosts, the first step of mapping a network.
+- **ICMP floods.** Sending huge numbers of pings to use up a victim's bandwidth.
+
+All of these are only ever practised on networks you own or are explicitly authorised to test, such as this lab.
 
 ### 5. How defenders detect it
 
-- **Dynamic ARP Inspection (DAI)**: Managed enterprise switches validate ARP packets against a trusted binding table (built by DHCP snooping) and drop spoofed ARP replies.
-- **Network monitoring alerts**: Systems flag multiple MAC addresses claiming the same IP address or sudden surges in unsolicited ARP replies.
-- **Host-level static ARP entries**: High-security environments pin the default gateway MAC address in the OS ARP table so dynamic replies cannot overwrite it.
+- **ARP watching.** Tools like arpwatch, and many IDS (Intrusion Detection System) products, alert when an IP's MAC changes or when one MAC claims many IPs. A flood of unrequested ARP replies is a strong signal.
+- **Switch logs.** Managed switches report **port security** violations (too many MACs on one port) and MAC addresses "flapping" between ports.
+- **Flow and firewall logs.** One host sending ICMP to every address in a range is a sweep.
+
+Imagine the SOC receives the alert "gateway MAC changed on VLAN 20." The analyst compares the new MAC's OUI with the router's maker and finds which switch port it is on. That port is the attacker's laptop.
 
 ### 6. How to prevent/fix it
 
-- **Enable port security**: Limit each switch port to a small number of learned MAC addresses; shut down ports that attempt to register dozens of addresses.
-- **Segment with VLANs (Virtual LANs)**: Split broadcast domains into small isolated groups so ARP spoofing on a guest Wi-Fi network cannot reach corporate servers.
-- **Drop unsolicited ICMP at perimeters**: Configure border firewalls to rate-limit or block incoming ICMP echo requests while allowing necessary Path MTU Discovery messages.
+- **Dynamic ARP Inspection (DAI)** on managed switches drops ARP replies that don't match the trusted IP-to-MAC list, which is built by **DHCP snooping** (lesson 6).
+- **Port security**: limit how many MAC addresses each switch port may learn, and shut ports that exceed it.
+- **VLANs (Virtual LANs)**: split one physical network into smaller separate networks, so an attacker on the guest Wi-Fi can't ARP-poison the finance team.
+- **Encrypt traffic** (TLS, VPNs), so that even an in-the-middle attacker sees only scrambled data.
+- **Filter ICMP carefully**: rate-limit it at the internet edge, but never block it entirely (see below).
 
 ### 7. Common mistakes
 
-- **Thinking ARP routes across the internet**: ARP broadcasts never cross routers. ARP only operates within the local Layer 2 broadcast domain.
-- **Confusing gateway MAC with remote host MAC**: When sending a packet to `example.com`, the destination IP is `example.com`, but the destination MAC in the frame is *your local router's MAC*.
-- **Completely blocking all ICMP**: Blocking all ICMP breaks Path MTU Discovery (PMTUD), causing mysterious connection hangs on large data transfers.
+- **Thinking ARP crosses routers.** It doesn't; ARP lives only inside one local network.
+- **Confusing the two destinations.** For a packet to example.com, the *IP* destination is example.com's address, `203.0.113.10`. The *MAC* destination is your gateway's MAC. They are different on purpose.
+- **"No ping = machine down."** It may just be blocking ICMP.
+- **Blocking all ICMP.** It breaks **Path MTU Discovery**, the mechanism that finds the largest packet size a path allows. The result is connections that hang mysteriously on large transfers.
 
 ### Remember it like this
 
-> **IP address = Logical destination across the world. MAC address = Physical hop to the next switch or router on the local link. ARP connects the two.**
+> **IP = who, across the world. MAC = which desk, on this floor. ARP = "who has this IP?" ICMP = the network's status notes: ping asks "are you there?", traceroute counts the hops.**
 
 ### Interview answer
 
-> "MAC addresses operate at Layer 2 to deliver frames across a local broadcast domain, whereas IP addresses operate at Layer 3 for internetwork routing. When communicating with a device on the local network or reaching the default gateway, ARP broadcasts an inquiry to resolve the target IP to its MAC address and caches the result. Because ARP is stateless and unauthenticated, it is susceptible to ARP poisoning, where an attacker intercepts traffic by advertising their MAC for the gateway IP. We mitigate this using Dynamic ARP Inspection, DHCP snooping, and switch port security."
+> "MAC addresses deliver frames inside a local network; IP addresses route packets between networks. ARP resolves an IP to a MAC by broadcasting a request and caching the reply, and for remote destinations the host ARPs for its gateway, not the server. Because ARP is unauthenticated, an attacker can poison caches and sit in the middle of traffic; we defend with Dynamic ARP Inspection backed by DHCP snooping, port security and VLANs. ICMP carries diagnostics: ping uses echo request and reply, and traceroute relies on TTL expiry and ICMP Time Exceeded to reveal each hop."
 
 ## Terminal Check
 
@@ -96,19 +212,19 @@ The `ip neigh` command displays the cached IP-to-MAC associations.
 
 ## Lab
 
-In this terminal lab, verify network reachability across a set of internal hosts, identify an unreachable server using ICMP ping, count network hops using traceroute, and retrieve the gateway's hardware MAC address from the neighbor table.
+In this terminal lab you check a list of servers. You will use `ping -c` to find the one that does not answer, `traceroute` to count the hops to `beacon.example`, and `ip neigh` to read your gateway's MAC address. Every learner gets a different network.
 
 <LabLink />
 
 ## Debrief
 
-**What a professional does here.** Security engineers monitor network segmentation boundaries and respond when network IDS tools detect duplicate IP-MAC bindings indicating ARP spoofing.
+**What a professional does here.** Network and security engineers keep a known-good record of critical MAC addresses (gateways, DNS servers) and alert on changes. When reachability breaks, they test in order: ARP entry for the gateway, ping the gateway, ping the target, then traceroute to see where the path stops.
 
-**Real incident: The Ping of Death (1996–1997).** The maximum legal size of an IPv4 packet is 65,535 bytes. In the mid-1990s, attackers discovered that sending an oversized ICMP echo request fragmented into multiple packets caused the reassembly buffer on the receiving operating system to overflow when put back together. Vulnerable Windows, Linux, and Unix systems immediately crashed with blue screens or kernel panics. This demonstrated that even simple diagnostic protocols like ICMP can cause catastrophic Denial of Service when packet validation is missing in protocol implementations.
+**Real incident: the "Ping of Death" (1996–1997).** The largest legal IPv4 packet is 65,535 bytes. Attackers found that sending an ICMP echo request *larger* than that, split into fragments, crashed many systems when they put the fragments back together. The reassembled packet overflowed the memory set aside for it. Windows 95 and NT, many Unix systems, Linux and macOS of the time were affected, and a single command could knock a machine offline. Vendors patched their reassembly code. The lesson still holds: even the simplest diagnostic protocol is code that parses untrusted input, and it must check sizes.
 
 **Key takeaways**
 
-- Layer 2 delivery uses 48-bit MAC addresses; switches forward frames via CAM tables.
-- ARP resolves local IP addresses to MAC addresses and operates only within a broadcast domain.
-- ICMP provides error reporting and diagnostics (ping, traceroute).
-- ARP lacks authentication and must be defended using switch features like DAI and port security.
+- MAC addresses are 48-bit hardware addresses used inside one local network; switches forward frames using their CAM table.
+- ARP maps IP → MAC, is broadcast and cached, and never crosses a router.
+- ARP has no authentication, so ARP poisoning (T1557.002) is easy; defend with DAI, DHCP snooping, port security and VLANs.
+- ICMP powers ping (echo request/reply) and traceroute (TTL + Time Exceeded).
