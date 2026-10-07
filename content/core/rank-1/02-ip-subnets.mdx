@@ -7,7 +7,7 @@ module: networking
 order: 2
 estimated_minutes: 35
 objectives_covered: ["netplus:1.7", "netplus:1.8", "netplus:5.5"]
-mitre: []
+mitre: ["T1018"]
 lab: core-r1-net-ip-lab-01
 xp: 100
 status: draft
@@ -18,95 +18,155 @@ last_reviewed: null
 
 ### 1. What it is
 
-An **IP (Internet Protocol) address** is a numerical identifier assigned to every device connected to a computer network that uses the Internet Protocol for communication.
+An **IP address** is the address of a device on a network. It tells other computers where to send data, the same way a postal address tells the post office where to deliver a letter.
 
-Two major versions are deployed worldwide:
+A postal address has parts: country, city, street, house number. An IP address also has two parts: the **network part** (which street) and the **host part** (which house on that street). A **subnet** is one street: a group of addresses that share the same network part.
 
-- **IPv4 (32-bit)**: Formatted as 4 octets separated by dots (e.g., `192.0.2.15`). It provides 2^32 ≈ 4.29 billion possible addresses.
-- **IPv6 (128-bit)**: Formatted as 8 groups of 4 hexadecimal digits separated by colons (e.g., `2001:0db8:85a3::8a2e:0370:7334`). It provides 2^128 addresses — virtually limitless space.
+The real meaning: **IP (Internet Protocol)** is the Layer 3 protocol from the last lesson. Every packet carries a source IP and a destination IP. There are two versions in use:
 
-Networks are grouped into **subnets** using **CIDR (Classless Inter-Domain Routing)** notation, where a suffix specifies how many leading bits belong to the network prefix (e.g., `/24`).
+- **IPv4**: 32 bits, written as four numbers from 0 to 255 separated by dots, e.g. `192.0.2.15`. About 4.3 billion addresses in total.
+- **IPv6**: 128 bits, written as eight groups of hexadecimal digits separated by colons, e.g. `2001:db8::15`. Enough addresses to never run out.
 
 ### 2. Why it exists
 
-Without hierarchical addressing, every router on the planet would need an entry for every individual computer on Earth. Routers would exhaust their memory within minutes.
+IP addresses exist because **a computer needs to know where to send a packet**, and routers need a short way to decide which direction to forward it.
 
-Subnetting divides address space into manageable clusters:
+If every router had to remember every single computer in the world, its memory would never be big enough. Splitting addresses into "network" and "host" solves this. A router only needs to know *which way to the street*, not every house on it. This is why subnets exist: they group addresses so that routing stays small and fast.
 
-- The **network portion** identifies the subnet. Routers only need to know how to reach the network prefix.
-- The **host portion** identifies the specific machine within that subnet.
-- The **subnet mask** tells the operating system where the network portion ends and the host portion begins.
+IPv6 exists because IPv4 ran out. 4.3 billion sounds like a lot, but the world has more phones, laptops, servers and smart devices than that. The last big blocks of IPv4 were handed out in 2011.
 
-Special-purpose ranges segregate private internal networks from the public internet (RFC 1918) and reserve addresses for link-local or loopback communications.
+When addressing goes wrong, machines can't reach each other, or reach things they shouldn't. One wrong subnet setting can expose a private server to a network that was never meant to see it.
 
 ### 3. How it works
 
-**Subnet calculation fundamentals:**
+**Level 1 — reading an IPv4 address.** Each of the four numbers is called an **octet**, because it is 8 bits (8 ones and zeros). 4 octets × 8 bits = 32 bits.
 
-In an IPv4 address, the total bits equal 32. If a subnet is `/26`:
+```text
+   192   .   0    .    2    .   15
+11000000 00000000 00000010 00001111      ← the same address in binary (32 bits)
+```
 
-- Host bits remaining: 32 - 26 = 6 bits.
-- Total IP addresses: 2^6 = 64.
-- **Usable host addresses**: 2^(host bits) - 2 (subtracting the network address where host bits are all 0, and the broadcast address where host bits are all 1). For `/26`, usable hosts = 64 - 2 = 62.
+**Level 2 — CIDR and the subnet mask.** How do you know where the network part ends? You add a slash and a number: `10.0.2.15/24`. This is **CIDR notation (Classless Inter-Domain Routing)**. The number after the slash is the **prefix length**: how many bits, counted from the left, are the network part.
 
-**Reserved IPv4 address blocks you must know:**
+```text
+ 10.0.2.15/24
+ ├────────┤ └─ 15 = this host
+  10.0.2      = the network (the first 24 bits)
 
-| Range | Purpose | RFC / Standard |
-|---|---|---|
-| `10.0.0.0/8` | Private network (Class A) | RFC 1918 |
-| `172.16.0.0/12` | Private network (Class B) | RFC 1918 |
-| `192.168.0.0/16` | Private network (Class C) | RFC 1918 |
-| `127.0.0.0/8` | Loopback (`127.0.0.1` = localhost) | RFC 1122 |
-| `169.254.0.0/16` | Link-local (APIPA / Cloud metadata) | RFC 3927 |
-| `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24` | Documentation & test examples | RFC 5737 |
+ Network address   10.0.2.0     (host bits all 0) — the name of the street
+ First usable      10.0.2.1
+ Last usable       10.0.2.254
+ Broadcast         10.0.2.255   (host bits all 1) — "everyone on this street"
+```
 
-**IPv6 structure:**
+In plain English: a `/24` keeps the first three numbers fixed. The last number can change, and that is where the hosts live. The **subnet mask** is the older way of writing the same thing: `/24` = `255.255.255.0`.
 
-IPv6 addresses use 128 bits. Consecutive blocks of zeroes can be compressed with `::` once per address.
-- `::1` is the loopback address (equivalent to `127.0.0.1`).
-- `fe80::/10` is link-local (usable only on the local link).
-- `2000::/3` is global unicast (routable on the internet).
+**How many hosts fit in a subnet?** There are `32 − prefix` host bits. Each extra bit doubles the number of addresses:
 
-Let's inspect our simulated network interface and routing table:
+- Total addresses = 2^(32 − prefix)
+- **Usable hosts = 2^(32 − prefix) − 2**: the first address names the network and the last is the broadcast, so neither can be given to a device.
+
+| Prefix | Host bits | Total | Usable hosts |
+|---|---|---|---|
+| /24 | 8 | 256 | 254 |
+| /26 | 6 | 64 | 62 |
+| /28 | 4 | 16 | 14 |
+| /30 | 2 | 4 | 2 |
+
+Example: a `/26` has 32 − 26 = 6 host bits, so 2^6 = 64 addresses and 64 − 2 = **62 usable hosts**.
+
+**Special addresses you must recognise.** Some ranges have fixed meanings. Seeing one in a log tells you a lot immediately:
+
+| Range | What it means |
+|---|---|
+| `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16` | **Private** addresses (RFC 1918). Used inside homes and companies; never routed on the public internet. |
+| `127.0.0.0/8` | **Loopback**: the machine itself. `127.0.0.1` = "me". |
+| `169.254.0.0/16` | **Link-local**: a machine gives itself one of these when no address server answers. In the cloud, `169.254.169.254` is the special metadata service (see the Debrief). |
+| `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24` | **Documentation** addresses (RFC 5737), reserved for examples like the ones in this course. |
+
+An **RFC (Request for Comments)** is a numbered public document that defines an internet standard. You don't need to memorise the numbers yet, just recognise the ranges.
+
+**IPv6 in one minute.** IPv6 addresses are long, so two shortcuts exist: leading zeros in a group can be dropped, and **one** run of all-zero groups can be replaced with `::`. So `2001:0db8:0000:0000:0000:0000:0000:0015` becomes `2001:db8::15`. Three you should know: `::1` is loopback (like `127.0.0.1`), `fe80::/10` is link-local (only valid on the local network), and `2000::/3` is the global, internet-routable range.
+
+**Level 3 — on a real machine.** Here is how you read all of this from a Linux terminal.
+
+#### Command
 
 ```console
 $ ip a
-$ ip route
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 52:54:00:12:34:56 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.15/24 brd 10.0.2.255 scope global dynamic eth0
+       valid_lft 86313sec preferred_lft 86313sec
 ```
 
-The output shows your assigned IP address, the CIDR prefix length, and the default gateway through which all remote traffic is forwarded.
+#### In simple English
+
+Show every network card and the IP addresses it has. `ip a` is short for `ip address`.
+
+#### Why do I care?
+
+It is the first thing you check on any machine you investigate: *what is this machine's address, and which network is it on?* That decides what it can reach, and what can reach it.
+
+#### Important part
+
+- `inet 10.0.2.15/24`: the IPv4 address, `10.0.2.15`, on a `/24` network.
+- `brd 10.0.2.255`: the broadcast address of that network.
+- `dynamic` and `valid_lft 86313sec`: the address was handed out automatically (by DHCP, lesson 6) and is valid for about another 24 hours.
+- `inet 127.0.0.1/8 … lo`: the loopback address, present on every machine.
+
+#### What should I look for?
+
+The `inet` line on the card that is `UP`. From `10.0.2.15/24` you can work out the whole subnet: `10.0.2.0` to `10.0.2.255`, with 254 usable hosts. An address starting `169.254.` would tell you the machine failed to get a real address.
+
+The second command shows where packets go:
+
+```console
+$ ip route
+default via 10.0.2.2 dev eth0 proto dhcp src 10.0.2.15 metric 100
+10.0.2.0/24 dev eth0 proto kernel scope link src 10.0.2.15 metric 100
+```
+
+Read it as two rules. Line 2: "anything in `10.0.2.0/24` is on my own street, so deliver it directly through `eth0`." Line 1: "everything else (`default`) goes **via** `10.0.2.2`." That router is the **default gateway**, the exit from your street to the rest of the world.
 
 ### 4. How attackers abuse it
 
-- **Server-Side Request Forgery (SSRF) against Cloud Metadata**: Cloud providers (AWS, GCP, Azure) expose instance metadata at the link-local address `169.254.169.254`. If an application accepts user-supplied URLs, attackers force the server to fetch `http://169.254.169.254/latest/meta-data/` to steal IAM credentials and security tokens.
-- **IP Spoofing**: In UDP-based protocols without handshakes, attackers forge the source IP header to redirect responses or impersonate trusted systems.
-- **Subnet scanning**: Once attackers gain a foothold, they sweep local CIDR ranges (e.g., `10.0.0.0/24`) to discover adjacent unhardened servers.
+- **Mapping the network.** After getting into one machine, an attacker reads its address and mask, works out the subnet, and sweeps it for other machines. A `/24` means 254 neighbours to try. ATT&CK: **T1018, Remote System Discovery**.
+- **Reaching special addresses.** If a web application fetches any URL a user gives it, an attacker can ask it to fetch `http://169.254.169.254/` (the cloud metadata service) and steal the server's cloud credentials. This is called **SSRF (Server-Side Request Forgery)**: making the *server* send a request on the attacker's behalf.
+- **Faking the sender.** **IP spoofing** means writing a false source address on packets. It is used to hide, or to make replies flood a victim.
 
 ### 5. How defenders detect it
 
-- **Egress filtering logs**: Firewalls block and alert on internal packets destined for invalid or forbidden IP ranges (such as outbound traffic to `169.254.169.254` from unauthorized containers).
-- **Network telemetry (NetFlow/IPFIX)**: Unusually high numbers of connection attempts across contiguous IP addresses indicate an active subnet sweep.
-- **Ingress validation**: Border routers drop incoming packets claiming to originate from private RFC 1918 or loopback addresses (anti-spoofing / BCP 38).
+- **Flow logs and firewalls** show one internal machine contacting many addresses in its own subnet in a short time: a classic sweep pattern.
+- **Egress rules with logging** alert when a server that should never call `169.254.169.254` suddenly does, or when internal traffic heads to unexpected ranges.
+- **Border routers** drop packets arriving from the internet that claim a private or loopback source address. Those are always spoofed. This is called **ingress filtering** (best practice BCP 38).
+
+Imagine a company runs 500 cloud servers. A defender can write one rule: "only the cloud agent process may talk to the metadata address." Any other request to it is an alert.
 
 ### 6. How to prevent/fix it
 
-- **Block access to metadata services**: Enforce host-level firewall rules or IMDSv2 (requiring session tokens) to prevent SSRF queries to `169.254.169.254`.
-- **Implement RFC 1918 filtering at edge firewalls**: Never allow private IP space to route out to or in from the public internet.
-- **Design least-privilege subnets**: Segment sensitive workloads (databases, payment processing) into distinct `/28` or `/24` subnets with restrictive inter-VLAN firewall rules.
+- **Size subnets on purpose** and keep sensitive systems (databases, payments) in their own small subnets, with a firewall between subnets.
+- **Protect cloud metadata.** On AWS, require **IMDSv2**, which needs a session token that a simple SSRF cannot get. Block metadata access from containers that don't need it.
+- **Filter at the edge.** Never let private-range traffic leave or enter the internet border; drop spoofed sources.
 
 ### 7. Common mistakes
 
-- **Forgetting to subtract 2 for usable hosts**: 2^(32 - prefix) gives total addresses; usable host capacity is always 2^(32 - prefix) - 2.
-- **Assuming cloud metadata is private to the network**: The link-local `169.254.169.254` address is accessible by any process on the virtual machine unless explicitly restricted.
-- **Exposing internal subnets via default routing**: Misconfiguring a router interface to route internal subnets out the default gateway exposes internal packets to upstream ISPs.
+- **Forgetting the "− 2".** A `/28` has 16 addresses but only **14** usable hosts.
+- **Thinking private means safe.** `10.x.x.x` is not reachable from the internet, but anyone already inside the network can reach it.
+- **Over-shortening IPv6.** `::` may appear only once in an address; using it twice makes the address ambiguous.
+- **Confusing the IP with the gateway.** In `ip route`, the address after `via` is the router, not you. Yours is after `src`.
 
 ### Remember it like this
 
-> **Prefix bits = Network. Remaining bits = Hosts. Usable hosts = 2^(32 - prefix) - 2. `169.254.169.254` = Cloud metadata link-local.**
+> **IP address = house address; subnet = street; prefix = how much of the address names the street. Usable hosts = 2^(32 − prefix) − 2.** `169.254.169.254` = the cloud's secret drawer. Guard it.
 
 ### Interview answer
 
-> "IPv4 uses 32-bit addresses divided into network and host portions by a subnet mask or CIDR prefix, while IPv6 expands to 128-bit addresses to eliminate address exhaustion. Usable IPv4 host capacity on a subnet is calculated as 2^(32 - prefix) - 2, reserving the network and broadcast addresses. Key special address ranges include RFC 1918 private spaces (10/8, 172.16/12, 192.168/16) and link-local addresses like 169.254.0.0/16. In cloud security, 169.254.169.254 is especially critical because it hosts the instance metadata service, a frequent target of Server-Side Request Forgery attacks."
+> "An IPv4 address is 32 bits, split by the prefix length into a network part and a host part. A /24 has 8 host bits, so 256 addresses and 254 usable hosts, since the network and broadcast addresses are reserved. IPv6 uses 128 bits to solve IPv4 exhaustion. I watch for special ranges: RFC 1918 private space, loopback, and link-local. 169.254.169.254 is especially sensitive in the cloud because it serves instance credentials, which is why SSRF to it is a well-known attack and why IMDSv2 exists."
 
 ## Terminal Check
 
@@ -114,19 +174,20 @@ The output shows your assigned IP address, the CIDR prefix length, and the defau
 
 ## Lab
 
-In this hands-on terminal lab, inspect your network interfaces, determine your assigned IPv4 address and CIDR prefix, calculate your subnet's usable host count, and locate the default gateway.
+In this terminal lab you investigate an unfamiliar machine. You will find its IPv4 address and prefix with `ip a`, work out how many usable hosts its subnet holds, find its default gateway with `ip route`, and spot the network card that is switched off. Each learner gets a different network, so you have to read your own output.
 
 <LabLink />
 
 ## Debrief
 
-**What a professional does here.** Network architects size subnets according to workload growth, while security analysts investigate traffic alerts by immediately distinguishing public internet IPs from RFC 1918 internal addresses and link-local ranges.
+**What a professional does here.** In an investigation, the first question about any IP in a log is "what *kind* of address is this?" Private, public, loopback, link-local or documentation. That one answer changes the story. Network engineers size subnets for growth; security engineers size them for **containment**, so a compromise stays small.
 
-**Real incident: Capital One Breach (2019).** An attacker exploited an SSRF vulnerability in a misconfigured open-source Web Application Firewall (WAF) running on an Amazon EC2 instance. The attacker sent an HTTP request directing the WAF to fetch `http://169.254.169.254/latest/meta-data/iam/security-credentials/`. Because link-local traffic was not blocked from the container, the server returned temporary AWS credentials. The attacker used those credentials to access Amazon S3 buckets containing over 100 million customer credit applications. This incident prompted cloud providers to introduce token-based protections (IMDSv2) for link-local metadata endpoints.
+**Real incident: Capital One (2019).** An attacker found a misconfigured web application firewall running on an Amazon EC2 server. It could be tricked into fetching any URL (SSRF). The attacker made it request `http://169.254.169.254/latest/meta-data/iam/security-credentials/`, the cloud metadata service. It returned temporary AWS credentials for the server's role. Those credentials could read Amazon S3 storage, and the attacker downloaded data from about 100 million credit card applications in the US and about 6 million in Canada. Months later, AWS released **IMDSv2**, which requires a session token and blocks this simple form of the attack. One special address, left reachable, was the whole difference.
 
 **Key takeaways**
 
-- IPv4 is 32 bits; IPv6 is 128 bits.
-- CIDR prefix denotes network bits; usable hosts on IPv4 are 2^(32 - prefix) - 2.
-- RFC 1918 reserves 10/8, 172.16/12, and 192.168/16 for private use.
-- `169.254.169.254` is the cloud metadata endpoint and must be secured against SSRF.
+- IPv4 = 32 bits in four octets; IPv6 = 128 bits in hex groups.
+- The prefix (`/24`) says how many bits name the network; the rest name hosts.
+- Usable IPv4 hosts = 2^(32 − prefix) − 2.
+- Know the special ranges: private (RFC 1918), loopback, link-local, documentation.
+- `ip a` shows your address; `ip route` shows your gateway.

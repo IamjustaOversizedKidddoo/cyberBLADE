@@ -17,92 +17,147 @@ last_reviewed: null
 
 ### 1. What it is
 
-Network communication is split into modular tiers called **layers**. Each layer solves one specific engineering challenge, offers services to the layer directly above it, and relies entirely on the layer directly beneath it.
+A **network model** is a way of splitting "send data from one computer to another" into small jobs, stacked on top of each other like floors in a building. Each floor, called a **layer**, does one job and trusts the floor below it to do its own.
 
-Engineers use two models to reason about networks:
+Think of sending a parcel. You write a letter (the content). You put it in an envelope with a name on it. The post office puts the envelope in a sack labelled with a city. A truck carries the sack on a road. Nobody in that chain does everyone's job: the truck driver never reads your letter, and you never drive the truck. Each step only adds its own label and hands the parcel on.
 
-1. The **OSI (Open Systems Interconnection) 7-layer model**: A conceptual reference architecture dividing communication into 7 distinct stages: Physical (L1), Data Link (L2), Network (L3), Transport (L4), Session (L5), Presentation (L6), and Application (L7).
-2. The **TCP/IP 4-layer model**: The pragmatic architecture actually implemented on the internet: Network Access (Link), Internet (Network), Transport, and Application.
+The real meaning: networks work exactly like this. Engineers use two models to describe the floors:
 
-When your computer sends data, the payload moves down the stack through a process called **encapsulation** — each layer wraps the payload with its own protocol header. At the receiving end, the reverse happens: **decapsulation** strips each header in sequence as data moves up the stack.
+- The **OSI model (Open Systems Interconnection)** has **7 layers**. It is a teaching and troubleshooting map. Nobody "installs" OSI, but everyone uses its layer numbers when they talk ("that's a Layer 2 problem").
+- The **TCP/IP model** has **4 layers**. It describes how the internet is actually built.
 
 ### 2. Why it exists
 
-Before layered abstractions, network equipment manufacturers used proprietary, monolithic architectures. An application written for one vendor's mainframe could not communicate over another vendor's cabling or switches.
+Layered models exist because **one giant program that does everything would be impossible to build, change or fix**.
 
-Layers deliver two critical benefits:
+In the 1970s, each computer maker had its own closed networking system. An IBM machine could not easily talk to a DEC machine, and changing the cable meant rewriting the software. Layers solved this by agreeing on clean hand-offs between jobs:
 
-- **Modularity and interoperability**: A web browser (L7) doesn't care whether data travels across fibre-optic cables, 5G wireless radio waves, or Ethernet copper (L1). The physical medium can change without rewriting the application.
-- **Systematic troubleshooting**: Security analysts and network engineers isolate failures by layer. If physical link lights are dark (L1), testing DNS resolution (L7) is pointless.
+- **You can swap one layer without touching the others.** Your browser works the same over Wi-Fi, a 5G phone signal or an office cable. Only the bottom layer changed.
+- **You can find faults one layer at a time.** If the cable is unplugged, there is no point checking the website.
+
+When people ignore the layers, troubleshooting turns into guessing, and security turns into one big wall with no backup behind it.
 
 ### 3. How it works
 
-The two models align as follows:
+**Level 1 — the seven floors, top to bottom.** Here are the OSI layers with the job each one does in plain English:
 
-| OSI Layer | Name | Unit of Data (PDU) | Primary Function & Protocols | TCP/IP Equivalent |
-|---|---|---|---|---|
-| Layer 7 | Application | Data | User interaction, APIs: HTTP, HTTPS, DNS, SSH, SMTP | Application |
-| Layer 6 | Presentation | Data | Data formatting, encryption, compression: TLS, ASCII, JSON | Application |
-| Layer 5 | Session | Data | Dialog control, session maintenance: RPC, NetBIOS | Application |
-| Layer 4 | Transport | Segment (TCP) / Datagram (UDP) | End-to-end delivery, port numbers: TCP, UDP | Transport |
-| Layer 3 | Network | Packet | Logical addressing, routing across networks: IPv4, IPv6, ICMP | Internet |
-| Layer 2 | Data Link | Frame | Physical addressing on local segment: MAC addresses, ARP, Ethernet | Network Access (Link) |
-| Layer 1 | Physical | Bit | Electrical signals, radio waves, light pulses: CAT6, fibre, Wi-Fi PHY | Network Access (Link) |
+| # | OSI layer | Plain-English job | Examples | Unit of data | TCP/IP layer |
+|---|---|---|---|---|---|
+| 7 | Application | the program's own language | HTTP, DNS, SSH, SMTP | data | Application |
+| 6 | Presentation | how data is formatted or encrypted | TLS, JSON, UTF-8 | data | Application |
+| 5 | Session | keeping a conversation going | session setup, RPC | data | Application |
+| 4 | Transport | which program, and is delivery reliable? | TCP, UDP, port numbers | segment (TCP) / datagram (UDP) | Transport |
+| 3 | Network | which computer, across many networks | IPv4, IPv6, ICMP | packet | Internet |
+| 2 | Data Link | which device on *this* local network | Ethernet, Wi-Fi frames, MAC addresses, ARP | frame | Link |
+| 1 | Physical | turning ones and zeros into signals | copper cable, fibre light, radio waves | bits | Link |
 
-**Encapsulation in action:**
+A **PDU (Protocol Data Unit)** is the name for "one piece of data" at a given layer. The same bytes are called a *segment* at Layer 4, a *packet* at Layer 3 and a *frame* at Layer 2, because each layer has added its own label.
+
+**Level 2 — encapsulation.** When you send something, the data travels *down* the stack. Each layer wraps it in a **header**: a small block of labels that layer needs. This wrapping is called **encapsulation**. The receiver does the reverse, travelling *up* the stack and removing one header at a time. That is **decapsulation**.
 
 ```text
-Application Data:             [ HTTP Request Body ]
-Transport Header added:  [TCP | HTTP Request Body ]          -> Segment
-Network Header added:    [IP  | TCP | HTTP Request Body ]     -> Packet
-Data Link Header added:  [ETH | IP  | TCP | HTTP Data | FCS ] -> Frame
-Physical transmission:   0110100101100010...                  -> Bits
+ sending (down the stack)                              unit
+ ┌────────────────────────────────────────────┐
+ │                 HTTP request                │      data      ← Layer 7 writes the message
+ ├────────┬───────────────────────────────────┤
+ │  TCP   │           HTTP request            │      segment   ← Layer 4 adds ports
+ ├────┬───┴───┬───────────────────────────────┤
+ │ IP │  TCP  │         HTTP request          │      packet    ← Layer 3 adds IP addresses
+ ├────┴┬──────┼───────┬───────────────────┬───┤
+ │ ETH │  IP  │  TCP  │   HTTP request    │FCS│      frame     ← Layer 2 adds MAC addresses
+ └─────┴──────┴───────┴───────────────────┴───┘
+   0110100101100010 …                                bits      ← Layer 1 sends signals
 ```
 
-On our simulated terminal, inspect the listening ports on Layer 4:
+In plain English: your browser writes a request. TCP labels it with port numbers so the right program receives it. IP labels it with the two computers' addresses. Ethernet labels it with the next device's hardware address, and adds an **FCS (Frame Check Sequence)**, a checksum that lets the receiver spot damaged frames. Then the bits go on the wire.
+
+**One machine, four layers.** You can see the layers on any Linux computer. Each command below looks at a different floor of the same machine.
+
+#### Command
 
 ```console
-$ ss -tln
+$ ip link
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 52:54:00:12:34:56 brd ff:ff:ff:ff:ff:ff
 ```
 
-You can see local sockets bound to ports, awaiting incoming transport segments.
+#### In simple English
+
+Show the machine's network cards ("links") and whether they are switched on.
+
+#### Why do I care?
+
+This is Layers 1 and 2. If a link is `DOWN`, nothing higher up can work, and you have found your problem in five seconds.
+
+#### Important part
+
+- `eth0` is the network card; `lo` is the **loopback**, a pretend card the machine uses to talk to itself.
+- `state UP` and `LOWER_UP` mean the card is on and a signal is present (Layer 1).
+- `link/ether 52:54:00:12:34:56` is the card's **MAC address**, its Layer 2 hardware address.
+
+#### What should I look for?
+
+`state UP` on the card you expect to use. `DOWN` or a missing card means the problem is at the bottom of the stack.
+
+Now one floor up, Layer 3, and then Layer 4:
+
+```console
+$ ip route
+default via 10.0.2.2 dev eth0 proto dhcp src 10.0.2.15 metric 100
+10.0.2.0/24 dev eth0 proto kernel scope link src 10.0.2.15 metric 100
+$ ss -tln
+State  Recv-Q Send-Q Local Address:Port Peer Address:Port
+LISTEN 0      128          0.0.0.0:22        0.0.0.0:*
+LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*
+```
+
+`ip route` shows the machine's **IP address** (`10.0.2.15`) and the router it sends everything else to (`10.0.2.2`). That is Layer 3: which computer, and which way. `ss -tln` lists the **ports** this machine is listening on. Port 22 is SSH and port 53 is DNS. That is Layer 4: which program. You will learn each of these commands properly in the next lessons. For now, notice that each one answers a question for *one* layer.
+
+**Level 3 — professional.** Real protocols don't always sit neatly on one floor. TLS encrypts (Layer 6 job) but runs inside TCP. ARP links Layer 3 addresses to Layer 2 addresses. Professionals use the layer numbers as a shared vocabulary ("it's a Layer 7 outage, the network is fine") and as a checklist. They don't treat them as strict laws.
 
 ### 4. How attackers abuse it
 
-Attackers target vulnerabilities specific to each layer:
+Every layer has its own weak spots, so attackers pick the floor where defences are thinnest:
 
-- **Layer 2 (Data Link)**: ARP poisoning, MAC flooding, and rogue DHCP servers to hijack local segment traffic.
-- **Layer 3 (Network)**: IP spoofing, ICMP redirect abuse, and route poisoning to misdirect packets across subnets.
-- **Layer 4 (Transport)**: TCP SYN floods to exhaust connection state tables, and UDP amplification reflection attacks.
-- **Layer 7 (Application)**: SQL injection, cross-site scripting (XSS), credential stuffing, and HTTP request smuggling.
+- **Layer 2:** pretending to be the router on a local network (ARP spoofing, which you will meet in lesson 3) so that traffic flows through the attacker.
+- **Layer 3:** faking the sender address on packets (**IP spoofing**) to hide or to aim replies at a victim.
+- **Layer 4:** sending floods of half-opened TCP connections (**SYN flood**) until a server can't accept real users.
+- **Layer 7:** attacking the application itself: stolen passwords, injection into web forms, abuse of APIs.
+
+A key idea: **an attack at a lower layer can defeat a control at a higher one.** Strong website passwords don't help if an attacker on the same Wi-Fi is silently redirecting your traffic at Layer 2.
 
 ### 5. How defenders detect it
 
-Defenders deploy monitoring tools calibrated to specific layer boundaries:
+Defenders place sensors on different floors, because each sees different things:
 
-- **Layer 2/3**: Switch port security, DHCP snooping, and ARP inspection detect rogue local devices.
-- **Layer 3/4**: Stateful firewalls, NetFlow/IPFIX logs, and intrusion detection systems (IDS/IPS) inspect packet headers, source/destination IPs, and TCP flags.
-- **Layer 7**: Web Application Firewalls (WAF), reverse proxies, and application loggers inspect decoded HTTP payloads, headers, and request methods.
+- **Layer 2/3:** managed switches report MAC addresses that suddenly move ports or claim another device's address.
+- **Layer 3/4:** firewalls and **flow logs** record who talked to whom, on which port, and how much. Flow logs are like a phone bill: numbers and durations, not the conversation.
+- **Layer 7:** web servers, proxies and **WAFs (Web Application Firewalls)** log the actual requests, such as the URL, method and user agent.
+
+Imagine the SOC receives an alert: "web login failures spiked." A good analyst checks the layers in order. Is the traffic reaching the server at all (L3)? Is it on the expected port (L4)? What are the requests (L7)?
 
 ### 6. How to prevent/fix it
 
-- **Defense-in-depth across layers**: Never rely on a single layer of control. Combine switch port access lists (L2), subnet firewalls (L3/L4), TLS encryption (L6), and application authentication (L7).
-- **Segment networks**: Place sensitive servers on isolated Layer 3 subnets so a compromise at Layer 2 cannot trivially reach high-value targets.
-- **Isolate failure domains**: Verify that higher-level services degrade gracefully when lower-layer dependencies experience latency or partitions.
+- **Defence in depth:** put a control on several floors, not one. Switch security (L2), firewall rules (L3/L4), TLS encryption (L6), and login security (L7). If one fails, the next still stands.
+- **Segment the network:** keep sensitive servers on their own networks so an attacker on the guest Wi-Fi can't even reach them.
+- **Troubleshoot bottom-up:** check link, then address, then port, then application. It is the fastest route to the real cause.
 
 ### 7. Common mistakes
 
-- **Confusing packets and frames**: A packet lives at Layer 3 (IP). A frame lives at Layer 2 (Ethernet). Routers forward packets; switches forward frames.
-- **Assuming Layer 7 security protects Layer 2**: Encrypting application data with TLS does not prevent an attacker on your local Wi-Fi from spoofing ARP replies and observing who you talk to.
-- **Troubleshooting top-down without checking Layer 1/2**: Debugging application timeouts before checking interface link state and IP assignment wastes hours.
+- **Mixing up packets and frames.** A packet is Layer 3 (IP addresses); a frame is Layer 2 (MAC addresses). Routers move packets between networks; switches move frames inside one network.
+- **Thinking OSI is software you run.** It is a model. The internet runs TCP/IP.
+- **Debugging the website first.** If `ip link` shows `DOWN`, no amount of browser refreshing will help.
+- **Believing encryption fixes everything.** TLS protects the *content* (L6/L7). It doesn't stop someone on your local network from seeing *who* you talk to.
 
 ### Remember it like this
 
-> **"Please Do Not Throw Sausage Pizza Away" (Physical, Data Link, Network, Transport, Session, Presentation, Application). Bits, Frames, Packets, Segments, Data.**
+> **Layers = floors of a building. Going down, each floor adds a label (encapsulation); going up, each floor removes one.** OSI order bottom-up: "**P**lease **D**o **N**ot **T**hrow **S**ausage **P**izza **A**way". Units: bits → frames → packets → segments → data.
 
 ### Interview answer
 
-> "The OSI 7-layer model is a conceptual hierarchy separating network concerns into Physical, Data Link, Network, Transport, Session, Presentation, and Application layers. The TCP/IP model condenses this into four operational layers: Network Access, Internet, Transport, and Application. When data is sent, each layer encapsulates the payload with headers containing layer-specific addressing — MAC addresses at Layer 2, IP addresses at Layer 3, and port numbers at Layer 4. In cybersecurity, we use these models for defense-in-depth: applying controls like ARP inspection at Layer 2, stateful firewall rules at Layer 3/4, and WAF inspection at Layer 7."
+> "The OSI model splits networking into seven layers, from Physical up to Application. The TCP/IP model is the four-layer version the internet actually uses: Link, Internet, Transport and Application. When data is sent, each layer encapsulates it with its own header: ports at Layer 4, IP addresses at Layer 3, MAC addresses at Layer 2. I use the layers to troubleshoot bottom-up, and to plan defence in depth, with a control at each layer so one failure doesn't expose everything."
 
 ## Terminal Check
 
@@ -110,17 +165,17 @@ Defenders deploy monitoring tools calibrated to specific layer boundaries:
 
 ## Lab
 
-This lesson has no scored lab. **Field exercise (not scored):** Open your operating system terminal and run `ping` against your local router IP, then run `arp -a` (Windows/macOS) or `ip neigh` (Linux). Identify the Layer 3 address and the corresponding Layer 2 MAC address. Note how your machine maps the Network layer to the Data Link layer.
+This lesson has no scored lab. **Field exercise (not scored):** on your own computer, open a terminal. On Linux, run `ip link`, `ip route` and `ss -tln`. On Windows, run `ipconfig /all` and `netstat -an` instead. For each output, write down which layer it is telling you about, and one fact it gave you (your MAC address, your router's IP, one listening port).
 
 ## Debrief
 
-**What a professional does here.** Security analysts investigate incidents by correlating events across layers. When a triage ticket reports "intranet unavailable," the analyst checks ping reachability (L3), port status (L4), and HTTP response codes (L7) before escalating.
+**What a professional does here.** When a ticket says "the intranet is down," an analyst does not guess. They walk the layers: is the link up, does the machine have an address and a route, does the server answer on its port, and what does the application return? Each answer removes a floor from the search.
 
-**Real incident: Meta/Facebook Outage (4 October 2021).** During routine data center maintenance, an errant command took down Meta's backbone connections. This caused their Border Gateway Protocol (BGP) routers to withdraw all routes to their authoritative DNS servers. Because the Layer 3 network routes were gone, the entire world's DNS resolvers (Layer 7) could no longer reach Facebook, Instagram, or WhatsApp nameservers. The domains appeared to have vanished from the internet. The outage demonstrated how a lower-layer routing failure cascades upwards to render high-level application services completely unreachable.
+**Real incident: the Facebook outage (4 October 2021).** During routine maintenance, a command meant to check Facebook's backbone network capacity accidentally disconnected the backbone links between its data centres. A tool that should have blocked the command had a bug. Facebook's DNS servers are designed to stop announcing themselves to the internet (using **BGP, the Border Gateway Protocol**, which tells the world's routers where networks are) when they lose contact with the data centres. They did exactly that. With no route to Facebook's DNS servers, nobody could look up facebook.com, instagram.com or whatsapp.com for about six hours. The applications (Layer 7) were fine; the routing underneath them (Layer 3) was gone. Lower-layer failures take down everything above them.
 
 **Key takeaways**
 
-- OSI has 7 conceptual layers; TCP/IP has 4 practical layers.
-- Data encapsulation moves down the stack (Data -> Segment -> Packet -> Frame -> Bits).
-- Layer 2 uses MAC addresses; Layer 3 uses IP addresses; Layer 4 uses ports.
-- Defense-in-depth requires distinct controls at each layer of the stack.
+- OSI has 7 layers (a map); TCP/IP has 4 (the real internet).
+- Sending = encapsulation down the stack; receiving = decapsulation up the stack.
+- Layer 2 = MAC addresses and frames, Layer 3 = IP addresses and packets, Layer 4 = ports and segments.
+- Troubleshoot bottom-up; defend on several layers at once.
