@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "check:content": "tsx scripts/check-content.mts"
   },
   "dependencies": {
     "@mdx-js/mdx": "^3.1.1",
