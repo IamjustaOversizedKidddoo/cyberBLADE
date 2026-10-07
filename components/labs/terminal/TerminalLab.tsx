@@ -3,7 +3,7 @@
 import "@xterm/xterm/css/xterm.css";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { createShell } from "@/lib/lab-engine/terminal/shell";
 import type { World } from "@/lib/lab-engine/terminal/types";
 import { createLineEditor } from "./line-editor";
@@ -15,8 +15,12 @@ const RESET = "\x1b[0m";
 /** The simulated machine runs entirely in the browser; only answers are checked on the server. */
 export default function TerminalLab({ world }: { world: World }) {
   const host = useRef<HTMLDivElement>(null);
+  // Re-renders can hand us a new but identical world object; only a different machine should
+  // rebuild the terminal (otherwise the learner's session would be wiped mid-lab).
+  const worldJson = useMemo(() => JSON.stringify(world), [world]);
 
   useEffect(() => {
+    const world: World = JSON.parse(worldJson);
     if (!host.current) return;
     const mono = getComputedStyle(document.body).getPropertyValue("--font-jbmono").trim() || "monospace";
     const term = new Terminal({
@@ -29,7 +33,13 @@ export default function TerminalLab({ world }: { world: World }) {
     const fit = new FitAddon();
     term.loadAddon(fit);
     term.open(host.current);
-    fit.fit();
+    // Fit whenever the container's size settles or changes (it can be 0×0 on the first frame).
+    const safeFit = () => {
+      if (host.current && host.current.clientWidth > 0 && host.current.clientHeight > 0) fit.fit();
+    };
+    safeFit();
+    const resizeObserver = new ResizeObserver(safeFit);
+    resizeObserver.observe(host.current);
 
     const shell = createShell(world);
     const editor = createLineEditor();
@@ -66,15 +76,13 @@ export default function TerminalLab({ world }: { world: World }) {
       }
     });
 
-    const onResize = () => fit.fit();
-    window.addEventListener("resize", onResize);
     term.focus();
     return () => {
-      window.removeEventListener("resize", onResize);
+      resizeObserver.disconnect();
       sub.dispose();
       term.dispose();
     };
-  }, [world]);
+  }, [worldJson]);
 
   return <div ref={host} className="h-[420px] w-full border border-line bg-[#05070a] p-2" aria-label="Lab terminal" />;
 }

@@ -64,3 +64,15 @@ test("announces lesson completion", async () => {
   await userEvent.click(within(q1).getByRole("button", { name: "Check answer" }));
   expect(await screen.findByRole("status")).toHaveTextContent(/lesson complete/i);
 });
+
+test("exposes attempt count and result for automation", async () => {
+  const answer = vi.fn().mockResolvedValue({ correct: false, explanations, lessonCompleted: false });
+  render(<TerminalCheck questions={questions} initialPassed={[]} answer={answer} />);
+  const q1 = screen.getByRole("group", { name: "What does a CPU do?" });
+  expect(q1).toHaveAttribute("data-result", "idle");
+  await userEvent.click(within(q1).getByRole("radio", { name: "Stores files" }));
+  await userEvent.click(within(q1).getByRole("button", { name: "Check answer" }));
+  await within(q1).findByText("Not quite");
+  expect(q1).toHaveAttribute("data-attempts", "1");
+  expect(q1).toHaveAttribute("data-result", "wrong");
+});

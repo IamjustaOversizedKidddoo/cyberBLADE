@@ -26,6 +26,7 @@ function Question({
   const [result, setResult] = useState<CheckResult | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [attempts, setAttempts] = useState(0);
 
   async function check() {
     if (choice === null) return;
@@ -34,6 +35,7 @@ function Question({
     try {
       const r = await answer(q.id, choice);
       setResult(r);
+      setAttempts((n) => n + 1);
       onResult(r);
     } catch {
       setError("Could not check your answer. Try again.");
@@ -43,7 +45,11 @@ function Question({
   }
 
   return (
-    <fieldset className="border border-line p-4">
+    <fieldset
+      className="border border-line p-4"
+      data-attempts={attempts}
+      data-result={pending ? "pending" : result ? (result.correct ? "correct" : "wrong") : "idle"}
+    >
       <legend className="px-2 text-ink">{q.prompt}</legend>
       {passed && <p className="mb-2 font-ui text-sm text-cyan">Passed</p>}
       <ul className="space-y-2">

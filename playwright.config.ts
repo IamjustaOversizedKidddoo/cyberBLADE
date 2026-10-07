@@ -9,7 +9,7 @@ export default defineConfig({
     port: 3000,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
-    env: { NEON_DATA_DIR: ".data-e2e" },
+    env: { NEON_DATA_DIR: ".data-e2e", NEON_SHOW_DRAFTS: "true" },
   },
   projects: [
     { name: "chromium-desktop", use: { ...devices["Desktop Chrome"] } },
