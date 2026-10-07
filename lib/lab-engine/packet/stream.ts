@@ -1,9 +1,15 @@
 import type { Packet } from "./types";
 
+export type TcpStreamChunk = {
+  sender: "client" | "server";
+  text: string;
+};
+
 export type TcpStream = {
   client: string;
   server: string;
   text: string;
+  chunks: TcpStreamChunk[];
 };
 
 /** Follows a TCP conversation (4-tuple) containing the given packet. */
@@ -45,14 +51,20 @@ export function followTcpStream(packets: Packet[], packetNo: number): TcpStream 
     serverPort = first.tcp!.dstport;
   }
 
-  const text = streamPackets
-    .filter((p) => Boolean(p.tcp?.payload))
-    .map((p) => p.tcp!.payload!)
-    .join("");
+  const chunks: TcpStreamChunk[] = [];
+  for (const p of streamPackets) {
+    if (p.tcp?.payload) {
+      const sender = p.ip?.src === clientIp && p.tcp.srcport === clientPort ? "client" : "server";
+      chunks.push({ sender, text: p.tcp.payload });
+    }
+  }
+
+  const text = chunks.map((c) => c.text).join("");
 
   return {
     client: `${clientIp}:${clientPort}`,
     server: `${serverIp}:${serverPort}`,
     text,
+    chunks,
   };
 }

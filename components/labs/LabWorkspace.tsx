@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import type { LabEnv } from "@/lib/lab-engine/env";
+import { PacketLab } from "./packet/PacketLab";
 import { ObjectivesPanel, type Objective, type SubmitResult } from "./ObjectivesPanel";
 
 // xterm.js needs the DOM: render the terminal in the browser only.
@@ -54,9 +55,7 @@ export function LabWorkspace({ env, objectives, onSubmit, doneMessage = "Lab com
           <TerminalLab world={env.world} objectives={objectives} onSubmit={submit} />
         </>
       ) : (
-        <div className="border border-line bg-[#05070a] p-4 text-muted">
-          Packet capture viewer coming in this phase.
-        </div>
+        <PacketLab capture={env.capture} />
       )}
       <ObjectivesPanel objectives={objectives} solved={solved} onSubmit={submit} status={status} continueTo={continueTo} />
     </div>
