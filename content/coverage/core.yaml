@@ -1,0 +1,51 @@
+# Shared core coverage matrix (spec §4.2, §5.5). Phase 1 seed of the cert registry.
+#
+# OWNER / REVIEWER: verify every exam code and objective id below against the CURRENT official
+# objective documents before relying on this file (CompTIA and ISC2 revise exams every few years).
+# Summaries are our own words — never paste vendor text here.
+#
+# built_ranks: objectives whose target_rank is listed here must already have ≥1 lesson (CI fails otherwise).
+# A+ ids are domain-level (aplus1201:<domain>, aplus1202:<domain>) until objective-level mapping is done.
+
+built_ranks: [0]
+
+certs:
+  aplus1201: { name: "CompTIA A+ Core 1", exam: "220-1201" }
+  aplus1202: { name: "CompTIA A+ Core 2", exam: "220-1202" }
+  netplus: { name: "CompTIA Network+", exam: "N10-009" }
+  secplus: { name: "CompTIA Security+", exam: "SY0-701" }
+  isc2cc: { name: "ISC2 Certified in Cybersecurity", exam: "CC" }
+
+objectives:
+  # --- Rank 0 targets -------------------------------------------------------
+  - id: "aplus1201:3"
+    summary: "Computer hardware: CPU, memory, storage and how the parts work together"
+    target_rank: 0
+  - id: "secplus:5.4"
+    summary: "Legal and compliance basics that shape security work (laws, regulations, consequences)"
+    target_rank: 0
+  - id: "isc2cc:1"
+    summary: "Core security principles, including professional ethics"
+    target_rank: 0
+
+  # --- Introduced in Rank 0, completed in Rank 1 ------------------------------
+  - id: "aplus1202:1"
+    summary: "Operating systems: files, folders, users, permissions and the command line"
+    target_rank: 1
+  - id: "netplus:1.1"
+    summary: "Layered models of networking (OSI and TCP/IP)"
+    target_rank: 1
+  - id: "netplus:1.4"
+    summary: "Common ports and protocols and what each is used for"
+    target_rank: 1
+
+  # --- Introduced in Rank 0, completed in Rank 2 ------------------------------
+  - id: "secplus:1.2"
+    summary: "Fundamental security concepts: confidentiality, integrity, availability, least privilege"
+    target_rank: 2
+  - id: "secplus:2.1"
+    summary: "Threat actors and what motivates them"
+    target_rank: 2
+  - id: "secplus:1.1"
+    summary: "Types and categories of security controls"
+    target_rank: 2
