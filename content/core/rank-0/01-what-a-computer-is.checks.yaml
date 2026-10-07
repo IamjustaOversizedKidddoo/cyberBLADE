@@ -1,0 +1,66 @@
+lesson: core-r0-comp-hardware-01
+questions:
+  - id: q1
+    prompt: "Which part of a computer loses its contents when the power is switched off?"
+    objectives: ["aplus1201:3"]
+    options:
+      - text: "RAM"
+        correct: true
+        explanation: "Correct. RAM is volatile: it only holds data while it has power. That is why live secrets and some malware exist only in RAM."
+      - text: "The SSD"
+        correct: false
+        explanation: "An SSD is storage, which is non-volatile — it keeps data without power."
+      - text: "The firmware chip"
+        correct: false
+        explanation: "Firmware is stored on a non-volatile chip on the motherboard so the computer can start up every time."
+      - text: "A USB stick"
+        correct: false
+        explanation: "USB sticks are flash storage and keep data when unplugged."
+  - id: q2
+    prompt: "Why do computers have both a little fast memory and a lot of slow storage, instead of one kind?"
+    objectives: ["aplus1201:3"]
+    options:
+      - text: "Fast memory is expensive and slow storage is cheap, so layering gives speed and capacity at a sensible cost."
+        correct: true
+        explanation: "Correct. The CPU works from small, fast layers (cache, RAM) while large, cheap storage holds everything else."
+      - text: "Slow storage is safer from hackers than fast memory."
+        correct: false
+        explanation: "Neither layer is automatically safer. Data on storage is often the easier target because it survives power-off."
+      - text: "The operating system can only read from one kind at a time."
+        correct: false
+        explanation: "The operating system constantly moves data between RAM and storage."
+      - text: "It is just tradition from early computers."
+        correct: false
+        explanation: "It is a real cost-and-speed trade-off that still applies to every modern device."
+  - id: q3
+    prompt: "A laptop with company data is stolen from a café. Which control would most likely stop the thief reading the files?"
+    objectives: ["aplus1201:3", "isc2cc:1"]
+    options:
+      - text: "Full-disk encryption such as BitLocker or FileVault"
+        correct: true
+        explanation: "Correct. Without the key, an encrypted disk is unreadable even if it is removed and plugged into another computer."
+      - text: "A strong Windows login password alone"
+        correct: false
+        explanation: "The thief can take the disk out and read it in another machine, skipping the login screen entirely."
+      - text: "Deleting sensitive files before travelling"
+        correct: false
+        explanation: "Deleted files usually remain on the disk until overwritten and can often be recovered."
+      - text: "Turning off Wi-Fi"
+        correct: false
+        explanation: "Wi-Fi has nothing to do with someone physically reading the disk."
+  - id: q4
+    prompt: "Your team suspects malware on a server that is still running. Why should you NOT simply switch it off right away?"
+    objectives: ["aplus1201:3"]
+    options:
+      - text: "Switching off erases RAM, which may hold the malware and other evidence investigators need."
+        correct: true
+        explanation: "Correct. Responders usually capture memory first, because some malware lives only in RAM."
+      - text: "Switching off spreads the malware to other machines."
+        correct: false
+        explanation: "Powering off does not spread malware; the concern is losing evidence."
+      - text: "The firmware will be deleted."
+        correct: false
+        explanation: "Firmware is non-volatile and survives a power-off."
+      - text: "There is no reason — switching off is always the first step."
+        correct: false
+        explanation: "Isolating the machine from the network is common, but pulling the power destroys volatile evidence."

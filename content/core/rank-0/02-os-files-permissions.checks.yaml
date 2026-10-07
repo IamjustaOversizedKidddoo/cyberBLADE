@@ -1,0 +1,66 @@
+lesson: core-r0-comp-os-files-01
+questions:
+  - id: q1
+    prompt: "In the listing -rw-r----- 1 root shadow … shadow, who can READ the file?"
+    objectives: ["aplus1202:1"]
+    options:
+      - text: "root (the owner) and members of the shadow group"
+        correct: true
+        explanation: "Correct. Owner bits rw- allow root to read and write, group bits r-- let the shadow group read, and others (---) get nothing."
+      - text: "Everyone on the machine"
+        correct: false
+        explanation: "The last three characters (---) are for everyone else, and they are all dashes: no access."
+      - text: "Only root"
+        correct: false
+        explanation: "The middle r-- gives the shadow group read access too."
+      - text: "Nobody, because it is a system file"
+        correct: false
+        explanation: "System files still follow the same permission rules; root and the shadow group can read it."
+  - id: q2
+    prompt: "Why do operating systems attach an owner and permissions to every file?"
+    objectives: ["aplus1202:1", "secplus:1.2"]
+    options:
+      - text: "Because many users and programs share one machine, and permissions stop them reading or changing each other's data."
+        correct: true
+        explanation: "Correct. Permissions are how the OS enforces who may do what on a shared system."
+      - text: "To make files load faster from the disk."
+        correct: false
+        explanation: "Permissions are about access control, not speed."
+      - text: "So that files can be sorted alphabetically."
+        correct: false
+        explanation: "Sorting has nothing to do with owners or permissions."
+      - text: "Only to stop viruses, which ignore permissions anyway."
+        correct: false
+        explanation: "Malware runs as some user and is limited by that user's permissions — which is exactly why least privilege matters."
+  - id: q3
+    prompt: "A developer gets 'Permission denied' writing to a shared folder and asks you to just make it writable by everyone. What is the best response?"
+    objectives: ["secplus:1.2"]
+    options:
+      - text: "Give write access only to the developer or their team's group, not to everyone."
+        correct: true
+        explanation: "Correct. Least privilege: solve the real need with the narrowest access that works."
+      - text: "Make it writable by everyone — it's only a folder."
+        correct: false
+        explanation: "World-writable folders let any account (or any malware) add or change files there."
+      - text: "Give the developer the root password."
+        correct: false
+        explanation: "Sharing admin credentials removes accountability and gives far more access than needed."
+      - text: "Tell them to copy the files to their personal laptop instead."
+        correct: false
+        explanation: "That moves company data somewhere uncontrolled and creates a new risk."
+  - id: q4
+    prompt: "Ransomware infects an account that can write to every shared folder in the company. Why is that worse than infecting an account with access to only its own team folder?"
+    objectives: ["secplus:1.2"]
+    options:
+      - text: "Ransomware can only encrypt what the infected account can write to, so wider access means more data destroyed."
+        correct: true
+        explanation: "Correct. Permissions limit the blast radius of malware — over-privileged accounts make attacks far more damaging."
+      - text: "It isn't worse; ransomware ignores permissions."
+        correct: false
+        explanation: "Ransomware runs as a user and is bound by that user's permissions unless it also escalates privileges."
+      - text: "Because more access makes the ransomware run faster."
+        correct: false
+        explanation: "Speed isn't the issue; the amount of data it can reach is."
+      - text: "Because team folders are automatically backed up."
+        correct: false
+        explanation: "Backups depend on configuration, not on folder ownership."

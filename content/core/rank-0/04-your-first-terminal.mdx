@@ -1,0 +1,244 @@
+---
+id: core-r0-term-first-terminal-01
+title: "Your First Terminal"
+track: core
+rank: 0
+module: terminal
+order: 4
+estimated_minutes: 35
+objectives_covered: ["aplus1202:1"]
+mitre: ["T1059.004"]
+lab: core-r0-terminal-lab-01
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+A **terminal** is a window where you control a computer by typing commands instead of clicking. You type a command, press Enter, and the computer prints an answer.
+
+The program that reads your commands is called the **shell**. On Linux it is usually **bash**. On Windows you will meet **PowerShell** later in the course.
+
+Think of the terminal as texting the computer. Clicking icons is like pointing at things in a shop. Typing commands is like telling the shopkeeper exactly what you want: "the blue one, size 9, from the back room" — faster and more precise, once you know the words.
+
+### 2. Why it exists
+
+The terminal exists because **typing is faster, more exact and repeatable** — and many machines have no screen at all.
+
+The servers that run websites, banks and cloud services usually have no desktop. Administrators reach them over the network with **SSH (Secure Shell)** and a terminal. A command can also be saved in a script and run a thousand times without a single mistake. That is why every security role uses the terminal: SOC analysts read logs with it, penetration testers explore machines with it, and cloud engineers manage thousands of servers with it.
+
+### 3. How it works
+
+**The prompt.** When the shell is ready, it shows a **prompt**:
+
+```text
+learner@neon-demo:~$
+   │        │     │ └── "$" = normal user ("#" would mean root)
+   │        │     └──── where you are (~ means your home folder)
+   │        └────────── the machine's name
+   └─────────────────── who you are
+```
+
+**Commands, options and arguments.** A command line has up to three parts:
+
+```text
+ls  -l  /etc
+│   │   └── argument: what to work on
+│   └────── option (flag): how to do it
+└────────── command: what to do
+```
+
+Let's use the most important ones. The examples below come from a demo machine where the user is called `learner`. Every command works in the lab terminal too — but your lab machine is generated just for you, so your user name, files and log lines will be different.
+
+#### Command
+
+```console
+$ whoami
+learner
+$ pwd
+/home/learner
+```
+
+#### In simple English
+
+`whoami` prints your user name. `pwd` (**print working directory**) prints the folder you are in.
+
+#### Why do I care?
+
+The first thing a professional checks on any machine is *who am I and where am I?* — an attacker who breaks in does exactly the same.
+
+#### Command
+
+```console
+$ ls
+Documents  Downloads  notes.txt
+$ ls -a
+.  ..  .bashrc  Documents  Downloads  notes.txt
+```
+
+#### In simple English
+
+`ls` **lists** what is in the current folder. `-a` means *all*, including **hidden** files — names that start with a dot.
+
+#### Important part
+
+`.` means "this folder" and `..` means "the folder above". `.bashrc` is a hidden settings file for your shell.
+
+#### What should I look for?
+
+Hidden files are hidden to keep clutter out of sight, not to keep secrets. Attackers and analysts always use `ls -a`.
+
+#### Command
+
+```console
+$ cd Documents
+$ pwd
+/home/learner/Documents
+$ cd ..
+$ pwd
+/home/learner
+```
+
+#### In simple English
+
+`cd` **changes directory** — it moves you into another folder. `cd ..` moves up one level. `cd` on its own takes you home.
+
+#### Command
+
+```console
+$ cat notes.txt
+Remember: only test systems you own.
+Read the logs every morning.
+$ head -n 1 notes.txt
+Remember: only test systems you own.
+```
+
+#### In simple English
+
+`cat` prints a whole file. `head -n 1` prints only the **first** line; `tail -n 1` prints only the **last** line.
+
+#### Why do I care?
+
+Log files can have millions of lines. `tail` shows the newest entries — usually what you need during an incident.
+
+#### Command
+
+```console
+$ tail -n 2 /var/log/auth.log
+Oct  6 09:02:47 neon-demo sshd[851]: Failed password for invalid user admin from 203.0.113.7 port 40130 ssh2
+Oct  6 09:15:03 neon-demo sudo:  learner : TTY=pts/0 ; PWD=/home/learner ; USER=root ; COMMAND=/usr/bin/apt update
+```
+
+#### In simple English
+
+Show the last two lines of the **authentication log** — the file where Linux records logins and admin actions.
+
+#### What should I look for?
+
+The first line is a **failed login** for a user called `admin` from the address `203.0.113.7`. The second shows `learner` running a command as root with `sudo`. These two lines are a security analyst's bread and butter.
+
+**Searching with grep.** `grep` prints only the lines that contain a word or pattern:
+
+#### Command
+
+```console
+$ grep "Failed password" /var/log/auth.log
+Oct  6 09:02:41 neon-demo sshd[851]: Failed password for root from 203.0.113.7 port 40122 ssh2
+Oct  6 09:02:44 neon-demo sshd[851]: Failed password for root from 203.0.113.7 port 40122 ssh2
+Oct  6 09:02:47 neon-demo sshd[851]: Failed password for invalid user admin from 203.0.113.7 port 40130 ssh2
+$ grep -c "Failed password" /var/log/auth.log
+3
+```
+
+#### In simple English
+
+Find every line with "Failed password" in it. With `-c`, **count** them instead of printing them.
+
+#### Important part
+
+The quotes keep "Failed password" together as one search term. `grep` is case-sensitive: `failed` would not match `Failed` unless you add `-i`.
+
+#### What should I look for?
+
+Three failures from the same address within seconds is someone guessing passwords.
+
+**Pipes — joining commands.** The `|` symbol (a **pipe**) sends the output of one command into the next:
+
+```console
+$ cat /var/log/auth.log | grep root | wc -l
+3
+```
+
+In plain words: print the log, keep only lines containing `root`, then **count the lines** (`wc -l`, "word count, lines"). Notice the answer is 3, not 2 — the `sudo` line also contains `USER=root`. Lesson: **always look at what you matched before you trust a count.**
+
+**Saving output.** `>` writes output into a file (replacing it); `>>` adds to the end:
+
+```console
+$ echo "I was here" > hello.txt
+$ cat hello.txt
+I was here
+```
+
+**When you are stuck:** `help` lists the commands the lab understands; the up arrow brings back your previous command; `history` lists what you typed; `clear` clears the screen.
+
+**Level 3 — professional.** Real investigations are mostly chains like the one above: narrow millions of log lines down to the handful that matter, count them, and save the evidence to a file for the report.
+
+### 4. How attackers abuse it
+
+Once attackers get into a Linux machine, the shell is their main tool — the same commands you just learned. They run `whoami` and `pwd`, list folders, read configuration files looking for passwords, and download more tools. MITRE ATT&CK tracks this as **T1059.004 — Command and Scripting Interpreter: Unix Shell**. Attackers also try to **clear their tracks** — deleting lines from logs or from the shell history.
+
+### 5. How defenders detect it
+
+- **Authentication logs** (`/var/log/auth.log` on Ubuntu) record logins, failed attempts and `sudo` use — exactly what you searched above.
+- **Shell history** (the hidden file `~/.bash_history`) often shows what an intruder typed, unless they wiped it — a wiped history is itself suspicious.
+- **Process monitoring** — EDR tools (**Endpoint Detection and Response**: security software that records what programs run on a machine) flag unusual shells, for example a web server suddenly starting `bash`.
+- **Central logging** — sending logs to a separate server so an intruder can't quietly edit them.
+
+### 6. How to prevent/fix it
+
+- Allow remote shell access only through **SSH with keys**, not passwords, and only from trusted networks.
+- Give each person their own account — never shared logins — so actions are traceable.
+- Use `sudo` for admin tasks instead of logging in as root, so admin actions are logged.
+- Ship logs off the machine to a central system in real time.
+
+### 7. Common mistakes
+
+- **Typos.** `cd Document` is not `cd Documents`. The shell is exact about spelling and capital letters.
+- Forgetting **hidden files** — always try `ls -a`.
+- Using `>` when you meant `>>` and **overwriting** a file.
+- Trusting a count without checking what matched (the `root` example above).
+- Running commands copied from the internet without understanding them.
+
+### Remember it like this
+
+> **whoami · pwd · ls -a · cd · cat · head/tail · grep · | · > — who, where, what's here, move, read, start/end, search, chain, save.**
+
+### Interview answer
+
+> "The shell is how I work on servers that have no desktop, usually over SSH. My first moves on any machine are `whoami`, `pwd` and `ls -a`. For investigations I read logs with `tail`, filter them with `grep`, chain commands with pipes, count with `wc -l` or `grep -c`, and save results with redirection. From a security view, attackers use the same commands after they get in, so defenders watch auth logs, shell history and process activity, and send logs to a central system so they can't be wiped."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+Your first login to a server: find a hidden note, read the end of a long log, and count errors — all from the terminal.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** A SOC analyst's first hour on an alert is mostly this lesson: log in, check who and where, find the right log, filter it with `grep`, and count. Speed with these basics frees your brain for the actual thinking.
+
+**Real incident: Shellshock (2014).** In September 2014, researchers disclosed **Shellshock** (CVE-2014-6271): a 25-year-old bug in bash itself. Bash mistakenly ran commands hidden inside specially crafted environment variables. Because many web servers passed parts of a web request into bash through environment variables, attackers could send one request and run commands on the server. Mass scanning began within hours of the disclosure, and the first fixes were incomplete, so several follow-up patches were needed. The lesson: **even the most trusted, oldest tools have bugs** — patch quickly, and limit which programs your web server can start.
+
+**Key takeaways**
+
+- The shell reads commands: command + options + arguments.
+- `whoami`, `pwd`, `ls -a`, `cd`, `cat`, `head`, `tail`, `grep`, pipes and redirection cover most beginner investigations.
+- Logs like `auth.log` show logins, failures and admin actions.
+- Attackers use the same shell — defenders watch logs, history and processes.

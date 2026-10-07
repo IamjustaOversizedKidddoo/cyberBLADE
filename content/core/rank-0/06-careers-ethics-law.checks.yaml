@@ -1,0 +1,66 @@
+lesson: core-r0-career-ethics-law-01
+questions:
+  - id: q1
+    prompt: "What separates a penetration tester from a criminal hacker?"
+    objectives: ["isc2cc:1"]
+    options:
+      - text: "Written permission from the system owner, and staying within the agreed scope"
+        correct: true
+        explanation: "Correct. The skills and tools can be identical; authorisation and scope are what make it legal and professional."
+      - text: "The tools they use"
+        correct: false
+        explanation: "Professionals and criminals often use the same tools."
+      - text: "Whether they change any data"
+        correct: false
+        explanation: "Even looking without permission can be unauthorised access."
+      - text: "Whether the system is on the public internet"
+        correct: false
+        explanation: "Public doesn't mean permitted."
+  - id: q2
+    prompt: "Why do security skills need clear ethical and legal rules?"
+    objectives: ["isc2cc:1", "secplus:5.4"]
+    options:
+      - text: "Because they are dual-use: the same knowledge that defends systems can be used to break into them."
+        correct: true
+        explanation: "Correct. Rules let organisations trust security staff and protect victims."
+      - text: "Because security tools are very expensive."
+        correct: false
+        explanation: "Cost isn't the reason; the potential for harm is."
+      - text: "Only to stop people from getting certifications."
+        correct: false
+        explanation: "Ethics codes support certification, they don't exist to block it."
+      - text: "Because computers are fragile."
+        correct: false
+        explanation: "The concern is misuse of skills, not fragility."
+  - id: q3
+    prompt: "A friend says, 'Let's scan our college's network to see if it's secure — we won't change anything.' What should you do?"
+    objectives: ["secplus:5.4", "isc2cc:1"]
+    options:
+      - text: "Refuse unless the college's IT team gives written permission and a defined scope."
+        correct: true
+        explanation: "Correct. Without authorisation it's unauthorised access, whatever your intentions."
+      - text: "Go ahead, because looking is not illegal."
+        correct: false
+        explanation: "Unauthorised access is covered by the IT Act even if nothing is changed."
+      - text: "Go ahead at night when nobody is using it."
+        correct: false
+        explanation: "Timing doesn't create permission."
+      - text: "Do it from a café so it can't be traced."
+        correct: false
+        explanation: "Trying to avoid being traced makes it worse, not legal."
+  - id: q4
+    prompt: "A caller pretends to be from your bank and tricks someone into sharing an OTP, then empties their account. Which IT Act section most directly covers cheating by impersonation like this?"
+    objectives: ["secplus:5.4"]
+    options:
+      - text: "Section 66D"
+        correct: true
+        explanation: "Correct. Section 66D covers cheating by personation using a computer resource or communication device."
+      - text: "Section 43"
+        correct: false
+        explanation: "Section 43 covers unauthorised access and damage to computer systems, with compensation."
+      - text: "Section 72A"
+        correct: false
+        explanation: "72A is about disclosing personal information in breach of a contract."
+      - text: "The DPDP Act's consent rules"
+        correct: false
+        explanation: "The DPDP Act governs how organisations handle personal data, not individual fraud by impersonation."

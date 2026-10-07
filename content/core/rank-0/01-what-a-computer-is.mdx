@@ -1,0 +1,146 @@
+---
+id: core-r0-comp-hardware-01
+title: "What a Computer Really Is"
+track: core
+rank: 0
+module: computers
+order: 1
+estimated_minutes: 25
+objectives_covered: ["aplus1201:3"]
+mitre: ["T1542.001"]
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+A computer is a machine that follows instructions very fast. It takes in data, does something with it, stores the result, and shows you an answer.
+
+That is the whole idea. A phone, a laptop, a bank's server and the chip inside a smart TV all do the same four things: **input → processing → storage → output**.
+
+Think of a computer like a restaurant kitchen:
+
+- The **CPU** is the chef. It does the actual work, one small step at a time, extremely quickly.
+- **RAM (memory)** is the kitchen counter. Ingredients the chef is using right now sit there, close at hand. When the kitchen closes, the counter is wiped clean.
+- **Storage (SSD or hard disk)** is the store room. Things kept there stay there, even overnight, but fetching them takes longer.
+- The **motherboard** is the kitchen itself — the walls, wiring and corridors that connect the chef, the counter and the store room.
+
+Now the real meaning. A **CPU (Central Processing Unit)** is a chip that executes instructions. **RAM (Random Access Memory)** is fast, temporary memory that loses everything when the power goes off — engineers call that *volatile*. **Storage** is slower but *non-volatile*: it keeps data without power. The **motherboard** is the main circuit board that carries power and data between all of them.
+
+### 2. Why it exists
+
+This design exists because of a simple problem: **fast memory is expensive, and cheap memory is slow.**
+
+If every piece of data lived on the hard disk, the CPU would spend most of its time waiting. If everything lived in the CPU's own tiny, ultra-fast memory, a computer would cost a fortune and hold almost nothing. So computers use layers — a little very fast memory close to the CPU, more medium-speed memory (RAM), and a lot of slow, cheap storage. The computer constantly moves data up and down these layers so the CPU always has what it needs next.
+
+Security people care because **each layer keeps data for a different amount of time**. Something in RAM disappears at power-off; something on disk can survive for years — even after you "delete" it.
+
+### 3. How it works
+
+**Level 1 — simple.** When you open a photo, the computer finds the file in storage, copies it into RAM, and the CPU runs the instructions of your photo app to decode it and draw it on the screen.
+
+**Level 2 — technical.** Everything inside a computer is stored as **bits**: tiny switches that are either 0 or 1. Eight bits make a **byte**. A letter like `A` is stored as the byte `01000001`. Programs are also just bytes — they are lists of instructions the CPU understands.
+
+The CPU works in a loop called **fetch → decode → execute**:
+
+```text
+        +-----------+
+        |   RAM     |  instructions + data
+        +-----------+
+          |  fetch the next instruction
+          v
+   +--------------------------------+
+   |              CPU               |
+   |  decode: "what does this mean?"|
+   |  execute: add, compare, move   |
+   |  registers = tiny scratchpads  |
+   +--------------------------------+
+          |  write results back
+          v
+        +-----------+        +---------------------+
+        |   RAM     | <----> | Storage (SSD/disk)  |
+        +-----------+  load  +---------------------+
+                       /save
+```
+
+In plain words: the CPU fetches an instruction from memory, works out what it means, does it, and moves to the next one — billions of times per second. Inside the CPU are **registers** (a handful of tiny, instant storage slots) and **cache** (a small, very fast copy of recently used memory), so it rarely has to wait for RAM.
+
+When you press the power button, the first code that runs is **firmware** — software stored on a chip on the motherboard, called **BIOS** on older machines and **UEFI** on modern ones. Firmware checks the hardware and starts the **operating system** (Windows, Linux, macOS), which you will meet in the next lesson.
+
+**Level 3 — professional.** A security engineer thinks of these layers as places where data can be found or stolen:
+
+| Layer | Keeps data… | Why security cares |
+|---|---|---|
+| CPU registers and cache | nanoseconds | Some attacks trick the CPU into leaking what is in its cache |
+| RAM | until power-off | Passwords and encryption keys live in RAM while in use; investigators capture RAM to find malware that never touches the disk |
+| Storage | years | "Deleted" files often remain until overwritten; lost laptops leak data unless the disk is encrypted |
+| Firmware | the life of the device | Malware hidden here survives even reinstalling the operating system |
+
+### 4. How attackers abuse it
+
+Attackers go after hardware in a few realistic ways:
+
+- **Stealing data at rest.** A stolen laptop with an unencrypted disk is an open book: anyone can pull the disk out and read it on another machine.
+- **Reading memory.** While a program runs, secrets sit in RAM. Malware that gets onto a machine can read the memory of other programs to grab passwords — this is why defenders capture RAM during investigations.
+- **CPU side channels.** In 2018, researchers showed that modern CPUs, while guessing ahead to run faster, could leak data between programs through the cache (the *Spectre* and *Meltdown* flaws — see the Debrief).
+- **Firmware implants.** The most persistent attackers hide code in the motherboard's firmware so it runs before the operating system and survives a full reinstall. MITRE ATT&CK lists this as **T1542.001 — Pre-OS Boot: System Firmware**.
+
+**MITRE ATT&CK** is a public, free catalogue of the techniques real attackers use, each with an ID like `T1542.001`. You will use it throughout your career.
+
+### 5. How defenders detect it
+
+At this level, defenders mostly detect hardware-related attacks indirectly:
+
+- **Asset inventory** — knowing every device you own, its model and firmware version. You cannot protect what you do not know exists.
+- **Firmware and update monitoring** — tools that report outdated firmware or CPU **microcode** (the CPU's own built-in update layer) across all machines.
+- **Boot integrity checks** — **Secure Boot** checks that the firmware and operating system loader are signed by a trusted vendor; a **TPM (Trusted Platform Module)** chip can record measurements of the boot process so changes are visible.
+- **Memory capture in investigations** — when malware is suspected, responders capture RAM before turning the machine off, because shutting down destroys that evidence.
+
+### 6. How to prevent/fix it
+
+- **Encrypt storage** (BitLocker on Windows, FileVault on macOS, LUKS on Linux) so a stolen disk is useless without the key.
+- **Patch firmware and microcode**, not just the operating system. Many hardware flaws are fixed this way.
+- **Turn on Secure Boot** and keep the TPM enabled.
+- **Physically protect devices** — locked server rooms, cable locks, and rules about leaving laptops unattended.
+- **Wipe disks properly** before selling or recycling them. Deleting files or a quick format is not enough.
+
+### 7. Common mistakes
+
+- Believing that **deleting a file erases it**. Usually the space is only marked as free; the data stays until something overwrites it.
+- **Turning off a hacked machine immediately**. That destroys the evidence in RAM. In an investigation, ask the incident response team first.
+- **Patching the operating system but never the firmware**.
+- Confusing **memory (RAM)** with **storage (disk)** — "my laptop has 512 GB of memory" usually means storage.
+
+### Remember it like this
+
+> **CPU = does the work · RAM = fast and forgets · Storage = slow and remembers · Firmware = runs first and hides deepest.**
+
+### Interview answer
+
+> "A computer takes input, processes it on the CPU, keeps working data in volatile RAM, and keeps long-term data in non-volatile storage. From a security view each layer holds data for a different time: RAM holds live secrets and malware that never touches disk, storage holds data that survives deletion unless it's encrypted or properly wiped, and firmware is the deepest place an attacker can persist. That's why we encrypt disks, patch firmware and microcode, use Secure Boot, and capture memory before shutting down a compromised machine."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no terminal lab. **Field exercise (not scored):** on your own computer, find out (a) how much RAM it has, (b) how much storage, and (c) whether disk encryption is turned on. On Windows, look under *Settings → System → About* and *Settings → Privacy & security → Device encryption*; on a Mac, *System Settings → General → About* and *Privacy & Security → FileVault*. Write the three answers down — you have just done a tiny asset inventory.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** On day one in a security team you will be asked "what do we own, and is it patched?" Asset inventory and patch status — including firmware — are the unglamorous foundation everything else stands on.
+
+**Real incident: Spectre and Meltdown (2018).** In January 2018, Google's Project Zero and several university research teams publicly disclosed *Meltdown* and *Spectre*: design flaws in how modern CPUs from Intel, AMD and ARM speculatively run instructions ahead of time. A malicious program could abuse this to read memory it should never see — including from other programs, and in Meltdown's case from the operating system itself. Because the flaw was in the hardware's design, it affected billions of devices. The fixes came as operating system patches, browser changes and CPU microcode updates, and some fixes slowed systems down. The lesson for defenders: **hardware is software too** — it has bugs, and it needs updates.
+
+**Key takeaways**
+
+- Every computer is input → processing → storage → output.
+- RAM forgets at power-off; storage remembers, even after deletion.
+- Firmware runs before the operating system, which makes it a powerful hiding place.
+- Encrypt disks, patch firmware and microcode, enable Secure Boot, and keep evidence in RAM during investigations.

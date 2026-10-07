@@ -1,0 +1,172 @@
+---
+id: core-r0-comp-os-files-01
+title: "Operating Systems, Files and Permissions"
+track: core
+rank: 0
+module: computers
+order: 2
+estimated_minutes: 30
+objectives_covered: ["aplus1202:1", "secplus:1.2"]
+mitre: ["T1486", "T1552.001"]
+lab: core-r0-files-lab-01
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+An **operating system (OS)** is the main program that runs a computer. It shares the hardware between all your apps, keeps your files organised, and decides **who is allowed to do what**.
+
+Windows, Linux, macOS, Android and iOS are all operating systems. Most of the internet — web servers, cloud machines, network devices — runs on **Linux**, so security work uses it every day.
+
+Think of the OS as the manager of an office building. Workers (apps) ask the manager for a desk (memory), a turn in the meeting room (CPU time) and access to the filing cabinets (files). The manager keeps a list of who holds which keys. Without the manager, every worker would grab whatever they liked.
+
+The real meaning: the OS's core, the **kernel**, controls the hardware directly. Apps run in **user space** and must ask the kernel for anything important — reading a file, opening a network connection, starting another program. Every one of those requests is checked against **permissions**.
+
+### 2. Why it exists
+
+Operating systems exist because **many programs and many people share one machine**, and without rules they would get in each other's way — or into each other's data.
+
+Early computers ran one program at a time for one person. As soon as computers were shared, three problems appeared: programs crashed each other, users read each other's files, and nobody knew who did what. The OS solves all three by isolating programs, organising files, and attaching an **owner** and **permissions** to everything.
+
+When permissions are configured badly, the protection disappears: a password file anyone can read, or a folder anyone can write to, is an open door.
+
+### 3. How it works
+
+**Files and folders.** Everything you save is a **file** with a name, stored in **folders** (also called **directories**). Linux arranges them in one tree that starts at `/`, called the **root** of the filesystem. A **path** is the address of a file in that tree:
+
+```text
+/                      ← the top (root of the filesystem)
+├── etc/               ← system settings
+│   └── passwd         ← the list of user accounts
+├── home/              ← one folder per user
+│   └── learner/       ← YOUR home folder, also written ~
+│       ├── notes.txt
+│       └── Documents/
+└── var/
+    └── log/           ← log files: what happened, and when
+```
+
+`/home/learner/notes.txt` means: start at the top, go into `home`, then `learner`, and open `notes.txt`. Windows uses drive letters and backslashes instead — `C:\Users\learner\notes.txt` — but the idea is the same.
+
+**Users and groups.** Every person, and many background services, has a **user account**. Users can belong to **groups**, so you can give a whole team access at once. The all-powerful account is called **root** on Linux and **Administrator** on Windows.
+
+**Permissions.** On Linux, every file has an owner, a group, and three sets of permissions:
+
+| Letter | On a file | On a folder |
+|---|---|---|
+| `r` read | open and read it | list what is inside |
+| `w` write | change it | create or delete files inside |
+| `x` execute | run it as a program | enter it (`cd`) |
+
+Those three letters are given separately to the **owner**, the **group**, and **everyone else** ("others"). You see them with `ls -l`:
+
+#### Command
+
+```console
+$ ls -l /etc
+total 4
+-rw-r--r-- 1 root root    10 Oct  6 09:14 hostname
+-rw-r--r-- 1 root root    59 Oct  6 09:14 os-release
+-rw-r--r-- 1 root root   185 Oct  6 09:14 passwd
+-rw-r----- 1 root shadow  70 Oct  6 09:14 shadow
+```
+
+#### In simple English
+
+List the `/etc` folder with details: permissions, owner, group, size, date and name.
+
+#### Why do I care?
+
+This one command tells you who can read, change or run every file — the first thing you check when data might be exposed.
+
+#### Important part
+
+Read `-rw-r-----` in four pieces:
+
+```text
+ -   rw-   r--   ---
+ │    │     │     └── everyone else: nothing
+ │    │     └──────── group (shadow): read
+ │    └────────────── owner (root): read + write
+ └─────────────────── "-" = a file ("d" would mean a folder)
+```
+
+The `total` line counts the entries in this lab shell; on a real Linux system it shows disk blocks used, and you can ignore it for now.
+
+#### What should I look for?
+
+`/etc/passwd` is readable by everyone — that is normal; it lists account names, not passwords. `/etc/shadow` holds password **hashes** (scrambled passwords), so only root and the `shadow` group may read it. Watch what happens when an ordinary user tries:
+
+```console
+$ whoami
+learner
+$ cat /etc/shadow
+cat: /etc/shadow: Permission denied
+```
+
+That *Permission denied* is the OS doing its job.
+
+**Level 3 — professional.** Security engineers apply the **principle of least privilege**: every user and program gets the minimum access it needs, and nothing more. In a company with 500 employees, the payroll spreadsheet should be readable by HR and finance — not by all 500. Windows uses richer permission lists called **ACLs (Access Control Lists)**, but the question is identical: *who can read, change, or run this?*
+
+### 4. How attackers abuse it
+
+- **Reading what was left open.** Attackers search for files with passwords or keys that were saved with permissions that are too loose — config files, backups, scripts. ATT&CK: **T1552.001 — Unsecured Credentials: Credentials In Files**.
+- **Becoming a more powerful user.** If a normal account can write to a file that root later runs, an attacker can slip in their own commands. This is called **privilege escalation**, and you will study it in depth later.
+- **Encrypting everything.** **Ransomware** is malware that encrypts files and demands payment for the key. It can only encrypt what the infected account is allowed to write — which is why one over-privileged account can lose a whole company's data. ATT&CK: **T1486 — Data Encrypted for Impact**.
+
+### 5. How defenders detect it
+
+- **Permission audits** — regularly listing files that are readable or writable by everyone, especially in home folders, web folders and backups.
+- **Logging access to sensitive files** — Linux's audit system (`auditd`) and Windows' object-access auditing can record who opened or changed a file.
+- **Watching for mass file changes** — hundreds of files renamed or rewritten in seconds is a classic ransomware signal that endpoint security tools alert on.
+- **Watching privileged accounts** — every use of root or Administrator should be logged and reviewed.
+
+### 6. How to prevent/fix it
+
+- Apply **least privilege**: give access per role, remove it when people change jobs.
+- Never store passwords in plain files; use a password manager or a secrets vault.
+- Do daily work as a normal user; use admin rights only when needed.
+- Keep **backups that ransomware cannot reach** — offline or immutable copies — and test that you can restore them.
+- Patch the operating system quickly; many attacks use known, already-fixed flaws.
+
+### 7. Common mistakes
+
+- "Fixing" a permission error by giving **everyone full access** (on Linux, the infamous `chmod 777`). It makes the error disappear and the security disappear with it.
+- Thinking `/etc/passwd` contains passwords. It does not; `/etc/shadow` holds the hashes.
+- Logging in as root or Administrator for everyday work.
+- Treating backups as safe because they exist — untested or permanently connected backups often fail when ransomware hits.
+
+### Remember it like this
+
+> **Every file has an owner, a group and three permissions (read, write, execute) for owner, group and everyone else. Give the least access that still works.**
+
+### Interview answer
+
+> "The operating system mediates every access to files and hardware. On Linux each file has an owner, a group and read, write and execute permissions for the owner, the group and others, which `ls -l` shows as something like `-rw-r-----`. As a defender I apply least privilege, audit for world-readable or world-writable files that hold secrets, and keep admin rights separate from daily use — because loose permissions are how credentials leak and how ransomware ends up able to encrypt far more than it should."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+You will investigate a team's shared folder: find the one file you are not allowed to read, and the file that everyone can read but only its owner can change.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** When a company asks "could anyone have seen this file?", an analyst checks exactly what you did in the lab: owner, group and permissions, and then the access logs.
+
+**Real incident: WannaCry (May 2017).** WannaCry ransomware spread across the world in a single weekend, infecting hundreds of thousands of Windows computers in about 150 countries. In the UK, the National Health Service had to cancel appointments and divert ambulances. It spread through a flaw in Windows file sharing (SMBv1) that Microsoft had already patched two months earlier in bulletin MS17-010 — many organisations had simply not installed the update. Once on a machine, it encrypted every file that account could write to. Two lessons in one: **patch the operating system**, and **limit what each account can write**, because ransomware can only destroy what its account is allowed to touch.
+
+**Key takeaways**
+
+- The OS shares the hardware and checks every access against permissions.
+- Linux permissions: `r`, `w`, `x` for owner, group and others; read them with `ls -l`.
+- Least privilege limits the damage of stolen accounts and ransomware.
+- Loose permissions on files with secrets are one of the most common ways attackers find passwords.
