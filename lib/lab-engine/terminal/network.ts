@@ -18,6 +18,8 @@ export type Host = {
   /** Routers on the way, last entry the host itself; null = a router that doesn't answer. */
   hops: (string | null)[];
   http?: Record<string, HttpResponse>;
+  /** Pages served over https://; when absent the host serves its `http` pages on both. */
+  https?: Record<string, HttpResponse>;
   openPorts?: number[];
 };
 export type Listener = { proto: "tcp" | "udp"; addr: string; port: number; process?: string; pid?: number; backlog?: number };

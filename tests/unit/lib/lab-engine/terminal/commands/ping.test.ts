@@ -74,3 +74,14 @@ test("no network at all", () => {
     code: 2,
   });
 });
+
+test("the gateway and other ARP neighbours answer: they are on the local link", () => {
+  expect(netRun("ping -c 2 10.0.2.2").stdout).toBe(
+    "PING 10.0.2.2 (10.0.2.2) 56(84) bytes of data.\n" +
+      "64 bytes from 10.0.2.2: icmp_seq=1 ttl=64 time=0.412 ms\n" +
+      "64 bytes from 10.0.2.2: icmp_seq=2 ttl=64 time=0.512 ms\n" +
+      "\n--- 10.0.2.2 ping statistics ---\n" +
+      "2 packets transmitted, 2 received, 0% packet loss, time 1004ms\n" +
+      "rtt min/avg/max/mdev = 0.412/0.462/0.512/0.050 ms\n",
+  );
+});

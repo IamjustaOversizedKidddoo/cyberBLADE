@@ -1,4 +1,6 @@
-import { netRun } from "../fixture-network";
+import { createShell } from "@/lib/lab-engine/terminal/shell";
+import { fixtureNetwork, netRun } from "../fixture-network";
+import { fixtureWorld } from "../fixture-world";
 
 test("prints the body", () => {
   expect(netRun("curl http://example.com/")).toEqual({ stdout: "<h1>Example</h1>\n", stderr: "", code: 0 });
@@ -37,4 +39,18 @@ test("errors use curl's codes and wording", () => {
     "curl: (7) Failed to connect to intranet.corp.example port 8080 after 3 ms: Couldn't connect to server\n",
   );
   expect(netRun("curl")).toEqual({ stdout: "", stderr: "curl: try 'curl --help' for more information\n", code: 2 });
+});
+
+test("https:// uses the host's https pages, so an http→https redirect ends", () => {
+  const net = fixtureNetwork();
+  const host = net.hosts["203.0.113.10"];
+  host.http = { "/": { status: 301, reason: "Moved Permanently", headers: [["Location", "https://example.com/"]], body: "" } };
+  host.https = { "/": { status: 200, reason: "OK", headers: [["Content-Type", "text/html"]], body: "<h1>Secure</h1>\n" } };
+  const sh = createShell({ ...fixtureWorld(), network: net });
+  expect(sh.exec("curl -I https://example.com/").stdout).toBe("HTTP/1.1 200 OK\nContent-Type: text/html\n\n");
+  expect(sh.exec("curl -L http://example.com/").stdout).toBe("<h1>Secure</h1>\n");
+});
+
+test("a host without separate https pages serves the same pages on both", () => {
+  expect(netRun("curl https://example.com/").stdout).toBe("<h1>Example</h1>\n");
 });

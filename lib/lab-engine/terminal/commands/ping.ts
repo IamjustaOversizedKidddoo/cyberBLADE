@@ -48,8 +48,10 @@ export const ping: Command = {
       const found = lookupTarget(net, target);
       if ("error" in found) return fail(`ping: ${target}: Name or service not known\n`, 2);
       ip = found.ip;
-      reachable = !!found.host?.reachable;
-      rtt = found.host?.rttMs ?? 0;
+      // The gateway and ARP neighbours sit on the local link: they answer even without a hosts entry.
+      const local = !found.host && (ip === net.gateway || net.neighbors.some((n) => n.ip === ip));
+      reachable = local || !!found.host?.reachable;
+      rtt = found.host?.rttMs ?? (local ? 0.412 : 0);
       ttl = found.host?.ttl ?? 64;
       if (!isIpv4(target)) shownName = found.host?.name ?? target.toLowerCase();
     }
