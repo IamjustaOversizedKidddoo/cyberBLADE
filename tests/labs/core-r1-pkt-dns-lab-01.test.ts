@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compileFilter } from "@/lib/lab-engine/packet/filter";
-import { openPacketLab, SEEDS } from "./helpers";
+import { infoOf } from "@/lib/lab-engine/packet/summary";
+import { MANY_SEEDS, openPacketLab, SEEDS } from "./helpers";
 
 describe("core-r1-pkt-dns-lab-01", () => {
   it.each(SEEDS)("solves lab with seed %s using Wireshark filters", async (seed) => {
@@ -56,4 +57,38 @@ describe("core-r1-pkt-dns-lab-01", () => {
     expect(chattyHost).not.toBe("");
     expect(check("o3", chattyHost)).toBe(true);
   });
+});
+
+describe("core-r1-pkt-dns-lab-01 across many seeds", () => {
+  it("the chatty host must be counted: queries are interleaved, the top count is unique, each client has its own MAC", async () => {
+    const queries = compileFilter("dns.flags.response == 0");
+    if (!queries.ok) throw new Error("filter");
+    const bad: string[] = [];
+    for (const seed of MANY_SEEDS) {
+      const { capture, answers } = await openPacketLab("core-r1-pkt-dns-lab-01", seed);
+      const qs = capture.packets.filter(queries.test);
+      const counts = new Map<string, number>();
+      const macs = new Map<string, Set<string>>();
+      for (const p of qs) {
+        counts.set(p.ip!.src, (counts.get(p.ip!.src) ?? 0) + 1);
+        macs.set(p.ip!.src, (macs.get(p.ip!.src) ?? new Set()).add(p.eth!.src));
+      }
+      const sorted = [...counts.values()].sort((a, b) => b - a);
+      const top = counts.get(answers.chatty)!;
+      const leading = qs.slice(0, top).every((p) => p.ip!.src === answers.chatty);
+      const distinctMacs = new Set([...macs.values()].flatMap((s) => [...s]));
+      if (top !== sorted[0] || sorted[0] === sorted[1] || leading || distinctMacs.size !== counts.size || [...macs.values()].some((s) => s.size !== 1))
+        bad.push(seed);
+    }
+    expect(bad).toEqual([]);
+  }, 120_000);
+});
+
+it("the last o1 hint quotes words that really appear in the NXDOMAIN response's Info column", async () => {
+  const { lab, capture } = await openPacketLab("core-r1-pkt-dns-lab-01", "seed-a");
+  const nx = capture.packets.find((p) => p.dns?.rcode === "NXDOMAIN")!;
+  const hint = lab.hints.o1.at(-1)!;
+  const quoted = hint.match(/"([^"]+)"/)?.[1];
+  expect(quoted).toBeDefined();
+  expect(infoOf(nx)).toContain(quoted);
 });

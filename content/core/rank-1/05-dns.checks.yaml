@@ -2,7 +2,7 @@ lesson: core-r1-net-dns-01
 questions:
   - id: q1
     prompt: "Which DNS record type maps a domain name to an IPv4 address?"
-    objectives: ["netplus:3.5"]
+    objectives: ["netplus:3.4"]
     options:
       - text: "A record"
         correct: true
@@ -18,7 +18,7 @@ questions:
         explanation: "An 'MX' record designates the mail server responsible for receiving email."
   - id: q2
     prompt: "What does an NXDOMAIN response code indicate in a DNS lookup?"
-    objectives: ["netplus:3.5"]
+    objectives: ["netplus:3.4"]
     options:
       - text: "The queried domain name does not exist in the DNS hierarchy."
         correct: true
@@ -34,7 +34,7 @@ questions:
         explanation: "DNS only resolves names to IP addresses; it does not monitor whether the underlying server is online."
   - id: q3
     prompt: "Why do adversaries use DNS Tunneling (ATT&CK T1071.004) in corporate environments?"
-    objectives: ["netplus:3.5"]
+    objectives: ["netplus:3.4"]
     options:
       - text: "Outbound UDP port 53 is almost universally permitted through firewalls, allowing data exfiltration encoded in subdomains."
         correct: true

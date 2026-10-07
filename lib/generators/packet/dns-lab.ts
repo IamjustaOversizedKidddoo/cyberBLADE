@@ -29,53 +29,43 @@ export const dnsLab: Generator = (rng) => {
 
   const builder = new CaptureBuilder("dns-traffic.pcap");
 
+  // Every name has one answer, whoever asks for it.
+  const addressOf = new Map(commonDomains.map((d, i) => [d, `198.51.100.${20 + i}`]));
+  addressOf.set("beacon.example", resolvedIp);
+  // Each client is its own machine with its own network card.
+  const macOf = new Map(clientIps.map((ip, i) => [ip, `52:54:00:12:34:${(0x56 + i).toString(16)}`]));
+
+  // The chatty host asks 12–16 times, the others 2–4 times each; the order is shuffled,
+  // so finding the chatty host means counting, not reading the first packet.
+  const [nxClient] = rng.shuffle(clientIps.filter((c) => c !== chattyHost));
+  const exchanges: { client: string; domain: string; nx: boolean }[] = [];
+  for (const client of clientIps) {
+    const count = client === chattyHost ? rng.int(12, 16) : rng.int(2, 4);
+    for (let i = 0; i < count; i++) exchanges.push({ client, domain: rng.pick(commonDomains), nx: false });
+  }
+  const ordered = rng.shuffle(exchanges);
+  ordered.find((e) => e.client === chattyHost)!.domain = "beacon.example";
+  const nx = ordered.find((e) => e.client === nxClient)!;
+  [nx.domain, nx.nx] = [nxdomainDomain, true];
+
   let txId = 0x1000;
   let clientPort = 53000;
-
-  // Add queries from chatty host (around 12-16 queries)
-  const chattyQueryCount = rng.int(12, 16);
-  for (let i = 0; i < chattyQueryCount; i++) {
+  for (const { client, domain, nx: isNx } of ordered) {
     txId++;
     clientPort++;
-    const domain = i === 0 ? "beacon.example" : rng.pick(commonDomains);
-    builder.addDnsQuery(chattyHost, dnsServerIp, "52:54:00:12:34:56", serverMac, domain, txId, clientPort);
+    const mac = macOf.get(client)!;
+    builder.addDnsQuery(client, dnsServerIp, mac, serverMac, domain, txId, clientPort);
     builder.addDnsResponse(
-      chattyHost,
+      client,
       dnsServerIp,
-      "52:54:00:12:34:56",
+      mac,
       serverMac,
       domain,
       txId,
-      [{ name: domain, type: "A", data: domain === "beacon.example" ? resolvedIp : "198.51.100.10", ttl: 300 }],
-      "NOERROR",
+      isNx ? [] : [{ name: domain, type: "A", data: addressOf.get(domain)!, ttl: 300 }],
+      isNx ? "NXDOMAIN" : "NOERROR",
       clientPort,
     );
-  }
-
-  // Add queries from other hosts (2-4 queries each)
-  for (const client of clientIps) {
-    if (client === chattyHost) continue;
-    const count = rng.int(2, 4);
-    for (let i = 0; i < count; i++) {
-      txId++;
-      clientPort++;
-      const isNxdomain = client === clientIps.find((c) => c !== chattyHost) && i === 0;
-      const domain = isNxdomain ? nxdomainDomain : rng.pick(commonDomains);
-      const rcode = isNxdomain ? "NXDOMAIN" : "NOERROR";
-
-      builder.addDnsQuery(client, dnsServerIp, "52:54:00:12:34:99", serverMac, domain, txId, clientPort);
-      builder.addDnsResponse(
-        client,
-        dnsServerIp,
-        "52:54:00:12:34:99",
-        serverMac,
-        domain,
-        txId,
-        isNxdomain ? [] : [{ name: domain, type: "A", data: "198.51.100.20", ttl: 300 }],
-        rcode,
-        clientPort,
-      );
-    }
   }
 
   const capture = builder.build();

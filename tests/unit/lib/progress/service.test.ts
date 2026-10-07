@@ -127,3 +127,36 @@ test("opening a lab in two tabs at once creates one attempt (same world in both)
   expect(b.attemptId).toBe(a.attemptId);
   expect(b.env).toEqual(a.env);
 });
+
+describe("rank gate on the server (server actions are public endpoints)", () => {
+  function rankOneCtx() {
+    const made = makeCtx();
+    const base = made.ctx.content;
+    made.ctx.content = {
+      ...base,
+      getLesson: async (id) => {
+        const l = await base.getLesson(id);
+        return l && { ...l, rank: 1 };
+      },
+      loadLab: async (id) => ({ ...(await base.loadLab(id)), rank: 1 }),
+    };
+    return made;
+  }
+
+  test("a Rank 0 operator cannot answer Rank 1 checks or open a Rank 1 lab, and gets no XP", async () => {
+    const { ctx, operators } = rankOneCtx();
+    const op = await operators.create({ handle: "rookie", ethicsAcceptedAt: "2026-10-07T00:00:00Z" });
+    await expect(answerCheck(ctx, op.id, BETA, "q1", RIGHT(op.id, BETA, "q1"))).rejects.toThrow(/locked/);
+    await expect(startLab(ctx, op.id, LAB.id)).rejects.toThrow(/locked/);
+    expect(await ctx.repo.getLessonProgress(op.id, BETA)).toBeNull();
+    expect(await ctx.repo.getXpTotal(op.id)).toBe(0);
+  });
+
+  test("once promoted, the same operator can", async () => {
+    const { ctx, operators } = rankOneCtx();
+    const op = await operators.create({ handle: "rookie", ethicsAcceptedAt: "2026-10-07T00:00:00Z" });
+    await operators.setRank(op.id, 1);
+    expect((await answerCheck(ctx, op.id, BETA, "q1", RIGHT(op.id, BETA, "q1"))).correct).toBe(true);
+    await expect(startLab(ctx, op.id, LAB.id)).resolves.toMatchObject({ completed: false });
+  });
+});

@@ -14,14 +14,17 @@ export const reachLab: Generator = (rng) => {
   const [user] = pickUsers(rng, 1);
   const hostname = pickHostname(rng);
 
-  const { network, hosts } = baseNetwork(rng);
-
-  // Ensure beacon.example exists with a randomized hop count
+  // beacon.example is added below on its own address and routers, so the base network must not use them.
   const beaconIp = "203.0.113.25";
+  const beaconRouterIp = (i: number) => `198.51.100.${i + 10}`;
+  const { network, hosts } = baseNetwork(rng, {
+    reserved: { ips: [beaconIp, ...[1, 2, 3, 4].map(beaconRouterIp)], names: ["beacon"] },
+  });
+
   const beaconHops = rng.int(3, 6);
   const beaconRouters: (string | null)[] = [network.gateway];
   for (let i = 1; i < beaconHops - 1; i++) {
-    beaconRouters.push(`198.51.100.${i + 10}`);
+    beaconRouters.push(beaconRouterIp(i));
   }
   beaconRouters.push(beaconIp);
 

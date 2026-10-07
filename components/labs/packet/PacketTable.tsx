@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import type { Packet } from "@/lib/lab-engine/packet/types";
 import { infoOf, protocolOf } from "@/lib/lab-engine/packet/summary";
 
@@ -11,16 +11,9 @@ type Props = {
 };
 
 export function PacketTable({ packets, selectedPacket, onSelect }: Props) {
+  // No scroll-into-view effect: it would also scroll the page past the briefing on load and on
+  // every filter. Arrow keys move focus, and focusing a row already brings it into view.
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
-
-  useEffect(() => {
-    if (selectedPacket) {
-      const idx = packets.findIndex((p) => p.no === selectedPacket.no);
-      if (idx !== -1 && rowRefs.current[idx]) {
-        rowRefs.current[idx]?.scrollIntoView?.({ block: "nearest" });
-      }
-    }
-  }, [selectedPacket, packets]);
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     if (e.key === "ArrowDown") {
