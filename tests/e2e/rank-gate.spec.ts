@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-// Enabled in Task 8 once the Rank 1 content exists.
-test.fixme("a Rank 0 learner cannot open Rank 1 lessons or labs", async ({ page }) => {
+test("a Rank 0 learner cannot open Rank 1 lessons or labs", async ({ page }) => {
   await page.goto("/start");
   await page.getByLabel("Choose your operator handle").fill(`gate_${Date.now() % 1_000_000}`);
   await page.getByLabel("I have read and agree to the ethical use agreement").check();
