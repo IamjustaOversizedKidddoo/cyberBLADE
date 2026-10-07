@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 
 export type Objective = { id: string; prompt: string; solved: boolean };
@@ -8,15 +8,15 @@ export type SubmitResult = { correct: boolean; labCompleted?: boolean; passed?: 
 
 type Props = {
   objectives: Objective[];
+  solved: ReadonlySet<string>;
   onSubmit: (objectiveId: string, answer: string) => Promise<SubmitResult>;
-  doneMessage?: string;
+  status: string;
+  continueTo?: { href: string; label: string } | null;
 };
 
-export function ObjectivesPanel({ objectives, onSubmit, doneMessage = "Lab complete! XP added to your profile." }: Props) {
-  const router = useRouter();
-  const [solved, setSolved] = useState(() => new Set(objectives.filter((o) => o.solved).map((o) => o.id)));
+/** Answer boxes for each objective. State lives in LabWorkspace (the terminal can submit too). */
+export function ObjectivesPanel({ objectives, solved, onSubmit, status, continueTo }: Props) {
   const [feedback, setFeedback] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState(objectives.every((o) => o.solved) ? doneMessage : "");
   const [pending, setPending] = useState<string | null>(null);
 
   async function submit(id: string, form: HTMLFormElement) {
@@ -28,17 +28,7 @@ export function ObjectivesPanel({ objectives, onSubmit, doneMessage = "Lab compl
     setPending(id);
     try {
       const r = await onSubmit(id, answer);
-      if (r.expired) {
-        setStatus("Time is up — this attempt has ended.");
-        router.refresh();
-        return;
-      }
-      setFeedback((f) => ({ ...f, [id]: r.correct ? "Correct" : "Not quite — keep digging." }));
-      if (r.correct) setSolved((s) => new Set(s).add(id));
-      if (r.labCompleted || r.passed) {
-        setStatus(doneMessage);
-        router.refresh();
-      }
+      if (!r.expired) setFeedback((f) => ({ ...f, [id]: r.correct ? "Correct" : "Not quite — keep digging." }));
     } catch {
       setFeedback((f) => ({ ...f, [id]: "Could not check that. Try again." }));
     } finally {
@@ -51,6 +41,9 @@ export function ObjectivesPanel({ objectives, onSubmit, doneMessage = "Lab compl
       <h2 id="objectives-heading" className="text-3xl">
         objectives
       </h2>
+      <p className="text-sm text-muted">
+        Answer below, or straight from the terminal: <code className="font-mono text-ink">submit 1 your-answer</code>
+      </p>
       <ol className="space-y-4">
         {objectives.map((o, i) => (
           <li key={o.id} className={`border p-4 ${solved.has(o.id) ? "border-cyan" : "border-line"}`}>
@@ -98,6 +91,11 @@ export function ObjectivesPanel({ objectives, onSubmit, doneMessage = "Lab compl
       <p role="status" className="font-ui text-purple">
         {status}
       </p>
+      {status && continueTo && (
+        <Link href={continueTo.href} className="inline-block border border-cyan bg-cyan px-6 py-2 font-ui text-lg text-void hover:bg-transparent hover:text-cyan">
+          {continueTo.label}
+        </Link>
+      )}
     </section>
   );
 }

@@ -20,6 +20,7 @@ Next.js (App Router) + TypeScript · Tailwind · MDX content in `content/` · Su
 - Visual direction (owner decision 2026-10-06): the look of https://watchdogsfont.com — black pages, white text, near-white hero bands with huge black glitch type, cyan `#0FBEFF` / purple `#C83CFF` / hot-pink `#FF1065` accents, blinking `_` cursors, typewriter text, snake_case headings (`rank_0`), terminal panels, subtle scanlines.
 - Fonts: **Hacked** (David Libeau, CC-BY — credit required on /credits and in the footer) for display headings and the wordmark; **Pixel Operator** for subheadings, buttons, labels. Long-form lesson prose stays in a readable sans and terminals/code in a monospace — glitch/pixel fonts are never used for body text.
 - Still NEVER use Ubisoft's actual logos, the DedSec symbol, game artwork, screenshots, character names, or the "Watch Dogs" name anywhere in the product. Style yes, their assets no. (Owner accepts the trade-dress risk of the look.)
+- High-contrast mode doubles as a dark-room mode: hero bands switch from near-white to dark (owner decision 2026-10-07); the default stays light.
 - Effects must never block reading; support `prefers-reduced-motion`; lessons must be readable on mobile.
 
 ## Content standard (non-negotiable)

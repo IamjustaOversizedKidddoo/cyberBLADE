@@ -83,6 +83,7 @@ test("a new user completes Rank 0 and is promoted to Operator", async ({ page },
       await expect(page.locator(".xterm-rows")).toContainText("simulation");
       await LAB_RECIPES[labId](page);
       await expect(page.getByRole("status").filter({ hasText: "Lab complete" })).toBeVisible();
+      await expect(page.getByRole("link", { name: /^Continue to next lesson: / })).toBeVisible();
     }
   }
 

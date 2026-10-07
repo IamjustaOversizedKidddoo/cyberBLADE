@@ -7,6 +7,7 @@ import { ls } from "./ls";
 import { mkdir } from "./mkdir";
 import { pwd } from "./pwd";
 import { clear, history, hostname, whoami } from "./simple";
+import { submit } from "./submit";
 import { touch } from "./touch";
 import type { Command } from "./types";
 import { ok } from "./util";
@@ -26,5 +27,5 @@ const help: Command = {
 
 /** The Rank 0 command set. Each command lives in its own file. */
 export const COMMANDS: Record<string, Command> = Object.fromEntries(
-  [cat, cd, clear, echo, grep, head, help, history, hostname, ls, mkdir, pwd, tail, touch, wc, whoami].map((c) => [c.name, c]),
+  [cat, cd, clear, echo, grep, head, help, history, hostname, ls, mkdir, pwd, submit, tail, touch, wc, whoami].map((c) => [c.name, c]),
 );
