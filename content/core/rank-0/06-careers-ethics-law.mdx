@@ -1,0 +1,125 @@
+---
+id: core-r0-career-ethics-law-01
+title: "Cyber Careers Map + Ethics & Law"
+track: core
+rank: 0
+module: mindset
+order: 6
+estimated_minutes: 30
+objectives_covered: ["secplus:5.4", "isc2cc:1"]
+mitre: []
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+Cybersecurity is not one job — it's a family of jobs that protect people, companies and governments from digital harm. And every one of them runs on the same rule: **you only touch systems you are allowed to touch.**
+
+Think of a locksmith. The same skill — opening locks — makes one person a trusted professional and another a burglar. The difference is **permission**. Security skills work the same way, and the law treats them the same way.
+
+### 2. Why it exists
+
+Ethics and law exist in this field because **the skills are dual-use**: what you learn to defend a system also tells you how to break it. Without clear rules, organisations couldn't trust security staff, learners would cause real damage while "practising", and victims would have no protection. That is why every professional engagement starts with written permission, and why this platform asked you to accept an ethical-use agreement before your first lesson.
+
+### 3. How it works
+
+**The careers map.** This platform's four launch tracks match real job families:
+
+| Track | What you do all day | Typical first titles |
+|---|---|---|
+| **SOC Analyst** | Watch alerts, investigate them, respond to incidents | SOC Analyst L1, Security Analyst |
+| **Penetration Tester / VAPT** | Find and prove weaknesses — with permission — and write reports on how to fix them | VAPT Analyst, Junior Penetration Tester |
+| **Cloud Security** | Secure AWS/Azure/GCP accounts, identities, networks and pipelines | Cloud Security Engineer, DevSecOps Engineer |
+| **Cybersecurity (Purple Team)** | Combine attack and defence: emulate attackers, build detections, investigate, improve controls | Security Engineer, Purple Team Analyst |
+
+Other paths you'll see later include incident response, digital forensics, malware analysis, threat intelligence, application security and GRC (**Governance, Risk and Compliance** — policies, audits and regulations). You don't have to choose yet: the shared core (Ranks 0–2) is the foundation for all of them.
+
+**Ethics in practice.** Professionals follow a few non-negotiable habits:
+
+- **Authorisation** — written permission from the system's owner before any testing.
+- **Scope** — test only what the permission covers (these IPs, these apps, these dates).
+- **Do no harm** — avoid damaging data or disrupting services; stop and report if something breaks.
+- **Confidentiality** — what you see during work stays private.
+- **Responsible disclosure** — if you find a flaw by accident, report it privately to the owner (or through CERT-In, India's national cyber incident response team) instead of exploiting or publicising it.
+
+Professional bodies write these down as codes of ethics — for example, the ISC2 Code of Ethics that holders of its certifications must follow.
+
+**The law in India (in plain words).** The main law is the **Information Technology Act, 2000 (IT Act)**:
+
+| Section | In plain words |
+|---|---|
+| **43** | Accessing, copying data from, damaging or disrupting someone's computer system **without permission** makes you liable to pay compensation. |
+| **66** | Doing any act in section 43 **dishonestly or fraudulently** is a crime — punishable with up to 3 years in prison, a fine up to ₹5 lakh, or both. |
+| **66C** | **Identity theft** — fraudulently using someone else's password, electronic signature or other unique identification. |
+| **66D** | **Cheating by impersonation** using a computer or phone — the law behind many phishing and "fake customer care" cases. |
+| **72A** | Disclosing someone's personal information obtained under a contract, without consent, to cause them loss. |
+
+The **Digital Personal Data Protection Act, 2023 (DPDP Act)** governs how organisations handle personal data. In its language, a **data fiduciary** (the organisation) must collect personal data lawfully, usually with consent, use it only for stated purposes, protect it with reasonable security safeguards, and notify the **Data Protection Board** and affected people of a breach. Failing to take reasonable security safeguards can lead to penalties of up to ₹250 crore. The Act's rules are being brought into force in phases — always check the current status on the official MeitY website.
+
+**CERT-In** also issues binding directions to organisations — for example, its 2022 directions require many kinds of cyber incidents to be reported within 6 hours of noticing them.
+
+> This is a plain-language summary for learning, not legal advice. Laws change; for real decisions, read the official text and ask a qualified lawyer.
+
+**Level 3 — professional.** On the job you will meet these rules as paperwork: a **rules of engagement** document before a penetration test, an incident-reporting procedure that includes the CERT-In deadline, and data-protection requirements that decide which logs you may keep and for how long.
+
+### 4. How attackers abuse it
+
+Attackers ignore authorisation — that is what makes them attackers. Two patterns matter for beginners:
+
+- Criminals use the same tools professionals use, so **owning a tool proves nothing**; using it without permission is what crosses the line.
+- Scammers use **impersonation** — fake bank staff, fake courier messages, fake tech support — which is exactly what section 66D targets. Many of India's most common cybercrimes are social engineering, not clever hacking.
+
+### 5. How defenders detect it
+
+Legal and ethical boundaries are enforced, too. Organisations log who accessed what, so unauthorised access by outsiders *and* insiders leaves a trail. Penetration-testing teams keep detailed records of everything they did, so their authorised activity can be told apart from a real attack. Incidents are reported to CERT-In, and police cyber cells investigate complaints filed through the national portal (cybercrime.gov.in) or the 1930 helpline.
+
+### 6. How to prevent/fix it
+
+For you, as a learner:
+
+- Practise **only** in this platform's labs, on machines you own, or in legal practice environments that invite you to test them.
+- Never "test" your college network, your employer's systems or a website because you're curious — even looking without permission can break the law.
+- Get **written** permission and a clear scope before any real-world testing.
+- If you stumble on a weakness, report it privately and responsibly; don't exploit it, share it publicly or brag about it.
+
+### 7. Common mistakes
+
+- "I didn't change anything, I only looked." Unauthorised access is the problem — not just damage.
+- Assuming verbal permission is enough. Get it in writing, with scope and dates.
+- Testing a target that is "probably fine" because it's public. Public doesn't mean permitted.
+- Thinking law is the lawyers' job. Security professionals are expected to know the basics.
+
+### Remember it like this
+
+> **Same skills, different intent: permission + scope = professional; no permission = crime.**
+
+### Interview answer
+
+> "Security skills are dual-use, so the line is authorisation. Before any testing I need written permission and a defined scope, I avoid harm, keep what I see confidential, and disclose issues responsibly. In India, unauthorised access is covered by the IT Act — section 43 for civil liability and section 66 when it's dishonest or fraudulent — and the DPDP Act 2023 requires organisations to protect personal data and report breaches. I'd also follow CERT-In's incident-reporting directions, which set very short reporting deadlines."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no terminal lab. **Field exercise (not scored):** read this platform's [ethical-use agreement](/legal/ethical-use) again. Then write two lines for each of the four launch tracks: one task from that job you would enjoy, and one skill from Rank 0 it uses. Keep the note — you'll use it in Rank 2 when you choose your track.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** Before every engagement, a penetration tester checks the signed scope document. Before reporting an incident, a SOC lead checks the reporting obligations. Knowing the rules is part of the job, not an extra.
+
+**Real incident: AIIMS New Delhi ransomware (2022).** In late November 2022, a ransomware attack took down the systems of the All India Institute of Medical Sciences in New Delhi, one of India's most important hospitals. For about two weeks, staff fell back to manual registration and paper records while systems were rebuilt, and national agencies including CERT-In were involved in the response. The attack showed what availability means in real life — patients waiting in queues — and why incident response, backups and reporting rules matter. It also shows why the people who defend such systems must be trustworthy: they hold the keys to services a whole country depends on.
+
+**Key takeaways**
+
+- Cybersecurity has many job families; the shared core prepares you for all of them.
+- Permission and scope separate professionals from criminals.
+- IT Act 2000 (sections 43, 66, 66C, 66D, 72A) and the DPDP Act 2023 set the legal boundaries in India.
+- Report vulnerabilities responsibly and incidents on time — and practise only where you're allowed.

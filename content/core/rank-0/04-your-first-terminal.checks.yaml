@@ -1,0 +1,66 @@
+lesson: core-r0-term-first-terminal-01
+questions:
+  - id: q1
+    prompt: "Which command shows hidden files in the current folder?"
+    objectives: ["aplus1202:1"]
+    options:
+      - text: "ls -a"
+        correct: true
+        explanation: "Correct. -a means all: it includes names that start with a dot, plus . and .."
+      - text: "ls -l"
+        correct: false
+        explanation: "-l gives the long, detailed format, but still hides dot-files unless you add -a."
+      - text: "pwd"
+        correct: false
+        explanation: "pwd prints where you are, not what is in the folder."
+      - text: "cat -a"
+        correct: false
+        explanation: "cat prints the contents of files; it does not list folders."
+  - id: q2
+    prompt: "Why do security professionals use the terminal instead of clicking through a desktop?"
+    objectives: ["aplus1202:1"]
+    options:
+      - text: "Most servers have no desktop, and commands are faster, exact and repeatable in scripts."
+        correct: true
+        explanation: "Correct. Servers are usually managed over SSH, and scripted commands scale to thousands of machines without mistakes."
+      - text: "The terminal is more secure because hackers cannot use it."
+        correct: false
+        explanation: "Attackers use the shell constantly once they get in — that's why defenders watch it."
+      - text: "Desktops cannot open log files."
+        correct: false
+        explanation: "They can, but terminals filter and count huge logs far faster."
+      - text: "It is required by law."
+        correct: false
+        explanation: "No law requires it; it's simply the most effective tool for the job."
+  - id: q3
+    prompt: "You want to know how many failed SSH logins are recorded in /var/log/auth.log. Which command gives a single number?"
+    objectives: ["aplus1202:1"]
+    options:
+      - text: "grep -c \"Failed password\" /var/log/auth.log"
+        correct: true
+        explanation: "Correct. -c makes grep count matching lines instead of printing them."
+      - text: "cat /var/log/auth.log"
+        correct: false
+        explanation: "That prints the whole log; you would have to count by hand."
+      - text: "tail -n 1 /var/log/auth.log"
+        correct: false
+        explanation: "That shows only the last line, not a count of failures."
+      - text: "grep \"failed password\" /var/log/auth.log"
+        correct: false
+        explanation: "grep is case-sensitive, so lowercase 'failed' would miss 'Failed', and it prints lines rather than a count."
+  - id: q4
+    prompt: "On a server you find that ~/.bash_history has been emptied, and auth.log shows a login from an unknown address at 03:00. What does this suggest?"
+    objectives: ["aplus1202:1", "isc2cc:1"]
+    options:
+      - text: "Someone may have logged in and tried to hide what they typed — investigate further and preserve the logs."
+        correct: true
+        explanation: "Correct. An unexplained login plus a wiped history is a classic sign of an intruder covering their tracks."
+      - text: "Nothing — bash history empties itself every night."
+        correct: false
+        explanation: "Bash history doesn't clear itself by default; an empty history needs an explanation."
+      - text: "The server needs more storage."
+        correct: false
+        explanation: "Storage space has nothing to do with a cleared history file."
+      - text: "It proves the account owner did it."
+        correct: false
+        explanation: "It doesn't prove who did it — the account may have been stolen. That's what the investigation must find out."

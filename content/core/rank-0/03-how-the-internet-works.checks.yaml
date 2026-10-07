@@ -1,0 +1,66 @@
+lesson: core-r0-net-internet-01
+questions:
+  - id: q1
+    prompt: "What does DNS do?"
+    objectives: ["netplus:1.4"]
+    options:
+      - text: "It turns names like example.com into IP addresses."
+        correct: true
+        explanation: "Correct. DNS is the internet's phonebook: computers connect using IP addresses, so names must be looked up first."
+      - text: "It encrypts web traffic."
+        correct: false
+        explanation: "Encryption is TLS's job (the S in HTTPS). DNS only answers 'which address?'."
+      - text: "It decides which route packets take between routers."
+        correct: false
+        explanation: "Routers and routing protocols choose paths; DNS isn't involved in forwarding packets."
+      - text: "It stores the website's pages."
+        correct: false
+        explanation: "Web servers store pages. DNS just tells you where the server is."
+  - id: q2
+    prompt: "Why does the internet split data into packets instead of using one fixed line between two computers?"
+    objectives: ["netplus:1.1"]
+    options:
+      - text: "Packets can each take any working route, so the network can be shared and survives broken links."
+        correct: true
+        explanation: "Correct. Independent packets let many users share links and let traffic flow around failures."
+      - text: "Packets are automatically encrypted."
+        correct: false
+        explanation: "Packets are not encrypted by default — that's why HTTPS and other encryption exist."
+      - text: "Packets make it impossible to block traffic."
+        correct: false
+        explanation: "Firewalls block packets all the time based on addresses and ports."
+      - text: "Fixed lines are illegal."
+        correct: false
+        explanation: "It's an engineering choice for resilience and sharing, not a legal one."
+  - id: q3
+    prompt: "A firewall log shows your web server receiving connections on port 443. What is most likely happening?"
+    objectives: ["netplus:1.4"]
+    options:
+      - text: "Visitors are connecting to the website over HTTPS."
+        correct: true
+        explanation: "Correct. Port 443 is the standard port for HTTPS, so this is normal web traffic for a web server."
+      - text: "Someone is logging in with SSH."
+        correct: false
+        explanation: "SSH normally uses port 22."
+      - text: "The server is looking up names in DNS."
+        correct: false
+        explanation: "DNS uses port 53, and lookups go out from the server, not in to port 443."
+      - text: "It must be an attack, because port 443 should be closed."
+        correct: false
+        explanation: "A public HTTPS website must accept connections on 443. Traffic volume and source would decide whether it's an attack."
+  - id: q4
+    prompt: "Thousands of home cameras still using factory-default passwords are hijacked and used to flood a DNS provider. Which defence would have prevented the cameras being recruited in the first place?"
+    objectives: ["netplus:1.4", "isc2cc:1"]
+    options:
+      - text: "Changing default passwords (and not exposing the cameras' admin services to the internet)."
+        correct: true
+        explanation: "Correct. Mirai spread mostly by logging in with default credentials on internet-exposed devices."
+      - text: "Using HTTPS on the DNS provider's website."
+        correct: false
+        explanation: "Encrypting the website doesn't stop devices elsewhere being hijacked or used in a flood."
+      - text: "Giving each camera a longer IP address."
+        correct: false
+        explanation: "Address length has nothing to do with whether attackers can log in."
+      - text: "Turning off DNS on the cameras."
+        correct: false
+        explanation: "The weakness was guessable logins, not the cameras' DNS settings."

@@ -1,0 +1,116 @@
+---
+id: core-r0-mind-attacker-defender-01
+title: "Thinking Like a Defender vs an Attacker"
+track: core
+rank: 0
+module: mindset
+order: 5
+estimated_minutes: 30
+objectives_covered: ["secplus:1.2", "secplus:2.1", "secplus:1.1", "isc2cc:1"]
+mitre: ["T1566"]
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+Cybersecurity is a contest between two ways of thinking. **Attackers look for one way in. Defenders must protect every way in — and notice when someone gets through.**
+
+Think of a house. A burglar walks around it once looking for a single weakness: an open window, a key under the mat, a dog that's friendly to strangers. The owner has to think about every door, every window, every key, and also fit an alarm in case something is missed. Good defenders learn to walk around their own house the way a burglar would.
+
+### 2. Why it exists
+
+This mindset exists because **security can't be perfect**. Every system has some weakness, every person can be tricked on a bad day, and new flaws are discovered constantly. If you only build walls, one hole is enough to lose. So professionals do three things: reduce the holes, assume some will still be found, and make sure they can **see and respond** when it happens.
+
+### 3. How it works
+
+**What we protect: the CIA triad.** Almost every security problem damages one of three things:
+
+| Letter | Means | Example of it breaking |
+|---|---|---|
+| **C**onfidentiality | only the right people can see data | customer records leaked online |
+| **I**ntegrity | data hasn't been changed without permission | a bank transfer amount altered |
+| **A**vailability | systems work when needed | a hospital's systems down for days |
+
+**The vocabulary of risk.** These four words are used precisely:
+
+- A **vulnerability** is a weakness — an unpatched server, a weak password, a trusting employee.
+- A **threat** is someone or something that could exploit it — a criminal gang, an insider, a flood.
+- A **threat actor** is the person or group behind a threat. Common types: *cybercriminals* (want money), *hacktivists* (want attention for a cause), *nation-state groups* (want intelligence or disruption), *insiders* (already have access), and *unskilled opportunists* using ready-made tools.
+- **Risk** is how likely the bad thing is multiplied by how much it would hurt. Defenders spend effort where risk is highest.
+
+**How attackers think.** Real attacks follow a recognisable path. One classic model is the **Cyber Kill Chain**, published by Lockheed Martin:
+
+```text
+1 Reconnaissance → 2 Weaponisation → 3 Delivery → 4 Exploitation
+        → 5 Installation → 6 Command & Control → 7 Actions on objectives
+```
+
+In plain words: the attacker studies the target, prepares a weapon (say, a booby-trapped document), delivers it (an email), gets it to run, installs a foothold, connects it back to their own server so they can control it, and then does what they came for — steal, encrypt, spy. **MITRE ATT&CK**, which you met in lesson 1, describes the same journey in far more detail, as *tactics* (the goal of each stage) and *techniques* (how it's done).
+
+**How defenders think.** The defender's version of the same picture:
+
+- **Defence in depth** — several independent layers, so one failure isn't fatal: email filtering, then up-to-date software, then limited permissions, then monitoring, then backups.
+- **Security controls** come in kinds. *Preventive* controls stop things (a firewall rule), *detective* controls notice things (an alert on failed logins), *corrective* controls fix things (restoring from backup). Controls can also be *technical* (software), *managerial* (policies) or *physical* (locks).
+- **Break the chain early.** Every link of the kill chain is a chance to stop the attack — the earlier the better.
+
+**Level 3 — professional.** Defenders practise "thinking like an attacker" safely and legally through **threat modelling** (asking "how would someone attack this?" before building it), **penetration tests** (hired, authorised attackers), and **purple teaming** (attackers and defenders working together to test detections).
+
+### 4. How attackers abuse it
+
+The most common first step is still the simplest: **phishing** — a message that tricks someone into clicking a link, opening a file or typing a password. ATT&CK: **T1566 — Phishing**. It works because it attacks people, not technology, and one success is enough. Attackers also prefer the **weakest link**: a supplier with access to your network, an old forgotten server, an account without multi-factor login.
+
+### 5. How defenders detect it
+
+- **Alerts** from email filters, endpoint security and log monitoring — and, crucially, **people who read and act on them**.
+- **Unusual behaviour**: a login at 3 a.m. from another country, an account suddenly reading thousands of files, a supplier's account logging into systems it never used before.
+- **Reports from users** — an employee who says "this email looks odd" is one of the best sensors a company has.
+
+### 6. How to prevent/fix it
+
+- Layer your controls (defence in depth) so no single failure is fatal.
+- Train people to spot and report phishing, and make reporting easy and blame-free.
+- Limit what each account and each supplier can reach.
+- Turn on multi-factor authentication for logins.
+- Have a plan for what to do when (not if) something gets through.
+
+### 7. Common mistakes
+
+- Thinking "**we're too small to be a target**". Most attacks are automated and opportunistic — they hit whoever is vulnerable.
+- Buying tools but **not watching the alerts** they produce.
+- Blaming the user who clicked instead of fixing the process that let one click cause so much damage.
+- Thinking security is only about technology; people and processes matter as much.
+
+### Remember it like this
+
+> **Attackers need one way in; defenders need layers and eyes. Protect C-I-A, reduce risk, break the chain early.**
+
+### Interview answer
+
+> "Attackers only need one weakness, so defenders can't rely on a single wall. I think in terms of the CIA triad — confidentiality, integrity, availability — and in terms of risk, which is likelihood times impact. I use models like the Cyber Kill Chain and MITRE ATT&CK to understand how attacks progress, and defence in depth so preventive, detective and corrective controls overlap. Just as important is acting on alerts: many big breaches were detected but not responded to."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no terminal lab. **Field exercise (not scored):** pick a place you know well — your home, college or office. List three things worth protecting there, one way a burglar or attacker might get to each, and one preventive and one detective control for each (for example: *laptop* — stolen from a desk — *preventive:* a cable lock — *detective:* a camera). You have just done your first threat model.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** In a job interview you will be asked about the CIA triad, risk and defence in depth. More importantly, on the job you will triage alerts — and the most important skill is deciding which one matters and *acting on it*.
+
+**Real incident: the Target breach (2013).** In late 2013, attackers stole payment-card data for about 40 million cards from US retailer Target, plus personal details of up to 70 million customers. According to public reporting and later investigations, they got in using login details stolen from a heating-and-ventilation supplier that had access to a Target network, then moved on to the checkout systems and installed malware that copied card data. Target had invested in a modern malware-detection system, and later reporting said it did raise alerts during the attack — but the alerts were not acted on in time. The lessons: **attackers come through the weakest link, including suppliers**, and **detection without response is not defence**.
+
+**Key takeaways**
+
+- Protect confidentiality, integrity and availability.
+- Vulnerability + threat → risk; spend effort where risk is highest.
+- Attacks follow a path (Kill Chain, ATT&CK) — every step is a chance to stop them.
+- Defence in depth, and always act on the alerts you get.

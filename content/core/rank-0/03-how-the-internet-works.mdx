@@ -1,0 +1,145 @@
+---
+id: core-r0-net-internet-01
+title: "How the Internet Works"
+track: core
+rank: 0
+module: internet
+order: 3
+estimated_minutes: 30
+objectives_covered: ["netplus:1.1", "netplus:1.4"]
+mitre: ["T1498"]
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+The internet is a huge network of networks. Billions of devices send each other small pieces of data, called **packets**, and each packet finds its own way to the right destination.
+
+Think of it like the postal system. Every house has an **address**. You write a letter, put the address on the envelope, and drop it in a post box. You don't know which trucks and sorting offices it passes through — each office just looks at the address and sends it one step closer.
+
+On the internet:
+
+- the **address** is an **IP address**, like `198.51.100.25` — a number that identifies a device on a network;
+- the **envelope** is a **packet** — a small chunk of data with a "to" and "from" address on it;
+- the **sorting offices** are **routers** — devices that read the destination address and pass the packet to the next network;
+- the **house's door number** is a **port** — a number that tells the receiving computer *which program* the packet is for.
+
+### 2. Why it exists
+
+Networks exist because computers are far more useful when they can share information. The internet's particular design — breaking data into packets — exists because of a problem from the 1960s: telephone-style networks needed a fixed line between two points, and if one link broke, the call died.
+
+Packets fix that. Each packet travels independently, so if one route fails, routers send packets another way. Data is reassembled at the other end. This makes the network cheap to share and very hard to break completely.
+
+The same openness is a security problem: by default, any device can try to send packets to any other device. Firewalls, encryption and monitoring exist because the internet itself does not check who should be talking to whom.
+
+### 3. How it works
+
+**Clients and servers.** A **client** asks for something; a **server** answers. Your browser is a client. The computer that holds a website is a server. One machine can be both.
+
+**What happens when you open a website** — say you type `example.com`:
+
+```text
+ You (client)             DNS resolver           Web server
+ ───────────              ────────────           ──────────
+ 1. "Where is example.com?"  ──────────►
+                              ◄──────────  2. "It's 203.0.113.10"
+ 3. Connect to 203.0.113.10, port 443  ──────────────────────►
+ 4. "GET me the home page" (encrypted, HTTPS) ────────────────►
+                              ◄──────────────────────────────  5. the page
+ 6. Your browser draws the page
+```
+
+In plain words (the addresses here come from ranges reserved for documentation, so they never point at a real machine):
+
+1. Computers use numbers, not names, so your computer first asks a **DNS** server — the internet's phonebook — "what is the IP address for example.com?" **DNS (Domain Name System)** turns names into IP addresses.
+2. DNS answers with the IP address.
+3. Your computer opens a connection to that IP address on **port 443**, the standard port for secure websites.
+4. Your browser sends a request using **HTTPS** — **HTTP (Hypertext Transfer Protocol)**, the language of the web, wrapped in **TLS** encryption so nobody in the middle can read or change it.
+5. The server sends the page back, split into many packets.
+6. Your browser reassembles them and shows you the page.
+
+**Layers.** Engineers describe networking in **layers**, because each layer solves one problem and relies on the one below. You will learn the full **OSI** and **TCP/IP** models in Rank 1; for now, four layers are enough:
+
+| Layer | Question it answers | Example |
+|---|---|---|
+| Application | What are we saying? | HTTP, DNS, email |
+| Transport | Which program, and did it all arrive? | TCP, UDP, **ports** |
+| Internet | Which device, and which way? | **IP addresses**, routers |
+| Link | How do bits cross this cable or Wi-Fi? | Ethernet, Wi-Fi |
+
+**TCP vs UDP.** **TCP (Transmission Control Protocol)** makes sure every packet arrives, in order, and resends lost ones — used for web pages and email. **UDP (User Datagram Protocol)** just sends and doesn't check — used where speed matters more than perfection, like video calls and DNS lookups.
+
+**Ports you will see constantly**
+
+| Port | Service | Note |
+|---|---|---|
+| 22 | SSH | remote command line, encrypted |
+| 53 | DNS | name lookups |
+| 80 | HTTP | web, **not** encrypted |
+| 443 | HTTPS | web, encrypted with TLS |
+| 3389 | RDP | Windows remote desktop |
+
+**Level 3 — professional.** Security engineers think in terms of **attack surface**: every open port on every internet-facing machine is a door someone can knock on. A big part of the job is knowing which doors are open, why, and who is knocking.
+
+### 4. How attackers abuse it
+
+- **Scanning.** Attackers constantly scan the whole internet for open ports — an exposed remote-desktop port or an old web server is found within hours of going online.
+- **Eavesdropping on unencrypted traffic.** Anything sent over plain HTTP or other unencrypted protocols can be read by anyone on the path, such as a malicious Wi-Fi hotspot.
+- **Lying about names.** If an attacker can tamper with DNS answers, your computer may connect to the attacker's server while showing the right website name.
+- **Flooding.** A **DDoS (Distributed Denial of Service)** attack uses thousands of hijacked devices to send so much traffic that a service can't answer real users. ATT&CK: **T1498 — Network Denial of Service**.
+
+### 5. How defenders detect it
+
+- **Firewall and network logs** show who connected to which IP and port, and when. A sudden flood of connections from many addresses is a DDoS signature.
+- **DNS logs** show which names devices looked up. Machines looking up strange, random-looking names are a classic sign of malware calling home.
+- **Network monitoring tools** (you'll use a packet viewer in Rank 1) let analysts inspect the packets themselves.
+- **External scans of your own organisation** — defenders scan their own IP ranges to find exposed services before attackers do.
+
+### 6. How to prevent/fix it
+
+- **Close what you don't need.** Only expose the ports a service truly requires; put everything else behind a firewall.
+- **Encrypt everything in transit** — HTTPS instead of HTTP, SSH instead of old plain-text tools.
+- **Change default passwords** on every internet-connected device, especially cameras and routers.
+- **Use DDoS protection** services for public websites, and plan how to keep running under attack.
+
+### 7. Common mistakes
+
+- Thinking an **IP address identifies a person**. It identifies a network connection — many people can share one, and it can change.
+- Assuming the padlock in the browser means a site is **trustworthy**. It means the connection is encrypted; a scam site can have a padlock too.
+- Leaving test or admin services open to the internet "just for now".
+- Confusing **DNS** (names → numbers) with the **website** itself.
+
+### Remember it like this
+
+> **IP address = which device · port = which program · DNS = name → IP · router = next hop · HTTPS = HTTP inside encryption.**
+
+### Interview answer
+
+> "When you open a website, your computer asks DNS to turn the name into an IP address, opens a connection to that address on a port — 443 for HTTPS — and exchanges HTTP over a TLS-encrypted channel. The data travels as packets that routers forward hop by hop. From a security view, every open port is attack surface, unencrypted traffic can be read on the path, DNS can be abused, and floods of traffic can take services down — so we minimise exposed ports, encrypt in transit, change default credentials and monitor firewall and DNS logs."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no terminal lab. **Field exercise (not scored):** open any website in your browser and click the padlock (or site-information) icon next to the address. Find (1) whether the connection is secure, and (2) who issued the site's certificate. Then write down, in your own words, the six steps from "I type the name" to "I see the page". If you can do that without looking, you understand how the web works.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** SOC analysts read firewall and DNS logs every day. When an alert says "server X connected to an unknown IP on port 4444", you now know what each of those words means — and that an unusual port is worth a closer look.
+
+**Real incident: the Mirai botnet and the Dyn attack (2016).** In 2016 a piece of malware called **Mirai** infected hundreds of thousands of internet-connected cameras and home routers. It did this mostly by trying a short list of factory-default usernames and passwords that owners had never changed. On 21 October 2016, the botnet flooded **Dyn**, a company that provided DNS for many large websites. Because DNS was overwhelmed, people across large parts of the US and Europe couldn't reach sites such as Twitter, Netflix, Reddit and GitHub — the websites themselves were fine, but nobody could look up their addresses. Two lessons: **default passwords on internet-facing devices are a global risk**, and **DNS is critical infrastructure** — take it down and the internet seems to disappear.
+
+**Key takeaways**
+
+- Data travels as packets with source and destination IP addresses; routers forward them hop by hop.
+- Ports identify programs; DNS turns names into IP addresses; HTTPS encrypts web traffic.
+- Every open port is attack surface. Close what you don't need and encrypt what you send.
+- Firewall and DNS logs are among a defender's most valuable sources.

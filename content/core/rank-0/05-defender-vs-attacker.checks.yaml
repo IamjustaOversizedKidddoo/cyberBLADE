@@ -1,0 +1,66 @@
+lesson: core-r0-mind-attacker-defender-01
+questions:
+  - id: q1
+    prompt: "A hospital's systems are knocked offline for a week. Which part of the CIA triad was mainly damaged?"
+    objectives: ["secplus:1.2"]
+    options:
+      - text: "Availability"
+        correct: true
+        explanation: "Correct. Availability means systems work when needed; an outage breaks it even if no data is stolen."
+      - text: "Confidentiality"
+        correct: false
+        explanation: "Confidentiality is about who can see data. An outage alone doesn't expose data."
+      - text: "Integrity"
+        correct: false
+        explanation: "Integrity is about data being changed without permission, which isn't the main problem here."
+      - text: "Authentication"
+        correct: false
+        explanation: "Authentication is about proving identity; it isn't one of the three letters of the CIA triad."
+  - id: q2
+    prompt: "Why do defenders use several layers of controls (defence in depth) instead of one very strong one?"
+    objectives: ["secplus:1.1", "isc2cc:1"]
+    options:
+      - text: "Because any single control can fail, and other layers can still stop or detect the attack."
+        correct: true
+        explanation: "Correct. Layers mean one missed patch or one clicked link isn't the end of the story."
+      - text: "Because one strong control is illegal."
+        correct: false
+        explanation: "There's no such law; it's about resilience."
+      - text: "Because attackers can only beat one layer per day."
+        correct: false
+        explanation: "There's no such rule — attackers can move quickly. Layers buy time and visibility."
+      - text: "To spend the whole security budget."
+        correct: false
+        explanation: "Layers should be chosen by risk, not to use up money."
+  - id: q3
+    prompt: "An alert fires: a supplier's account logged into your payroll server at 03:10 — something it has never done. What is the best first action?"
+    objectives: ["secplus:2.1", "isc2cc:1"]
+    options:
+      - text: "Treat it as suspicious: check the login details and escalate it according to your process."
+        correct: true
+        explanation: "Correct. Unusual behaviour by a third-party account is a classic warning sign — detection only helps if someone acts."
+      - text: "Ignore it; suppliers are trusted."
+        correct: false
+        explanation: "Supplier accounts are a common way in, as the Target breach showed."
+      - text: "Delete the alert so the dashboard stays clean."
+        correct: false
+        explanation: "Deleting alerts destroys evidence and hides a possible attack."
+      - text: "Wait a week to see if it happens again."
+        correct: false
+        explanation: "Waiting gives an attacker time to reach their goal."
+  - id: q4
+    prompt: "Which of these is a DETECTIVE control?"
+    objectives: ["secplus:1.1"]
+    options:
+      - text: "An alert that fires after five failed logins in one minute"
+        correct: true
+        explanation: "Correct. Detective controls notice that something is happening so people can respond."
+      - text: "A firewall rule that blocks a port"
+        correct: false
+        explanation: "That's preventive — it stops traffic before anything happens."
+      - text: "Restoring files from a backup after ransomware"
+        correct: false
+        explanation: "That's corrective — it fixes damage after the fact."
+      - text: "A written password policy"
+        correct: false
+        explanation: "That's a managerial (administrative) control that guides behaviour."
