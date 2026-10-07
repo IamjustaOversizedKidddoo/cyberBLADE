@@ -1,0 +1,66 @@
+lesson: core-r1-net-capture-01
+questions:
+  - id: q1
+    prompt: "What mode must a Network Interface Card (NIC) be placed in to capture all packets traversing the local network segment, even those not addressed to its own MAC?"
+    objectives: ["netplus:5.5"]
+    options:
+      - text: "Promiscuous mode"
+        correct: true
+        explanation: "Correct. Promiscuous mode instructs the NIC to pass all frames on the network segment to the CPU, regardless of the destination MAC."
+      - text: "Loopback mode"
+        correct: false
+        explanation: "Loopback mode routes packets back into the local host for self-testing."
+      - text: "Dynamic mode"
+        correct: false
+        explanation: "Dynamic mode is not a network interface capture state."
+      - text: "Duplex mode"
+        correct: false
+        explanation: "Duplex mode controls bidirectional transmission capability (half-duplex or full-duplex), not packet capture filtering."
+  - id: q2
+    prompt: "Which Wireshark feature reconstructs fragmented application data across multiple TCP packets into a single chronological dialogue?"
+    objectives: ["netplus:5.5"]
+    options:
+      - text: "Follow TCP Stream"
+        correct: true
+        explanation: "Correct. 'Follow TCP Stream' reassembles all segments in a 4-tuple conversation, presenting client requests and server replies as readable text."
+      - text: "Export Packet Dissections"
+        correct: false
+        explanation: "Exporting dissections outputs summary tables rather than reassembling stream data."
+      - text: "Apply as Filter"
+        correct: false
+        explanation: "Apply as Filter creates display filter rules based on a selected header field."
+      - text: "Decode As"
+        correct: false
+        explanation: "Decode As forces Wireshark to interpret a port as a specific protocol (e.g., treating port 8080 as HTTP)."
+  - id: q3
+    prompt: "How did the 2010 Firesheep extension enable easy account hijacking on open Wi-Fi networks?"
+    objectives: ["netplus:5.5"]
+    options:
+      - text: "It passively sniffed unencrypted HTTP session cookies transmitted over the air, allowing attackers to replay the cookies."
+        correct: true
+        explanation: "Correct. Websites used HTTPS only for initial login but reverted to plain HTTP for subsequent requests, exposing session cookies to local sniffers."
+      - text: "It broke WPA2-Enterprise encryption keys using dictionary attacks."
+        correct: false
+        explanation: "Firesheep operated on unencrypted open Wi-Fi networks, sniffing clear-text HTTP."
+      - text: "It brute-forced user passwords against social media APIs."
+        correct: false
+        explanation: "Firesheep stole existing session tokens; it did not crack passwords."
+      - text: "It infected victim laptops with ransomware via malicious DNS replies."
+        correct: false
+        explanation: "Firesheep was a packet sniffing extension, not a malware dropper."
+  - id: q4
+    prompt: "In a Wireshark display filter, which expression filters specifically for HTTP POST requests?"
+    objectives: ["netplus:5.5"]
+    options:
+      - text: 'http.request.method == "POST"'
+        correct: true
+        explanation: "Correct. 'http.request.method == \"POST\"' matches packets where the HTTP request method field equals POST."
+      - text: "port == 80"
+        correct: false
+        explanation: "'port == 80' matches all TCP packets on port 80, including handshakes, GET requests, and server responses."
+      - text: "http.response.code == 200"
+        correct: false
+        explanation: "This filters for successful server responses, not outbound POST requests."
+      - text: 'frame contains "GET"'
+        correct: false
+        explanation: "This searches for the string 'GET' anywhere in the packet, which is neither a POST request nor a structured method check."

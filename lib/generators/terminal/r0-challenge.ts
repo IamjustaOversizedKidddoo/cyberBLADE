@@ -70,5 +70,5 @@ export const r0Challenge: Generator = (rng) => {
       }),
     },
   });
-  return { world, answers: { attacked: top, flag, ips: String(ipCount) } };
+  return { env: { kind: "terminal", world }, answers: { attacked: top, flag, ips: String(ipCount) } };
 };

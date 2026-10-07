@@ -4,8 +4,9 @@ import type { Generator } from "@/lib/generators";
 import { newSeed } from "@/lib/generators/rng";
 import { checkObjective, generateLab } from "@/lib/lab-engine/checks";
 import type { LoadedLab } from "@/lib/lab-engine/lab-schema";
-import type { World } from "@/lib/lab-engine/terminal/types";
+import type { LabEnv } from "@/lib/lab-engine/env";
 import type { OperatorStore } from "@/lib/identity/operator-store";
+import { canAccessRank } from "./access";
 import type { ProgressRepo } from "./repo";
 import type { LabAttempt } from "./types";
 
@@ -22,12 +23,19 @@ export type ContentSource = {
 export type Ctx = { repo: ProgressRepo; operators: OperatorStore; content: ContentSource; now: () => Date };
 
 export type PublicObjective = { id: string; prompt: string; solved: boolean };
-export type LabSession = { attemptId: string; world: World; objectives: PublicObjective[]; completed: boolean };
+export type LabSession = { attemptId: string; env: LabEnv; objectives: PublicObjective[]; completed: boolean };
 
 async function requireLesson(ctx: Ctx, lessonId: string): Promise<Lesson> {
   const lesson = await ctx.content.getLesson(lessonId);
   if (!lesson) throw new Error("not found");
   return lesson;
+}
+
+/** The pages redirect locked learners; this is the same rule for the server actions behind them. */
+async function requireRankOpen(ctx: Ctx, userId: string, rank: number): Promise<void> {
+  if (rank === 0) return;
+  const operator = await ctx.operators.get(userId);
+  if (!operator || !canAccessRank(operator.rank, rank)) throw new Error(`locked: rank ${rank}`);
 }
 
 export async function answerCheck(
@@ -37,7 +45,8 @@ export async function answerCheck(
   questionId: string,
   optionIndex: number,
 ): Promise<{ correct: boolean; explanations: string[]; lessonCompleted: boolean }> {
-  await requireLesson(ctx, lessonId);
+  const lesson = await requireLesson(ctx, lessonId);
+  await requireRankOpen(ctx, userId, lesson.rank);
   const { correct, explanations } = gradeCheck(await ctx.content.loadChecks(lessonId), questionId, optionIndex, userId);
   if (correct) await ctx.repo.addCheckPassed(userId, lessonId, questionId);
   else await ctx.repo.touchLesson(userId, lessonId);
@@ -58,18 +67,19 @@ export async function tryCompleteLesson(ctx: Ctx, userId: string, lessonId: stri
   return true;
 }
 
-export function toSession(lab: LoadedLab, attempt: LabAttempt, world: World): LabSession {
+export function toSession(lab: LoadedLab, attempt: LabAttempt, env: LabEnv): LabSession {
   return {
     attemptId: attempt.id,
-    world,
+    env,
     objectives: lab.objectives.map((o) => ({ id: o.id, prompt: o.prompt, solved: attempt.objectivesSolved.includes(o.id) })),
     completed: attempt.completedAt !== null,
   };
 }
 
-/** Opens (or reopens) the learner's practice attempt. Returns the world only — never the seed or answers. */
+/** Opens (or reopens) the learner's practice attempt. Returns the env only — never the seed or answers. */
 export async function startLab(ctx: Ctx, userId: string, labId: string): Promise<LabSession> {
   const lab = await ctx.content.loadLab(labId);
+  await requireRankOpen(ctx, userId, lab.rank);
   const attempt = await ctx.repo.findOrCreateAttempt(userId, labId, "practice", () => ({
       userId,
       labId,
@@ -82,7 +92,7 @@ export async function startLab(ctx: Ctx, userId: string, labId: string): Promise
       completedAt: null,
       failedAt: null,
   }));
-  return toSession(lab, attempt, generateLab(lab, attempt.seed, ctx.content.generators).world);
+  return toSession(lab, attempt, generateLab(lab, attempt.seed, ctx.content.generators).env);
 }
 
 /** Checks one answer for an attempt the learner owns; returns the solved list after this submission. */

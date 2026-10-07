@@ -65,7 +65,7 @@ test("a new user completes Rank 0 and is promoted to Operator", async ({ page },
   await onboard(page);
 
   await page.getByRole("link", { name: "Begin rank_0" }).click();
-  await expect(page).toHaveURL(/\/learn\/core$/);
+  await expect(page).toHaveURL(/\/learn\/core#rank-0$/);
   const lessonLinks = page.locator('main ol a[href^="/learn/core-r0-"]');
   await expect(lessonLinks).toHaveCount(6);
   const hrefs = await lessonLinks.evaluateAll((as) => as.map((a) => a.getAttribute("href")!));

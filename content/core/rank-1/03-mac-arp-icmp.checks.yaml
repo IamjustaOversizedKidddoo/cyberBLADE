@@ -1,0 +1,66 @@
+lesson: core-r1-net-l2-01
+questions:
+  - id: q1
+    prompt: "What is the primary function of the Address Resolution Protocol (ARP)?"
+    objectives: ["netplus:2.2"]
+    options:
+      - text: "To resolve a known Layer 3 IP address to its corresponding Layer 2 MAC address on the local network."
+        correct: true
+        explanation: "Correct. ARP maps local IP addresses to physical MAC addresses so Ethernet frames can be constructed."
+      - text: "To translate domain names into IP addresses across the internet."
+        correct: false
+        explanation: "Translating domain names into IP addresses is the job of DNS (Domain Name System)."
+      - text: "To assign dynamic IP addresses to new network clients automatically."
+        correct: false
+        explanation: "Automatic IP assignment is performed by DHCP (Dynamic Host Configuration Protocol)."
+      - text: "To route packets between separate subnets across wide area networks."
+        correct: false
+        explanation: "Routing across subnets is performed by Layer 3 routers, not ARP."
+  - id: q2
+    prompt: "When sending an IP packet to a web server on the public internet, what destination MAC address is placed in the Ethernet frame leaving your host?"
+    objectives: ["netplus:2.2"]
+    options:
+      - text: "The MAC address of your local default gateway router."
+        correct: true
+        explanation: "Correct. Remote traffic must be handed to the local router at Layer 2; the frame destination MAC is the gateway, while the IP destination is the remote web server."
+      - text: "The MAC address of the remote web server."
+        correct: false
+        explanation: "Your computer cannot know or reach the remote server's MAC address across routers; MAC addresses change at every router hop."
+      - text: "The broadcast MAC address FF:FF:FF:FF:FF:FF."
+        correct: false
+        explanation: "Unicast web traffic is never addressed to the broadcast MAC."
+      - text: "The MAC address of your local DNS server."
+        correct: false
+        explanation: "The DNS server's MAC is only used when sending DNS queries, not when connecting to the web server."
+  - id: q3
+    prompt: "How does the traceroute command discover intermediate routers along a network path?"
+    objectives: ["netplus:5.5"]
+    options:
+      - text: "It sends probe packets with incrementing TTL values, capturing ICMP Time Exceeded messages from each router."
+        correct: true
+        explanation: "Correct. Each hop decrements the TTL; when TTL reaches 0, the router drops the packet and sends an ICMP Time Exceeded (Type 11) reply revealing its IP."
+      - text: "It queries a central global routing database for the fixed path."
+        correct: false
+        explanation: "Traceroute sends active network probes; it does not read a static central database."
+      - text: "It asks the destination server to provide a log of all routers it visited."
+        correct: false
+        explanation: "Intermediate routers respond independently when packet TTL expires."
+      - text: "It uses ARP broadcasts to poll every router simultaneously."
+        correct: false
+        explanation: "ARP does not travel across routers and cannot discover remote hops."
+  - id: q4
+    prompt: "Which Layer 2 attack floods an Ethernet switch with randomized MAC addresses until its CAM table overflows?"
+    objectives: ["netplus:2.2"]
+    options:
+      - text: "MAC flooding"
+        correct: true
+        explanation: "Correct. MAC flooding exhausts switch table memory, causing the switch to flood frames to all ports like a hub, enabling packet sniffing."
+      - text: "ARP poisoning"
+        correct: false
+        explanation: "ARP poisoning sends spoofed ARP replies to redirect specific IP traffic, without necessarily overflowing the switch CAM table."
+      - text: "DNS amplification"
+        correct: false
+        explanation: "DNS amplification is a Layer 7/Layer 4 UDP denial-of-service attack."
+      - text: "SYN flooding"
+        correct: false
+        explanation: "SYN flooding targets Layer 4 TCP connection tables on servers."

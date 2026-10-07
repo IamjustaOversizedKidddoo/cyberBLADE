@@ -1,0 +1,35 @@
+id: core-r1-pkt-dns-lab-01
+title: "DNS Query Investigation"
+type: packet
+track: core
+rank: 1
+estimated_minutes: 20
+briefing: briefing.md
+dataset:
+  generator: dns_lab
+  params: {}
+objectives:
+  - id: o1
+    prompt: "Which domain queried resulted in an NXDOMAIN (non-existent domain) error?"
+    check: { kind: flag, answer_from: generator.nxdomain, case_sensitive: false }
+  - id: o2
+    prompt: "What IPv4 address did beacon.example resolve to?"
+    check: { kind: flag, answer_from: generator.resolved }
+  - id: o3
+    prompt: "Which internal host IP sent the highest number of DNS queries?"
+    check: { kind: flag, answer_from: generator.chatty }
+hints:
+  o1:
+    - "DNS response packets carry a reply code indicating success or error."
+    - "Look for responses mentioning NXDOMAIN or No such name."
+    - 'Apply filter dns.flags.response == 1 and look in the Info column for "No such name".'
+  o2:
+    - "Filter for DNS queries or responses concerning beacon.example."
+    - "Inspect the Answers field of the response packet."
+    - "Apply filter dns.qry.name == \"beacon.example\"."
+  o3:
+    - "Filter for DNS queries and observe the source IP addresses."
+    - "Count how many queries each client IP dispatched to the resolver."
+    - "Apply filter dns.flags.response == 0 and check Source IPs."
+xp: 100
+mitre: []

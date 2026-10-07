@@ -1,0 +1,189 @@
+---
+id: core-r1-net-tcpudp-01
+title: "TCP, UDP and Ports"
+track: core
+rank: 1
+module: networking
+order: 4
+estimated_minutes: 35
+objectives_covered: ["netplus:1.4"]
+mitre: ["T1046", "T1498.002"]
+lab: core-r1-pkt-scan-lab-01
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+A **port** is a numbered door on a computer. The IP address gets data to the right computer; the port gets it to the right **program** on that computer.
+
+**TCP** and **UDP** are the two main ways to send data through those doors:
+
+- **TCP (Transmission Control Protocol)** is like a phone call. You first check the other side is there ("hello?" "hello!"), then you talk, and if something is missed, it gets said again.
+- **UDP (User Datagram Protocol)** is like dropping postcards in a postbox. Fast, no setup, but nobody tells you if one gets lost.
+
+The real meaning: these are Layer 4 (Transport) protocols. A port is a 16-bit number, so from 0 to 65,535. A program **listens** on a port, and every TCP or UDP packet names a **source port** and a **destination port**. An IP address plus a port, written like `10.0.2.15:22`, is called a **socket**.
+
+### 2. Why it exists
+
+Ports exist because **one computer runs many programs at once**. A server may run a website, an email service and remote login together. Without port numbers, the computer couldn't know which program an arriving packet is for.
+
+TCP and UDP both exist because applications need different things:
+
+- A web page, a file download or a bank transfer must arrive **complete and in order**. One missing byte breaks it. TCP guarantees that.
+- A voice call, a video game or a DNS lookup cares more about **speed**. A late voice packet is useless anyway, so retrying it only adds delay. UDP skips the setup and the retries.
+
+When ports are managed badly, services that should be private end up open to the internet, and every open port is a door an attacker can knock on.
+
+### 3. How it works
+
+**Level 1 — port numbers you will see every day.** Port ranges have names:
+
+- **0–1023: well-known ports**, used by standard services.
+- **1024–49151: registered ports**, used by many applications (e.g. 3306 MySQL, 3389 RDP).
+- **49152–65535: dynamic or ephemeral ports**, picked at random by *clients* for their side of a connection. Linux actually uses 32768–60999 by default.
+
+| Port | Service | Transport | What it is |
+|---|---|---|---|
+| 21 | FTP | TCP | file transfer (unencrypted) |
+| 22 | SSH | TCP | secure remote login |
+| 23 | Telnet | TCP | old remote login, unencrypted — should not exist today |
+| 25 | SMTP | TCP | sending email between mail servers |
+| 53 | DNS | UDP (and TCP for large answers) | looking up names |
+| 80 | HTTP | TCP | web, unencrypted |
+| 443 | HTTPS | TCP (and UDP for HTTP/3) | web, encrypted |
+| 445 | SMB | TCP | Windows file sharing |
+| 3389 | RDP | TCP | Windows Remote Desktop |
+
+**Level 2 — the TCP three-way handshake.** Before any data moves, TCP sets up the connection with three packets. Each packet has **flags**, single on/off bits that say what the packet is for:
+
+```text
+   client 10.0.2.15:51514                         server 203.0.113.10:443
+          │  ① SYN            seq=0                         │   "can we talk?"
+          │ ─────────────────────────────────────────────▶ │
+          │  ② SYN, ACK       seq=0  ack=1                  │   "yes — can you hear me?"
+          │ ◀───────────────────────────────────────────── │
+          │  ③ ACK            seq=1  ack=1                  │   "yes."
+          │ ─────────────────────────────────────────────▶ │
+          │            … data flows both ways …             │
+          │  FIN / ACK  (polite goodbye)  or  RST (hang up) │
+```
+
+In plain English: the client asks to connect (**SYN**, synchronise). The server agrees and asks back (**SYN-ACK**). The client confirms (**ACK**, acknowledge). Now both sides are ready. The **sequence numbers** (`seq`) count bytes so that the receiver can put data back in order and spot what is missing. Wireshark shows them *relative*, starting at 0, to make them readable. To end a connection, each side sends **FIN** (finish). **RST** (reset) means "this connection is refused or broken", and it is what a server sends when you knock on a **closed** port.
+
+UDP has none of this: no handshake, no sequence numbers, no acknowledgements. A UDP packet (a **datagram**) just carries the two ports, a length, a checksum and the data.
+
+| | TCP | UDP |
+|---|---|---|
+| Setup | three-way handshake | none |
+| Delivery | guaranteed, in order, resent if lost | best effort |
+| Speed / overhead | slower, bigger header (20+ bytes) | faster, 8-byte header |
+| Used by | web, SSH, email, file transfer | DNS, voice/video, games, DHCP, NTP |
+| Easy to fake the sender? | hard: the handshake needs replies | easy: no handshake |
+
+**Level 3 — what is listening on this machine?** Defenders check this constantly, because every listening port is attack surface.
+
+#### Command
+
+```console
+$ ss -tulnp
+Netid State  Recv-Q Send-Q Local Address:Port Peer Address:Port Process
+tcp   LISTEN 0      128          0.0.0.0:22        0.0.0.0:*    users:(("sshd",pid=812,fd=3))
+tcp   LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*    users:(("systemd-resolve",pid=455,fd=3))
+udp   UNCONN 0      0      127.0.0.53%lo:53        0.0.0.0:*    users:(("systemd-resolve",pid=455,fd=3))
+```
+
+#### In simple English
+
+List every port this machine is listening on, for TCP and UDP, with the program behind each one. `ss` means **socket statistics**.
+
+#### Why do I care?
+
+If you don't know a port is open, you can't protect it. An unexpected listener can also be a sign of malware, such as a backdoor waiting for its owner.
+
+#### Important part
+
+- `-t` TCP, `-u` UDP, `-l` only **listening** sockets, `-n` show numbers instead of names, `-p` show the **process** (program). On a real machine `-p` needs root to see other users' programs.
+- `0.0.0.0:22`: SSH is listening on **every** network card, so it is reachable from the network.
+- `127.0.0.53%lo:53`: DNS is listening only on loopback (`lo`), so **only this machine** can use it.
+- `LISTEN` (TCP) and `UNCONN` (UDP): UDP has no connections, so a waiting UDP socket shows as unconnected.
+
+#### What should I look for?
+
+The **Local Address** column. `0.0.0.0` or a real IP means "reachable from outside"; `127.x.x.x` means "local only." Then ask of each exposed port: *should this be here?* Here, SSH on 22 is the only exposed service.
+
+**How a port scan works.** A scanner learns which doors are open by knocking on many ports and reading the answers:
+
+- reply **SYN-ACK** → the port is **open** (a program is listening);
+- reply **RST** → the port is **closed** (the machine is up, nothing is listening);
+- **no reply** → the port is **filtered** (a firewall silently dropped the probe).
+
+A **SYN scan** (also called *half-open*) sends RST instead of the final ACK, so the connection is never completed. A **connect scan** completes the handshake. In a capture, the open ports are the ones that answered with SYN-ACK. In Wireshark you can show only those packets with this **display filter**:
+
+```text
+tcp.flags.syn == 1 && tcp.flags.ack == 1
+```
+
+Read it as: "show packets where the SYN flag is set **and** (`&&`) the ACK flag is set." You will learn display filters fully in lesson 9; this one is enough for this lesson's lab.
+
+> **Authorisation note.** Port scanning touches other people's systems. Only scan networks and machines you own or have written permission to test, such as the labs on this platform. Unauthorised scanning and access can be an offence under India's IT Act (sections 43 and 66) and similar laws elsewhere.
+
+### 4. How attackers abuse it
+
+- **Network service discovery.** Before attacking, an attacker scans to find what is running: an open 3389 suggests Windows Remote Desktop, an open 445 means file sharing. ATT&CK: **T1046, Network Service Discovery**.
+- **Reflection and amplification.** Because UDP has no handshake, an attacker can send a small request with the **victim's** IP as the fake source. The server sends its much bigger reply to the victim. With thousands of servers, the victim drowns. ATT&CK: **T1498.002, Network Denial of Service: Reflection Amplification**.
+- **SYN floods.** Sending huge numbers of SYNs and never finishing the handshake fills the server's waiting list for half-open connections, so real users can't connect.
+
+### 5. How defenders detect it
+
+- **Scan detection**: one source touching many ports (or many hosts) in a short time. IDS tools such as Suricata, Snort and Zeek have rules for it. In a capture, it looks like a burst of SYNs from one IP to many ports, most answered by RST.
+- **Listener audits**: compare `ss -tulnp` output with what the server is supposed to run. A new listening port is worth an alert.
+- **Traffic shape**: for amplification, the victim sees huge volumes of UDP *replies* from many servers it never asked. For SYN floods, many SYNs arrive with no matching ACKs.
+
+### 6. How to prevent/fix it
+
+- **Close what you don't need**, and bind internal services to `127.0.0.1` so they are never reachable from the network.
+- **Firewall by default-deny**: allow only the ports the service needs, from the sources that need them.
+- **Turn on SYN cookies** (on by default in Linux): the server encodes the connection state in its sequence number instead of storing it, so a SYN flood can't fill memory.
+- **Never expose UDP services like memcached, open DNS resolvers or old NTP** to the whole internet. They are amplifiers.
+
+### 7. Common mistakes
+
+- **"Closed" and "filtered" are not the same.** Closed = RST came back (host is up). Filtered = silence (a firewall).
+- **Mixing up the ports.** In a client's request, the *destination* port is the service (443) and the *source* port is a random high number (51514).
+- **"UDP is unreliable, so it's useless."** Many critical protocols use UDP and add their own reliability where needed. QUIC, the base of HTTP/3, is an example.
+- **Trusting `0.0.0.0` services because "the firewall will block it."** One firewall mistake later, it is on the internet.
+
+### Remember it like this
+
+> **IP = which building; port = which door; TCP = phone call (handshake, reliable); UDP = postcard (fast, no proof).** Scan answers: SYN-ACK = open, RST = closed, silence = filtered.
+
+### Interview answer
+
+> "Ports identify the application on a host, from 0 to 65,535, with 0 to 1023 being well-known. TCP is connection-oriented: a SYN, SYN-ACK, ACK handshake, then sequenced, acknowledged delivery. UDP is connectionless and lightweight, used for DNS, voice and streaming. In a scan, SYN-ACK means open, RST means closed and no reply means filtered, which is what T1046 discovery relies on. Because UDP has no handshake, its source address is easy to spoof, which is why UDP services get abused for reflection amplification DDoS."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+In this packet lab you analyse a recorded port scan against an internal server. You will find the scanner's IP address from its SYN probes, filter for SYN-ACK replies to list the open ports, and count how many ports were probed. Each learner gets a different scan.
+
+<LabLink />
+
+## Debrief
+
+**What a professional does here.** An analyst seeing a scan asks three questions. Who is scanning: our own vulnerability scanner, or an unknown address? What did they find, meaning which ports answered SYN-ACK? And did anything follow: a login attempt, an exploit? Engineers then shrink what a scan *can* find, closing ports and putting firewalls in front of everything else.
+
+**Real incident: GitHub, 28 February 2018.** GitHub was hit by a 1.35 terabits-per-second DDoS attack, the largest publicly reported at the time. The attackers sent tiny UDP requests to **memcached** servers (a caching program) that were wrongly left open to the internet on port 11211, with GitHub's address as the fake source. Each memcached server answered with up to about 51,000 times more data than it received, all aimed at GitHub. GitHub moved its traffic to a DDoS mitigation provider, and the attack was under control within about 10 minutes. Soon after, memcached's developers turned UDP off by default, and network operators began filtering port 11211. One open UDP port on thousands of forgotten servers became a weapon.
+
+**Key takeaways**
+
+- Ports identify programs; well-known ports are 0–1023 (SSH 22, DNS 53, HTTP 80, HTTPS 443).
+- TCP = handshake (SYN, SYN-ACK, ACK), reliable and ordered; UDP = no handshake, fast, easy to spoof.
+- `ss -tulnp` lists what is listening; `0.0.0.0` means exposed, `127.0.0.1` means local only.
+- Scan answers: SYN-ACK = open, RST = closed, nothing = filtered.

@@ -1,0 +1,66 @@
+lesson: core-r1-net-ip-01
+questions:
+  - id: q1
+    prompt: "How many usable host IP addresses are available in a /28 IPv4 subnet?"
+    objectives: ["netplus:1.7"]
+    options:
+      - text: "14"
+        correct: true
+        explanation: "Correct. A /28 subnet has 32 - 28 = 4 host bits. 2^4 = 16 total addresses minus 2 (network and broadcast) = 14 usable hosts."
+      - text: "16"
+        correct: false
+        explanation: "16 is the total number of addresses, but network and broadcast addresses cannot be assigned to hosts."
+      - text: "30"
+        correct: false
+        explanation: "30 usable hosts corresponds to a /27 subnet (2^5 - 2)."
+      - text: "12"
+        correct: false
+        explanation: "The formula is 2^(32 - 28) - 2 = 14, not 12."
+  - id: q2
+    prompt: "Which of the following IP address ranges is reserved for private networks under RFC 1918?"
+    objectives: ["netplus:1.7"]
+    options:
+      - text: "172.16.0.0/12"
+        correct: true
+        explanation: "Correct. RFC 1918 defines three private ranges: 10.0.0.0/8, 172.16.0.0/12 (172.16.0.0 - 172.31.255.255), and 192.168.0.0/16."
+      - text: "169.254.0.0/16"
+        correct: false
+        explanation: "169.254.0.0/16 is the IPv4 link-local (APIPA) range under RFC 3927."
+      - text: "192.0.2.0/24"
+        correct: false
+        explanation: "192.0.2.0/24 is reserved for documentation and examples under RFC 5737."
+      - text: "127.0.0.0/8"
+        correct: false
+        explanation: "127.0.0.0/8 is reserved for loopback traffic."
+  - id: q3
+    prompt: "Why was the link-local IP address 169.254.169.254 central to the 2019 Capital One breach?"
+    objectives: ["netplus:1.7"]
+    options:
+      - text: "It hosts the cloud provider's instance metadata service, allowing the attacker to retrieve temporary IAM credentials via SSRF."
+        correct: true
+        explanation: "Correct. Cloud instances query 169.254.169.254 for instance metadata. Exploiting SSRF allowed the attacker to exfiltrate IAM role tokens."
+      - text: "It was the external IP address of Capital One's primary web server."
+        correct: false
+        explanation: "169.254.169.254 is a non-routable link-local address, not a public internet IP."
+      - text: "It allowed the attacker to poison the internal DNS cache across all regions."
+        correct: false
+        explanation: "The vulnerability was SSRF targeting the metadata API, not DNS cache poisoning."
+      - text: "It is the default IP address used for SSH management consoles."
+        correct: false
+        explanation: "SSH typically runs on port 22 of any routable IP; 169.254.169.254 is specifically the cloud instance metadata endpoint."
+  - id: q4
+    prompt: "Which command in modern Linux systems displays the assigned IP addresses and link states for all interfaces?"
+    objectives: ["netplus:5.5"]
+    options:
+      - text: "ip a (or ip addr)"
+        correct: true
+        explanation: "Correct. The iproute2 suite command 'ip a' or 'ip addr' lists all interfaces, their operational states, MAC addresses, and assigned IP/CIDR prefixes."
+      - text: "ping -c 1 localhost"
+        correct: false
+        explanation: "Ping tests ICMP reachability to a host; it does not display interface configuration details."
+      - text: "cat /etc/hosts"
+        correct: false
+        explanation: "/etc/hosts contains static hostname-to-IP mappings, not live interface configuration."
+      - text: "traceroute"
+        correct: false
+        explanation: "Traceroute maps the router hops to a remote destination."

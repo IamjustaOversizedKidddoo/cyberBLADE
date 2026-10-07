@@ -1,0 +1,181 @@
+---
+id: core-r1-net-osi-01
+title: "Layers: the OSI and TCP/IP Models"
+track: core
+rank: 1
+module: networking
+order: 1
+estimated_minutes: 30
+objectives_covered: ["netplus:1.1"]
+mitre: []
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+A **network model** is a way of splitting "send data from one computer to another" into small jobs, stacked on top of each other like floors in a building. Each floor, called a **layer**, does one job and trusts the floor below it to do its own.
+
+Think of sending a parcel. You write a letter (the content). You put it in an envelope with a name on it. The post office puts the envelope in a sack labelled with a city. A truck carries the sack on a road. Nobody in that chain does everyone's job: the truck driver never reads your letter, and you never drive the truck. Each step only adds its own label and hands the parcel on.
+
+The real meaning: networks work exactly like this. Engineers use two models to describe the floors:
+
+- The **OSI model (Open Systems Interconnection)** has **7 layers**. It is a teaching and troubleshooting map. Nobody "installs" OSI, but everyone uses its layer numbers when they talk ("that's a Layer 2 problem").
+- The **TCP/IP model** has **4 layers**. It describes how the internet is actually built.
+
+### 2. Why it exists
+
+Layered models exist because **one giant program that does everything would be impossible to build, change or fix**.
+
+In the 1970s, each computer maker had its own closed networking system. An IBM machine could not easily talk to a DEC machine, and changing the cable meant rewriting the software. Layers solved this by agreeing on clean hand-offs between jobs:
+
+- **You can swap one layer without touching the others.** Your browser works the same over Wi-Fi, a 5G phone signal or an office cable. Only the bottom layer changed.
+- **You can find faults one layer at a time.** If the cable is unplugged, there is no point checking the website.
+
+When people ignore the layers, troubleshooting turns into guessing, and security turns into one big wall with no backup behind it.
+
+### 3. How it works
+
+**Level 1 — the seven floors, top to bottom.** Here are the OSI layers with the job each one does in plain English:
+
+| # | OSI layer | Plain-English job | Examples | Unit of data | TCP/IP layer |
+|---|---|---|---|---|---|
+| 7 | Application | the program's own language | HTTP, DNS, SSH, SMTP | data | Application |
+| 6 | Presentation | how data is formatted or encrypted | TLS, JSON, UTF-8 | data | Application |
+| 5 | Session | keeping a conversation going | session setup, RPC | data | Application |
+| 4 | Transport | which program, and is delivery reliable? | TCP, UDP, port numbers | segment (TCP) / datagram (UDP) | Transport |
+| 3 | Network | which computer, across many networks | IPv4, IPv6, ICMP | packet | Internet |
+| 2 | Data Link | which device on *this* local network | Ethernet, Wi-Fi frames, MAC addresses, ARP | frame | Link |
+| 1 | Physical | turning ones and zeros into signals | copper cable, fibre light, radio waves | bits | Link |
+
+A **PDU (Protocol Data Unit)** is the name for "one piece of data" at a given layer. The same bytes are called a *segment* at Layer 4, a *packet* at Layer 3 and a *frame* at Layer 2, because each layer has added its own label.
+
+**Level 2 — encapsulation.** When you send something, the data travels *down* the stack. Each layer wraps it in a **header**: a small block of labels that layer needs. This wrapping is called **encapsulation**. The receiver does the reverse, travelling *up* the stack and removing one header at a time. That is **decapsulation**.
+
+```text
+ sending (down the stack)                              unit
+ ┌────────────────────────────────────────────┐
+ │                 HTTP request                │      data      ← Layer 7 writes the message
+ ├────────┬───────────────────────────────────┤
+ │  TCP   │           HTTP request            │      segment   ← Layer 4 adds ports
+ ├────┬───┴───┬───────────────────────────────┤
+ │ IP │  TCP  │         HTTP request          │      packet    ← Layer 3 adds IP addresses
+ ├────┴┬──────┼───────┬───────────────────┬───┤
+ │ ETH │  IP  │  TCP  │   HTTP request    │FCS│      frame     ← Layer 2 adds MAC addresses
+ └─────┴──────┴───────┴───────────────────┴───┘
+   0110100101100010 …                                bits      ← Layer 1 sends signals
+```
+
+In plain English: your browser writes a request. TCP labels it with port numbers so the right program receives it. IP labels it with the two computers' addresses. Ethernet labels it with the next device's hardware address, and adds an **FCS (Frame Check Sequence)**, a checksum that lets the receiver spot damaged frames. Then the bits go on the wire.
+
+**One machine, four layers.** You can see the layers on any Linux computer. Each command below looks at a different floor of the same machine.
+
+#### Command
+
+```console
+$ ip link
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 52:54:00:12:34:56 brd ff:ff:ff:ff:ff:ff
+```
+
+#### In simple English
+
+Show the machine's network cards ("links") and whether they are switched on.
+
+#### Why do I care?
+
+This is Layers 1 and 2. If a link is `DOWN`, nothing higher up can work, and you have found your problem in five seconds.
+
+#### Important part
+
+- `eth0` is the network card; `lo` is the **loopback**, a pretend card the machine uses to talk to itself.
+- `state UP` and `LOWER_UP` mean the card is on and a signal is present (Layer 1).
+- `link/ether 52:54:00:12:34:56` is the card's **MAC address**, its Layer 2 hardware address.
+
+#### What should I look for?
+
+`state UP` on the card you expect to use. `DOWN` or a missing card means the problem is at the bottom of the stack.
+
+Now one floor up, Layer 3, and then Layer 4:
+
+```console
+$ ip route
+default via 10.0.2.2 dev eth0 proto dhcp src 10.0.2.15 metric 100
+10.0.2.0/24 dev eth0 proto kernel scope link src 10.0.2.15 metric 100
+$ ss -tln
+State  Recv-Q Send-Q Local Address:Port Peer Address:Port
+LISTEN 0      128          0.0.0.0:22        0.0.0.0:*
+LISTEN 0      4096   127.0.0.53%lo:53        0.0.0.0:*
+```
+
+`ip route` shows the machine's **IP address** (`10.0.2.15`) and the router it sends everything else to (`10.0.2.2`). That is Layer 3: which computer, and which way. `ss -tln` lists the **ports** this machine is listening on. Port 22 is SSH and port 53 is DNS. That is Layer 4: which program. You will learn each of these commands properly in the next lessons. For now, notice that each one answers a question for *one* layer.
+
+**Level 3 — professional.** Real protocols don't always sit neatly on one floor. TLS encrypts (Layer 6 job) but runs inside TCP. ARP links Layer 3 addresses to Layer 2 addresses. Professionals use the layer numbers as a shared vocabulary ("it's a Layer 7 outage, the network is fine") and as a checklist. They don't treat them as strict laws.
+
+### 4. How attackers abuse it
+
+Every layer has its own weak spots, so attackers pick the floor where defences are thinnest:
+
+- **Layer 2:** pretending to be the router on a local network (ARP spoofing, which you will meet in lesson 3) so that traffic flows through the attacker.
+- **Layer 3:** faking the sender address on packets (**IP spoofing**) to hide or to aim replies at a victim.
+- **Layer 4:** sending floods of half-opened TCP connections (**SYN flood**) until a server can't accept real users.
+- **Layer 7:** attacking the application itself: stolen passwords, injection into web forms, abuse of APIs.
+
+A key idea: **an attack at a lower layer can defeat a control at a higher one.** Strong website passwords don't help if an attacker on the same Wi-Fi is silently redirecting your traffic at Layer 2.
+
+### 5. How defenders detect it
+
+Defenders place sensors on different floors, because each sees different things:
+
+- **Layer 2/3:** managed switches report MAC addresses that suddenly move ports or claim another device's address.
+- **Layer 3/4:** firewalls and **flow logs** record who talked to whom, on which port, and how much. Flow logs are like a phone bill: numbers and durations, not the conversation.
+- **Layer 7:** web servers, proxies and **WAFs (Web Application Firewalls)** log the actual requests, such as the URL, method and user agent.
+
+Imagine the SOC receives an alert: "web login failures spiked." A good analyst checks the layers in order. Is the traffic reaching the server at all (L3)? Is it on the expected port (L4)? What are the requests (L7)?
+
+### 6. How to prevent/fix it
+
+- **Defence in depth:** put a control on several floors, not one. Switch security (L2), firewall rules (L3/L4), TLS encryption (L6), and login security (L7). If one fails, the next still stands.
+- **Segment the network:** keep sensitive servers on their own networks so an attacker on the guest Wi-Fi can't even reach them.
+- **Troubleshoot bottom-up:** check link, then address, then port, then application. It is the fastest route to the real cause.
+
+### 7. Common mistakes
+
+- **Mixing up packets and frames.** A packet is Layer 3 (IP addresses); a frame is Layer 2 (MAC addresses). Routers move packets between networks; switches move frames inside one network.
+- **Thinking OSI is software you run.** It is a model. The internet runs TCP/IP.
+- **Debugging the website first.** If `ip link` shows `DOWN`, no amount of browser refreshing will help.
+- **Believing encryption fixes everything.** TLS protects the *content* (L6/L7). It doesn't stop someone on your local network from seeing *who* you talk to.
+
+### Remember it like this
+
+> **Layers = floors of a building. Going down, each floor adds a label (encapsulation); going up, each floor removes one.** OSI order bottom-up: "**P**lease **D**o **N**ot **T**hrow **S**ausage **P**izza **A**way". Units: bits → frames → packets → segments → data.
+
+### Interview answer
+
+> "The OSI model splits networking into seven layers, from Physical up to Application. The TCP/IP model is the four-layer version the internet actually uses: Link, Internet, Transport and Application. When data is sent, each layer encapsulates it with its own header: ports at Layer 4, IP addresses at Layer 3, MAC addresses at Layer 2. I use the layers to troubleshoot bottom-up, and to plan defence in depth, with a control at each layer so one failure doesn't expose everything."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no scored lab. **Field exercise (not scored):** on your own computer, open a terminal. On Linux, run `ip link`, `ip route` and `ss -tln`. On Windows, run `ipconfig /all` and `netstat -an` instead. For each output, write down which layer it is telling you about, and one fact it gave you (your MAC address, your router's IP, one listening port).
+
+## Debrief
+
+**What a professional does here.** When a ticket says "the intranet is down," an analyst does not guess. They walk the layers: is the link up, does the machine have an address and a route, does the server answer on its port, and what does the application return? Each answer removes a floor from the search.
+
+**Real incident: the Facebook outage (4 October 2021).** During routine maintenance, a command meant to check Facebook's backbone network capacity accidentally disconnected the backbone links between its data centres. A tool that should have blocked the command had a bug. Facebook's DNS servers are designed to stop announcing themselves to the internet (using **BGP, the Border Gateway Protocol**, which tells the world's routers where networks are) when they lose contact with the data centres. They did exactly that. With no route to Facebook's DNS servers, nobody could look up facebook.com, instagram.com or whatsapp.com for about six hours. The applications (Layer 7) were fine; the routing underneath them (Layer 3) was gone. Lower-layer failures take down everything above them.
+
+**Key takeaways**
+
+- OSI has 7 layers (a map); TCP/IP has 4 (the real internet).
+- Sending = encapsulation down the stack; receiving = decapsulation up the stack.
+- Layer 2 = MAC addresses and frames, Layer 3 = IP addresses and packets, Layer 4 = ports and segments.
+- Troubleshoot bottom-up; defend on several layers at once.
