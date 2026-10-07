@@ -72,6 +72,7 @@ export function demoWorld(): World {
     env: { PATH: "/usr/local/bin:/usr/bin:/bin", SHELL: "/bin/bash", LANG: "en_IN.UTF-8" },
     network: demoNetwork(),
     root: dir({
+      dev: dir({ null: file("", { mode: 0o666 }) }),
       etc: dir({
         hostname: file("neon-demo\n"),
         "os-release": file('NAME="Ubuntu"\nVERSION="24.04 LTS (Noble Numbat)"\nID=ubuntu\n'),
