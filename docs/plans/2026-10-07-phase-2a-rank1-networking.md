@@ -194,10 +194,10 @@ Rules: `track: core`, `rank: 1`, `module: networking`, `order` = #, `estimated_m
 
 Coverage additions (`target_rank: 1` unless noted; mark these new ids "verify" in the file header): `netplus:1.2` appliances/functions (firewalls, proxies), `netplus:1.7` IPv4 addressing, `netplus:1.8` modern environments incl. IPv6, `netplus:2.1` routing, `netplus:2.2` switching (MAC/ARP/VLAN basics), `netplus:3.5` network services (DHCP, DNS, NTP), `netplus:5.5` troubleshooting tools (ping, traceroute, dig, packet capture); `secplus:1.4` cryptographic solutions (TLS) `target_rank: 2`; `secplus:3.2` securing infrastructure (firewalls, proxies) `target_rank: 2`. Keep `built_ranks: [0]` until Rank 1 is complete (Plan 2C).
 
-- [ ] **Step 1:** Write lessons 1–3 + checks; all `console` examples run against `demoWorld()` (capture real output with a scratch script before pasting); `npm run check:content` → PASS.
-- [ ] **Step 2:** Lessons 4–6 + checks → PASS.
-- [ ] **Step 3:** Lessons 7–9 + checks → PASS.
-- [ ] **Step 4:** Commit `content(core): rank 1 networking lessons (draft, pending expert review)`.
+- [x] **Step 1:** Write lessons 1–3 + checks; all `console` examples run against `demoWorld()` (capture real output with a scratch script before pasting); `npm run check:content` → PASS.
+- [x] **Step 2:** Lessons 4–6 + checks → PASS.
+- [x] **Step 3:** Lessons 7–9 + checks → PASS.
+- [x] **Step 4:** Commit `content(core): rank 1 networking lessons (draft, pending expert review)`.
 
 ---
 
