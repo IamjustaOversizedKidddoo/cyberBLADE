@@ -14,7 +14,7 @@ test("new visitor onboards and lands on the dashboard", async ({ page }) => {
   await onboard(page, handle);
 
   await expect(page).toHaveURL(/\/dashboard$/);
-  await expect(page.getByText(`> welcome, ${handle}`)).toBeAttached();
+  await expect(page.getByText(`> welcome, ${handle}`).first()).toBeAttached();
   await expect(page.getByText("Rank 0 · Initiate").first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "job_tracks" })).toBeVisible();
 });

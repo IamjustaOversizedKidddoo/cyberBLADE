@@ -6,24 +6,25 @@ async function lines(page: Page): Promise<string[]> {
   return (await page.locator(".xterm-rows > div").allInnerTexts()).map((r) => r.replace(/ /g, " ").trimEnd());
 }
 
+function outputAfter(rows: string[], cmd: string): string | null {
+  const at = rows.findLastIndex((l) => l.endsWith(`$ ${cmd}`));
+  if (at < 0) return null;
+  const rest = rows.slice(at + 1);
+  const end = rest.findIndex((l) => PROMPT.test(l));
+  return end < 0 ? null : rest.slice(0, end).join("\n");
+}
+
 /**
- * Types a command into the lab terminal like a learner (click, type, Enter) and returns the output
- * printed after it, up to the next prompt. Output wraps at the terminal width.
+ * Types a command into the lab terminal like a learner (click, Ctrl+L to clear, type, Enter) and
+ * returns what it printed, up to the next prompt. xterm only renders the visible screen, so the
+ * screen is cleared first; output longer than one screen would be cut off. Long lines wrap.
  */
 export async function runCommand(page: Page, cmd: string): Promise<string> {
-  const before = (await lines(page)).filter((l) => PROMPT.test(l) || l.includes("$ ")).length;
   await page.locator(".xterm-screen").click();
+  await page.keyboard.press("Control+l");
+  await expect.poll(async () => (await lines(page)).filter(Boolean).length, { timeout: 5_000 }).toBe(1);
   await page.keyboard.type(cmd);
   await page.keyboard.press("Enter");
-  await expect
-    .poll(async () => {
-      const now = await lines(page);
-      const at = now.findLastIndex((l) => l.endsWith(`$ ${cmd}`));
-      return at >= 0 && now.filter((l) => PROMPT.test(l) || l.includes("$ ")).length > before && now.slice(at + 1).some((l) => PROMPT.test(l));
-    }, { timeout: 10_000 })
-    .toBe(true);
-  const now = await lines(page);
-  const at = now.findLastIndex((l) => l.endsWith(`$ ${cmd}`));
-  const out = now.slice(at + 1);
-  return out.slice(0, out.findIndex((l) => PROMPT.test(l))).join("\n");
+  await expect.poll(async () => outputAfter(await lines(page), cmd), { timeout: 10_000 }).not.toBeNull();
+  return outputAfter(await lines(page), cmd)!;
 }

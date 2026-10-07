@@ -10,6 +10,7 @@ test("the lab terminal runs commands and shows output", async ({ page }) => {
   await page.getByRole("button", { name: "Start" }).click();
   await expect(page).toHaveURL(/\/labs\/core-r0-terminal-lab-01$/);
 
+  await page.locator(".xterm-screen").scrollIntoViewIfNeeded();
   await expect(page.locator(".xterm-rows")).toContainText("This machine is a simulation");
   expect(await runCommand(page, "pwd")).toMatch(/^\/home\/[a-z]+$/);
   expect(await runCommand(page, "whoami")).toMatch(/^[a-z]+$/);
