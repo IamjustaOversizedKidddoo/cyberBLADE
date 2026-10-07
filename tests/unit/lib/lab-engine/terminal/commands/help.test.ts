@@ -11,6 +11,6 @@ test("lists every command with its summary", () => {
 
 test("the lab command set is complete", () => {
   expect(Object.keys(COMMANDS).sort()).toEqual(
-    ["cat", "cd", "clear", "curl", "dig", "echo", "grep", "head", "help", "history", "hostname", "ip", "ls", "mkdir", "ping", "pwd", "ss", "submit", "tail", "touch", "traceroute", "wc", "whoami"].sort(),
+    ["cat", "cd", "clear", "curl", "dig", "echo", "grep", "groups", "head", "help", "history", "hostname", "id", "ip", "ls", "mkdir", "ping", "pwd", "ss", "submit", "tail", "touch", "traceroute", "wc", "whoami"].sort(),
   );
 });

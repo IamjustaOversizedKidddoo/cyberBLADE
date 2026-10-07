@@ -1,3 +1,4 @@
+import { groupsOf } from "./identity";
 import type { DirNode, FileNode, Node } from "./types";
 
 export type VfsErrorCode = "ENOENT" | "ENOTDIR" | "EISDIR" | "EACCES" | "EEXIST";
@@ -30,18 +31,14 @@ export function resolvePath(cwd: string, p: string, home: string): string {
 }
 
 export function formatMode(node: Pick<Node, "kind" | "mode">): string {
-  const bits = (shift: number) => {
-    const b = (node.mode >> shift) & 7;
-    return (b & R ? "r" : "-") + (b & W ? "w" : "-") + (b & X ? "x" : "-");
+  const m = node.mode;
+  // Special bits replace the execute letter: lowercase when x is also set, uppercase when it isn't.
+  const triple = (shift: number, special: boolean, letter: string) => {
+    const b = (m >> shift) & 7;
+    const x = b & X ? (special ? letter : "x") : special ? letter.toUpperCase() : "-";
+    return (b & R ? "r" : "-") + (b & W ? "w" : "-") + x;
   };
-  return (node.kind === "dir" ? "d" : "-") + bits(6) + bits(3) + bits(0);
-}
-
-function allowed(node: Node, user: string, bit: number): boolean {
-  if (user === "root") return true;
-  // v1 simplification: owner bits for the owner, "other" bits for everyone else (no group membership).
-  const shift = node.owner === user ? 6 : 0;
-  return ((node.mode >> shift) & bit) !== 0;
+  return (node.kind === "dir" ? "d" : "-") + triple(6, (m & 0o4000) !== 0, "s") + triple(3, (m & 0o2000) !== 0, "s") + triple(0, (m & 0o1000) !== 0, "t");
 }
 
 function split(path: string): string[] {
@@ -50,10 +47,43 @@ function split(path: string): string[] {
 
 export class Vfs {
   private root: DirNode;
+  /** Bits removed from new files (0o666) and directories (0o777); the shell's umask command changes it. */
+  umask: number;
+  private groupCache = new Map<string, string[]>();
 
-  constructor(root: DirNode) {
+  constructor(root: DirNode, opts: { umask?: number } = {}) {
     // Own copy: the world object the server sent is never mutated.
     this.root = structuredClone(root);
+    this.umask = opts.umask ?? 0o022;
+  }
+
+  /** Linux checks one class only: owner bits for the owner, else group bits for members, else other bits. */
+  private allowed(node: Node, user: string, bit: number): boolean {
+    if (user === "root") return bit !== X || node.kind === "dir" || (node.mode & 0o111) !== 0;
+    let shift = 0;
+    if (node.owner === user) shift = 6;
+    else if (this.groupsOf(user).includes(node.group)) shift = 3;
+    return ((node.mode >> shift) & bit) !== 0;
+  }
+
+  groupsOf(user: string): string[] {
+    let groups = this.groupCache.get(user);
+    if (!groups) this.groupCache.set(user, (groups = groupsOf(this, user)));
+    return groups;
+  }
+
+  /** Raw change, no permission check: callers (chmod, chown) decide who may. */
+  setMode(path: string, mode: number): void {
+    const node = this.stat(path);
+    if (!node) throw new VfsError("ENOENT", path);
+    node.mode = mode;
+  }
+
+  setOwner(path: string, owner?: string, group?: string): void {
+    const node = this.stat(path);
+    if (!node) throw new VfsError("ENOENT", path);
+    if (owner !== undefined) node.owner = owner;
+    if (group !== undefined) node.group = group;
   }
 
   /** Raw lookup, no permission checks. */
@@ -75,7 +105,7 @@ export class Vfs {
     let node: Node = this.root;
     for (const seg of split(path)) {
       if (node.kind !== "dir") throw new VfsError("ENOTDIR", path);
-      if (!allowed(node, user, X)) throw new VfsError("EACCES", path);
+      if (!this.allowed(node, user, X)) throw new VfsError("EACCES", path);
       if (!Object.hasOwn(node.children, seg)) throw new VfsError("ENOENT", path);
       node = node.children[seg];
     }
@@ -88,21 +118,21 @@ export class Vfs {
     if (!name) throw new VfsError("EISDIR", path);
     const parent = this.walk("/" + segs.join("/"), user);
     if (parent.kind !== "dir") throw new VfsError("ENOTDIR", path);
-    if (!allowed(parent, user, X)) throw new VfsError("EACCES", path);
+    if (!this.allowed(parent, user, X)) throw new VfsError("EACCES", path);
     return { parent, name };
   }
 
   readFile(path: string, user: string): string {
     const node = this.walk(path, user);
     if (node.kind === "dir") throw new VfsError("EISDIR", path);
-    if (!allowed(node, user, R)) throw new VfsError("EACCES", path);
+    if (!this.allowed(node, user, R)) throw new VfsError("EACCES", path);
     return node.content;
   }
 
   list(path: string, user: string): [string, Node][] {
     const node = this.walk(path, user);
     if (node.kind !== "dir") throw new VfsError("ENOTDIR", path);
-    if (!allowed(node, user, R)) throw new VfsError("EACCES", path);
+    if (!this.allowed(node, user, R)) throw new VfsError("EACCES", path);
     return Object.entries(node.children);
   }
 
@@ -110,7 +140,7 @@ export class Vfs {
   checkDir(path: string, user: string): void {
     const node = this.walk(path, user);
     if (node.kind !== "dir") throw new VfsError("ENOTDIR", path);
-    if (!allowed(node, user, X)) throw new VfsError("EACCES", path);
+    if (!this.allowed(node, user, X)) throw new VfsError("EACCES", path);
   }
 
   write(path: string, content: string, user: string, append: boolean): void {
@@ -118,13 +148,15 @@ export class Vfs {
     const existing = Object.hasOwn(parent.children, name) ? parent.children[name] : undefined;
     if (existing) {
       if (existing.kind === "dir") throw new VfsError("EISDIR", path);
-      if (!allowed(existing, user, W)) throw new VfsError("EACCES", path);
+      if (!this.allowed(existing, user, W)) throw new VfsError("EACCES", path);
       existing.content = append ? existing.content + content : content;
       existing.mtime = new Date().toISOString();
+      if (path.startsWith("/etc/")) this.groupCache.clear();
       return;
     }
-    if (!allowed(parent, user, W)) throw new VfsError("EACCES", path);
+    if (!this.allowed(parent, user, W)) throw new VfsError("EACCES", path);
     parent.children[name] = this.newFile(content, user);
+    if (path.startsWith("/etc/")) this.groupCache.clear();
   }
 
   mkdir(path: string, user: string, parents: boolean): void {
@@ -140,13 +172,13 @@ export class Vfs {
       }
       if (!last && !parents) throw new VfsError("ENOENT", path);
       const { parent, name } = this.parentOf(sub, user);
-      if (!allowed(parent, user, W)) throw new VfsError("EACCES", path);
+      if (!this.allowed(parent, user, W)) throw new VfsError("EACCES", path);
       parent.children[name] = {
         kind: "dir",
         children: {},
         owner: user,
         group: user,
-        mode: 0o755,
+        mode: 0o777 & ~this.umask,
         mtime: new Date().toISOString(),
       };
     }
@@ -156,15 +188,15 @@ export class Vfs {
     const { parent, name } = this.parentOf(path, user);
     const existing = Object.hasOwn(parent.children, name) ? parent.children[name] : undefined;
     if (existing) {
-      if (!allowed(existing, user, W)) throw new VfsError("EACCES", path);
+      if (!this.allowed(existing, user, W)) throw new VfsError("EACCES", path);
       existing.mtime = new Date().toISOString();
       return;
     }
-    if (!allowed(parent, user, W)) throw new VfsError("EACCES", path);
+    if (!this.allowed(parent, user, W)) throw new VfsError("EACCES", path);
     parent.children[name] = this.newFile("", user);
   }
 
   private newFile(content: string, user: string): FileNode {
-    return { kind: "file", content, owner: user, group: user, mode: 0o644, mtime: new Date().toISOString() };
+    return { kind: "file", content, owner: user, group: user, mode: 0o666 & ~this.umask, mtime: new Date().toISOString() };
   }
 }
