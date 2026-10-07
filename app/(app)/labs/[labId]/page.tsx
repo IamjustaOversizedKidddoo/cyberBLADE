@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { LabWorkspace } from "@/components/labs/LabWorkspace";
 import { proseComponents } from "@/components/lesson/prose";
 import { HeroBand } from "@/components/theme/HeroBand";
@@ -8,6 +8,7 @@ import { getLesson, getLessons } from "@/lib/content/lessons";
 import { renderMdx } from "@/lib/content/mdx";
 import { continueTarget } from "@/lib/content/navigation";
 import { requireOperator } from "@/lib/identity/session";
+import { canAccessRank } from "@/lib/progress/access";
 import type { LoadedLab } from "@/lib/lab-engine/lab-schema";
 import { loadLab } from "@/lib/lab-engine/labs";
 import { getCtx } from "@/lib/progress/context";
@@ -35,6 +36,8 @@ export default async function LabPage(props: PageProps<"/labs/[labId]">) {
   if (!lab || lab.challenge) notFound();
 
   const operator = await requireOperator();
+  // Gate before startLab so a locked visit never creates an attempt.
+  if (!canAccessRank(operator.rank, lab.rank)) redirect(`/learn/core?locked=${lab.rank}`);
   const session = await startLab(getCtx(), operator.id, lab.id);
   const briefing = await renderMdx(lab.briefingText, proseComponents, "md");
   const lessonId = typeof lesson === "string" && /^[a-z0-9-]+$/.test(lesson) ? lesson : undefined;

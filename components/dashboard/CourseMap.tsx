@@ -33,10 +33,13 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                   {state === "locked" && <span className="ml-3 text-sm">🔒︎ Locked</span>}
                 </h3>
                 <p className="mt-1 text-muted">{RANK_SUMMARY[r.rank]}</p>
-                {state === "current" && r.rank === 0 && (
+                {state === "current" && (
                   <p className="mt-3 flex flex-wrap items-center gap-4">
-                    <Link href="/learn/core" className="border border-cyan px-4 py-1 font-ui text-cyan hover:bg-cyan hover:text-void">
-                      {rankProgress.done > 0 ? "Continue" : "Begin rank_0"}
+                    <Link
+                      href={`/learn/core#rank-${r.rank}`}
+                      className="border border-cyan px-4 py-1 font-ui text-cyan hover:bg-cyan hover:text-void"
+                    >
+                      {rankProgress.done > 0 ? "Continue" : `Begin rank_${r.rank}`}
                     </Link>
                     <span className="text-sm text-muted">
                       {rankProgress.done}/{rankProgress.total} lessons · {xp} XP
