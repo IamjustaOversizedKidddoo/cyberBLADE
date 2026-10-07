@@ -1,3 +1,5 @@
+import { dir, file } from "@/lib/lab-engine/terminal/build";
+import { createShell } from "@/lib/lab-engine/terminal/shell";
 import { run, shell } from "./helpers";
 
 test("lists names sorted, ignoring case and leading dots, hidden only with -a", () => {
@@ -61,4 +63,17 @@ test("one name per line when output goes to a pipe or a file (like GNU ls)", () 
   // bash creates out.txt before ls runs, so it lists itself.
   expect(sh.exec("cat out.txt").stdout).toBe("Docs\nnotes.txt\nout.txt\n");
   expect(sh.exec("ls").stdout).toBe("Docs  notes.txt  out.txt\n");
+});
+
+test("ls -l shows special bits like GNU ls", () => {
+  const sh = createShell({
+    hostname: "h",
+    user: "op",
+    home: "/",
+    root: dir({ bin: dir({ passwd: file("", { mode: 0o4755 }), crontab: file("", { group: "crontab", mode: 0o2755 }) }), tmp: dir({}, { mode: 0o1777 }) }),
+  });
+  expect(sh.exec("ls -l /bin").stdout).toBe(
+    "total 2\n-rwxr-sr-x 1 root crontab 0 Oct  6 09:14 crontab\n-rwsr-xr-x 1 root root    0 Oct  6 09:14 passwd\n",
+  );
+  expect(sh.exec("ls -l /").stdout).toMatch(/^drwxrwxrwt 1 root root 4096 Oct  6 09:14 tmp$/m);
 });

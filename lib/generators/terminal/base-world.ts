@@ -56,6 +56,9 @@ export function baseWorld(opts: BaseOptions): World {
     "root:x:0:0:root:/root:/bin/bash\n" +
     "daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\n" +
     all.map((u, i) => `${u}:x:${1000 + i}:${1000 + i}:${u}:/home/${u}:/bin/bash\n`).join("");
+  // One private group per user (Ubuntu's default), plus the usual system groups.
+  const group =
+    "root:x:0:\ndaemon:x:1:\nadm:x:4:\nsudo:x:27:\nshadow:x:42:\n" + all.map((u, i) => `${u}:x:${1000 + i}:\n`).join("");
 
   const homes: Record<string, DirNode> = {
     [user]: dir(
@@ -75,7 +78,7 @@ export function baseWorld(opts: BaseOptions): World {
     home: `/home/${user}`,
     env: { PATH: "/usr/local/bin:/usr/bin:/bin", SHELL: "/bin/bash" },
     root: dir({
-      etc: dir({ hostname: file(`${hostname}\n`), passwd: file(passwd), ...opts.etc }),
+      etc: dir({ hostname: file(`${hostname}\n`), passwd: file(passwd), group: file(group), ...opts.etc }),
       home: dir(homes),
       root: dir({}, { mode: 0o700 }),
       tmp: dir({}, { mode: 0o777 }),

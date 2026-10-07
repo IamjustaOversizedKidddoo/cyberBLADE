@@ -132,3 +132,50 @@ test("build helpers set sane defaults", () => {
   expect(file("x")).toMatchObject({ kind: "file", content: "x", owner: "root", group: "root", mode: 0o644 });
   expect(dir({})).toMatchObject({ kind: "dir", children: {}, owner: "root", mode: 0o755 });
 });
+
+describe("groups, special bits and umask", () => {
+  const etc = () =>
+    dir({
+      passwd: file("root:x:0:0:root:/root:/bin/bash\nop:x:1000:1000::/home/op:/bin/bash\nbob:x:1001:1001::/home/bob:/bin/bash\n"),
+      group: file("root:x:0:\nadm:x:4:op\nop:x:1000:\nbob:x:1001:\n"),
+    });
+
+  test("group members get the group bits; others get the other bits", () => {
+    const vfs = new Vfs(dir({ etc: etc(), log: file("secret\n", { group: "adm", mode: 0o640 }) }));
+    expect(vfs.readFile("/log", "op")).toBe("secret\n");
+    expect(() => vfs.readFile("/log", "bob")).toThrow(/EACCES/);
+  });
+
+  test("only the first matching class counts: a group member gets group bits even if other has more", () => {
+    const vfs = new Vfs(dir({ etc: etc(), f: file("x\n", { owner: "bob", group: "adm", mode: 0o604 }) }));
+    expect(() => vfs.readFile("/f", "op")).toThrow(/EACCES/);
+    expect(vfs.readFile("/f", "root")).toBe("x\n");
+  });
+
+  test("umask shapes new files and directories", () => {
+    const vfs = new Vfs(dir({ etc: etc(), home: dir({}, { owner: "op", mode: 0o755 }) }), { umask: 0o077 });
+    vfs.write("/home/a.txt", "", "op", false);
+    vfs.mkdir("/home/d", "op", false);
+    expect(vfs.stat("/home/a.txt")!.mode).toBe(0o600);
+    expect(vfs.stat("/home/d")!.mode).toBe(0o700);
+    vfs.umask = 0o022;
+    vfs.touch("/home/b.txt", "op");
+    expect(vfs.stat("/home/b.txt")!.mode).toBe(0o644);
+  });
+
+  test("setMode and setOwner change the node", () => {
+    const vfs = new Vfs(dir({ f: file("x") }));
+    vfs.setMode("/f", 0o4755);
+    vfs.setOwner("/f", "op", "adm");
+    expect(vfs.stat("/f")).toMatchObject({ mode: 0o4755, owner: "op", group: "adm" });
+  });
+
+  test("formatMode shows setuid, setgid and sticky bits", () => {
+    expect(formatMode({ kind: "file", mode: 0o4755 })).toBe("-rwsr-xr-x");
+    expect(formatMode({ kind: "file", mode: 0o4644 })).toBe("-rwSr--r--");
+    expect(formatMode({ kind: "file", mode: 0o2755 })).toBe("-rwxr-sr-x");
+    expect(formatMode({ kind: "file", mode: 0o2745 })).toBe("-rwxr-Sr-x");
+    expect(formatMode({ kind: "dir", mode: 0o1777 })).toBe("drwxrwxrwt");
+    expect(formatMode({ kind: "dir", mode: 0o1776 })).toBe("drwxrwxrwT");
+  });
+});

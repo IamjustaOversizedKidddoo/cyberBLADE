@@ -4,7 +4,9 @@ import { echo } from "./echo";
 import { curl } from "./curl";
 import { dig } from "./dig";
 import { grep } from "./grep";
+import { groups } from "./groups";
 import { head, tail } from "./head-tail";
+import { id } from "./id";
 import { ip } from "./ip";
 import { ls } from "./ls";
 import { mkdir } from "./mkdir";
@@ -33,5 +35,5 @@ const help: Command = {
 
 /** The lab command set (Rank 0 basics + Rank 1 networking). Each command lives in its own file. */
 export const COMMANDS: Record<string, Command> = Object.fromEntries(
-  [cat, cd, clear, curl, dig, echo, grep, head, help, history, hostname, ip, ls, mkdir, ping, pwd, ss, submit, tail, touch, traceroute, wc, whoami].map((c) => [c.name, c]),
+  [cat, cd, clear, curl, dig, echo, grep, groups, head, help, history, hostname, id, ip, ls, mkdir, ping, pwd, ss, submit, tail, touch, traceroute, wc, whoami].map((c) => [c.name, c]),
 );

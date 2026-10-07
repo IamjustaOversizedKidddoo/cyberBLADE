@@ -81,6 +81,7 @@ export function demoWorld(): World {
             "www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\n" +
             "learner:x:1000:1000:Learner:/home/learner:/bin/bash\n",
         ),
+        group: file("root:x:0:\nadm:x:4:\nsudo:x:27:learner\nshadow:x:42:\nwww-data:x:33:\nlearner:x:1000:\n"),
         shadow: file("root:*:19700:0:99999:7:::\nlearner:$y$j9T$demo$hash:19700:0:99999:7:::\n", { mode: 0o640, group: "shadow" }),
         hosts: file("127.0.0.1 localhost\n127.0.1.1 neon-demo\n"),
         "resolv.conf": file("nameserver 127.0.0.53\noptions edns0 trust-ad\n"),
@@ -97,7 +98,7 @@ export function demoWorld(): World {
         ),
       }),
       root: dir({ ".bash_history": file("apt update\n", { mode: 0o600 }) }, { mode: 0o700 }),
-      tmp: dir({}, { mode: 0o777 }),
+      tmp: dir({}, { mode: 0o1777 }),
       var: dir({
         log: dir({
           "auth.log": file(
