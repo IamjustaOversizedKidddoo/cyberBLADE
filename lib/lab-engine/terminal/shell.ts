@@ -49,7 +49,7 @@ export function createShell(world: World): Shell {
       const isTty = index === parsed.commands.length - 1 && !redirect;
       const alone = parsed.commands.length === 1 && !redirect;
       last = impl
-        ? impl.run({ argv, stdin, vfs, cwd, user, home, hostname, env, history, isTty, alone, setCwd })
+        ? impl.run({ argv, stdin, vfs, cwd, user, home, hostname, env, history, isTty, alone, network: world.network, setCwd })
         : { stdout: "", stderr: `${argv[0]}: command not found\n`, code: 127 };
 
       if (redirect && target) {

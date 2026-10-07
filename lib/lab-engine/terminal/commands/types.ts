@@ -1,3 +1,4 @@
+import type { Network } from "../network";
 import type { Vfs } from "../vfs";
 
 export type CmdResult = {
@@ -23,6 +24,7 @@ export type CmdContext = {
   isTty: boolean;
   /** True when this is the only command on the line, with no redirect. */
   alone: boolean;
+  network?: Network;
   setCwd(path: string): void;
 };
 
