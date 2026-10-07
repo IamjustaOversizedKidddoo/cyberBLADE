@@ -18,85 +18,188 @@ last_reviewed: null
 
 ### 1. What it is
 
-The **Domain Name System (DNS)** is a hierarchical, distributed naming database that translates human-memorable domain names (e.g., `example.com`) into computer-routable IP addresses (e.g., `203.0.113.10`).
+**DNS (Domain Name System)** turns names into addresses. You type `example.com`; DNS answers `203.0.113.10`, the IP address your computer actually connects to.
 
-DNS operates primarily over **UDP port 53** for low-latency queries, switching to **TCP port 53** when response payloads exceed 512 bytes or when performing authoritative database transfers (**zone transfers**).
+It is the internet's phonebook. You remember your friend's name, not their number, and the phonebook gives you the number when you need it. You don't need to know where your friend lives, either. If they move, the phonebook is updated and you keep using the same name.
 
-Key components of the DNS architecture:
-- **Stub Resolver**: The client library on your operating system requesting a translation.
-- **Recursive Resolver**: The upstream server (e.g., provided by your ISP, corporate IT, or Quad9/Cloudflare) that traverses the global hierarchy on the client's behalf.
-- **Root Nameservers (`.` )**: 13 logical root server authorities operating at the top of the DNS tree.
-- **Top-Level Domain (TLD) Nameservers**: Authorities managing suffixes like `.com`, `.org`, or country codes like `.in`.
-- **Authoritative Nameservers**: The final servers holding the actual zone records for a specific domain.
+The real meaning: DNS is a huge, distributed database. No single server holds all of it. Each organisation runs servers for its own names, and a chain of servers finds the right one for every question. Queries normally use **UDP port 53**. They switch to **TCP port 53** when an answer is too big for UDP, and for **zone transfers** (copying a domain's whole record list between servers).
 
 ### 2. Why it exists
 
-Humans cannot memorize billions of 32-bit or 128-bit numerical strings. Furthermore, IP addresses change when servers migrate across hosting providers or cloud availability zones.
+DNS exists because **people can't remember numbers, and numbers change**.
 
-DNS decouples human-facing application names from physical infrastructure addresses. A company can migrate web servers from one data center to another simply by updating an `A` record in its authoritative zone, without changing the URL users bookmark.
+Nobody could memorise the IP address of every website they use, and companies move servers all the time: to a new data centre, a new cloud provider, a new address. With DNS, the company changes one record and every user keeps typing the same name. In the early internet, every computer kept one shared text file of all names, called `HOSTS.TXT`. It broke as soon as the internet grew past a few thousand machines. DNS replaced it in 1983.
 
-Because almost every internet transaction begins with a DNS lookup, DNS is also one of the most critical observability chokepoints and attack surfaces in enterprise cybersecurity.
+Because almost everything starts with a DNS lookup, DNS is also a perfect place to **watch** what a network is doing, and a perfect place to **attack** it. If DNS lies to you, you connect to the wrong place without noticing.
 
 ### 3. How it works
 
-**Core DNS Record Types:**
+**Level 1 — the parts.** Several different servers take part in one lookup:
 
-| Type | Name | Purpose | Example Value |
-|---|---|---|---|
-| **A** | Address | Maps domain name to an IPv4 address | `example.com -> 203.0.113.10` |
-| **AAAA** | IPv6 Address | Maps domain name to an IPv6 address | `example.com -> 2001:db8::10` |
-| **CNAME** | Canonical Name | Alias pointing one domain to another domain | `www.example.com -> example.com` |
-| **MX** | Mail Exchange | Designates incoming mail servers with priority | `10 mail.example.com` |
-| **TXT** | Text | Freeform text; used for SPF, DKIM, and site ownership | `v=spf1 -all` |
-| **NS** | Name Server | Delegates a zone to authoritative nameservers | `ns1.example.com` |
-| **PTR** | Pointer | Reverse lookup: maps IP to a domain name | `10.113.0.203.in-addr.arpa -> example.com` |
+- **Stub resolver**: the small DNS client inside your own computer. It asks; it doesn't search.
+- **Recursive resolver**: the server that does the searching for you. It is run by your company, your ISP, or a public service. It also **caches** (remembers) answers.
+- **Root servers**: the top of the tree. They know who runs each **TLD (Top-Level Domain)** such as `.com`, `.org` or `.in`.
+- **TLD servers**: they know which servers are responsible for each domain inside their TLD.
+- **Authoritative servers**: they hold the real records for one domain. Their answer is the final word.
 
-**Resolution return codes (RCODEs):**
-- **NOERROR**: Query completed successfully.
-- **NXDOMAIN (Non-Existent Domain)**: The queried domain name does not exist.
-- **SERVFAIL**: The nameserver encountered an internal failure or timeout.
+**Level 2 — one lookup, step by step.**
 
-Let's test DNS resolution on our demo machine using BIND `dig`:
-
-```console
-$ dig +short example.com
-$ dig @127.0.0.53 example.com
+```text
+ your PC            recursive resolver           root      .com TLD     example.com's
+ (stub)                                                                authoritative
+   │ ① "example.com A?" ─▶│                                                 │
+   │                      │ ② "example.com?" ─────▶│ "ask .com servers"      │
+   │                      │ ③ "example.com?" ────────────────▶│ "ask ns1.example.com"
+   │                      │ ④ "example.com A?" ──────────────────────────────▶│
+   │                      │◀──────────────────────────────── "203.0.113.10, TTL 300"
+   │◀─ ⑤ "203.0.113.10" ──│   (saved in cache for 300 seconds)
 ```
 
-The output displays the DNS header flags, question section, and answer section containing the resolved IP address.
+In plain English: your computer asks one question to its resolver. The resolver walks down the tree, from root to `.com` to the domain's own server, collects the answer, remembers it, and hands it back. The next person who asks within 300 seconds gets the remembered answer instantly. That number is the record's **TTL (Time To Live)**: how long a cache may keep it. It is not the same TTL as the IP header field in lesson 3; the same name is used for two different counters.
+
+**Record types.** A domain holds several kinds of **records**:
+
+| Type | Says | Example |
+|---|---|---|
+| **A** | name → IPv4 address | `example.com → 203.0.113.10` |
+| **AAAA** | name → IPv6 address | `example.com → 2001:db8::10` |
+| **CNAME** | this name is an alias of another name | `www.example.com → example.com` |
+| **MX** | where email for this domain goes (lower number = preferred) | `10 mail.example.com` |
+| **NS** | which servers are authoritative for this domain | `ns1.example.com` |
+| **TXT** | free text, used for email security (SPF) and proving ownership | `"v=spf1 -all"` |
+| **PTR** | reverse lookup: IP → name | `203.0.113.10 → example.com` |
+
+**Answer codes.** Every DNS reply carries a status, the **RCODE (response code)**:
+
+- **NOERROR**: the name exists (the answer may still be empty for that record type).
+- **NXDOMAIN** ("non-existent domain"): this name does not exist at all. Wireshark shows it as **No such name**.
+- **SERVFAIL**: the server failed to get an answer.
+
+**Level 3 — asking DNS yourself.** Where does your machine send its questions? Linux keeps that in one file:
+
+```console
+$ cat /etc/resolv.conf
+nameserver 127.0.0.53
+options edns0 trust-ad
+```
+
+`nameserver 127.0.0.53` is a local resolver on loopback (on Ubuntu, `systemd-resolved`), which in turn forwards questions to the network's real resolver. The professional's tool for asking DNS questions directly is `dig`.
+
+#### Command
+
+```console
+$ dig example.com
+; <<>> DiG 9.18.28 <<>> example.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 17372
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;example.com.			IN	A
+
+;; ANSWER SECTION:
+example.com.		300	IN	A	203.0.113.10
+
+;; Query time: 4 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53) (UDP)
+;; WHEN: Wed Oct 07 10:00:00 IST 2026
+;; MSG SIZE  rcvd: 56
+
+```
+
+#### In simple English
+
+Ask DNS for the A record (IPv4 address) of example.com, and show the full reply.
+
+#### Why do I care?
+
+When something "can't connect," DNS is the first suspect. In an investigation, `dig` tells you exactly what a name points to *right now*.
+
+#### Important part
+
+- `status: NOERROR`: the name exists.
+- `flags: qr rd ra`: this is a **q**uery **r**esponse; **r**ecursion was **d**esired and is **a**vailable.
+- `ANSWER SECTION`: the answer itself. `300` is the TTL in seconds, `IN` means internet class, `A` the type, `203.0.113.10` the data.
+- `SERVER: 127.0.0.53#53 (UDP)`: which resolver answered, on port 53 over UDP.
+
+#### What should I look for?
+
+The `status` and the `ANSWER SECTION`. Most of the time you only want the answer, and `+short` prints just that:
+
+```console
+$ dig +short www.example.com
+example.com.
+203.0.113.10
+$ dig +short example.com MX
+10 mail.example.com.
+```
+
+The first lookup shows a **CNAME** chain: `www.example.com` is an alias of `example.com`, which has the address. The second asks for a different **record type** by naming it after the domain. The trailing dot in `example.com.` means "a complete name, ending at the root". It is normal.
+
+Here is what a name that doesn't exist looks like:
+
+```console
+$ dig nosuch.example.com
+; <<>> DiG 9.18.28 <<>> nosuch.example.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 13950
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;nosuch.example.com.			IN	A
+
+;; Query time: 4 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53) (UDP)
+;; WHEN: Wed Oct 07 10:00:00 IST 2026
+;; MSG SIZE  rcvd: 40
+
+```
+
+`status: NXDOMAIN` and `ANSWER: 0`: no such name. One NXDOMAIN is a typo. Hundreds from one machine is a warning sign, as you'll see below.
 
 ### 4. How attackers abuse it
 
-- **Application Layer Protocol: DNS (ATT&CK T1071.004)**: Malware uses **DNS Tunneling** to encode stolen files or Command and Control (C2) instructions inside subdomains of an attacker-owned domain (e.g., `data123.evil.example`). Because port 53 is almost always permitted through corporate firewalls, this bypasses egress controls.
-- **DNS Server Compromise & Hijacking (ATT&CK T1584.002)**: Attackers compromise registrar accounts, BGP routes, or DNS caching servers to point legitimate domain records to malicious clone servers (DNS Cache Poisoning / Kaminsky attack).
-- **Domain Generation Algorithms (DGAs)**: Malware generates hundreds of pseudorandom domains daily (e.g., `x89fk2a.biz`) to contact C2 servers, making static IP/domain blocking ineffective.
+- **DNS as a hidden channel.** Firewalls almost always allow DNS, so malware hides its traffic inside it. It might ask for `c2VjcmV0.attacker.example`, where the "name" is really encoded stolen data, and the answer carries commands back. This is called **DNS tunnelling**. ATT&CK: **T1071.004, Application Layer Protocol: DNS**.
+- **Hijacking the answers.** If attackers take over a domain's DNS server, its registrar account, or the routes to it, every user is quietly sent to the attacker's server. ATT&CK: **T1584.002, Compromise Infrastructure: DNS Server**. **Cache poisoning** is a related trick: feeding a resolver a forged answer, which it then serves to everyone until the TTL runs out.
+- **DGAs (Domain Generation Algorithms).** Malware generates hundreds of random-looking domain names a day and tries them all. The attacker registers only one. Blocking yesterday's names doesn't help, and most of the lookups fail with NXDOMAIN.
 
 ### 5. How defenders detect it
 
-- **DNS Query Logging & Telemetry**: Logging all queries at corporate recursive resolvers exposes infected hosts querying high numbers of NXDOMAINs (a hallmark of DGAs).
-- **High-entropy domain detection**: Security analytics flag subdomains with long, randomized character strings indicative of DNS data tunneling.
-- **Passive DNS databases**: Security teams query historical DNS databases to discover which IP addresses a suspicious domain previously resolved to during threat investigations.
+- **Log every query** at the company's resolvers: who asked for what, and when. It is one of the most valuable logs a SOC has.
+- **NXDOMAIN spikes**: one host getting dozens of NXDOMAINs for random-looking names suggests a DGA.
+- **Strange names and sizes**: very long subdomains full of random characters, unusually large TXT answers, or a huge number of lookups to one domain suggest tunnelling.
+- **Chatty hosts**: one machine sending far more queries than its neighbours is worth a look. That is part of your lab.
+
+Imagine the SOC receives the alert "host 10.0.2.17: 900 queries to one domain in 10 minutes, average name length 60 characters." That is not a person browsing; it is a program talking through DNS.
 
 ### 6. How to prevent/fix it
 
-- **Deploy DNSSEC (DNS Security Extensions)**: Cryptographically sign DNS records to prevent cache poisoning and verify answer authenticity.
-- **Use Protective DNS (PDNS) / DNS Filtering**: Direct all internal traffic through resolvers that block known malicious domains, phishing links, and dynamic DGAs.
-- **Enforce DNS over HTTPS (DoH) / DNS over TLS (DoT)**: Encrypt DNS queries to prevent on-path eavesdropping and tampering by local Wi-Fi or ISP adversaries.
-- **Disable open DNS recursion**: Ensure public-facing authoritative nameservers do not answer recursive lookups for external domains.
+- **Force all DNS through company resolvers** and block outbound port 53 to anywhere else, so nothing can bypass logging and filtering. Watch for DNS over HTTPS to public resolvers too.
+- **Protective DNS**: resolvers that refuse to resolve known-malicious and newly registered domains.
+- **DNSSEC (DNS Security Extensions)**: digitally signed records, so resolvers can detect forged answers.
+- **Lock down domain accounts**: registrar accounts with MFA (multi-factor authentication) and registry lock for important domains.
+- **No open resolvers**: a public-facing DNS server should answer only for its own domains, or it becomes an amplifier (lesson 4).
 
 ### 7. Common mistakes
 
-- **Allowing internal clients to bypass corporate DNS**: If workstations can query public resolvers (8.8.8.8, 1.1.1.1) directly over UDP/TCP 53, attackers can bypass enterprise DNS logging. Block outbound port 53 except from designated recursive resolvers.
-- **Assuming DNS records update instantly**: DNS records are cached according to their **TTL (Time-To-Live)** in seconds. Caches worldwide retain old IPs until the TTL expires.
-- **Confusing CNAME with A records**: CNAME records must always point to another domain name, never directly to an IP address.
+- **Expecting changes instantly.** Caches keep the old answer until its TTL expires. Lower the TTL *before* a planned move.
+- **Pointing a CNAME at an IP.** A CNAME must point to another *name*. Use an A record for an address.
+- **Thinking "DNS works, so the server works."** DNS only gives the address; reaching the service is a separate question (ports, firewalls, HTTP).
+- **Letting laptops use any resolver they like.** Your logs and filters only see what goes through your resolvers.
 
 ### Remember it like this
 
-> **A = IPv4 · AAAA = IPv6 · CNAME = Alias · MX = Mail · TXT = Verification/SPF · NXDOMAIN = No such name · Port 53 UDP/TCP.**
+> **DNS = name → IP address, the internet's phonebook. A = IPv4, AAAA = IPv6, CNAME = alias, MX = mail. NXDOMAIN = "no such name." Port 53, usually UDP.**
 
 ### Interview answer
 
-> "DNS is the distributed database resolving domain names to IP addresses, operating primarily over UDP port 53 for queries and TCP port 53 for large responses and zone transfers. Client stub resolvers query recursive resolvers, which traverse the root, TLD, and authoritative nameserver hierarchy. From a security perspective, DNS is a primary C2 and data exfiltration channel via DNS tunneling (ATT&CK T1071.004) and DGAs. Defenders protect against abuse by inspecting recursive resolver query logs, deploying protective DNS filters, enforcing DNSSEC to prevent cache poisoning, and blocking direct outbound port 53 to prevent clients from bypassing monitoring."
+> "DNS resolves names to addresses. The client's stub resolver asks a recursive resolver, which walks from the root to the TLD to the domain's authoritative server, then caches the answer for its TTL. It runs on port 53, normally UDP, with TCP for large answers and zone transfers. Common records are A, AAAA, CNAME, MX, NS, TXT and PTR. For security, DNS is both an attack channel, with tunnelling and DGAs for command and control under T1071.004, and a target, through hijacking and cache poisoning. That is why we force clients through logged, filtered resolvers and alert on NXDOMAIN spikes and anomalous query patterns."
 
 ## Terminal Check
 
@@ -104,19 +207,19 @@ The output displays the DNS header flags, question section, and answer section c
 
 ## Lab
 
-In this packet capture lab, inspect a recording of enterprise DNS traffic. Filter for response packets returning NXDOMAIN errors, determine the specific IPv4 address resolved for beacon.example, and identify which internal client IP dispatched the highest volume of queries.
+In this packet lab you read a capture of an office network's DNS traffic. You will find the name that came back as **No such name** (NXDOMAIN), the address `beacon.example` resolved to, and the internal machine that sent the most queries. You find the last one by counting, not by guessing. Each learner gets a different capture.
 
 <LabLink />
 
 ## Debrief
 
-**What a professional does here.** Security Operations Center (SOC) analysts monitor recursive resolver logs for beaconing patterns, spike in NXDOMAIN responses, and anomalous TXT record sizes indicating data exfiltration.
+**What a professional does here.** SOC analysts treat DNS logs as a map of intent: every connection a machine makes starts with a question about where to go. They hunt for beaconing (the same lookup at regular intervals), NXDOMAIN storms, and names that look like encoded data. Engineers make sure there is no path around the company's resolvers.
 
-**Real incident: MyEtherWallet BGP DNS Hijack (24 April 2018).** Attackers used BGP route hijacking to announce IP prefixes belonging to Amazon's Route 53 DNS service. For approximately two hours, DNS queries for the cryptocurrency wallet website `myetherwallet.com` were redirected to an attacker-controlled rogue DNS server. The rogue server answered with the IP address of a phishing clone hosted in Russia. Users who visited the site and logged in had their private keys stolen, resulting in the theft of approximately $150,000 in cryptocurrency. This attack highlighted how vulnerabilities in lower-layer BGP routing can directly compromise DNS integrity.
+**Real incident: MyEtherWallet, 24 April 2018.** Attackers used a **BGP hijack**: they falsely announced to the internet's routers that they were the right path to some of the IP addresses used by Amazon's Route 53 DNS service. For about two hours, some resolvers sent their questions about `myetherwallet.com` to the attackers' fake DNS server. It answered with the address of a copy of the site, hosted in Russia. The fake site had no valid certificate, so browsers showed a security warning, but some users clicked through and logged in. Their wallets were emptied, and roughly $150,000 in cryptocurrency was stolen. DNS itself wasn't "hacked." The routing underneath it was, and the users' trust in the name did the rest.
 
 **Key takeaways**
 
-- DNS translates domain names to IP addresses (A/AAAA records) using UDP/TCP port 53.
-- NXDOMAIN indicates that a queried domain does not exist.
-- Malware leverages DNS tunneling and DGAs for evasive Command and Control.
-- Restricting outbound port 53 to corporate resolvers is essential for security visibility.
+- DNS maps names to addresses through a hierarchy: stub → recursive resolver → root → TLD → authoritative.
+- Records: A, AAAA, CNAME, MX, NS, TXT, PTR; answers are cached for their TTL.
+- `dig name [type]` asks DNS directly; `+short` shows only the answer; `status:` shows NOERROR or NXDOMAIN.
+- Attackers tunnel through DNS (T1071.004) and hijack it (T1584.002); defenders log, filter and force all DNS through their own resolvers.
