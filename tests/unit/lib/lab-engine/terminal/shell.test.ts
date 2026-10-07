@@ -1,3 +1,4 @@
+import { dir, file } from "@/lib/lab-engine/terminal/build";
 import { createShell } from "@/lib/lab-engine/terminal/shell";
 import { fixtureWorld } from "./fixture-world";
 
@@ -66,4 +67,36 @@ test("command output is never mutated into the world", () => {
 
 test.each(["toString", "constructor", "__proto__", "hasOwnProperty"])("built-in object names are not commands: %s", (name) => {
   expect(sh().exec(name)).toEqual({ stdout: "", stderr: `${name}: command not found\n`, code: 127 });
+});
+
+describe("stderr redirects and /dev/null", () => {
+  const devWorld = () => {
+    const w = fixtureWorld();
+    (w.root.children as Record<string, unknown>).dev = dir({ null: file("", { mode: 0o666 }) });
+    return w;
+  };
+  test("2> sends errors to a file, not the screen", () => {
+    const sh = createShell(devWorld());
+    expect(sh.exec("cat nofile 2> err.txt")).toEqual({ stdout: "", stderr: "", code: 1 });
+    expect(sh.exec("cat err.txt").stdout).toBe("cat: nofile: No such file or directory\n");
+  });
+  test("2>/dev/null throws errors away; output still shows", () => {
+    const sh = createShell(devWorld());
+    expect(sh.exec("cat nofile notes.txt 2>/dev/null")).toEqual({ stdout: "buy milk\ncheck logs\n", stderr: "", code: 1 });
+    expect(sh.exec("cat /dev/null")).toEqual({ stdout: "", stderr: "", code: 0 });
+    expect(sh.exec("echo gone > /dev/null")).toEqual({ stdout: "", stderr: "", code: 0 });
+  });
+  test("2>&1 puts errors into the pipe; order of redirects matters like bash", () => {
+    const sh = createShell(devWorld());
+    expect(sh.exec("cat nofile1 nofile2 2>&1 | wc -l").stdout).toBe("2\n");
+    sh.exec("cat nofile notes.txt > both.txt 2>&1");
+    expect(sh.exec("cat both.txt").stdout).toBe("cat: nofile: No such file or directory\nbuy milk\ncheck logs\n");
+    expect(sh.exec("cat nofile 2>&1 > only-out.txt")).toMatchObject({ stderr: "cat: nofile: No such file or directory\n" });
+    expect(sh.exec("cat only-out.txt").stdout).toBe("");
+  });
+  test("submit still refuses any redirect", () => {
+    const sh = createShell(devWorld());
+    expect(sh.exec("submit 1 x 2>/dev/null").stderr).toBe("");
+    expect(sh.exec("submit 1 x 2>/dev/null").code).toBe(2);
+  });
 });
