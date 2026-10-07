@@ -145,9 +145,9 @@
 - Consumes: Task 4 (`compileFilter`, `infoOf`, `protocolOf`, `followTcpStream`), Task 3 (`LabEnv`).
 - Produces: `<PacketLab capture />` — filter bar (input + Apply; Enter applies; invalid filter shows the error in `role="alert"` and keeps the last good list; filter input border pink when invalid), table columns **No. · Time · Source · Destination · Protocol · Length · Info** (`Time` with 6 decimals), row click selects and shows a details tree (one collapsible section per layer, field `name: value` lines in mono), "Follow TCP stream" button for TCP packets opens `StreamView` (client text cyan, server text pink, a "Back to packets" button), status line `Displayed: <shown> of <total> packets`. Keyboard: rows are buttons, arrow keys move selection. Mobile: table scrolls horizontally inside its own container; the page itself never scrolls sideways.
 
-- [ ] **Step 1: Failing tests:** renders all packets and `Displayed: 12 of 12`; applying `dns` shows only DNS rows and `Displayed: 2 of 12`; invalid filter `ip.addr = 1.2.3.4` shows the exact error and still lists the previous rows; clicking an HTTP packet shows an `Hypertext Transfer Protocol` section; "Follow TCP stream" shows the request line.
-- [ ] **Step 2:** Run → FAIL. Implement. Run → PASS.
-- [ ] **Step 3:** Commit `feat(packet): packet lab UI — filter bar, packet list, details, follow stream`.
+- [x] **Step 1: Failing tests:** renders all packets and `Displayed: 12 of 12`; applying `dns` shows only DNS rows and `Displayed: 2 of 12`; invalid filter `ip.addr = 1.2.3.4` shows the exact error and still lists the previous rows; clicking an HTTP packet shows an `Hypertext Transfer Protocol` section; "Follow TCP stream" shows the request line.
+- [x] **Step 2:** Run → FAIL. Implement. Run → PASS.
+- [x] **Step 3:** Commit `feat(packet): packet lab UI — filter bar, packet list, details, follow stream`.
 
 ---
 
