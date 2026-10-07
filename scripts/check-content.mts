@@ -5,7 +5,7 @@
 import fs from "node:fs/promises";
 import { parse as parseYaml } from "yaml";
 import { parseChecks, type CheckSet } from "@/lib/content/checks";
-import { consoleCommands, runConsoleCommands } from "@/lib/content/lesson-commands";
+import { consoleCommands, consoleExamples, outputMismatches, runConsoleCommands } from "@/lib/content/lesson-commands";
 import { loadLessons } from "@/lib/content/lessons";
 import { coverageSchema, validateContent } from "@/lib/content/validate";
 import { GENERATORS } from "@/lib/generators";
@@ -44,7 +44,11 @@ async function main(): Promise<number> {
         const out = generateLab(lab, "content-check");
         if (out.env.kind === "terminal") world = out.env.world;
       }
-      return runConsoleCommands(consoleCommands(lesson.body), world);
+      // Commands must run in the lesson's own lab world; shown outputs are written against the demo machine.
+      return [
+        ...runConsoleCommands(consoleCommands(lesson.body), world),
+        ...outputMismatches(consoleExamples(lesson.body), demoWorld()),
+      ];
     },
     now: new Date(),
   });
