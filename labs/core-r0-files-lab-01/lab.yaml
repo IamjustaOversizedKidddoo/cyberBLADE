@@ -1,0 +1,28 @@
+id: core-r0-files-lab-01
+title: "Who Can Read What?"
+type: terminal
+track: core
+rank: 0
+estimated_minutes: 15
+briefing: briefing.md
+dataset:
+  generator: files_perms
+  params: {}
+objectives:
+  - id: o1
+    prompt: "One file in ~/shared is off-limits to you. What is its name?"
+    check: { kind: flag, answer_from: generator.unreadable }
+  - id: o2
+    prompt: "Find the file that only its owner can change but everyone can read, and submit the flag inside it."
+    check: { kind: flag, answer_from: generator.flag }
+hints:
+  o1:
+    - "Start by looking at the folder: what is in ~/shared?"
+    - "The long listing shows who owns each file and the permission letters. Look for a file where only the owner has any letters."
+    - "Run ls -l ~/shared, then try cat on the file whose permissions look like rw-------."
+  o2:
+    - "You want permissions where the owner can read and write, and everyone else can only read."
+    - "In a long listing that pattern is written -rw-r--r--."
+    - "Run ls -l ~/shared, find the -rw-r--r-- file, then cat it."
+xp: 100
+mitre: []
