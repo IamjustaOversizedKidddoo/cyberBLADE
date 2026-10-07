@@ -128,9 +128,9 @@
   - empty string → matches everything
 - `stream.ts`: `followTcpStream(packets, packetNo): { client: string; server: string; text: string } | null` — the conversation (4-tuple) of that packet, payloads in order, client→server first; non-TCP → `null`.
 
-- [ ] **Step 1: Failing tests:** each field/operator on a fixture capture (≈12 packets: ARP pair, DNS query/response, TCP handshake, HTTP POST + 200, TLS ClientHello, a RST); `ip.addr == 10.0.2.15 && tcp.port == 80`; `!dns`; `dns.qry.name contains "example"`; `frame contains "password"`; each exact error above (Review Focus #2); `""` matches all; `followTcpStream` returns the HTTP request+response text; performance — build 3,000 packets, `compileFilter('tcp.port == 80 and frame contains "x"')` over all < 50 ms (Review Focus #5); `infoOf` strings for each protocol.
-- [ ] **Step 2:** Run → FAIL. Implement (hand-written tokenizer + recursive-descent parser → predicate). Run → PASS.
-- [ ] **Step 3:** Commit `feat(packet): capture model, Wireshark-style display filters, follow TCP stream`.
+- [x] **Step 1: Failing tests:** each field/operator on a fixture capture (≈12 packets: ARP pair, DNS query/response, TCP handshake, HTTP POST + 200, TLS ClientHello, a RST); `ip.addr == 10.0.2.15 && tcp.port == 80`; `!dns`; `dns.qry.name contains "example"`; `frame contains "password"`; each exact error above (Review Focus #2); `""` matches all; `followTcpStream` returns the HTTP request+response text; performance — build 3,000 packets, `compileFilter('tcp.port == 80 and frame contains "x"')` over all < 50 ms (Review Focus #5); `infoOf` strings for each protocol.
+- [x] **Step 2:** Run → FAIL. Implement (hand-written tokenizer + recursive-descent parser → predicate). Run → PASS.
+- [x] **Step 3:** Commit `feat(packet): capture model, Wireshark-style display filters, follow TCP stream`.
 
 ---
 
