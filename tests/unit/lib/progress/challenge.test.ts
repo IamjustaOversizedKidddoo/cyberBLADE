@@ -7,7 +7,7 @@ import {
   submitChallengeObjective,
 } from "@/lib/progress/challenge";
 import { answerCheck, startLab, submitObjective } from "@/lib/progress/service";
-import { LAB, LESSONS, makeCtx, readFromWorld } from "./fakes";
+import { LAB, LESSONS, makeCtx, readFromWorld, RIGHT } from "./fakes";
 
 const USER = "op-1";
 const T0 = new Date("2026-10-07T10:00:00Z");
@@ -55,7 +55,7 @@ describe("challengeState (pure)", () => {
 });
 
 async function completeLessons(ctx: ReturnType<typeof makeCtx>["ctx"]) {
-  for (const lesson of LESSONS) for (const q of ["q1", "q2", "q3"]) await answerCheck(ctx, USER, lesson.id, q, 0);
+  for (const lesson of LESSONS) for (const q of ["q1", "q2", "q3"]) await answerCheck(ctx, USER, lesson.id, q, RIGHT(USER, lesson.id, q));
   const { attemptId, world } = await startLab(ctx, USER, LAB.id);
   await submitObjective(ctx, USER, attemptId, "o1", readFromWorld(world, "flag.txt"));
   await submitObjective(ctx, USER, attemptId, "o2", readFromWorld(world, "word.txt"));
@@ -161,5 +161,17 @@ describe("rank challenge service", () => {
     const practice = await startLab(ctx, USER, LAB.id);
     await expect(submitChallengeObjective(ctx, USER, practice.attemptId, "o1", "x")).rejects.toThrow("not found");
     await expect(submitChallengeObjective(ctx, "op-2", started.attemptId, "o1", "x")).rejects.toThrow("not found");
+  });
+});
+
+describe("concurrency", () => {
+  test("two simultaneous starts create exactly one attempt (no cooldown bypass)", async () => {
+    const { ctx } = makeCtx(T0);
+    await completeLessons(ctx);
+    const results = await Promise.allSettled([startChallenge(ctx, USER, 0), startChallenge(ctx, USER, 0), startChallenge(ctx, USER, 0)]);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    const first = results.find((r) => r.status === "fulfilled") as PromiseFulfilledResult<{ attemptId: string }>;
+    await abandonChallenge(ctx, USER, first.value.attemptId);
+    expect((await getRankSummary(ctx, USER, 0)).challenge.kind).toBe("cooldown");
   });
 });

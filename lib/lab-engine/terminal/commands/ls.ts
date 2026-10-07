@@ -30,9 +30,10 @@ function longLines(entries: [string, Node][]): string[] {
   );
 }
 
-function render(entries: [string, Node][], long: boolean, isListing: boolean): string {
+function render(entries: [string, Node][], long: boolean, isListing: boolean, isTty: boolean): string {
   if (entries.length === 0) return long && isListing ? "total 0\n" : "";
-  if (!long) return entries.map(([name]) => name).join("  ") + "\n";
+  // Into a pipe or a file, GNU ls prints one name per line.
+  if (!long) return entries.map(([name]) => name).join(isTty ? "  " : "\n") + "\n";
   const lines = longLines(entries);
   return (isListing ? `total ${entries.length}\n` : "") + lines.join("\n") + "\n";
 }
@@ -73,11 +74,11 @@ export const ls: Command = {
     }
 
     const blocks: string[] = [];
-    if (files.length) blocks.push(render(files.sort(byName), long, false));
+    if (files.length) blocks.push(render(files.sort(byName), long, false, ctx.isTty));
     const headers = targets.length > 1;
     for (const { label, path } of dirs.sort((a, b) => compareNames(a.label, b.label))) {
       try {
-        const body = render(dirEntries(ctx, path, all), long, true);
+        const body = render(dirEntries(ctx, path, all), long, true, ctx.isTty);
         blocks.push(headers ? `${label}:\n${body}` : body);
       } catch (err) {
         if (!(err instanceof VfsError)) throw err;

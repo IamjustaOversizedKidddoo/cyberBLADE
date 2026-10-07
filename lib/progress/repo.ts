@@ -19,6 +19,8 @@ export interface ProgressRepo {
   findLatestAttempt(userId: string, labId: string, mode: AttemptMode): Promise<LabAttempt | null>;
   hasCompletedAttempt(userId: string, labId: string, mode: AttemptMode): Promise<boolean>;
   createAttempt(attempt: Omit<LabAttempt, "id">): Promise<LabAttempt>;
+  /** Latest non-failed attempt, or a new one from `make()` — in one atomic step (two tabs → one attempt). */
+  findOrCreateAttempt(userId: string, labId: string, mode: AttemptMode, make: () => Omit<LabAttempt, "id">): Promise<LabAttempt>;
   addSolvedObjective(id: string, objectiveId: string): Promise<LabAttempt>;
   updateAttempt(id: string, patch: Partial<Pick<LabAttempt, "completedAt" | "failedAt" | "hintsUsed">>): Promise<LabAttempt>;
 
@@ -30,7 +32,25 @@ export interface ProgressRepo {
   getLastFailedChallenge(userId: string, rank: number): Promise<RankChallenge | null>;
   hasPassedChallenge(userId: string, rank: number): Promise<boolean>;
   createChallenge(challenge: Omit<RankChallenge, "id">): Promise<RankChallenge>;
+  /**
+   * Starts a rank challenge only if none is active (and unexpired), none has passed and no cooldown
+   * is running — checked and written in one atomic step. Throws "challenge is <state>" otherwise.
+   */
+  startChallengeAtomic(input: {
+    userId: string;
+    rank: number;
+    attempt: Omit<LabAttempt, "id">;
+    cooldownMinutes: number;
+    now: Date;
+  }): Promise<LabAttempt>;
   updateChallenge(id: string, patch: Partial<Pick<RankChallenge, "status" | "finishedAt">>): Promise<RankChallenge>;
+}
+
+function latestAttempt(d: ProgressData, userId: string, labId: string, mode: AttemptMode): LabAttempt | null {
+  const attempts = Object.values(d.attempts)
+    .filter((a) => a.userId === userId && a.labId === labId && a.mode === mode && !a.failedAt)
+    .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
+  return attempts[0] ?? null;
 }
 
 const own = <T>(record: Record<string, T>, key: string): T | null => (Object.hasOwn(record, key) ? record[key] : null);
@@ -81,10 +101,7 @@ export class StoreProgressRepo implements ProgressRepo {
   }
 
   async findLatestAttempt(userId: string, labId: string, mode: AttemptMode) {
-    const attempts = Object.values((await this.store.read()).attempts)
-      .filter((a) => a.userId === userId && a.labId === labId && a.mode === mode && !a.failedAt)
-      .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
-    return attempts[0] ?? null;
+    return latestAttempt(await this.store.read(), userId, labId, mode);
   }
 
   async hasCompletedAttempt(userId: string, labId: string, mode: AttemptMode) {
@@ -99,6 +116,18 @@ export class StoreProgressRepo implements ProgressRepo {
       d.attempts[created.id] = created;
     });
     return created;
+  }
+
+  async findOrCreateAttempt(userId: string, labId: string, mode: AttemptMode, make: () => Omit<LabAttempt, "id">) {
+    let found: LabAttempt | null = null;
+    await this.store.update((d) => {
+      found = latestAttempt(d, userId, labId, mode);
+      if (found) return;
+      const created = { ...make(), id: randomUUID() };
+      d.attempts[created.id] = created;
+      found = created;
+    });
+    return found!;
   }
 
   private async mutateAttempt(id: string, fn: (a: LabAttempt) => void) {
@@ -162,6 +191,43 @@ export class StoreProgressRepo implements ProgressRepo {
       d.challenges[created.id] = created;
     });
     return created;
+  }
+
+  async startChallengeAtomic(input: {
+    userId: string;
+    rank: number;
+    attempt: Omit<LabAttempt, "id">;
+    cooldownMinutes: number;
+    now: Date;
+  }) {
+    const { userId, rank, cooldownMinutes, now } = input;
+    let created: LabAttempt | null = null;
+    await this.store.update((d) => {
+      const mine = Object.values(d.challenges).filter((c) => c.userId === userId && c.rank === rank);
+      if (mine.some((c) => c.status === "passed")) throw new Error("challenge is passed");
+      for (const c of mine.filter((c) => c.status === "active")) {
+        const attempt = own(d.attempts, c.labAttemptId);
+        if (attempt?.expiresAt && now > new Date(attempt.expiresAt)) {
+          // Ran out of time without being finalized: it failed at its deadline.
+          attempt.failedAt = attempt.expiresAt;
+          c.status = "failed";
+          c.finishedAt = attempt.expiresAt;
+        } else throw new Error("challenge is active");
+      }
+      const lastFailed = mine
+        .filter((c) => c.status === "failed" && c.finishedAt)
+        .map((c) => new Date(c.finishedAt!).getTime())
+        .sort((a, b) => b - a)[0];
+      if (lastFailed !== undefined && now.getTime() < lastFailed + cooldownMinutes * 60_000) {
+        throw new Error("challenge is cooldown");
+      }
+      const attempt = { ...input.attempt, id: randomUUID() };
+      d.attempts[attempt.id] = attempt;
+      const challengeId = randomUUID();
+      d.challenges[challengeId] = { id: challengeId, userId, rank, labAttemptId: attempt.id, status: "active", finishedAt: null };
+      created = attempt;
+    });
+    return created!;
   }
 
   async updateChallenge(id: string, patch: Partial<Pick<RankChallenge, "status" | "finishedAt">>) {

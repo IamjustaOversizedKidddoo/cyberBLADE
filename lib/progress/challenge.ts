@@ -109,19 +109,26 @@ export async function startChallenge(ctx: Ctx, userId: string, rank: number): Pr
   if (summary.challenge.kind !== "ready") throw new Error(`challenge is ${summary.challenge.kind}`);
   const lab = await findChallengeLab(ctx, rank);
   const now = ctx.now();
-  const attempt = await ctx.repo.createAttempt({
+  // The summary check above gives a friendly error; this atomic step is what actually guarantees
+  // one attempt at a time and the cooldown, even with several tabs pressing Start together.
+  const attempt = await ctx.repo.startChallengeAtomic({
     userId,
-    labId: lab.id,
-    seed: newSeed(),
-    mode: "challenge",
-    objectivesSolved: [],
-    hintsUsed: 0,
-    startedAt: now.toISOString(),
-    expiresAt: addMinutes(now, lab.challenge!.time_limit_minutes).toISOString(),
-    completedAt: null,
-    failedAt: null,
+    rank,
+    cooldownMinutes: lab.challenge!.cooldown_minutes,
+    now,
+    attempt: {
+      userId,
+      labId: lab.id,
+      seed: newSeed(),
+      mode: "challenge",
+      objectivesSolved: [],
+      hintsUsed: 0,
+      startedAt: now.toISOString(),
+      expiresAt: addMinutes(now, lab.challenge!.time_limit_minutes).toISOString(),
+      completedAt: null,
+      failedAt: null,
+    },
   });
-  await ctx.repo.createChallenge({ userId, rank, labAttemptId: attempt.id, status: "active", finishedAt: null });
   return sessionFor(ctx, lab, attempt.id);
 }
 

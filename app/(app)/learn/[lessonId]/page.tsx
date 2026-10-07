@@ -40,7 +40,7 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
     Callout,
     TerminalCheck: () => (
       <TerminalCheck
-        questions={toPublicChecks(checks)}
+        questions={toPublicChecks(checks, operator.id)}
         initialPassed={progress?.checksPassed ?? []}
         answer={answerCheckAction.bind(null, lesson.id)}
       />

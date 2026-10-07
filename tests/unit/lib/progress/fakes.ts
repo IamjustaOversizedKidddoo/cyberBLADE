@@ -1,4 +1,4 @@
-import { checksSchema, type CheckSet } from "@/lib/content/checks";
+import { checksSchema, optionOrder, type CheckSet } from "@/lib/content/checks";
 import type { Lesson } from "@/lib/content/schema";
 import type { Generator } from "@/lib/generators";
 import { dir, file } from "@/lib/lab-engine/terminal/build";
@@ -140,3 +140,7 @@ export function readFromWorld(world: { root: unknown }, name: "flag.txt" | "word
   const root = world.root as { children: { home: { children: { op: { children: Record<string, { content: string }> } } } } };
   return root.children.home.children.op.children[name].content.trim();
 }
+
+/** Where the correct option ("right", option 0 in the file) is shown to this learner. */
+export const RIGHT = (userId: string, lessonId: string, questionId: string) => optionOrder(userId, lessonId, questionId, 2).indexOf(0);
+export const WRONG = (userId: string, lessonId: string, questionId: string) => 1 - RIGHT(userId, lessonId, questionId);

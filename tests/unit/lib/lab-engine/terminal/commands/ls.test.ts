@@ -52,3 +52,13 @@ test("missing path reported but others still listed", () => {
     code: 2,
   });
 });
+
+test("one name per line when output goes to a pipe or a file (like GNU ls)", () => {
+  expect(run("ls | wc -l").stdout).toBe("2\n");
+  expect(run("ls -a | grep hidden").stdout).toBe(".hidden\n");
+  const sh = shell();
+  sh.exec("ls > out.txt");
+  // bash creates out.txt before ls runs, so it lists itself.
+  expect(sh.exec("cat out.txt").stdout).toBe("Docs\nnotes.txt\nout.txt\n");
+  expect(sh.exec("ls").stdout).toBe("Docs  notes.txt  out.txt\n");
+});

@@ -27,6 +27,14 @@ describe.each(SEEDS)(`${LAB} with seed %s`, (seed) => {
   });
 });
 
+test.each(SEEDS)("auth.log only says 'invalid user' for accounts that don't exist (seed %s)", async (seed) => {
+  const { run } = await openLab(LAB, seed);
+  const accounts = new Set(run("cat /etc/passwd").stdout.split("\n").map((l) => l.split(":")[0]));
+  const invalid = [...run('grep "invalid user" /var/log/auth.log').stdout.matchAll(/invalid user (\S+)/g)].map((m) => m[1]);
+  expect(invalid.length).toBeGreaterThan(0);
+  for (const name of invalid) expect(accounts.has(name)).toBe(false);
+});
+
 test("different seeds give different answers", async () => {
   const a = await openLab(LAB, "seed-a");
   const b = await openLab(LAB, "seed-b");

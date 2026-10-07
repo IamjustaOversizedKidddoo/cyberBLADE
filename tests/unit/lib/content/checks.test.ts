@@ -1,4 +1,4 @@
-import { checksSchema, gradeCheck, parseChecks, toPublicChecks, type CheckSet } from "@/lib/content/checks";
+import { checksSchema, gradeCheck, optionOrder, parseChecks, toPublicChecks, type CheckSet } from "@/lib/content/checks";
 
 const option = (text: string, correct = false) => ({ text, correct, explanation: `Because ${text}.` });
 const question = (id: string) => ({
@@ -69,5 +69,34 @@ describe("public view and grading", () => {
     expect(() => gradeCheck(set, "q1", 3)).toThrow();
     expect(() => gradeCheck(set, "q1", -1)).toThrow();
     expect(() => gradeCheck(set, "q1", 1.5)).toThrow();
+  });
+});
+
+describe("per-learner option order", () => {
+  const set = checksSchema.parse(valid) as CheckSet;
+
+  test("is a stable permutation for the same learner and question", () => {
+    const order = optionOrder("op-1", "core-r0-test-first-01", "q1", 3);
+    expect([...order].sort()).toEqual([0, 1, 2]);
+    expect(optionOrder("op-1", "core-r0-test-first-01", "q1", 3)).toEqual(order);
+  });
+
+  test("the correct answer is not always in the same place across learners", () => {
+    const positions = new Set(
+      Array.from({ length: 30 }, (_, i) => optionOrder(`op-${i}`, "core-r0-test-first-01", "q1", 3).indexOf(0)),
+    );
+    expect(positions.size).toBeGreaterThan(1);
+  });
+
+  test("public view and grading use the learner's order", () => {
+    const pub = toPublicChecks(set, "op-7");
+    const order = optionOrder("op-7", set.lesson, "q1", 3);
+    expect(pub[0].options).toEqual(order.map((i) => set.questions[0].options[i].text));
+    const shownRight = pub[0].options.indexOf("q1-right");
+    expect(gradeCheck(set, "q1", shownRight, "op-7")).toEqual({
+      correct: true,
+      explanations: order.map((i) => set.questions[0].options[i].explanation),
+    });
+    expect(gradeCheck(set, "q1", (shownRight + 1) % 3, "op-7").correct).toBe(false);
   });
 });
