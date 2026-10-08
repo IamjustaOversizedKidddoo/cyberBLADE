@@ -179,7 +179,7 @@
 /* ===== NEON art system: visual tokens and composition utilities (spec 2026-10-08 §4, §6) ===== */
 :root {
   /* Poster type scale: display type as artwork. */
-  --poster-hero: clamp(4rem, 17vw, 15rem);
+  --poster-hero: clamp(4rem, 21vw, 19rem);
   --poster-section: clamp(2.75rem, 9vw, 7.5rem);
   --poster-label: clamp(1.25rem, 3vw, 2rem);
   /* Layer order inside a poster band: texture < art < type < ui. */
@@ -250,4 +250,13 @@
 [data-scene][data-step] .draw-path .diagram-link {
   stroke-dasharray: 100;
   stroke-dashoffset: calc(100 - var(--scene-progress, 1) * 100);
+}
+
+/* Scroll-linked drift for poster type and art inside a running ScrollScene (no scene: no offset). */
+.scene-drift-left { translate: calc(var(--scene-progress, 0) * -12%) 0; }
+.scene-drift-up { translate: 0 calc(var(--scene-progress, 0) * -10%); }
+
+/* Phones: the wordmark is set across the full width (it bleeds and is clipped by its band). */
+@media (max-width: 767px) {
+  :root { --poster-hero: 24vw; }
 }

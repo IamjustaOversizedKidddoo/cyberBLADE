@@ -45,7 +45,7 @@ export function RankNode({ rank, name, status, xp, lessons, mission, as: Heading
           </Heading>
           <p className="mt-1 text-muted">{mission}</p>
           <p className="mt-2">
-            <SystemLabel>
+            <SystemLabel tone="muted">
               {lessons.done}/{lessons.total} lessons · {xp} XP
             </SystemLabel>
           </p>

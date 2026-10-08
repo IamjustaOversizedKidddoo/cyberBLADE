@@ -44,14 +44,14 @@ function Operator() {
   return (
     <>
       {/* pink mis-registration: the second print plate slipped a few millimetres */}
-      <Dots d={BUST} box="0 0 200 240" className="translate-x-[4%] translate-y-[2%] text-pink opacity-70" />
+      <Dots d={BUST} box="0 0 200 240" className="translate-x-[7%] translate-y-[3%] text-pink opacity-50" />
       <Dots d={BUST} box="0 0 200 240" />
       <svg viewBox="0 0 200 240" className="absolute inset-0 h-full w-full" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="100" cy="78" r="70" strokeWidth="0.8" strokeDasharray="3 5" opacity="0.6" />
         <path d="M100 0 V12 M100 144 V156 M22 78 H34 M166 78 H178" strokeWidth="1" />
         <path d={BUST} strokeWidth="3" />
         <path d="M76 150 L100 178 L124 150 M100 178 V240 M58 196 L72 214 M142 196 L128 214" strokeWidth="2" />
-        <path d="M66 112 C78 128 122 128 134 112" strokeWidth="1.6" />
+        <path d="M72 120 L100 132 L128 120" strokeWidth="1.6" />
         {/* the visor: a simulation-only headset, NEON cyan */}
         <path d="M46 66 L156 59 L158 87 L48 93 Z" fill="var(--color-cyan)" stroke="currentColor" strokeWidth="3" />
         <path d="M54 72 L150 66 M54 78 L151 72 M55 84 L152 78" stroke="var(--color-void)" strokeWidth="1.2" opacity="0.55" />
