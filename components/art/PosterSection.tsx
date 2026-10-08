@@ -1,10 +1,7 @@
 type BandTone = "paper" | "void" | "cyan";
 
-const TONES: Record<BandTone, string> = {
-  paper: "band-paper bg-paper text-void",
-  void: "band-void bg-void text-ink",
-  cyan: "band-cyan bg-cyan text-void",
-};
+// Colours come from the band tokens in globals.css (they also handle high contrast).
+const TONES: Record<BandTone, string> = { paper: "band-paper", void: "band-void", cyan: "band-cyan" };
 
 type Props = {
   tone: BandTone;
@@ -34,14 +31,14 @@ type ZoneProps = { className?: string; children: React.ReactNode };
 
 /** Zones place content on the poster grid; give each a grid-area/col/row class for desktop and mobile. */
 PosterSection.Art = function Art({ className = "", children }: ZoneProps) {
-  return <div className={`relative z-[1] ${className}`}>{children}</div>;
+  return <div className={`relative z-[var(--z-art)] ${className}`}>{children}</div>;
 };
 PosterSection.Type = function Type({ className = "", children }: ZoneProps) {
-  return <div className={`relative z-[2] ${className}`}>{children}</div>;
+  return <div className={`relative z-[var(--z-type)] ${className}`}>{children}</div>;
 };
 PosterSection.Caption = function Caption({ className = "", children }: ZoneProps) {
-  return <div className={`relative z-[2] max-w-[60ch] ${className}`}>{children}</div>;
+  return <div className={`relative z-[var(--z-type)] max-w-[60ch] ${className}`}>{children}</div>;
 };
 PosterSection.Labels = function Labels({ className = "", children }: ZoneProps) {
-  return <div className={`relative z-[3] flex flex-wrap gap-x-6 gap-y-1 ${className}`}>{children}</div>;
+  return <div className={`relative z-[var(--z-ui)] flex flex-wrap gap-x-6 gap-y-1 ${className}`}>{children}</div>;
 };

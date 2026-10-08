@@ -3,9 +3,9 @@ import { Fragment } from "react";
 type Size = "hero" | "section" | "label";
 
 const SIZES: Record<Size, string> = {
-  hero: "text-[clamp(4rem,17vw,15rem)] leading-[0.82]",
-  section: "text-[clamp(2.75rem,9vw,7.5rem)] leading-[0.88]",
-  label: "text-[clamp(1.25rem,3vw,2rem)] leading-none",
+  hero: "text-[length:var(--poster-hero)] leading-[0.82]",
+  section: "text-[length:var(--poster-section)] leading-[0.88]",
+  label: "text-[length:var(--poster-label)] leading-none",
 };
 
 type Props = {
