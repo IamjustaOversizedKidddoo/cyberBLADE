@@ -8,6 +8,7 @@ import { Magnetic } from "@/components/art/motion/Magnetic";
 import { Parallax } from "@/components/art/motion/Parallax";
 import { Reveal } from "@/components/art/motion/Reveal";
 import { ScrollScene } from "@/components/art/motion/ScrollScene";
+import { SmoothScroll } from "@/components/art/motion/SmoothScroll";
 import { NoiseLayer } from "@/components/art/NoiseLayer";
 import { PosterHeading } from "@/components/art/PosterHeading";
 import { PosterSection } from "@/components/art/PosterSection";
@@ -31,6 +32,7 @@ export default function Home() {
 
   return (
     <main>
+      <SmoothScroll />
       <Scanlines />
 
       {/* ENTER — the poster: the wordmark collides with the operator you are about to become. */}
