@@ -16,10 +16,12 @@ type Props = {
   ratio?: string;
   /** Show each node's label next to it (off for small glyphs). */
   labels?: boolean;
+  /** Prefix labels with their step number (only for diagrams that really are a sequence). */
+  numbered?: boolean;
   className?: string;
 };
 
-function Drawing({ nodes, links, active, style, tone, ratio, labels, className }: Omit<Props, "title" | "mobileNodes"> & { tone: Tone }) {
+function Drawing({ nodes, links, active, style, tone, ratio, labels, numbered, className }: Omit<Props, "title" | "mobileNodes"> & { tone: Tone }) {
   const byId = new Map(nodes.map((n) => [n.id, n]));
   return (
     <div aria-hidden="true" className={`diagram relative ${className}`} style={{ aspectRatio: ratio, color: toneVar(tone) }} data-style={style}>
@@ -36,7 +38,7 @@ function Drawing({ nodes, links, active, style, tone, ratio, labels, className }
               pathLength={100}
               fill="none"
               stroke="currentColor"
-              strokeWidth={style === "hand" ? 1.6 : 1}
+              strokeWidth={style === "hand" ? 2.25 : 1.25}
               strokeDasharray={l.dashed ? "2 2" : undefined}
               strokeLinecap="round"
               vectorEffect="non-scaling-stroke"
@@ -49,11 +51,16 @@ function Drawing({ nodes, links, active, style, tone, ratio, labels, className }
           key={n.id}
           data-index={i}
           data-active={active === n.id ? "" : undefined}
-          className="diagram-node absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-2"
+          className="diagram-node absolute -translate-x-1/2 -translate-y-1/2"
           style={{ left: `${n.x}%`, top: `${n.y}%` }}
         >
-          <span className={`block h-3 w-3 border-2 border-current bg-[var(--band-bg,transparent)] ${n.kind === "cloud" || n.kind === "signal" ? "rounded-full" : ""}`} />
-          {labels && <span className="whitespace-nowrap font-ui text-xs tracking-wider sm:text-sm">{n.label}</span>}
+          <span className={`block border-2 border-current bg-[var(--band-bg,transparent)] ${style === "hand" ? "h-5 w-5" : "h-3 w-3"} ${n.kind === "cloud" || n.kind === "signal" ? "rounded-full" : ""}`} />
+          {labels && (
+            <span className="absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap bg-[var(--band-bg,transparent)] px-1 font-ui text-xs tracking-wider sm:text-base">
+              {numbered && <span className="mr-2 opacity-60">{String(i + 1).padStart(2, "0")}</span>}
+              {n.label}
+            </span>
+          )}
         </span>
       ))}
     </div>
@@ -64,8 +71,8 @@ function Drawing({ nodes, links, active, style, tone, ratio, labels, className }
  * NEON's schematic language: nodes, links and labels drawn from data (lib/art/diagram.ts).
  * Screen readers get the title and an ordered list of the node labels; the drawing itself is hidden.
  */
-export function TechnicalDiagram({ title, nodes, links, active, style = "schematic", mobileNodes, tone = "ink", ratio = "16 / 10", labels = true, className = "" }: Props) {
-  const drawing = { links, active, style, tone, ratio, labels };
+export function TechnicalDiagram({ title, nodes, links, active, style = "schematic", mobileNodes, tone = "current", ratio = "16 / 10", labels = true, numbered = false, className = "" }: Props) {
+  const drawing = { links, active, style, tone, ratio, labels, numbered };
   return (
     <figure className={className}>
       <span role="img" aria-label={title} className="block">

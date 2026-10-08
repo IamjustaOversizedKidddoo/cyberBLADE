@@ -16,7 +16,7 @@ type Props = {
  * A field-manual callout: a label with a leader line pointing at part of an artwork or diagram.
  * The label is real text; the line is decorative. Place inside a `relative` art box.
  */
-export function Annotation({ from, to, label, tone = "ink", hand = true, className = "" }: Props) {
+export function Annotation({ from, to, label, tone = "current", hand = true, className = "" }: Props) {
   const [x1, y1] = from;
   const [x2, y2] = to;
   const d = hand ? `M ${x1} ${y1} Q ${(x1 + x2) / 2 + 3} ${(y1 + y2) / 2 - 4} ${x2} ${y2}` : `M ${x1} ${y1} L ${x2} ${y2}`;
@@ -27,7 +27,7 @@ export function Annotation({ from, to, label, tone = "ink", hand = true, classNa
         <circle cx={x2} cy={y2} r="0.9" fill="currentColor" />
       </svg>
       <span
-        className={`absolute -translate-y-full whitespace-nowrap font-ui text-xs tracking-wider sm:text-sm ${className}`}
+        className={`absolute -translate-y-full whitespace-nowrap bg-[var(--band-bg,transparent)] px-1 font-ui text-xs tracking-wider sm:text-sm ${className}`}
         style={{ left: `${x1}%`, top: `${y1}%`, color: toneVar(tone) }}
       >
         {label}
