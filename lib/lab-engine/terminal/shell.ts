@@ -1,6 +1,9 @@
 import { COMMANDS, type CmdResult } from "./commands";
 import { errorText } from "./commands/util";
+import { readAccounts } from "./identity";
 import { expandGlobs, parseLine } from "./parser";
+import { ProcessTable } from "./processes";
+import { procTree } from "./procfs";
 import type { World } from "./types";
 import { resolvePath, Vfs } from "./vfs";
 
@@ -15,6 +18,29 @@ export function createShell(world: World): Shell {
   const history: string[] = [];
   let cwd = home;
   const env: Record<string, string> = { ...world.env, HOME: home, USER: user, HOSTNAME: hostname, PWD: home };
+  const shellPid = world.shellPid ?? 2201;
+  const procs = new ProcessTable(world.processes ?? [], shellPid, {
+    pid: shellPid,
+    ppid: world.shellParent ?? 1,
+    user,
+    argv: ["-bash"],
+    state: "S",
+    stat: "Ss",
+    tty: "pts/0",
+    start: "09:58",
+    cpuTime: "0:00",
+    cpu: 0,
+    mem: 0.1,
+    vsz: 8784,
+    rss: 5376,
+    env: { ...env },
+  });
+  vfs.mount("/proc", () =>
+    procTree(procs, (name) => {
+      const a = readAccounts(vfs).find((acc) => acc.name === name);
+      return { uid: a?.uid ?? 0, gid: a?.gid ?? 0 };
+    }),
+  );
 
   const setCwd = (path: string) => {
     env.OLDPWD = cwd;
@@ -64,7 +90,7 @@ export function createShell(world: World): Shell {
       const isTty = index === parsed.commands.length - 1 && out.kind === "default";
       const alone = parsed.commands.length === 1 && redirects.length === 0;
       const ran = impl
-        ? impl.run({ argv, stdin, vfs, cwd, user, home, hostname, env, history, isTty, alone, network: world.network, umask: vfs.umask, setUmask: (n) => (vfs.umask = n), setCwd })
+        ? impl.run({ argv, stdin, vfs, cwd, user, home, hostname, env, history, isTty, alone, network: world.network, umask: vfs.umask, setUmask: (n) => (vfs.umask = n), procs, self: procs.spawnCommand(argv, user), setCwd })
         : { stdout: "", stderr: `${argv[0]}: command not found\n`, code: 127 };
 
       // Errors are written first: tools report a bad operand before (or instead of) its output.
