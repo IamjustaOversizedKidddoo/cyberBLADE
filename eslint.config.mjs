@@ -15,7 +15,7 @@ const eslintConfig = defineConfig([
         {
           patterns: [
             {
-              regex: "^(gsap|@gsap/react|motion)(/.*)?$",
+              regex: "^(gsap|@gsap/react|motion|three|lenis)(/.*)?$",
               message: "Use the primitives in components/art/motion/ (ScrollScene, Parallax, Reveal, Counter, Magnetic, MissionMarker).",
             },
           ],
