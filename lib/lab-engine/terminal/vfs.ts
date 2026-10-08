@@ -50,6 +50,8 @@ export class Vfs {
   /** Bits removed from new files (0o666) and directories (0o777); the shell's umask command changes it. */
   umask: number;
   private groupCache = new Map<string, string[]>();
+  /** Virtual filesystems (like /proc): built fresh by a provider on every lookup, never writable. */
+  private mounts = new Map<string, () => DirNode>();
 
   constructor(root: DirNode, opts: { umask?: number } = {}) {
     // Own copy: the world object the server sent is never mutated.
@@ -74,24 +76,44 @@ export class Vfs {
 
   /** Raw change, no permission check: callers (chmod, chown) decide who may. */
   setMode(path: string, mode: number): void {
+    if (this.isMounted(path)) throw new VfsError("EACCES", path);
     const node = this.stat(path);
     if (!node) throw new VfsError("ENOENT", path);
     node.mode = mode;
   }
 
   setOwner(path: string, owner?: string, group?: string): void {
+    if (this.isMounted(path)) throw new VfsError("EACCES", path);
     const node = this.stat(path);
     if (!node) throw new VfsError("ENOENT", path);
     if (owner !== undefined) node.owner = owner;
     if (group !== undefined) node.group = group;
   }
 
+  mount(path: string, provider: () => DirNode): void {
+    this.mounts.set(path, provider);
+  }
+
+  private isMounted(path: string): boolean {
+    return [...this.mounts.keys()].some((m) => path === m || path.startsWith(`${m}/`));
+  }
+
+  /** The child of a directory, with mount points replaced by their provider's tree. */
+  private child(node: DirNode, seg: string, prefix: string): Node | null {
+    const provider = this.mounts.get(prefix);
+    if (provider) return provider();
+    return Object.hasOwn(node.children, seg) ? node.children[seg] : null;
+  }
+
   /** Raw lookup, no permission checks. */
   stat(path: string): Node | null {
     let node: Node = this.root;
+    let prefix = "";
     for (const seg of split(path)) {
-      if (node.kind !== "dir" || !Object.hasOwn(node.children, seg)) return null;
-      node = node.children[seg];
+      prefix += `/${seg}`;
+      const next: Node | null = node.kind === "dir" ? this.child(node, seg, prefix) : null;
+      if (!next) return null;
+      node = next;
     }
     return node;
   }
@@ -103,11 +125,14 @@ export class Vfs {
 
   private walk(path: string, user: string): Node {
     let node: Node = this.root;
+    let prefix = "";
     for (const seg of split(path)) {
       if (node.kind !== "dir") throw new VfsError("ENOTDIR", path);
       if (!this.allowed(node, user, X)) throw new VfsError("EACCES", path);
-      if (!Object.hasOwn(node.children, seg)) throw new VfsError("ENOENT", path);
-      node = node.children[seg];
+      prefix += `/${seg}`;
+      const next = this.child(node, seg, prefix);
+      if (!next) throw new VfsError("ENOENT", path);
+      node = next;
     }
     return node;
   }
@@ -144,6 +169,7 @@ export class Vfs {
   }
 
   write(path: string, content: string, user: string, append: boolean): void {
+    if (this.isMounted(path)) throw new VfsError("EACCES", path);
     const { parent, name } = this.parentOf(path, user);
     const existing = Object.hasOwn(parent.children, name) ? parent.children[name] : undefined;
     if (existing) {
@@ -160,6 +186,7 @@ export class Vfs {
   }
 
   mkdir(path: string, user: string, parents: boolean): void {
+    if (this.isMounted(path)) throw new VfsError("EACCES", path);
     const segs = split(path);
     for (let i = 1; i <= segs.length; i++) {
       const sub = "/" + segs.slice(0, i).join("/");
@@ -185,6 +212,7 @@ export class Vfs {
   }
 
   touch(path: string, user: string): void {
+    if (this.isMounted(path)) throw new VfsError("EACCES", path);
     const { parent, name } = this.parentOf(path, user);
     const existing = Object.hasOwn(parent.children, name) ? parent.children[name] : undefined;
     if (existing) {

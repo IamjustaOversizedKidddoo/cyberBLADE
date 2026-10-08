@@ -1,4 +1,5 @@
 import type { Network } from "../network";
+import type { Proc, ProcessTable } from "../processes";
 import type { Vfs } from "../vfs";
 
 export type CmdResult = {
@@ -28,6 +29,9 @@ export type CmdContext = {
   /** Bits removed from new files' permissions (`umask`). */
   umask: number;
   setUmask(umask: number): void;
+  procs: ProcessTable;
+  /** This running command as a process (ps lists itself). */
+  self: Proc;
   setCwd(path: string): void;
 };
 

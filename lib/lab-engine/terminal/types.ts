@@ -1,4 +1,5 @@
 import type { Network } from "./network";
+import type { Proc } from "./processes";
 
 type Meta = { owner: string; group: string; mode: number; mtime: string };
 
@@ -17,4 +18,9 @@ export type World = {
   network?: Network;
   /** Starting umask for the learner's shell; default 0o022. */
   umask?: number;
+  /** Running processes (ps, kill, /proc). The learner's own bash is added by the shell. */
+  processes?: Proc[];
+  /** PID of the learner's bash (default 2201) and of its parent (default 1). */
+  shellPid?: number;
+  shellParent?: number;
 };
