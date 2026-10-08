@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { render, screen } from "@testing-library/react";
 import { Annotation } from "@/components/art/Annotation";
+import { BladeMark } from "@/components/art/BladeMark";
 import { DossierCard } from "@/components/art/DossierCard";
 import { EditorialIllustration } from "@/components/art/EditorialIllustration";
 import { HalftoneField } from "@/components/art/HalftoneField";
@@ -100,4 +101,34 @@ test("RankNode states are words, not just colours", () => {
   rerender(<RankNode {...base} status="current" />);
   expect(screen.getByText("01")).toBeInTheDocument();
   expect(screen.getByText("CURRENT")).toBeInTheDocument();
+});
+
+describe("cinematic extensions", () => {
+  test("split headings: one span per character, accessible name stays the word", () => {
+    render(<PosterHeading as="h1" lines={["CYBERBLADE"]} size="hero" split="chars" cursor />);
+    const h1 = screen.getByRole("heading", { level: 1 });
+    expect(h1).toHaveAccessibleName("CYBERBLADE");
+    expect(h1.querySelectorAll("[data-char]")).toHaveLength(10);
+    expect(h1.querySelector("[data-char]")?.textContent).toBe("C");
+  });
+
+  test("morphing diagram nodes render their final position and their earlier positions", () => {
+    const { container } = render(
+      <TechnicalDiagram
+        title="Network becomes interface"
+        nodes={[{ id: "a", x: 70, y: 40, label: "host", morph: [{ x: 10, y: 10 }, { x: 40, y: 20 }] }]}
+        links={[]}
+      />,
+    );
+    const node = container.querySelector(".diagram-node") as HTMLElement;
+    expect(node.style.left).toBe("70%");
+    expect(JSON.parse(node.dataset.morph!)).toEqual([{ x: 10, y: 10 }, { x: 40, y: 20 }]);
+  });
+
+  test("BladeMark is decorative unless it is given a title", () => {
+    const { container, rerender } = render(<BladeMark />);
+    expect(container.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+    rerender(<BladeMark title="CYBERBLADE blade mark" />);
+    expect(screen.getByRole("img", { name: "CYBERBLADE blade mark" })).toBeInTheDocument();
+  });
 });

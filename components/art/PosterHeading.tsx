@@ -18,19 +18,34 @@ type Props = {
   vertical?: boolean;
   /** RGB-split glitch on first paint and hover. Use rarely. */
   glitch?: boolean;
+  /** Split into one span per character (kinetic typography inside a ScrollScene). */
+  split?: "chars";
   /** A blinking underscore after the last line — visual only, not part of the heading's name. */
   cursor?: boolean;
   id?: string;
   className?: string;
 };
 
-function Lines({ lines, cursor = false }: { lines: string[]; cursor?: boolean }) {
+function Chars({ text }: { text: string }) {
+  // Spaces stay plain text so the heading's accessible name keeps its words.
+  return [...text].map((c, i) =>
+    c === " " ? (
+      " "
+    ) : (
+      <span key={i} data-char={i} className="inline-block">
+        {c}
+      </span>
+    ),
+  );
+}
+
+function Lines({ lines, cursor = false, split }: { lines: string[]; cursor?: boolean; split?: "chars" }) {
   // The space between lines sits outside the block spans, so the heading's accessible name is a sentence.
   return lines.map((line, i) => (
     <Fragment key={i}>
       {i > 0 && " "}
       <span className="block whitespace-nowrap">
-        {line}
+        {split ? <Chars text={line} /> : line}
         {cursor && i === lines.length - 1 && <BlinkCursor />}
       </span>
     </Fragment>
@@ -41,7 +56,7 @@ function Lines({ lines, cursor = false }: { lines: string[]; cursor?: boolean })
  * Huge Hacked display type used as part of the artwork. One semantic heading; the glitch copies are
  * aria-hidden, so the accessible name is just the words.
  */
-export function PosterHeading({ as: Tag = "h2", lines, size, bleed, vertical, glitch = false, cursor = false, id, className = "" }: Props) {
+export function PosterHeading({ as: Tag = "h2", lines, size, bleed, vertical, glitch = false, cursor = false, split, id, className = "" }: Props) {
   const bleedClass = bleed === "left" ? "-ml-[0.06em]" : bleed === "right" ? "-mr-[0.06em] text-right" : "";
   return (
     <Tag
@@ -49,7 +64,7 @@ export function PosterHeading({ as: Tag = "h2", lines, size, bleed, vertical, gl
       className={`font-display uppercase ${SIZES[size]} ${bleedClass} ${vertical ? "[writing-mode:vertical-rl]" : ""} ${glitch ? "neon-glitch" : "relative"} ${className}`}
       data-glitch={glitch ? "intro" : undefined}
     >
-      <Lines lines={lines} cursor={cursor} />
+      <Lines lines={lines} cursor={cursor} split={split} />
       {glitch && (
         <>
           <span aria-hidden="true" className="neon-glitch-copy neon-glitch-cyan">
