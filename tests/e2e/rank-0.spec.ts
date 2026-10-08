@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { answerAllChecks } from "./helpers/checks";
 import { runCommand } from "./helpers/terminal";
 
-const FLAG = /NEON\{[0-9a-f]{12}\}/;
+const FLAG = /CYBERBLADE\{[0-9a-f]{12}\}/;
 const flat = (s: string) => s.replace(/\n/g, "");
 
 async function onboard(page: Page) {

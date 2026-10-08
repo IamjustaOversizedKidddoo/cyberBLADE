@@ -30,7 +30,7 @@ test("stale cookie is cleared and the visitor is sent to /start", async ({ page,
 
 test("hero heading is announced once", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: "NEON", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "CYBERBLADE", exact: true })).toBeVisible();
 });
 
 test("reduced motion: no scanlines, static cursor, full kicker text", async ({ page }) => {

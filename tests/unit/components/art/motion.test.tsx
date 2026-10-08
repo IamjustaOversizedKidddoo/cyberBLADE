@@ -30,7 +30,7 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
-describe("useReducedMotion — the system setting OR NEON's toggle", () => {
+describe("useReducedMotion — the system setting OR CYBERBLADE's toggle", () => {
   test("false by default, true when the toggle sets data-motion=reduce later", async () => {
     const { result } = renderHook(() => useReducedMotion());
     expect(result.current).toBe(false);

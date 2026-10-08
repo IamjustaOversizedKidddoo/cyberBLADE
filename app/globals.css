@@ -176,7 +176,7 @@
   color: var(--color-ink);
 }
 
-/* ===== NEON art system: visual tokens and composition utilities (spec 2026-10-08 §4, §6) ===== */
+/* ===== CYBERBLADE art system: visual tokens and composition utilities (spec 2026-10-08 §4, §6) ===== */
 :root {
   /* Poster type scale: display type as artwork. */
   --poster-hero: clamp(4rem, 21vw, 19rem);
