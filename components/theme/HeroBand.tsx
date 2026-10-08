@@ -10,8 +10,8 @@ type Props = { title: string; kicker?: string; children?: React.ReactNode };
  */
 export function HeroBand({ title, kicker, children }: Props) {
   return (
-    <PosterSection tone="paper" className="neon-hero px-4 py-12 sm:py-20">
-      <div className="mx-auto w-full max-w-5xl">
+    <PosterSection tone="paper" className="neon-hero py-12 sm:py-20">
+      <div className="col-span-full mx-auto w-full max-w-5xl">
         {kicker && (
           <p className="mb-4 text-lg sm:text-xl">
             <TypingText text={kicker} />

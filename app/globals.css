@@ -175,3 +175,79 @@
 [data-contrast="high"] .neon-hero * {
   color: var(--color-ink);
 }
+
+/* ===== NEON art system: visual tokens and composition utilities (spec 2026-10-08 §4, §6) ===== */
+:root {
+  /* Poster type scale: display type as artwork. */
+  --poster-hero: clamp(4rem, 17vw, 15rem);
+  --poster-section: clamp(2.75rem, 9vw, 7.5rem);
+  --poster-label: clamp(1.25rem, 3vw, 2rem);
+  /* Layer order inside a poster band: texture < art < type < ui. */
+  --z-texture: 0;
+  --z-art: 1;
+  --z-type: 2;
+  --z-ui: 3;
+}
+
+/* Band tones. Art draws with --band-fg / currentColor, so it follows the band — and high contrast. */
+.band-paper { --band-bg: var(--color-paper); --band-fg: var(--color-void); --band-accent: var(--color-pink); }
+.band-void { --band-bg: var(--color-void); --band-fg: var(--color-ink); --band-accent: var(--color-cyan); }
+.band-cyan { --band-bg: var(--color-cyan); --band-fg: var(--color-void); --band-accent: var(--color-void); }
+.band-paper, .band-void, .band-cyan { background: var(--band-bg); color: var(--band-fg); }
+
+/* High contrast doubles as the dark-room mode: light bands turn dark (owner decision 2026-10-07). */
+[data-contrast="high"] .band-paper,
+[data-contrast="high"] .band-cyan { --band-bg: #0b0f19; --band-fg: var(--color-ink); --band-accent: var(--color-cyan); }
+[data-contrast="high"] .band-paper,
+[data-contrast="high"] .band-cyan { border-block: 1px solid var(--color-cyan); }
+[data-contrast="high"] .dossier { background: #0b0f19; color: var(--color-ink); border-color: var(--color-cyan); box-shadow: 6px 6px 0 0 var(--color-cyan); }
+[data-contrast="high"] .neon-noise { display: none; }
+
+/* The poster grid: 4 columns on phones, 12 from 768 px. Zones place themselves with col/row classes. */
+.poster-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 1rem;
+  padding-inline: 1rem;
+}
+@media (min-width: 768px) {
+  .poster-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 1.5rem; padding-inline: 2rem; }
+}
+@media (min-width: 1440px) {
+  .poster-grid { max-width: 90rem; margin-inline: auto; }
+}
+
+/* Small deliberate tilts for collage compositions; phones get them straight. */
+.tilt-1 { rotate: 1.5deg; }
+.tilt-2 { rotate: 3deg; }
+.tilt--1 { rotate: -1.5deg; }
+.tilt--2 { rotate: -3deg; }
+@media (max-width: 639px) {
+  .tilt-1, .tilt-2, .tilt--1, .tilt--2 { rotate: none; }
+}
+
+/* Diagrams: a highlighted node, and scroll scenes stepping through nodes and their notes.
+   Without a running scene (no data-step: reduced motion, phones, no JS) everything shows at full strength. */
+.diagram-node[data-active] > span:first-child { background: var(--color-cyan); border-color: var(--color-cyan); }
+[data-scene][data-step] .diagram-node,
+[data-scene][data-step] [data-step-item] { opacity: 0.3; transition: opacity 0.25s ease; }
+[data-scene][data-step="0"] .diagram-node[data-index="0"],
+[data-scene][data-step="1"] .diagram-node[data-index="1"],
+[data-scene][data-step="2"] .diagram-node[data-index="2"],
+[data-scene][data-step="3"] .diagram-node[data-index="3"],
+[data-scene][data-step="4"] .diagram-node[data-index="4"],
+[data-scene][data-step="5"] .diagram-node[data-index="5"],
+[data-scene][data-step="6"] .diagram-node[data-index="6"],
+[data-scene][data-step="7"] .diagram-node[data-index="7"],
+[data-scene][data-step="0"] [data-step-item="0"],
+[data-scene][data-step="1"] [data-step-item="1"],
+[data-scene][data-step="2"] [data-step-item="2"],
+[data-scene][data-step="3"] [data-step-item="3"],
+[data-scene][data-step="4"] [data-step-item="4"],
+[data-scene][data-step="5"] [data-step-item="5"],
+[data-scene][data-step="6"] [data-step-item="6"],
+[data-scene][data-step="7"] [data-step-item="7"] { opacity: 1; }
+[data-scene][data-step] .draw-path .diagram-link {
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - var(--scene-progress, 1) * 100);
+}
