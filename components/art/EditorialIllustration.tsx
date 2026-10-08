@@ -17,12 +17,12 @@ type Props = {
 
 const RATIO: Record<Slot, string> = { operator: "5 / 6", system: "4 / 3", signal: "1 / 1" };
 
-// Head-and-shoulders silhouette of an anonymous operator, drawn for NEON (200×240 box).
+// Head-and-shoulders silhouette of an anonymous operator, drawn for CYBERBLADE (200×240 box).
 const BUST =
   "M100 18 C132 18 150 44 150 78 C150 104 140 124 126 136 L124 150 C150 156 178 166 192 184 L198 240 L2 240 L8 184 C22 166 50 156 76 150 L74 136 C60 124 50 104 50 78 C50 44 68 18 100 18 Z";
 const maskOf = (d: string, box: string) => `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='${box}'><path d='${d}'/></svg>")`;
 
-/** Halftone dots clipped to a shape: the print texture that fills NEON's ink figures. */
+/** Halftone dots clipped to a shape: the print texture that fills CYBERBLADE's ink figures. */
 function Dots({ d, box, className }: { d: string; box: string; className?: string }) {
   const mask = maskOf(d, box);
   return (
@@ -52,7 +52,7 @@ function Operator() {
         <path d={BUST} strokeWidth="3" />
         <path d="M76 150 L100 178 L124 150 M100 178 V240 M58 196 L72 214 M142 196 L128 214" strokeWidth="2" />
         <path d="M72 120 L100 132 L128 120" strokeWidth="1.6" />
-        {/* the visor: a simulation-only headset, NEON cyan */}
+        {/* the visor: a simulation-only headset, CYBERBLADE cyan */}
         <path d="M46 66 L156 59 L158 87 L48 93 Z" fill="var(--color-cyan)" stroke="currentColor" strokeWidth="3" />
         <path d="M54 72 L150 66 M54 78 L151 72 M55 84 L152 78" stroke="var(--color-void)" strokeWidth="1.2" opacity="0.55" />
         <path d="M6 6 H18 M6 6 V18 M194 234 H182 M194 234 V222" strokeWidth="1.5" />
@@ -93,7 +93,7 @@ const PLACEHOLDER: Record<Slot, () => React.ReactNode> = { operator: Operator, s
 
 /**
  * An art slot for a figurative illustration. With `src` it shows the final artwork; without, a
- * composed NEON placeholder (ink + halftone + accent) so the page never shows an empty box.
+ * composed CYBERBLADE placeholder (ink + halftone + accent) so the page never shows an empty box.
  */
 export function EditorialIllustration({ slot, alt, decorative, caption, src, crop, className = "" }: Props) {
   if (!alt && !decorative) throw new Error(`EditorialIllustration "${slot}" needs alt text (or decorative).`);

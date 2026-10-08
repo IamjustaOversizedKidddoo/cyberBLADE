@@ -1,6 +1,6 @@
-# NEON — Cybersecurity Learning Platform
+# CYBERBLADE — Breach-Level Analysis of Digital Exploitation
 
-A text-first, hacker-themed platform that takes anyone from zero to a job-ready cybersecurity professional. "NEON" is a placeholder codename.
+A text-first, hacker-themed platform that takes anyone from zero to a job-ready cybersecurity professional. The product is called CYBERBLADE (owner decision 2026-10-08; formerly the codename NEON).
 
 - Source of truth: [`docs/specs/2026-10-06-platform-design.md`](docs/specs/2026-10-06-platform-design.md)
 - Curriculum roadmaps, teaching style and cert targets: [`docs/curriculum/`](docs/curriculum/)

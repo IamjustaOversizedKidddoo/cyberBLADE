@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 const QUERY = "(prefers-reduced-motion: reduce)";
 
-/** Reduced motion is on when the operating system asks for it OR NEON's "Reduce motion" toggle is pressed. */
+/** Reduced motion is on when the operating system asks for it OR CYBERBLADE's "Reduce motion" toggle is pressed. */
 export function readReducedMotion(): boolean {
   if (typeof window === "undefined") return false;
   return document.documentElement.dataset.motion === "reduce" || window.matchMedia?.(QUERY).matches === true;

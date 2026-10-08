@@ -4,7 +4,7 @@ import { expect, type Page } from "@playwright/test";
 import { OPERATOR_COOKIE } from "@/lib/identity/constants";
 import { runCommand } from "./terminal";
 
-export const FLAG = /NEON\{[0-9a-f]{12}\}/;
+export const FLAG = /CYBERBLADE\{[0-9a-f]{12}\}/;
 export const flat = (s: string) => s.replace(/\n/g, "");
 
 export async function onboard(page: Page, handle?: string) {
@@ -69,7 +69,7 @@ export async function promoteToRank(page: Page, targetRank: number): Promise<voi
   if (!opCookie) throw new Error("no operator cookie found");
 
   const candidates = [
-    path.resolve(process.env.NEON_DATA_DIR ?? ".data-e2e", "operators.json"),
+    path.resolve(process.env.CYBERBLADE_DATA_DIR ?? ".data-e2e", "operators.json"),
     path.resolve(".data-e2e", "operators.json"),
     path.resolve(".data", "operators.json"),
   ];

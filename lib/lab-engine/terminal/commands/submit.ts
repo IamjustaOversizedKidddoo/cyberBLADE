@@ -9,7 +9,7 @@ const USAGE = "submit: usage: submit <objective-number> <answer>\n";
  */
 export const submit: Command = {
   name: "submit",
-  summary: "lab only: send an answer, e.g. submit 1 NEON{...}",
+  summary: "lab only: send an answer, e.g. submit 1 CYBERBLADE{...}",
   run(ctx) {
     if (!ctx.alone) return fail("submit: use it on its own line, not in a pipe or redirect\n", 2);
     const [num, ...words] = ctx.argv.slice(1);

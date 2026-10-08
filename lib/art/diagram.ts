@@ -1,4 +1,4 @@
-/** Geometry for NEON's technical diagrams. Coordinates are in a 0–100 viewBox on both axes. */
+/** Geometry for CYBERBLADE's technical diagrams. Coordinates are in a 0–100 viewBox on both axes. */
 
 export type DiagramNode = { id: string; x: number; y: number; label: string; kind?: "host" | "step" | "rank" | "cloud" | "signal" };
 export type DiagramLink = { from: string; to: string; shape?: "straight" | "orthogonal" | "curve"; dashed?: boolean };

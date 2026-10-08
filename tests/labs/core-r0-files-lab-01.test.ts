@@ -30,5 +30,5 @@ test("different seeds give different answers", async () => {
 test("wrong answers are rejected", async () => {
   const { check, answers } = await openLab(LAB, "seed-a");
   expect(check("o1", "plan.md" === answers.unreadable ? "roster.txt" : "plan.md")).toBe(false);
-  expect(check("o2", "NEON{000000000000}")).toBe(false);
+  expect(check("o2", "CYBERBLADE{000000000000}")).toBe(false);
 });

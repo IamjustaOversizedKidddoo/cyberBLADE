@@ -68,7 +68,7 @@ function Drawing({ nodes, links, active, style, tone, ratio, labels, numbered, c
 }
 
 /**
- * NEON's schematic language: nodes, links and labels drawn from data (lib/art/diagram.ts).
+ * CYBERBLADE's schematic language: nodes, links and labels drawn from data (lib/art/diagram.ts).
  * Screen readers get the title and an ordered list of the node labels; the drawing itself is hidden.
  */
 export function TechnicalDiagram({ title, nodes, links, active, style = "schematic", mobileNodes, tone = "current", ratio = "16 / 10", labels = true, numbered = false, className = "" }: Props) {
