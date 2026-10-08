@@ -33,8 +33,8 @@ function Drawing({ nodes, links, active, style, tone, ratio, labels, numbered, c
           return (
             <path
               key={`${l.from}-${l.to}`}
-              data-from={l.from}
-              data-to={l.to}
+              data-link-from={l.from}
+              data-link-to={l.to}
               data-shape={l.shape ?? "straight"}
               className="diagram-link"
               d={linkPath(a, b, l.shape)}
