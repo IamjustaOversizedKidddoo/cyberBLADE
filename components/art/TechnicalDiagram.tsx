@@ -33,6 +33,9 @@ function Drawing({ nodes, links, active, style, tone, ratio, labels, numbered, c
           return (
             <path
               key={`${l.from}-${l.to}`}
+              data-from={l.from}
+              data-to={l.to}
+              data-shape={l.shape ?? "straight"}
               className="diagram-link"
               d={linkPath(a, b, l.shape)}
               pathLength={100}
@@ -51,6 +54,8 @@ function Drawing({ nodes, links, active, style, tone, ratio, labels, numbered, c
           key={n.id}
           data-index={i}
           data-active={active === n.id ? "" : undefined}
+          data-node-id={n.id}
+          data-morph={n.morph ? JSON.stringify(n.morph) : undefined}
           className="diagram-node absolute -translate-x-1/2 -translate-y-1/2"
           style={{ left: `${n.x}%`, top: `${n.y}%` }}
         >

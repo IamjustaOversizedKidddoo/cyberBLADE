@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DisplaySettings } from "@/components/theme/DisplaySettings";
 import { Scanlines } from "@/components/theme/Scanlines";
+import { BladeMark } from "@/components/art/BladeMark";
 import { BlinkCursor } from "@/components/theme/BlinkCursor";
 import { BRAND } from "@/lib/brand";
 import type { Operator } from "@/lib/identity/types";
@@ -18,7 +19,8 @@ export function AppShell({
       <Scanlines />
       <header className="border-b border-line">
         <nav className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <Link href="/dashboard" className="font-display text-2xl">
+          <Link href="/dashboard" className="flex items-center gap-2 font-display text-2xl">
+            <BladeMark className="h-8 w-8 text-ink" />
             {BRAND.name}
             <BlinkCursor />
           </Link>

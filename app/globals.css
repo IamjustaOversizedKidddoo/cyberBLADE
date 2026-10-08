@@ -260,3 +260,10 @@
 @media (max-width: 767px) {
   :root { --poster-hero: 24vw; }
 }
+
+/* ===== CYBERBLADE cinema: the stage a scene's camera moves through (spec 2026-10-08 cinematic §3) ===== */
+.scene-stage { perspective: 1400px; perspective-origin: 50% 45%; }
+[data-camera] { transform-origin: 50% 50%; transform-style: preserve-3d; }
+/* Scene accents: EXPLOIT runs hot (pink), DEFEND resolves cool (cyan). */
+.scene-alert { --scene-accent: var(--color-pink); }
+.scene-secure { --scene-accent: var(--color-cyan); }
