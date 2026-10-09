@@ -25,7 +25,17 @@ export function SmoothScroll() {
     const tick = (time: number) => lenis.raf(time * 1000);
     gsap.ticker.add(tick);
     gsap.ticker.lagSmoothing(0);
+    // Keyboard focus wins: when Tab (or a skip link) lands on something off-screen, go straight to it.
+    // Otherwise Lenis keeps its old target and glides the page away from what the user is focused on.
+    const onFocus = (e: FocusEvent) => {
+      const el = e.target;
+      if (!(el instanceof HTMLElement)) return;
+      const r = el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > window.innerHeight) lenis.scrollTo(el, { offset: -window.innerHeight / 3, immediate: true });
+    };
+    document.addEventListener("focusin", onFocus);
     return () => {
+      document.removeEventListener("focusin", onFocus);
       gsap.ticker.remove(tick);
       lenis.destroy();
     };

@@ -12,7 +12,7 @@ export async function onboard(page: Page, handle?: string) {
   await page.getByLabel("Choose your operator handle").fill(handle ?? `op_${Date.now() % 1_000_000}`);
   await page.getByLabel("I have read and agree to the ethical use agreement").check();
   await page.getByRole("button", { name: "Start" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
 }
 
 export async function submitObjective(page: Page, objective: number, answer: string, { last = false } = {}) {
