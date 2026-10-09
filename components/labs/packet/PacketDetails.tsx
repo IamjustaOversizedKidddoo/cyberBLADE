@@ -10,21 +10,21 @@ type Props = {
 export function PacketDetails({ packet, onFollowStream }: Props) {
   if (!packet) {
     return (
-      <div className="border border-line bg-[#05070a] p-4 font-mono text-sm text-muted">
+      <div className="border border-line bg-console p-4 font-mono text-sm text-muted">
         Select a packet to inspect protocol layers.
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 border border-line bg-[#05070a] p-4 text-ink">
+    <div className="space-y-3 border border-line bg-console p-4 text-ink">
       <div className="flex items-center justify-between border-b border-line pb-2">
         <h3 className="font-mono text-sm font-bold text-ink">Packet #{packet.no} Details</h3>
         {packet.tcp && onFollowStream && (
           <button
             type="button"
             onClick={onFollowStream}
-            className="border border-[#00e5ff] px-2 py-1 font-mono text-xs text-[#00e5ff] hover:bg-[#00e5ff]/10"
+            className="border border-cyan px-2 py-1 font-mono text-xs text-cyan hover:bg-cyan/10"
           >
             Follow TCP stream
           </button>
@@ -33,7 +33,7 @@ export function PacketDetails({ packet, onFollowStream }: Props) {
 
       <div className="space-y-2 font-mono text-xs">
         {/* Frame / Ethernet */}
-        <details open className="border border-line/60 bg-[#020408] p-2">
+        <details open className="border border-line/60 bg-console-deep p-2">
           <summary className="cursor-pointer select-none font-semibold text-muted hover:text-ink">
             Ethernet II, Src: {packet.eth.src}, Dst: {packet.eth.dst}
           </summary>
@@ -45,7 +45,7 @@ export function PacketDetails({ packet, onFollowStream }: Props) {
 
         {/* ARP */}
         {packet.arp && (
-          <details open className="border border-line/60 bg-[#020408] p-2">
+          <details open className="border border-line/60 bg-console-deep p-2">
             <summary className="cursor-pointer select-none font-semibold text-muted hover:text-ink">
               Address Resolution Protocol ({packet.arp.op})
             </summary>
@@ -60,7 +60,7 @@ export function PacketDetails({ packet, onFollowStream }: Props) {
 
         {/* IP */}
         {packet.ip && (
-          <details open className="border border-line/60 bg-[#020408] p-2">
+          <details open className="border border-line/60 bg-console-deep p-2">
             <summary className="cursor-pointer select-none font-semibold text-muted hover:text-ink">
               Internet Protocol Version {packet.ip.version}, Src: {packet.ip.src}, Dst: {packet.ip.dst}
             </summary>
@@ -75,7 +75,7 @@ export function PacketDetails({ packet, onFollowStream }: Props) {
 
         {/* ICMP */}
         {packet.icmp && (
-          <details open className="border border-line/60 bg-[#020408] p-2">
+          <details open className="border border-line/60 bg-console-deep p-2">
             <summary className="cursor-pointer select-none font-semibold text-muted hover:text-ink">
               Internet Control Message Protocol
             </summary>
@@ -88,7 +88,7 @@ export function PacketDetails({ packet, onFollowStream }: Props) {
 
         {/* TCP */}
         {packet.tcp && (
-          <details open className="border border-line/60 bg-[#020408] p-2">
+          <details open className="border border-line/60 bg-console-deep p-2">
             <summary className="cursor-pointer select-none font-semibold text-muted hover:text-ink">
               Transmission Control Protocol, Src Port: {packet.tcp.srcport}, Dst Port: {packet.tcp.dstport}
             </summary>
@@ -108,7 +108,7 @@ export function PacketDetails({ packet, onFollowStream }: Props) {
 
         {/* UDP */}
         {packet.udp && (
-          <details open className="border border-line/60 bg-[#020408] p-2">
+          <details open className="border border-line/60 bg-console-deep p-2">
             <summary className="cursor-pointer select-none font-semibold text-muted hover:text-ink">
               User Datagram Protocol, Src Port: {packet.udp.srcport}, Dst Port: {packet.udp.dstport}
             </summary>
@@ -121,7 +121,7 @@ export function PacketDetails({ packet, onFollowStream }: Props) {
 
         {/* DNS */}
         {packet.dns && (
-          <details open className="border border-line/60 bg-[#020408] p-2">
+          <details open className="border border-line/60 bg-console-deep p-2">
             <summary className="cursor-pointer select-none font-semibold text-muted hover:text-ink">
               Domain Name System ({packet.dns.response ? "response" : "query"})
             </summary>
@@ -146,7 +146,7 @@ export function PacketDetails({ packet, onFollowStream }: Props) {
 
         {/* HTTP */}
         {packet.http && (
-          <details open className="border border-line/60 bg-[#020408] p-2">
+          <details open className="border border-line/60 bg-console-deep p-2">
             <summary className="cursor-pointer select-none font-semibold text-muted hover:text-ink">
               Hypertext Transfer Protocol
             </summary>
@@ -182,7 +182,7 @@ export function PacketDetails({ packet, onFollowStream }: Props) {
 
         {/* TLS */}
         {packet.tls && (
-          <details open className="border border-line/60 bg-[#020408] p-2">
+          <details open className="border border-line/60 bg-console-deep p-2">
             <summary className="cursor-pointer select-none font-semibold text-muted hover:text-ink">
               Transport Layer Security
             </summary>

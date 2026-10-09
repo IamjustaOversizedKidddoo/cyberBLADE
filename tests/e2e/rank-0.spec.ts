@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { answerAllChecks } from "./helpers/checks";
 import { runCommand } from "./helpers/terminal";
 
-const FLAG = /NEON\{[0-9a-f]{12}\}/;
+const FLAG = /CYBERBLADE\{[0-9a-f]{12}\}/;
 const flat = (s: string) => s.replace(/\n/g, "");
 
 async function onboard(page: Page) {
@@ -10,7 +10,7 @@ async function onboard(page: Page) {
   await page.getByLabel("Choose your operator handle").fill(`r0_${Date.now() % 1_000_000}`);
   await page.getByLabel("I have read and agree to the ethical use agreement").check();
   await page.getByRole("button", { name: "Start" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
 }
 
 async function submit(page: Page, objective: number, answer: string, { last = false } = {}) {

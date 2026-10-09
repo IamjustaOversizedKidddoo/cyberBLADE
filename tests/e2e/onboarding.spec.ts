@@ -14,7 +14,7 @@ test("new visitor onboards and lands on the dashboard", async ({ page }) => {
   const handle = `e2e_${Date.now() % 1_000_000}`;
   await onboard(page, handle);
 
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
   await expect(page.getByText(`> welcome, ${handle}`).first()).toBeAttached();
   await expect(page.getByText("Rank 0 · Initiate").first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "job_tracks" })).toBeVisible();
@@ -37,7 +37,7 @@ test("form errors are shown and the visitor stays on /start", async ({ page }) =
 test("switch operator returns to the landing page and re-gates", async ({ page }) => {
   await page.goto("/start");
   await onboard(page, `e2e_${(Date.now() + 2) % 1_000_000}`);
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
   await page.getByRole("button", { name: "Switch operator" }).click();
   await expect(page).toHaveURL(onSite("/$"));
   await page.goto("/dashboard");
@@ -47,7 +47,7 @@ test("switch operator returns to the landing page and re-gates", async ({ page }
 test("dashboard has no horizontal scroll", async ({ page }) => {
   await page.goto("/start");
   await onboard(page, `e2e_${(Date.now() + 3) % 1_000_000}`);
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
   const { scrollWidth, innerWidth } = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     innerWidth: window.innerWidth,

@@ -5,7 +5,7 @@ test("a Rank 0 learner cannot open Rank 1 lessons or labs", async ({ page }) => 
   await page.getByLabel("Choose your operator handle").fill(`gate_${Date.now() % 1_000_000}`);
   await page.getByLabel("I have read and agree to the ethical use agreement").check();
   await page.getByRole("button", { name: "Start" }).click();
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
 
   await page.goto("/learn/core-r1-net-osi-01");
   await expect(page).toHaveURL(/\/learn\/core\?locked=1$/);

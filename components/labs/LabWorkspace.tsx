@@ -10,7 +10,7 @@ import { ObjectivesPanel, type Objective, type SubmitResult } from "./Objectives
 // xterm.js needs the DOM: render the terminal in the browser only.
 const TerminalLab = dynamic(() => import("./terminal/TerminalLab"), {
   ssr: false,
-  loading: () => <div className="h-[420px] border border-line bg-[#05070a] p-4 font-mono text-muted">Connecting…</div>,
+  loading: () => <div className="h-[420px] border border-line bg-console p-4 font-mono text-muted">Connecting…</div>,
 });
 
 type Props = {

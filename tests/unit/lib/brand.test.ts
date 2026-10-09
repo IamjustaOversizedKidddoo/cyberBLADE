@@ -1,6 +1,9 @@
 import { BRAND } from "@/lib/brand";
 
-test("brand name is a single constant", () => {
-  expect(BRAND.name).toBe("NEON");
-  expect(BRAND.tagline).toMatch(/hacker game/);
+test("the brand is CYBERBLADE, one constant", () => {
+  expect(BRAND).toEqual({
+    name: "CYBERBLADE",
+    fullName: "Breach-Level Analysis of Digital Exploitation",
+    tagline: "Learn. Breach. Analyze. Defend.",
+  });
 });

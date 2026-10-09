@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { SiteFooter } from "@/components/theme/SiteFooter";
 import { BRAND } from "@/lib/brand";
 import { PREFS_BOOT_SCRIPT } from "@/lib/theme/display-prefs";
@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: BRAND.tagline,
 };
 
+export const viewport: Viewport = { themeColor: "#000000" };
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${fontVariables} h-full antialiased`} suppressHydrationWarning>
@@ -17,7 +19,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: PREFS_BOOT_SCRIPT }} />
       </head>
       <body className="flex min-h-full flex-col">
-        <div className="flex-1">{children}</div>
+        <a
+          href="#main"
+          className="sr-only z-[100] border-2 border-cyan bg-void px-4 py-2 font-ui text-cyan focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+        >
+          Skip to content
+        </a>
+        <div id="main" tabIndex={-1} className="flex-1 outline-none">
+          {children}
+        </div>
         <SiteFooter />
       </body>
     </html>

@@ -2,7 +2,7 @@ import { checkObjective, generateLab } from "@/lib/lab-engine/checks";
 import { loadLab } from "@/lib/lab-engine/labs";
 import { createShell } from "@/lib/lab-engine/terminal/shell";
 
-export const FLAG = /NEON\{[0-9a-f]{12}\}/;
+export const FLAG = /CYBERBLADE\{[0-9a-f]{12}\}/;
 
 /** Loads a real lab, builds its world for a seed, and gives a shell + an answer checker. */
 export async function openLab(labId: string, seed: string) {

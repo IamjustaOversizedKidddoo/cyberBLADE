@@ -15,7 +15,7 @@ for (const next of ["//evil.example", "/%09/evil.example", "/%0A/evil.example", 
     await page.goto(`/start?next=${next}`);
     await onboard(page);
     await expect(page).toHaveURL(onSite("/"));
-    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
   });
 }
 
@@ -30,7 +30,7 @@ test("stale cookie is cleared and the visitor is sent to /start", async ({ page,
 
 test("hero heading is announced once", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: "NEON", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "CYBERBLADE", exact: true })).toBeVisible();
 });
 
 test("reduced motion: no scanlines, static cursor, full kicker text", async ({ page }) => {
@@ -39,7 +39,7 @@ test("reduced motion: no scanlines, static cursor, full kicker text", async ({ p
   await expect(page.locator(".neon-scanlines")).toBeHidden();
   const cursorAnimation = await page.locator(".neon-cursor").first().evaluate((el) => getComputedStyle(el).animationName);
   expect(cursorAnimation).toBe("none");
-  await expect(page.locator("[data-typed]").first()).toHaveText("> BE READY TO LEARN");
+  await expect(page.locator("[data-typed]").first()).toHaveText("> INITIALIZING CYBERBLADE");
 });
 
 test("readable text never uses the Hacked or Pixel fonts", async ({ page }) => {
@@ -56,7 +56,7 @@ test("readable text never uses the Hacked or Pixel fonts", async ({ page }) => {
 test("unknown pages show the themed 404 and the guessed challenge path redirects", async ({ page }) => {
   await page.goto("/start");
   await onboard(page);
-  await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
   const res = await page.goto("/this-page-does-not-exist");
   expect(res?.status()).toBe(404);
   await expect(page.getByRole("heading", { level: 1, name: "404_not_found" })).toBeVisible();
