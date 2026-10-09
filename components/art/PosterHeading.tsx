@@ -1,10 +1,11 @@
 import { Fragment } from "react";
 import { BlinkCursor } from "@/components/theme/BlinkCursor";
 
-type Size = "hero" | "section" | "label";
+type Size = "hero" | "wordmark" | "section" | "label";
 
 const SIZES: Record<Size, string> = {
   hero: "text-[length:var(--poster-hero)] leading-[0.82]",
+  wordmark: "text-[length:var(--poster-wordmark)] leading-[0.85]",
   section: "text-[length:var(--poster-section)] leading-[0.88]",
   label: "text-[length:var(--poster-label)] leading-none",
 };
@@ -45,7 +46,18 @@ function Lines({ lines, cursor = false, split }: { lines: string[]; cursor?: boo
     <Fragment key={i}>
       {i > 0 && " "}
       <span className="block whitespace-nowrap">
-        {split ? <Chars text={line} /> : line}
+        {split ? (
+          // Browsers read separate letter boxes one letter at a time, so the word is given once as
+          // screen-reader text and the animated letters are hidden from assistive technology.
+          <>
+            <span className="sr-only">{line}</span>
+            <span aria-hidden="true">
+              <Chars text={line} />
+            </span>
+          </>
+        ) : (
+          line
+        )}
         {cursor && i === lines.length - 1 && <BlinkCursor />}
       </span>
     </Fragment>

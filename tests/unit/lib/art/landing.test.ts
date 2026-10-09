@@ -20,3 +20,30 @@ test("glyphs differ by track: no two share the same shape", () => {
   const shapes = Object.values(TRACK_GLYPHS).map((g) => JSON.stringify(g.nodes.map((n) => [n.x, n.y])));
   expect(new Set(shapes).size).toBe(shapes.length);
 });
+
+import { ANALYZE_DIAGRAM, DEFEND_DIAGRAM, SCENES, SIGNAL_DIAGRAM, SYSTEM_STAGES, TRACE_DIAGRAM } from "@/lib/art/landing";
+
+describe("the cinematic sequence", () => {
+  test("seven scenes, in story order", () => {
+    expect(SCENES.map((s) => s.name)).toEqual(["BOOT", "OPERATOR", "SIGNAL", "TRACE", "ANALYZE", "DEFEND", "ENTER THE SYSTEM"]);
+  });
+
+  test("it resolves into the training system: LEARN → PRACTICE → TRACE → ANALYZE → DEFEND → MASTER", () => {
+    expect(SYSTEM_STAGES.map((s) => s.label)).toEqual(["LEARN", "PRACTICE", "TRACE", "ANALYZE", "DEFEND", "MASTER"]);
+  });
+
+  test("morphs are continuous: each diagram starts exactly where the previous one ended", () => {
+    const at = (d: typeof SIGNAL_DIAGRAM) => Object.fromEntries(d.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
+    const from = (d: typeof SIGNAL_DIAGRAM) => Object.fromEntries(d.nodes.map((n) => [n.id, n.morph?.[0]]));
+    expect(from(ANALYZE_DIAGRAM)).toEqual(at(SIGNAL_DIAGRAM));
+    expect(from(DEFEND_DIAGRAM)).toEqual(at(TRACE_DIAGRAM));
+    for (const d of [SIGNAL_DIAGRAM, ANALYZE_DIAGRAM, DEFEND_DIAGRAM]) for (const n of d.nodes) expect(n.morph).toHaveLength(1);
+  });
+
+  test("every link joins two real nodes", () => {
+    for (const d of [SIGNAL_DIAGRAM, ANALYZE_DIAGRAM, TRACE_DIAGRAM, DEFEND_DIAGRAM]) {
+      const ids = new Set(d.nodes.map((n) => n.id));
+      for (const l of d.links) expect(ids.has(l.from) && ids.has(l.to), `${d.title}: ${l.from}-${l.to}`).toBe(true);
+    }
+  });
+});

@@ -39,7 +39,7 @@ test("reduced motion: no scanlines, static cursor, full kicker text", async ({ p
   await expect(page.locator(".neon-scanlines")).toBeHidden();
   const cursorAnimation = await page.locator(".neon-cursor").first().evaluate((el) => getComputedStyle(el).animationName);
   expect(cursorAnimation).toBe("none");
-  await expect(page.locator("[data-typed]").first()).toHaveText("> BE READY TO LEARN");
+  await expect(page.locator("[data-typed]").first()).toHaveText("> INITIALIZING CYBERBLADE");
 });
 
 test("readable text never uses the Hacked or Pixel fonts", async ({ page }) => {
