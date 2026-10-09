@@ -59,3 +59,13 @@ test("on a phone the landing page fits the screen and never downloads three.js",
   await page.waitForTimeout(3000);
   expect(scripts.filter((s) => /three/i.test(s))).toEqual([]);
 });
+
+test("frame 00: the boot caption sits on a solid plate, so it reads while the macro wordmark passes behind it", async ({ page }) => {
+  await page.goto("/");
+  for (const text of [/BREACH-LEVEL ANALYSIS/, /Learn\. Breach\. Analyze\. Defend\./]) {
+    const plate = page.locator("[data-scene-id=boot] [data-plate]").filter({ hasText: text });
+    await expect(plate).toBeVisible();
+    await expect(plate).toHaveCSS("background-color", "rgb(0, 0, 0)");
+  }
+  await expect(page.locator("[data-scene-id=boot]").getByRole("link", { name: "Start", exact: true })).toHaveCSS("background-color", "rgb(0, 0, 0)");
+});

@@ -9,6 +9,10 @@
   --color-cyan: #0fbeff;
   --color-purple: #c83cff;
   --color-pink: #ff1065;
+  /* Lab console surfaces: terminal panes, packet tables, detail panels. */
+  --color-console: #05070a;
+  --color-console-deep: #020408;
+  --color-console-raised: #0a0f18;
 }
 
 @theme inline {
