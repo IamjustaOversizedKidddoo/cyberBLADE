@@ -55,4 +55,33 @@ describe("PREFS_BOOT_SCRIPT", () => {
     await run(true);
     expect(document.documentElement.dataset.motion).toBe("reduce");
   });
+
+  describe("keeps following the OS setting live, until the operator makes a choice", () => {
+    let listeners: ((e: { matches: boolean }) => void)[] = [];
+    const runLive = async (osReduce: boolean) => {
+      listeners = [];
+      const { PREFS_BOOT_SCRIPT } = await import("@/lib/theme/display-prefs");
+      window.matchMedia = ((q: string) => ({
+        matches: osReduce && q.includes("reduce"),
+        addEventListener: (_: string, fn: (e: { matches: boolean }) => void) => listeners.push(fn),
+      })) as unknown as typeof window.matchMedia;
+      new Function(PREFS_BOOT_SCRIPT)();
+    };
+
+    test("the OS turns reduced motion off and on again while the page is open", async () => {
+      await runLive(true);
+      expect(document.documentElement.dataset.motion).toBe("reduce");
+      listeners.forEach((fn) => fn({ matches: false }));
+      expect(document.documentElement.dataset.motion).toBe("full");
+      listeners.forEach((fn) => fn({ matches: true }));
+      expect(document.documentElement.dataset.motion).toBe("reduce");
+    });
+
+    test("a choice the operator saved is never overridden by the OS", async () => {
+      await runLive(false);
+      localStorage.setItem("neon.display", '{"motion":"full","contrast":"normal"}');
+      listeners.forEach((fn) => fn({ matches: true }));
+      expect(document.documentElement.dataset.motion).toBe("full");
+    });
+  });
 });

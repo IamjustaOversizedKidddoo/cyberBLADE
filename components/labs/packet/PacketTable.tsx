@@ -38,9 +38,9 @@ export function PacketTable({ packets, selectedPacket, onSelect }: Props) {
   const getDestination = (p: Packet): string => p.ip?.dst ?? p.arp?.targetIp ?? p.eth.dst;
 
   return (
-    <div className="w-full overflow-x-auto border border-line bg-[#05070a]">
+    <div className="w-full overflow-x-auto border border-line bg-console">
       <table className="w-full text-left font-mono text-xs text-muted" role="table">
-        <thead className="border-b border-line bg-[#0a0f18] text-ink select-none sticky top-0">
+        <thead className="border-b border-line bg-console-raised text-ink select-none sticky top-0">
           <tr>
             <th className="px-3 py-2 w-14">No.</th>
             <th className="px-3 py-2 w-28">Time</th>
@@ -65,9 +65,9 @@ export function PacketTable({ packets, selectedPacket, onSelect }: Props) {
                 tabIndex={0}
                 onClick={() => onSelect(p)}
                 onKeyDown={(e) => handleKeyDown(e, idx)}
-                className={`cursor-pointer transition-colors focus:outline-none ${
+                className={`cursor-pointer transition-colors ${
                   isSelected
-                    ? "bg-[#00e5ff]/20 text-[#00e5ff] font-semibold"
+                    ? "bg-cyan/20 text-cyan font-semibold"
                     : "hover:bg-line/40 hover:text-ink text-muted"
                 }`}
               >

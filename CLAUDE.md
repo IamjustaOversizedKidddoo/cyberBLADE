@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# CLAUDE.md — Cybersecurity Learning Platform (codename NEON)
+# CLAUDE.md — CYBERBLADE (Breach-Level Analysis of Digital Exploitation) — Cybersecurity Learning Platform
 
 Read `docs/specs/2026-10-06-platform-design.md` before doing any work. It is the source of truth.
 
