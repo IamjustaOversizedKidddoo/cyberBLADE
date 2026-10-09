@@ -29,12 +29,21 @@ export function ChallengeTimer({ expiresAt }: { expiresAt: string }) {
   }, [deadline, router]);
 
   const left = deadline - now;
+  const isWarning = left < 5 * 60_000;
+  const isCritical = left < 60_000;
+
   return (
-    <p className="font-ui text-xl">
-      Time left:{" "}
-      <span role="timer" className={left < 5 * 60_000 ? "text-pink" : "text-cyan"}>
+    <div className={`flex items-center gap-2 border px-3 py-1.5 font-ui text-xs tracking-widest ${
+      isCritical
+        ? "border-pink text-pink animate-pulse"
+        : isWarning
+        ? "border-pink/60 text-pink"
+        : "border-line text-muted"
+    }`}>
+      <span className="hidden sm:inline text-muted/60">T-MINUS</span>
+      <span role="timer" aria-label={`${format(left)} remaining`} className="font-display text-xl leading-none">
         {format(left)}
       </span>
-    </p>
+    </div>
   );
 }
