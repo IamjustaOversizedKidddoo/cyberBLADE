@@ -36,4 +36,9 @@ var d=document.documentElement,p={motion:matchMedia("(prefers-reduced-motion: re
 try{var s=JSON.parse(localStorage.getItem(${JSON.stringify(PREFS_KEY)})||"null");
 if(s&&(s.motion==="full"||s.motion==="reduce"))p.motion=s.motion;
 if(s&&(s.contrast==="normal"||s.contrast==="high"))p.contrast=s.contrast;}catch(e){}
-d.dataset.motion=p.motion;d.dataset.contrast=p.contrast;}catch(e){}})();`;
+d.dataset.motion=p.motion;d.dataset.contrast=p.contrast;
+var m=matchMedia("(prefers-reduced-motion: reduce)");
+if(m.addEventListener)m.addEventListener("change",function(ev){try{
+var s2=JSON.parse(localStorage.getItem(${JSON.stringify(PREFS_KEY)})||"null");
+if(s2&&(s2.motion==="full"||s2.motion==="reduce"))return;}catch(x){}
+d.dataset.motion=ev.matches?"reduce":"full";});}catch(e){}})();`;
