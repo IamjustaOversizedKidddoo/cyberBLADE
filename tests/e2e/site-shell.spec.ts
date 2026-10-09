@@ -24,3 +24,25 @@ test("nothing can push the page sideways, not even code or an anchor", async ({ 
   });
   expect(shifted).toBe(0);
 });
+
+test.describe("page transition", () => {
+  const scanAnimation = (page: import("@playwright/test").Page) =>
+    page.locator("[data-route-scan]").evaluate((el) => getComputedStyle(el).animationName);
+
+  test("moving to another page runs a scan line across the screen, without blocking clicks", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("banner").getByRole("link", { name: "Start", exact: true }).click();
+    await expect(page).toHaveURL(/\/start$/);
+    const scan = page.locator("[data-route-scan]");
+    await expect(scan).toHaveCount(1);
+    await expect(scan).toHaveAttribute("aria-hidden", "true");
+    await expect(scan).toHaveCSS("pointer-events", "none");
+    expect(await scanAnimation(page)).toBe("route-scan");
+  });
+
+  test("reduced motion: no scan", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/start");
+    expect(await scanAnimation(page)).toBe("none");
+  });
+});

@@ -62,7 +62,7 @@ export function StartForm({ next }: { next: string }) {
       <button
         type="submit"
         disabled={pending}
-        className="border border-cyan px-6 py-2 text-lg text-cyan hover:bg-cyan hover:text-void disabled:opacity-50"
+        className="btn-glitch border border-cyan px-6 py-2 text-lg text-cyan hover:bg-cyan hover:text-void disabled:opacity-50"
       >
         {pending ? "Starting…" : "Start"}
       </button>
