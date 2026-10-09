@@ -55,7 +55,7 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
   // ─── STATE: PASSED ──────────────────────────────────────────────────────────
   if (state.kind === "passed") {
     return (
-      <main id="main">
+      <main>
         {/* Full-bleed ACCESS GRANTED hero */}
         <PosterSection
           tone="void"
@@ -83,11 +83,11 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
               </SystemLabel>
             </div>
 
-            {/* Giant ACCESS_GRANTED wordmark */}
+            {/* Giant rank unlock heading */}
             <PosterHeading
               id="rankup-heading"
               as="h1"
-              lines={["ACCESS_", "GRANTED_"]}
+              lines={[`rank_${rank + 1}_unlocked`]}
               size="wordmark"
               cursor
               className="text-cyan"
@@ -134,7 +134,7 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
     if (!session) notFound();
     const briefing = await renderMdx(session.briefingText, proseComponents, "md");
     return (
-      <main id="main">
+      <main>
         {/* Live HUD header */}
         <div className="sticky top-0 z-30 border-b border-line bg-void/90 backdrop-blur-sm">
           <div className="mx-auto max-w-7xl grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-2 sm:px-6">
@@ -205,7 +205,7 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
 
   // ─── STATE: LOBBY (locked / ready / cooldown) ───────────────────────────────
   return (
-    <main id="main">
+    <main>
       {/* Mission briefing hero */}
       <PosterSection
         tone="void"
@@ -321,7 +321,7 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
             {/* CTA */}
             {state.kind === "ready" && (
               <form action={startChallengeAction.bind(null, rank)} className="mt-2">
-                <button type="submit" className={BTN_START}>
+                <button type="submit" aria-label="Start the challenge" className={BTN_START}>
                   DEPLOY MISSION →
                 </button>
               </form>
