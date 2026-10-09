@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { CORE, TRACKS, type TrackGroup } from "@/lib/catalog/tracks";
+import { SystemLabel } from "@/components/art/SystemLabel";
+import { HalftoneField } from "@/components/art/HalftoneField";
 
 const SOON_GROUPS: TrackGroup[] = ["Defend", "Attack", "Build", "Emerging", "Governance", "Leadership"];
 
@@ -9,6 +11,22 @@ const RANK_SUMMARY: Record<number, string> = {
   2: "Web architecture, the security core and your first tools.",
 };
 
+const RANK_CODENAME: Record<number, string> = {
+  0: "INITIATE",
+  1: "OPERATOR",
+  2: "WATCHER",
+};
+
+const GROUP_SIGIL: Record<TrackGroup, string> = {
+  Flagship: "★",
+  Defend: "■",
+  Attack: "▲",
+  Build: "◆",
+  Emerging: "●",
+  Governance: "▬",
+  Leadership: "╬",
+};
+
 type Props = { currentRank: number; xp: number; rankProgress: { done: number; total: number } };
 
 export function CourseMap({ currentRank, xp, rankProgress }: Props) {
@@ -16,74 +34,181 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
   const soon = TRACKS.filter((t) => t.status === "coming_soon");
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-16">
+
+      {/* ── SHARED CORE ────────────────────────────────────────────────────── */}
       <section aria-labelledby="core-heading">
-        <h2 id="core-heading" className="mb-6 text-4xl">
-          shared_core
-        </h2>
-        <ol className="space-y-3 border-l border-line pl-6">
+        {/* Section header */}
+        <div className="flex items-center gap-4 border-b-2 border-line pb-4">
+          <h2 id="core-heading" className="font-ui text-sm tracking-[0.25em] text-muted">
+            CAMPAIGN // SHARED_CORE
+          </h2>
+          <div aria-hidden="true" className="flex-1 h-px bg-line" />
+          <SystemLabel className="text-muted/60">
+            {currentRank === 0 ? `RANK_${currentRank} ACTIVE` : `RANK_${currentRank - 1} CLEARED`}
+          </SystemLabel>
+        </div>
+
+        {/* Rank nodes in a rigid grid */}
+        <ol className="mt-6 grid gap-px bg-line" aria-label="Shared core ranks">
           {CORE.ranks.map((r) => {
-            const state = r.rank < currentRank ? "done" : r.rank === currentRank ? "current" : "locked";
+            const state = r.rank < currentRank ? "cleared" : r.rank === currentRank ? "current" : "locked";
+            const isCurrent = state === "current";
+            const isCleared = state === "cleared";
+
             return (
-              <li key={r.rank} className={`border p-4 ${state === "current" ? "border-cyan" : "border-line"}`}>
-                <h3 className={`text-xl ${state === "current" ? "text-cyan" : state === "done" ? "text-ink" : "text-muted"}`}>
-                  rank_{r.rank} · {r.name}
-                  {state === "current" && <span className="ml-3 text-sm text-pink">Start here</span>}
-                  {state === "done" && <span className="ml-3 text-sm text-purple">Complete</span>}
-                  {state === "locked" && <span className="ml-3 text-sm">🔒︎ Locked</span>}
-                </h3>
-                <p className="mt-1 text-muted">{RANK_SUMMARY[r.rank]}</p>
-                {state === "current" && (
-                  <p className="mt-3 flex flex-wrap items-center gap-4">
+              <li
+                key={r.rank}
+                data-rank-node={r.rank}
+                className={`grid grid-cols-1 sm:grid-cols-[4rem_1fr_auto] gap-px bg-void ${isCurrent ? "ring-2 ring-cyan ring-inset" : ""}`}
+              >
+                {/* Giant rank numeral cell */}
+                <div
+                  className={`flex items-center justify-center bg-void py-6 font-display text-5xl leading-none ${
+                    isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-line"
+                  }`}
+                  aria-hidden="true"
+                >
+                  {String(r.rank).padStart(2, "0")}
+                </div>
+
+                {/* Main content */}
+                <div className="bg-void px-5 py-5">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <SystemLabel
+                      className={isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-muted/40"}
+                    >
+                      {RANK_CODENAME[r.rank] ?? `RANK_${r.rank}`}
+                    </SystemLabel>
+                    <span
+                      className={`border px-2 py-0.5 font-ui text-xs tracking-widest ${
+                        isCurrent
+                          ? "border-cyan text-cyan"
+                          : isCleared
+                          ? "border-purple text-purple"
+                          : "border-line text-muted/40"
+                      }`}
+                    >
+                      {state === "cleared" ? "CLEARED" : state === "current" ? "ACTIVE" : "LOCKED"}
+                    </span>
+                  </div>
+                  <h3 className={`mt-2 font-ui text-lg ${state === "locked" ? "text-muted/40" : "text-ink"}`}>
+                    rank_{r.rank} · {r.name}
+                  </h3>
+                  <p className="mt-1 text-sm text-muted">{RANK_SUMMARY[r.rank]}</p>
+                </div>
+
+                {/* Action cell */}
+                <div className="flex items-center bg-void px-5">
+                  {isCurrent && (
                     <Link
                       href={`/learn/core#rank-${r.rank}`}
-                      className="border border-cyan px-4 py-1 font-ui text-cyan hover:bg-cyan hover:text-void"
+                      aria-label={rankProgress.done > 0 ? "Continue" : `Begin rank_${r.rank}`}
+                      className="btn-glitch inline-flex min-h-[44px] items-center justify-center border-2 border-cyan px-5 py-2 font-ui text-sm text-cyan hover:bg-cyan hover:text-void"
                     >
-                      {rankProgress.done > 0 ? "Continue" : `Begin rank_${r.rank}`}
+                      {rankProgress.done > 0 ? "CONTINUE →" : "BEGIN →"}
                     </Link>
-                    <span className="text-sm text-muted">
-                      {rankProgress.done}/{rankProgress.total} lessons · {xp} XP
+                  )}
+                  {isCleared && (
+                    <Link
+                      href={`/learn/core#rank-${r.rank}`}
+                      className="inline-flex min-h-[44px] items-center justify-center border border-purple px-4 py-2 font-ui text-xs text-purple hover:bg-purple hover:text-void transition-colors"
+                    >
+                      REVIEW
+                    </Link>
+                  )}
+                  {state === "locked" && (
+                    <span className="font-ui text-xs text-muted/30 tracking-widest">
+                      ▒▒▒ CLASSIFIED
                     </span>
-                  </p>
-                )}
+                  )}
+                </div>
               </li>
             );
           })}
         </ol>
+
+        {/* XP tally */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border border-line px-4 py-3 sm:px-5">
+          <div className="flex items-center gap-3">
+            <SystemLabel className="text-muted">XP TOTAL</SystemLabel>
+            <span className="font-display text-3xl text-cyan leading-none">{xp.toLocaleString("en-US")}</span>
+          </div>
+          <div aria-hidden="true" className="hidden sm:block flex-1 h-px bg-line mx-2" />
+          <SystemLabel className="text-muted/60">
+            {rankProgress.done}/{rankProgress.total} LESSONS COMPLETE
+          </SystemLabel>
+        </div>
       </section>
 
+      {/* ── LAUNCH TRACKS ──────────────────────────────────────────────────── */}
       <section aria-labelledby="tracks-heading">
-        <h2 id="tracks-heading" className="mb-2 text-4xl">
-          job_tracks
-        </h2>
-        <p className="mb-6 text-muted">Unlocks after the core. Pick the job you want.</p>
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {launch.map((t) => (
-            <li key={t.id} className="border border-line p-4">
-              <h3 className="text-lg text-ink">{t.title}</h3>
-              <p className="text-sm text-muted">🔒︎ Unlocks after the core</p>
+        <div className="flex items-center gap-4 border-b-2 border-line pb-4">
+          <h2 id="tracks-heading" aria-label="job_tracks" className="font-ui text-sm tracking-[0.25em] text-muted">
+            JOB_TRACKS // UNLOCKS AFTER RANK_2
+          </h2>
+          <div aria-hidden="true" className="flex-1 h-px bg-line" />
+          <SystemLabel className="text-muted/60">{launch.length} OPEN</SystemLabel>
+        </div>
+
+        <ul className="mt-6 grid gap-px bg-line sm:grid-cols-2" aria-label="Open job tracks">
+          {launch.map((t, i) => (
+            <li
+              key={t.id}
+              className="relative overflow-hidden bg-void p-5"
+            >
+              {i === 0 && (
+                <div className="pointer-events-none absolute inset-0 opacity-10">
+                  <HalftoneField tone="cyan" density={6} fade="radial" className="opacity-40" />
+                </div>
+              )}
+              <div className="relative">
+                <SystemLabel className="text-muted/60">
+                  {`TRACK ${String(i + 1).padStart(2, "0")} // ${t.group.toUpperCase()}`}
+                </SystemLabel>
+                <p className="mt-2 font-ui text-lg text-ink">{t.title}</p>
+                <p className="mt-3 border-t border-line pt-3 font-ui text-xs tracking-wider text-muted/40">
+                  ▒ LOCKED — Complete shared core to unlock
+                </p>
+              </div>
             </li>
           ))}
         </ul>
       </section>
 
+      {/* ── CLASSIFIED / COMING SOON ───────────────────────────────────────── */}
       <section aria-labelledby="soon-heading">
-        <h2 id="soon-heading" className="mb-6 text-4xl">
-          coming_soon
-        </h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {SOON_GROUPS.map((group) => (
-            <div key={group}>
-              <h3 className="mb-2 text-muted">{group}</h3>
-              <ul className="space-y-1 text-sm text-muted">
-                {soon
-                  .filter((t) => t.group === group)
-                  .map((t) => (
-                    <li key={t.id}>🔒︎ {t.title}</li>
+        <div className="flex items-center gap-4 border-b-2 border-line pb-4">
+          <h2 id="soon-heading" className="font-ui text-sm tracking-[0.25em] text-muted">
+            CLASSIFIED // UPCOMING_TRACKS
+          </h2>
+          <div aria-hidden="true" className="flex-1 h-px bg-line" />
+          <SystemLabel className="text-muted/60">{soon.length} REDACTED</SystemLabel>
+        </div>
+
+        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {SOON_GROUPS.map((group) => {
+            const groupTracks = soon.filter((t) => t.group === group);
+            if (groupTracks.length === 0) return null;
+            return (
+              <div key={group} className="border border-line p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="font-display text-muted/40 text-lg" aria-hidden="true">
+                    {GROUP_SIGIL[group]}
+                  </span>
+                  <SystemLabel className="text-muted/60">{group.toUpperCase()}</SystemLabel>
+                </div>
+                <ul className="space-y-1.5">
+                  {groupTracks.map((t) => (
+                    <li key={t.id} className="flex items-center gap-2">
+                      <span aria-hidden="true" className="font-ui text-xs text-muted/30">▒▒</span>
+                      <span className="text-sm text-muted/50">{t.title}</span>
+                    </li>
                   ))}
-              </ul>
-            </div>
-          ))}
+                </ul>
+              </div>
+            );
+          })}
         </div>
       </section>
     </div>

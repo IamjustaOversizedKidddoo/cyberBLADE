@@ -47,5 +47,5 @@ test("newSeed is 16 random hex chars", () => {
 });
 
 test("flag format", () => {
-  expect(formatFlag("0123456789ab")).toBe("NEON{0123456789ab}");
+  expect(formatFlag("0123456789ab")).toBe("CYBERBLADE{0123456789ab}");
 });

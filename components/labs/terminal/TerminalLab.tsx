@@ -135,5 +135,5 @@ export default function TerminalLab({ world, objectives, onSubmit }: Props) {
     };
   }, [worldJson]);
 
-  return <div ref={host} className="h-[420px] w-full border border-line bg-[#05070a] p-2" aria-label="Lab terminal" />;
+  return <div ref={host} className="h-[420px] w-full border border-line bg-console p-2" aria-label="Lab terminal" />;
 }
