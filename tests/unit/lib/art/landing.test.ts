@@ -21,7 +21,7 @@ test("glyphs differ by track: no two share the same shape", () => {
   expect(new Set(shapes).size).toBe(shapes.length);
 });
 
-import { ANALYZE_DIAGRAM, DEFEND_DIAGRAM, SCENES, SIGNAL_DIAGRAM, SYSTEM_STAGES, TRACE_DIAGRAM } from "@/lib/art/landing";
+import { ANALYZE_DIAGRAM, DEFENCE_LAYERS, SCENES, SIGNAL_DIAGRAM, SYSTEM_STAGES, TRACE_DIAGRAM, TRACE_EVIDENCE, TRIAGE } from "@/lib/art/landing";
 
 describe("the cinematic sequence", () => {
   test("seven scenes, in story order", () => {
@@ -36,14 +36,33 @@ describe("the cinematic sequence", () => {
     const at = (d: typeof SIGNAL_DIAGRAM) => Object.fromEntries(d.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
     const from = (d: typeof SIGNAL_DIAGRAM) => Object.fromEntries(d.nodes.map((n) => [n.id, n.morph?.[0]]));
     expect(from(ANALYZE_DIAGRAM)).toEqual(at(SIGNAL_DIAGRAM));
-    expect(from(DEFEND_DIAGRAM)).toEqual(at(TRACE_DIAGRAM));
-    for (const d of [SIGNAL_DIAGRAM, ANALYZE_DIAGRAM, DEFEND_DIAGRAM]) for (const n of d.nodes) expect(n.morph).toHaveLength(1);
+    for (const d of [SIGNAL_DIAGRAM, ANALYZE_DIAGRAM]) for (const n of d.nodes) expect(n.morph).toHaveLength(1);
   });
 
   test("every link joins two real nodes", () => {
-    for (const d of [SIGNAL_DIAGRAM, ANALYZE_DIAGRAM, TRACE_DIAGRAM, DEFEND_DIAGRAM]) {
+    for (const d of [SIGNAL_DIAGRAM, ANALYZE_DIAGRAM, TRACE_DIAGRAM]) {
       const ids = new Set(d.nodes.map((n) => n.id));
       for (const l of d.links) expect(ids.has(l.from) && ids.has(l.to), `${d.title}: ${l.from}-${l.to}`).toBe(true);
     }
+  });
+});
+
+describe("the scene objects", () => {
+  test("TRACE: one evidence tag per hop, in route order, in time order", () => {
+    expect(TRACE_EVIDENCE.map((e) => e.hop)).toEqual(TRACE_DIAGRAM.nodes.map((n) => n.id));
+    const times = TRACE_EVIDENCE.map((e) => e.time);
+    expect(times).toEqual([...times].sort());
+    for (const e of TRACE_EVIDENCE) expect(e.time).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+  });
+
+  test("ANALYZE: triage narrows every step and ends at one incident", () => {
+    const values = TRIAGE.map((t) => t.value);
+    for (let i = 1; i < values.length; i++) expect(values[i]).toBeLessThan(values[i - 1]);
+    expect(values.at(-1)).toBe(1);
+  });
+
+  test("DEFEND: defence in depth, outermost layer first, each with the control that guards it", () => {
+    expect(DEFENCE_LAYERS.map((l) => l.name)).toEqual(["EDGE", "NETWORK", "HOST", "IDENTITY", "DATA"]);
+    for (const l of DEFENCE_LAYERS) expect(l.control.length).toBeGreaterThan(0);
   });
 });

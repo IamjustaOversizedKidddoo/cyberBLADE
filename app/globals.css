@@ -185,7 +185,7 @@
   /* Poster type scale: display type as artwork. */
   --poster-hero: clamp(4rem, 21vw, 19rem);
   /* A ten-letter wordmark across the full width. */
-  --poster-wordmark: clamp(2.6rem, 12.5vw, 14rem);
+  --poster-wordmark: clamp(2.6rem, 16.5vw, 19rem);
   --poster-section: clamp(2.75rem, 9vw, 7.5rem);
   --poster-label: clamp(1.25rem, 3vw, 2rem);
   /* Layer order inside a poster band: texture < art < type < ui. */
@@ -253,6 +253,11 @@
 [data-scene][data-step="5"] [data-step-item="5"],
 [data-scene][data-step="6"] [data-step-item="6"],
 [data-scene][data-step="7"] [data-step-item="7"] { opacity: 1; }
+/* A trail: items light up as the scene reaches them and stay lit (style --trail-i / --trail-n; no scene: all lit). */
+[data-scene][data-step] [data-trail] {
+  opacity: clamp(0.3, calc((var(--scene-progress, 1) * var(--trail-n) - var(--trail-i)) * 4), 1);
+  transition: opacity 0.25s ease;
+}
 /* A route that draws itself as the scene plays: the drawing is revealed left to right (no scene: fully drawn). */
 [data-scene][data-step] .draw-path .diagram { clip-path: inset(-10% calc((1 - var(--scene-progress, 1)) * 100%) -10% -10%); }
 

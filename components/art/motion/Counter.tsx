@@ -4,10 +4,13 @@ import { animate } from "motion/react";
 import { useEffect, useRef } from "react";
 import { readReducedMotion } from "./reduced";
 
-type Props = { to: number; format?: (n: number) => string; className?: string };
+type Props = { to: number; format?: (n: number) => string; grouped?: boolean; className?: string };
+
+const groupThousands = (n: number) => n.toLocaleString("en-US");
 
 /** A number that counts up when it comes into view. The markup always holds the final value. */
-export function Counter({ to, format = String, className }: Props) {
+export function Counter({ to, format: custom, grouped = false, className }: Props) {
+  const format = custom ?? (grouped ? groupThousands : String);
   const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
