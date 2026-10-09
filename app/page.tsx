@@ -16,7 +16,7 @@ import { SystemLabel } from "@/components/art/SystemLabel";
 import { TechnicalDiagram } from "@/components/art/TechnicalDiagram";
 import { Scanlines } from "@/components/theme/Scanlines";
 import { TypingText } from "@/components/theme/TypingText";
-import { stackVertically } from "@/lib/art/diagram";
+import { ring, stackVertically, turnUpright, zigzagNodes } from "@/lib/art/diagram";
 import { ANALYZE_DIAGRAM, DEFEND_DIAGRAM, SIGNAL_DIAGRAM, SYSTEM_STAGES, TRACE_DIAGRAM, TRACK_GLYPHS, type LaunchTrackId } from "@/lib/art/landing";
 import { BRAND } from "@/lib/brand";
 import { TRACKS } from "@/lib/catalog/tracks";
@@ -25,7 +25,8 @@ import { TRACKS } from "@/lib/catalog/tracks";
 const fx = (vars: Record<string, number | string>) => JSON.stringify(vars);
 
 const START_BUTTON = "inline-block border-2 px-8 py-3 font-ui text-xl transition-colors";
-const STAGE = "relative col-span-full grid min-h-[100svh] content-center gap-x-6 gap-y-8 py-16 md:grid-cols-12";
+const PLATE = "bg-void px-2 py-0.5 [box-decoration-break:clone]";
+const STAGE ="relative col-span-full grid min-h-[100svh] content-center gap-x-6 gap-y-8 py-16 md:grid-cols-12";
 const CAMERA = "contents md:col-span-12 md:grid md:grid-cols-12 md:gap-x-6 md:gap-y-8";
 const WALL = ["tilt--1", "tilt-1 md:mt-16", "tilt-1 md:-mt-4", "tilt--2 md:mt-12"];
 const STAMP_TONE: Record<LaunchTrackId, "purple" | "cyan" | "pink"> = { purple: "purple", soc: "cyan", pentest: "pink", cloud: "cyan" };
@@ -66,11 +67,20 @@ export default function Home() {
           </div>
 
           <div data-from={fx({ y: 120 })} data-at="0.45" data-dur="0.35" className="relative z-[var(--z-type)] md:col-span-7">
-            <p className="font-ui text-sm tracking-[0.25em] text-cyan sm:text-base">{BRAND.fullName.toUpperCase()}</p>
-            <p className="mt-3 text-xl sm:text-3xl">{BRAND.tagline}</p>
+            {/* Plates: the caption stays readable while the macro wordmark passes behind it (frame 00). */}
+            <p className="font-ui text-sm leading-relaxed tracking-[0.25em] text-cyan sm:text-base">
+              <span data-plate className={PLATE}>
+                {BRAND.fullName.toUpperCase()}
+              </span>
+            </p>
+            <p className="mt-3 text-xl leading-snug sm:text-3xl">
+              <span data-plate className={PLATE}>
+                {BRAND.tagline}
+              </span>
+            </p>
             <div className="mt-8">
               <Magnetic>
-                <Link href="/start" className={`${START_BUTTON} border-ink text-ink hover:border-cyan hover:bg-cyan hover:text-void`}>
+                <Link href="/start" className={`${START_BUTTON} border-ink bg-void text-ink hover:border-cyan hover:bg-cyan hover:text-void`}>
                   Start
                 </Link>
               </Magnetic>
@@ -133,7 +143,7 @@ export default function Home() {
             </div>
             <div data-morph-at="0.1" data-morph-dur="0.7" className="relative md:col-span-7">
               <HalftoneField tone="cyan" density={7} fade="radial" className="opacity-20" />
-              <TechnicalDiagram {...SIGNAL_DIAGRAM} mobileNodes={stackVertically(SIGNAL_DIAGRAM.nodes)} tone="cyan" style="hand" ratio="16 / 11" />
+              <TechnicalDiagram {...SIGNAL_DIAGRAM} mobileNodes={ring(SIGNAL_DIAGRAM.nodes)} tone="cyan" style="hand" ratio="16 / 11" />
             </div>
           </div>
         </ScrollScene>
@@ -151,7 +161,7 @@ export default function Home() {
             </p>
           </div>
           <div data-camera={fx({ xPercent: 18, rotateY: -8 })} className="draw-path relative md:col-span-12">
-            <TechnicalDiagram {...TRACE_DIAGRAM} mobileNodes={stackVertically(TRACE_DIAGRAM.nodes)} tone="pink" style="hand" ratio="21 / 7" numbered />
+            <TechnicalDiagram {...TRACE_DIAGRAM} mobileNodes={zigzagNodes(TRACE_DIAGRAM.nodes)} tone="pink" style="hand" ratio="21 / 7" numbered />
             <div data-from={fx({ opacity: 0, x: 40 })} data-at="0.8" data-dur="0.15" className="mt-4 text-right">
               <SystemLabel tone="pink">ROUTE RECONSTRUCTED: 5 HOPS</SystemLabel>
             </div>
@@ -170,7 +180,7 @@ export default function Home() {
               </div>
             </div>
             <div data-morph-at="0.2" data-morph-dur="0.6" className="relative md:col-span-8">
-              <TechnicalDiagram {...ANALYZE_DIAGRAM} mobileNodes={stackVertically(ANALYZE_DIAGRAM.nodes)} tone="cyan" ratio="16 / 8" />
+              <TechnicalDiagram {...ANALYZE_DIAGRAM} mobileNodes={turnUpright(ANALYZE_DIAGRAM.nodes)} tone="cyan" ratio="16 / 8" />
             </div>
             <div className="relative md:col-span-4 md:self-center">
               <div data-from={fx({ x: "40%", rotate: 12, opacity: 0 })} data-at="0.35" data-dur="0.35" className="mx-auto w-2/3 text-ink md:w-full">

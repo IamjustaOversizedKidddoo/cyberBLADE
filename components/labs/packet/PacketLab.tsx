@@ -70,22 +70,22 @@ export function PacketLab({ capture }: Props) {
             }}
             onKeyDown={handleKeyDown}
             placeholder="Apply a display filter…"
-            className={`flex-1 border bg-[#05070a] px-3 py-2 font-mono text-sm text-ink placeholder-muted/60 focus:outline-none ${
+            className={`flex-1 border bg-console px-3 py-2 font-mono text-sm text-ink placeholder-muted/60 ${
               filterError
-                ? "border-[#ff007f] focus:border-[#ff007f]"
-                : "border-line focus:border-[#00e5ff]"
+                ? "border-pink focus:border-pink"
+                : "border-line focus:border-cyan"
             }`}
           />
           <button
             type="button"
             onClick={() => applyFilter(filterInput)}
-            className="border border-line bg-[#0a0f18] px-4 py-2 font-mono text-sm text-ink hover:border-ink hover:text-white"
+            className="border border-line bg-console-raised px-4 py-2 font-mono text-sm text-ink hover:border-ink hover:text-white"
           >
             Apply
           </button>
         </div>
         {filterError && (
-          <div role="alert" className="font-mono text-xs text-[#ff007f]">
+          <div role="alert" className="font-mono text-xs text-pink">
             {filterError}
           </div>
         )}

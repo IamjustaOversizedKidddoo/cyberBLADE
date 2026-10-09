@@ -21,6 +21,29 @@ export function stackVertically(nodes: DiagramNode[]): DiagramNode[] {
   return nodes.map((n, i) => ({ ...n, x: 50, y: r(gap / 2 + i * gap) }));
 }
 
+// Phone layouts: each keeps its diagram's character on a tall screen. They drop `morph`, since phones
+// play a scene once instead of morphing between desktop positions.
+const place = (n: DiagramNode, p: Point): DiagramNode => ({ id: n.id, label: n.label, kind: n.kind, x: r(p.x), y: r(p.y) });
+
+/** A network: nodes evenly on a circle, the first at the top, clockwise. */
+export function ring(nodes: DiagramNode[]): DiagramNode[] {
+  return nodes.map((n, i) => {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / nodes.length;
+    return place(n, { x: 50 + 38 * Math.cos(a), y: 50 + 38 * Math.sin(a) });
+  });
+}
+
+/** A wide drawing turned a quarter (x and y swap), so a grid or tree fills a portrait screen. */
+export function turnUpright(nodes: DiagramNode[]): DiagramNode[] {
+  return nodes.map((n) => place(n, { x: n.y, y: n.x }));
+}
+
+/** A route: the nodes in order, alternating sides as they move down. */
+export function zigzagNodes(nodes: DiagramNode[]): DiagramNode[] {
+  const pts = zigzag(nodes.length);
+  return nodes.map((n, i) => place(n, pts[i]));
+}
+
 /** The course map's desktop path: alternating sides, moving down. */
 export function zigzag(count: number): Point[] {
   const gap = 100 / count;

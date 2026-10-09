@@ -1,4 +1,4 @@
-import { linkPath, rankStatus, stackVertically, zigzag, type DiagramNode } from "@/lib/art/diagram";
+import { linkPath, rankStatus, ring, stackVertically, turnUpright, zigzag, zigzagNodes, type DiagramNode } from "@/lib/art/diagram";
 
 const a: DiagramNode = { id: "a", x: 10, y: 20, label: "A" };
 const b: DiagramNode = { id: "b", x: 70, y: 60, label: "B" };
@@ -30,4 +30,35 @@ test("rank status from the operator's rank", () => {
   expect(rankStatus(1, 0)).toBe("cleared");
   expect(rankStatus(1, 1)).toBe("current");
   expect(rankStatus(1, 2)).toBe("locked");
+});
+
+describe("phone layouts keep each diagram's own shape", () => {
+  const six = Array.from({ length: 6 }, (_, i): DiagramNode => ({ id: `n${i}`, x: (i % 3) * 35 + 15, y: i < 3 ? 30 : 74, label: `N${i}` }));
+  const inside = (n: DiagramNode) => n.x >= 0 && n.x <= 100 && n.y >= 0 && n.y <= 100;
+
+  test("ring: nodes sit evenly on a circle, first at the top, in order", () => {
+    const out = ring(six);
+    expect(out.map((n) => n.id)).toEqual(six.map((n) => n.id));
+    expect(out[0]).toMatchObject({ x: 50, y: 12 });
+    const radius = (n: DiagramNode) => Math.hypot(n.x - 50, n.y - 50);
+    for (const n of out) expect(radius(n)).toBeCloseTo(38, 1);
+    expect(out.every(inside)).toBe(true);
+  });
+
+  test("turnUpright: a wide drawing turns a quarter so it fills a tall screen, labels untouched", () => {
+    const out = turnUpright(six);
+    expect(out[0]).toMatchObject({ id: "n0", x: 30, y: 15, label: "N0" });
+    expect(out[5]).toMatchObject({ x: 74, y: 85 });
+  });
+
+  test("zigzagNodes: alternating sides, moving down, in order", () => {
+    const out = zigzagNodes(six);
+    expect(out.map((n) => n.x)).toEqual([20, 80, 20, 80, 20, 80]);
+    expect(out.map((n) => n.y)).toEqual([...out.map((n) => n.y)].sort((p, q) => p - q));
+  });
+
+  test("phone layouts drop desktop morph history (phones play, they don't morph)", () => {
+    const withMorph = six.map((n) => ({ ...n, morph: [{ x: 1, y: 1 }] }));
+    for (const layout of [ring, turnUpright, zigzagNodes]) expect(layout(withMorph).every((n) => n.morph === undefined)).toBe(true);
+  });
 });
