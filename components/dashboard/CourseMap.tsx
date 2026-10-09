@@ -37,7 +37,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                   <p className="mt-3 flex flex-wrap items-center gap-4">
                     <Link
                       href={`/learn/core#rank-${r.rank}`}
-                      className="border border-cyan px-4 py-1 font-ui text-cyan hover:bg-cyan hover:text-void"
+                      className="btn-glitch border border-cyan px-4 py-1 font-ui text-cyan hover:bg-cyan hover:text-void"
                     >
                       {rankProgress.done > 0 ? "Continue" : `Begin rank_${r.rank}`}
                     </Link>

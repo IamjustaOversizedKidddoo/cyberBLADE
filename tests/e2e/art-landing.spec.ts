@@ -4,14 +4,14 @@ const SCENES = ["boot", "operator", "signal", "trace", "analyze", "defend", "ent
 const STAGES = ["LEARN", "PRACTICE", "TRACE", "ANALYZE", "DEFEND", "MASTER"];
 const TRACKS = ["Cybersecurity (Purple Team)", "SOC Analyst", "Penetration Tester / VAPT Analyst", "Cloud Security"];
 
-test("the landing page is seven scenes in story order, with one h1 and two ways in", async ({ page }) => {
+test("the landing page is seven scenes in story order, with one h1 and three ways in (header, boot, final band)", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveAccessibleName("CYBERBLADE");
   await expect(page.locator("h1")).toHaveCount(1);
   const order = await page.locator("section[data-scene-id]").evaluateAll((els) => els.map((e) => e.getAttribute("data-scene-id")));
   expect(order).toEqual(SCENES);
   const starts = page.getByRole("link", { name: "Start", exact: true });
-  await expect(starts).toHaveCount(2);
+  await expect(starts).toHaveCount(3);
   for (const link of await starts.all()) await expect(link).toHaveAttribute("href", "/start");
   for (const t of TRACKS) await expect(page.getByRole("heading", { name: t })).toBeAttached();
   for (const s of STAGES) await expect(page.locator("[data-stage]").filter({ hasText: s }).first()).toBeAttached();
@@ -23,7 +23,7 @@ test.describe("without JavaScript", () => {
     await page.goto("/");
     for (const id of SCENES) await expect(page.locator(`#${id}-heading`)).toBeVisible();
     for (const t of TRACKS) await expect(page.getByRole("heading", { name: t })).toBeVisible();
-    await expect(page.getByRole("link", { name: "Start", exact: true })).toHaveCount(2);
+    await expect(page.getByRole("link", { name: "Start", exact: true })).toHaveCount(3);
   });
 });
 
@@ -68,4 +68,31 @@ test("frame 00: the boot caption sits on a solid plate, so it reads while the ma
     await expect(plate).toHaveCSS("background-color", "rgb(0, 0, 0)");
   }
   await expect(page.locator("[data-scene-id=boot]").getByRole("link", { name: "Start", exact: true })).toHaveCSS("background-color", "rgb(0, 0, 0)");
+});
+
+test.describe("the landing header", () => {
+  test("is a fixed banner with a home link, the way in, and a link to the tracks", async ({ page }) => {
+    await page.goto("/");
+    const banner = page.getByRole("banner");
+    await expect(banner.getByRole("link", { name: "CYBERBLADE home" })).toHaveAttribute("href", "/");
+    await expect(banner.getByRole("link", { name: "Start", exact: true })).toHaveAttribute("href", "/start");
+    await page.locator("#trace-heading").scrollIntoViewIfNeeded();
+    await expect(banner).toBeInViewport();
+  });
+
+  test("reads out which scene of the story you're in", async ({ page }, info) => {
+    test.skip(info.project.name !== "chromium-desktop", "the readout is hidden on phones");
+    await page.goto("/", { waitUntil: "networkidle" });
+    const readout = page.locator("[data-scene-readout]");
+    await expect(readout).toHaveText("01/07 BOOT");
+    await page.locator("[data-scene-id=trace]").evaluate((el) => window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY + 200));
+    await expect(readout).toHaveText("04/07 TRACE");
+  });
+
+  test("never covers the boot scene's system labels", async ({ page }) => {
+    await page.goto("/");
+    const header = await page.getByRole("banner").boundingBox();
+    const label = await page.locator("[data-scene-id=boot]").getByText("NODE: PUBLIC").boundingBox();
+    expect(header && label && (label.y >= header.y + header.height || label.y + label.height <= header.y)).toBe(true);
+  });
 });

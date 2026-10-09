@@ -271,3 +271,45 @@
 /* Scene accents: EXPLOIT runs hot (pink), DEFEND resolves cool (cyan). */
 .scene-alert { --scene-accent: var(--color-pink); }
 .scene-secure { --scene-accent: var(--color-cyan); }
+
+/* ===== Buttons with a designed hover and press (audit 2026-10-09) =====
+   Hover: the button lifts off a hard offset shadow and its label splits into the accent channels.
+   Press: it lands flat. Reduced motion keeps the states, only the transition is dropped (global rule). */
+.btn-glitch {
+  box-shadow: 0 0 0 currentColor;
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 160ms cubic-bezier(0.2, 0.8, 0.2, 1), text-shadow 160ms;
+}
+.btn-glitch:hover,
+.btn-glitch:focus-visible {
+  transform: translate(-3px, -3px);
+  box-shadow: 3px 3px 0 currentColor;
+  text-shadow: -2px 0 var(--color-cyan), 2px 0 var(--color-pink);
+}
+.btn-glitch:disabled {
+  transform: none;
+  box-shadow: none;
+  text-shadow: none;
+}
+.btn-glitch:active {
+  transform: translate(0, 0);
+  box-shadow: 0 0 0 currentColor;
+  text-shadow: none;
+}
+
+/* ===== Page transition: one scan line per navigation (app/template.tsx) ===== */
+.route-scan {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 60;
+  height: 2px;
+  pointer-events: none;
+  background: var(--color-cyan);
+  box-shadow: 0 0 18px 4px rgb(15 190 255 / 0.55), 0 -40px 60px rgb(15 190 255 / 0.12);
+  opacity: 0;
+  animation: route-scan 620ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes route-scan {
+  0% { transform: translateY(0); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
