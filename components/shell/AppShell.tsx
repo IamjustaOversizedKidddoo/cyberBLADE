@@ -49,7 +49,7 @@ export function AppShell({
 
           {/* RIGHT — rank + controls */}
           <div className="flex items-center justify-end gap-1.5 sm:gap-3">
-            <div className="hidden lg:block">
+            <div>
               <RankBadge rank={operator.rank} />
             </div>
             <div className="hidden sm:block">
@@ -58,6 +58,7 @@ export function AppShell({
             <form action="/session/end" method="post">
               <button
                 type="submit"
+                aria-label="Switch operator"
                 className="border border-line px-2.5 py-1 font-ui text-xs tracking-wider text-muted transition-colors hover:border-pink hover:text-pink sm:px-3 sm:py-1.5"
               >
                 [DISCONNECT]

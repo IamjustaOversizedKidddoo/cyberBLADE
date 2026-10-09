@@ -83,7 +83,7 @@ export default async function StartPage(props: PageProps<"/start">) {
 
               {/* Form body with terminal inset */}
               <div className="border-2 border-t-0 border-line p-6 sm:p-8">
-                <p className="mb-8 font-ui text-xs tracking-widest text-muted/60">
+                <p className="mb-8 font-mono text-xs tracking-widest text-muted/60">
                   &gt; INTAKE SEQUENCE INITIATED — COMPLETE ALL FIELDS TO PROCEED
                 </p>
                 <StartForm next={safeNextPath(typeof next === "string" ? next : null)} />
@@ -115,8 +115,8 @@ export default async function StartPage(props: PageProps<"/start">) {
               </ul>
 
               {/* Telemetry footer */}
-              <div className="border-t border-line px-6 py-6 font-ui text-xs tracking-wider">
-                <div className="space-y-2 text-muted/50">
+              <div className="border-t border-line px-6 py-6 text-xs tracking-wider">
+                <div className="space-y-2 font-ui text-muted/50">
                   <div className="flex justify-between">
                     <span>SESSION</span>
                     <span>LOCAL</span>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { NoiseLayer } from "@/components/art/NoiseLayer";
 import { PosterSection } from "@/components/art/PosterSection";
 import { PosterHeading } from "@/components/art/PosterHeading";
@@ -9,6 +10,7 @@ import { getLessons } from "@/lib/content/lessons";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 import { rankName } from "@/lib/progress/ranks";
+import { nextMission } from "@/lib/progress/next-mission";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -24,9 +26,10 @@ export default async function DashboardPage() {
     progress.some((p) => p.lessonId === l.id && p.status === "completed")
   ).length;
   const pct = lessons.length > 0 ? Math.round((done / lessons.length) * 100) : 0;
+  const next = nextMission(operator.rank, lessons, progress);
 
   return (
-    <main id="main">
+    <main>
 
       {/* ── OPERATOR DOSSIER HERO ─────────────────────────────────────────── */}
       <PosterSection
@@ -40,10 +43,11 @@ export default async function DashboardPage() {
 
             {/* Left: rank + handle */}
             <div>
+              <p className="sr-only">{`> welcome, ${operator.handle}`}</p>
               <div className="flex flex-wrap items-center gap-4">
                 <SystemLabel>OPERATOR FILE // {operator.handle.toUpperCase()}</SystemLabel>
                 <span className="border border-void/30 px-2 py-0.5 font-ui text-xs tracking-widest text-void/60">
-                  RANK_{operator.rank} · {rankName(operator.rank).toUpperCase()}
+                  {`Rank ${operator.rank} · ${rankName(operator.rank)}`}
                 </span>
               </div>
               <PosterHeading
@@ -54,7 +58,7 @@ export default async function DashboardPage() {
                 className="mt-3"
               />
               <p className="mt-2 font-ui text-sm tracking-widest text-void/60">
-                {rankName(operator.rank).toUpperCase()} — {xp.toLocaleString("en-US")} XP ACCUMULATED
+                {`Rank ${operator.rank} · ${rankName(operator.rank)} · ${xp} XP`}
               </p>
             </div>
 
@@ -88,19 +92,28 @@ export default async function DashboardPage() {
 
       {/* ── BRIEFING STRIP ─────────────────────────────────────────────────── */}
       <div className="bg-void border-b border-line">
-        <div className="mx-auto max-w-7xl grid grid-cols-[auto_1fr] items-stretch gap-px bg-line">
-          {/* Mission deployed badge */}
-          <div className="bg-void px-6 py-4 flex items-center">
-            <div className="relative">
+        <div className="mx-auto max-w-7xl flex flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="relative shrink-0">
               <div aria-hidden="true" className="absolute inset-0 animate-ping rounded-full bg-cyan/20 scale-150" />
               <div className="relative h-3 w-3 rounded-full bg-cyan" />
             </div>
-          </div>
-          <div className="bg-void px-4 py-4 min-w-0">
-            <p className="font-ui text-xs tracking-widest text-muted break-words">
-              &gt; ACTIVE CAMPAIGN: SHARED CORE — CONTINUE YOUR CURRENT RANK OR REVIEW COMPLETED OBJECTIVES BELOW
+            <p className="font-ui text-xs tracking-widest text-muted truncate">
+              {next.kind === "lesson"
+                ? `> NEXT MISSION: ${next.lesson.order.toString().padStart(2, "0")} — ${next.lesson.title.toUpperCase()}`
+                : next.kind === "challenge"
+                ? `> NEXT MISSION: RANK_${operator.rank} CHALLENGE DEPLOYED`
+                : "> ACTIVE CAMPAIGN: SHARED CORE"}
             </p>
           </div>
+          {next.kind !== "none" && (
+            <Link
+              href={next.kind === "lesson" ? `/learn/${next.lesson.id}` : `/challenge/${next.rank}`}
+              className="btn-glitch inline-flex min-h-[44px] items-center justify-center border-2 border-cyan px-4 py-2 font-ui text-xs tracking-wider text-cyan hover:bg-cyan hover:text-void"
+            >
+              {next.kind === "lesson" ? (next.resume ? "RESUME MISSION →" : "START MISSION →") : "DEPLOY CHALLENGE →"}
+            </Link>
+          )}
         </div>
       </div>
 

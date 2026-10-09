@@ -28,7 +28,7 @@ export function SiteFooter() {
           <p className="mt-3 max-w-[38ch] text-sm leading-relaxed text-muted">
             {BRAND.fullName}. Practical cybersecurity training from zero to job-ready.
           </p>
-          <p className="mt-5 font-ui text-xs tracking-widest text-muted/60">
+          <p className="mt-5 font-mono text-xs tracking-widest text-muted/60">
             [&nbsp;{CLEARANCE}&nbsp;]
           </p>
         </div>
@@ -71,7 +71,7 @@ export function SiteFooter() {
         {/* System telemetry cell */}
         <div className="col-span-2 hidden bg-void px-6 py-8 md:col-span-2 md:block">
           <SystemLabel className="mb-4 block text-cyan">SYSTEM</SystemLabel>
-          <ul className="space-y-1.5 font-ui text-xs tracking-wider text-muted/60">
+          <ul className="space-y-1.5 font-mono text-xs tracking-wider text-muted/60">
             <li>STATUS: ONLINE</li>
             <li>NODE: PUBLIC-01</li>
             <li className="pt-1 text-muted/30">{BUILD_ID}</li>

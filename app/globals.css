@@ -208,6 +208,8 @@
 [data-contrast="high"] .band-cyan { border-block: 1px solid var(--color-cyan); }
 [data-contrast="high"] .dossier { background: #0b0f19; color: var(--color-ink); border-color: var(--color-cyan); box-shadow: 6px 6px 0 0 var(--color-cyan); }
 [data-contrast="high"] .neon-noise { display: none; }
+[data-contrast="high"] .diagram,
+[data-contrast="high"] .diagram-link { stroke: #ffffff; color: #ffffff; }
 
 /* The poster grid: 4 columns on phones, 12 from 768 px. Zones place themselves with col/row classes. */
 .poster-grid {
@@ -228,7 +230,7 @@
 .tilt-2 { rotate: 3deg; }
 .tilt--1 { rotate: -1.5deg; }
 .tilt--2 { rotate: -3deg; }
-@media (max-width: 767px) {
+@media (max-width: 639px) {
   .tilt-1, .tilt-2, .tilt--1, .tilt--2 { rotate: none; transform: none !important; }
 }
 

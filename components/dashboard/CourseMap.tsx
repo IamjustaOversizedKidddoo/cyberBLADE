@@ -103,6 +103,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                   {isCurrent && (
                     <Link
                       href={`/learn/core#rank-${r.rank}`}
+                      aria-label={rankProgress.done > 0 ? "Continue" : `Begin rank_${r.rank}`}
                       className="btn-glitch inline-flex min-h-[44px] items-center justify-center border-2 border-cyan px-5 py-2 font-ui text-sm text-cyan hover:bg-cyan hover:text-void"
                     >
                       {rankProgress.done > 0 ? "CONTINUE →" : "BEGIN →"}
@@ -143,7 +144,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
       {/* ── LAUNCH TRACKS ──────────────────────────────────────────────────── */}
       <section aria-labelledby="tracks-heading">
         <div className="flex items-center gap-4 border-b-2 border-line pb-4">
-          <h2 id="tracks-heading" className="font-ui text-sm tracking-[0.25em] text-muted">
+          <h2 id="tracks-heading" aria-label="job_tracks" className="font-ui text-sm tracking-[0.25em] text-muted">
             JOB_TRACKS // UNLOCKS AFTER RANK_2
           </h2>
           <div aria-hidden="true" className="flex-1 h-px bg-line" />
