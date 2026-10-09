@@ -3,7 +3,6 @@ import { DisplaySettings } from "@/components/theme/DisplaySettings";
 import { Scanlines } from "@/components/theme/Scanlines";
 import { BladeMark } from "@/components/art/BladeMark";
 import { BlinkCursor } from "@/components/theme/BlinkCursor";
-import { SystemLabel } from "@/components/art/SystemLabel";
 import { BRAND } from "@/lib/brand";
 import type { Operator } from "@/lib/identity/types";
 import { RankBadge } from "./RankBadge";
@@ -26,20 +25,20 @@ export function AppShell({
 
         <nav
           aria-label="Application navigation"
-          className="mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-2 sm:px-6"
+          className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2 sm:gap-4 sm:px-6"
         >
           {/* LEFT — wordmark */}
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 font-display text-xl text-ink transition-colors hover:text-cyan sm:text-2xl"
+            className="flex items-center gap-1.5 font-display text-lg text-ink transition-colors hover:text-cyan sm:gap-2 sm:text-2xl"
           >
-            <BladeMark className="h-7 w-7 text-cyan" />
-            {BRAND.name}
+            <BladeMark className="h-6 w-6 text-cyan sm:h-7 sm:w-7 shrink-0" />
+            <span>{BRAND.name}</span>
             <BlinkCursor />
           </Link>
 
           {/* CENTRE — operator HUD badge */}
-          <div className="flex items-center gap-0 border border-line">
+          <div className="hidden md:flex items-center gap-0 border border-line">
             <span className="border-r border-line px-3 py-1.5 font-ui text-xs tracking-widest text-muted uppercase">
               OPERATOR
             </span>
@@ -49,13 +48,17 @@ export function AppShell({
           </div>
 
           {/* RIGHT — rank + controls */}
-          <div className="flex items-center justify-end gap-3">
-            <RankBadge rank={operator.rank} />
-            <DisplaySettings />
+          <div className="flex items-center justify-end gap-1.5 sm:gap-3">
+            <div className="hidden lg:block">
+              <RankBadge rank={operator.rank} />
+            </div>
+            <div className="hidden sm:block">
+              <DisplaySettings />
+            </div>
             <form action="/session/end" method="post">
               <button
                 type="submit"
-                className="border border-line px-3 py-1.5 font-ui text-xs tracking-wider text-muted transition-colors hover:border-pink hover:text-pink"
+                className="border border-line px-2.5 py-1 font-ui text-xs tracking-wider text-muted transition-colors hover:border-pink hover:text-pink sm:px-3 sm:py-1.5"
               >
                 [DISCONNECT]
               </button>

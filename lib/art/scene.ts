@@ -126,11 +126,25 @@ export function buildScene(gsap: GsapLike, root: Element, o: SceneOptions): Tl {
     const dur = fraction(el.dataset.dur, el.dataset.camera !== undefined ? 1 : 0.25);
     if (el.dataset.camera !== undefined) {
       const vars = parseVars(el.dataset.camera);
-      if (vars) tl.from(el, { ...vars, duration: dur }, at);
+      if (vars) {
+        if (!o.desktop) {
+          delete vars.rotate;
+          delete vars.rotateX;
+          delete vars.rotateY;
+        }
+        tl.from(el, { ...vars, duration: dur }, at);
+      }
     }
     if (el.dataset.from !== undefined) {
       const vars = parseVars(el.dataset.from);
-      if (vars) tl.from(el, { ...vars, duration: dur }, at);
+      if (vars) {
+        if (!o.desktop) {
+          delete vars.rotate;
+          delete vars.rotateX;
+          delete vars.rotateY;
+        }
+        tl.from(el, { ...vars, duration: dur }, at);
+      }
     }
     if (el.dataset.chars !== undefined) {
       const vars = parseVars(el.dataset.chars);

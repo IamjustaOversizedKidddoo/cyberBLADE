@@ -36,7 +36,7 @@ export default async function StartPage(props: PageProps<"/start">) {
           <div className="col-span-full max-w-5xl mx-auto w-full">
             {/* Sequence label */}
             <SystemLabel>
-              {BRAND.name} // OPERATOR INTAKE // PHASE 01
+              {`${BRAND.name} // OPERATOR INTAKE // PHASE 01`}
             </SystemLabel>
 
             {/* Giant heading */}

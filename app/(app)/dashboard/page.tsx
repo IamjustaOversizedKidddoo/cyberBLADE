@@ -96,8 +96,8 @@ export default async function DashboardPage() {
               <div className="relative h-3 w-3 rounded-full bg-cyan" />
             </div>
           </div>
-          <div className="bg-void px-4 py-4">
-            <p className="font-ui text-xs tracking-widest text-muted">
+          <div className="bg-void px-4 py-4 min-w-0">
+            <p className="font-ui text-xs tracking-widest text-muted break-words">
               &gt; ACTIVE CAMPAIGN: SHARED CORE — CONTINUE YOUR CURRENT RANK OR REVIEW COMPLETED OBJECTIVES BELOW
             </p>
           </div>
