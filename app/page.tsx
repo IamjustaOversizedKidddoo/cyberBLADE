@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { Annotation } from "@/components/art/Annotation";
+import { BladeMark } from "@/components/art/BladeMark";
 import { DossierCard } from "@/components/art/DossierCard";
 import { EditorialIllustration } from "@/components/art/EditorialIllustration";
 import { HalftoneField } from "@/components/art/HalftoneField";
 import { InkEdge } from "@/components/art/InkEdge";
+import { BladeObject } from "@/components/art/motion/BladeObject";
 import { Magnetic } from "@/components/art/motion/Magnetic";
-import { Parallax } from "@/components/art/motion/Parallax";
-import { Reveal } from "@/components/art/motion/Reveal";
 import { ScrollScene } from "@/components/art/motion/ScrollScene";
 import { SmoothScroll } from "@/components/art/motion/SmoothScroll";
 import { NoiseLayer } from "@/components/art/NoiseLayer";
@@ -17,14 +17,17 @@ import { TechnicalDiagram } from "@/components/art/TechnicalDiagram";
 import { Scanlines } from "@/components/theme/Scanlines";
 import { TypingText } from "@/components/theme/TypingText";
 import { stackVertically } from "@/lib/art/diagram";
-import { LOOP_DIAGRAM, LOOP_STEPS, TRACK_GLYPHS, type LaunchTrackId } from "@/lib/art/landing";
+import { ANALYZE_DIAGRAM, DEFEND_DIAGRAM, SIGNAL_DIAGRAM, SYSTEM_STAGES, TRACE_DIAGRAM, TRACK_GLYPHS, type LaunchTrackId } from "@/lib/art/landing";
 import { BRAND } from "@/lib/brand";
 import { TRACKS } from "@/lib/catalog/tracks";
 
-const START_BUTTON = "inline-block border-2 px-8 py-3 font-ui text-xl transition-colors";
+/** Scene-language helper: start values for the scene engine (lib/art/scene.ts). */
+const fx = (vars: Record<string, number | string>) => JSON.stringify(vars);
 
-// The dossier wall: each file sits at its own angle and height, like papers pinned to a board.
-const WALL = ["tilt--1", "tilt-1 md:mt-20", "tilt-1 md:-mt-4", "tilt--2 md:mt-14"];
+const START_BUTTON = "inline-block border-2 px-8 py-3 font-ui text-xl transition-colors";
+const STAGE = "relative col-span-full grid min-h-[100svh] content-center gap-x-6 gap-y-8 py-16 md:grid-cols-12";
+const CAMERA = "contents md:col-span-12 md:grid md:grid-cols-12 md:gap-x-6 md:gap-y-8";
+const WALL = ["tilt--1", "tilt-1 md:mt-16", "tilt-1 md:-mt-4", "tilt--2 md:mt-12"];
 const STAMP_TONE: Record<LaunchTrackId, "purple" | "cyan" | "pink"> = { purple: "purple", soc: "cyan", pentest: "pink", cloud: "cyan" };
 
 export default function Home() {
@@ -35,140 +38,216 @@ export default function Home() {
       <SmoothScroll />
       <Scanlines />
 
-      {/* ENTER — the poster: the wordmark collides with the operator you are about to become. */}
-      <PosterSection
-        tone="paper"
-        labelledBy="enter-heading"
-        className="neon-hero min-h-[100svh] pt-6"
-        backdrop={
-          <>
-            <HalftoneField tone="current" density={7} angle={20} fade="right" className="opacity-[0.14]" />
-            <NoiseLayer kind="grain" />
-          </>
-        }
-      >
-        <PosterSection.Labels className="col-span-full row-start-1 justify-between pb-8 opacity-80">
-          <SystemLabel>SYS.BOOT 00:00:01</SystemLabel>
-          <SystemLabel>NODE: PUBLIC</SystemLabel>
-          <SystemLabel className="hidden sm:inline">x:0412 y:0088</SystemLabel>
-          <SystemLabel>MODE: SIMULATION</SystemLabel>
-        </PosterSection.Labels>
-
-        <PosterSection.Type className="col-span-full row-start-2 self-center md:col-span-9 md:col-start-1 md:row-start-2">
-          <p className="mb-2 text-lg sm:text-xl">
-            <TypingText text="> BE READY TO LEARN" />
-          </p>
-          <PosterHeading as="h1" id="enter-heading" lines={[BRAND.name]} size="hero" cursor />
-        </PosterSection.Type>
-
-        <PosterSection.Art className="col-span-3 col-start-2 row-start-3 -mt-2 md:col-span-7 md:col-start-6 md:row-span-2 md:row-start-2 md:-mt-6">
-          <Parallax speed={-10}>
-            <div className="relative">
-              <EditorialIllustration slot="operator" alt="Ink-and-halftone portrait of an anonymous operator wearing a cyan simulation visor" />
-              <Annotation from={[0, 12]} to={[40, 22]} label="OPERATOR: YOU" />
-              <Annotation from={[64, 56]} to={[70, 34]} label="VISOR: SIM-ONLY" />
-              <Annotation from={[0, 92]} to={[30, 78]} label="CLEARANCE: RANK_00" />
-            </div>
-          </Parallax>
-        </PosterSection.Art>
-
-        <PosterSection.Caption className="col-span-full row-start-4 pb-20 pt-8 md:col-span-6 md:col-start-1 md:row-start-3 md:self-end md:pt-0">
-          <p className="text-lg sm:text-2xl">{BRAND.tagline}</p>
-          <div className="mt-8">
-            <Magnetic>
-              <Link href="/start" className={`${START_BUTTON} border-void bg-void text-paper hover:border-pink hover:bg-pink hover:text-void`}>
-                Start
-              </Link>
-            </Magnetic>
+      {/* 01 BOOT — the camera starts on fragments of the wordmark and pulls back until CYBERBLADE stands whole. */}
+      <PosterSection tone="void" sceneId="boot" labelledBy="boot-heading" backdrop={<NoiseLayer kind="crt" />}>
+        <ScrollScene pin length={2.2} mobile="play" className={STAGE}>
+          <div className="pointer-events-none absolute inset-x-0 top-6 z-[var(--z-ui)] flex flex-wrap justify-between gap-2 opacity-80">
+            <SystemLabel tone="cyan">SYS.BOOT 00:00:01</SystemLabel>
+            <SystemLabel>NODE: PUBLIC</SystemLabel>
+            <SystemLabel className="hidden sm:inline">OPERATOR: UNKNOWN</SystemLabel>
+            <SystemLabel tone="cyan">
+              {BRAND.name} {"//"} SYSTEM ONLINE
+            </SystemLabel>
           </div>
-        </PosterSection.Caption>
-      </PosterSection>
-      <InkEdge edge="bottom" tone="void" className="band-paper" />
 
-      {/* DISCOVER — the claim, set as big as the wordmark. */}
-      <PosterSection
-        tone="void"
-        labelledBy="discover-heading"
-        className="py-20 sm:py-32"
-        backdrop={<HalftoneField tone="cyan" density={9} fade="radial" className="opacity-30" />}
-      >
-        <PosterSection.Labels className="col-span-full mb-8">
-          <SystemLabel tone="cyan">SEQ 02/05</SystemLabel>
-        </PosterSection.Labels>
-        <PosterSection.Type className="col-span-full md:col-span-11">
-          <Reveal mode="mask">
-            <PosterHeading id="discover-heading" lines={["YOU'RE NOT", "WATCHING", "A COURSE_"]} size="section" />
-          </Reveal>
-        </PosterSection.Type>
-        <PosterSection.Caption className="col-span-full mt-12 md:col-span-5 md:col-start-8">
-          <Reveal mode="rise">
-            <p className="text-xl sm:text-2xl">
-              You&apos;re entering a training system. Every rank is a set of missions: learn the idea, prove it, do it on a simulated machine, then
-              debrief like a professional.
-            </p>
-          </Reveal>
-        </PosterSection.Caption>
-      </PosterSection>
+          <div data-from={fx({ scale: 0.3, opacity: 0 })} data-dur="0.6" className="pointer-events-none absolute inset-0">
+            <HalftoneField tone="cyan" density={8} fade="radial" className="opacity-25" />
+          </div>
+          <div data-from={fx({ scale: 1.6, opacity: 0, rotate: -20 })} data-at="0.3" data-dur="0.5" className="pointer-events-none absolute right-[2%] top-1/2 -translate-y-1/2 max-md:hidden">
+            <BladeObject className="h-[min(64vh,32rem)] w-[min(64vh,32rem)] text-ink" />
+          </div>
+          <p className="relative text-lg sm:text-xl md:col-span-12">
+            <TypingText text="> INITIALIZING CYBERBLADE" />
+          </p>
+          <div data-camera={fx({ scale: 6, rotate: -4 })} data-dur="0.7" className="relative md:col-span-12">
+            <div data-chars={fx({ y: 40, rotate: -8, stagger: 0.02 })} data-at="0.1" data-dur="0.5">
+              <PosterHeading as="h1" id="boot-heading" lines={[BRAND.name]} size="wordmark" split="chars" cursor />
+            </div>
+          </div>
 
-      {/* UNDERSTAND — the learning loop as a circuit; scrolling walks through its four stations. */}
-      <PosterSection tone="void" labelledBy="understand-heading" className="border-t border-line">
-        <ScrollScene pin steps={LOOP_STEPS.length} className="col-span-full grid min-h-[100svh] content-center gap-x-6 gap-y-6 py-10 md:grid-cols-12">
-          <PosterSection.Type className="md:col-span-7 md:row-start-1">
-            <SystemLabel tone="cyan">SEQ 03/05</SystemLabel>
-            <PosterHeading id="understand-heading" lines={["BREAKING INTO", "THE SYSTEM_"]} size="section" className="mt-2" />
-            <p className="mt-4 max-w-[52ch] text-lg text-muted">Every lesson runs the same four-step loop. Finish it and the next briefing is waiting.</p>
-          </PosterSection.Type>
-          <PosterSection.Art className="relative md:col-span-7 md:row-start-2">
-            <HalftoneField tone="cyan" density={7} fade="radial" className="opacity-20" />
-            <TechnicalDiagram {...LOOP_DIAGRAM} mobileNodes={stackVertically(LOOP_DIAGRAM.nodes)} tone="cyan" style="hand" ratio="21 / 9" numbered />
-          </PosterSection.Art>
-          <PosterSection.Caption className="md:col-span-5 md:col-start-8 md:row-span-2 md:row-start-1 md:self-center">
-            <ol className="space-y-5">
-              {LOOP_STEPS.map((s, i) => (
-                <li key={s.id} data-step-item={i} className="border-l-2 border-cyan pl-4">
-                  <h3 className="font-ui text-xl text-cyan">{s.label}</h3>
-                  <p className="text-muted">{s.text}</p>
-                </li>
-              ))}
-            </ol>
-          </PosterSection.Caption>
+          <div data-from={fx({ y: 120 })} data-at="0.45" data-dur="0.35" className="relative z-[var(--z-type)] md:col-span-7">
+            <p className="font-ui text-sm tracking-[0.25em] text-cyan sm:text-base">{BRAND.fullName.toUpperCase()}</p>
+            <p className="mt-3 text-xl sm:text-3xl">{BRAND.tagline}</p>
+            <div className="mt-8">
+              <Magnetic>
+                <Link href="/start" className={`${START_BUTTON} border-ink text-ink hover:border-cyan hover:bg-cyan hover:text-void`}>
+                  Start
+                </Link>
+              </Magnetic>
+            </div>
+          </div>
         </ScrollScene>
       </PosterSection>
 
-      {/* CHOOSE — the four launch tracks as files pinned to a wall, each with the shape of its work. */}
+      {/* 02 OPERATOR — the poster comes alive: layers of the portrait move at different depths as the camera slides past. */}
       <InkEdge edge="top" tone="paper" className="band-void" />
-      <PosterSection tone="paper" labelledBy="choose-heading" className="py-20 sm:py-28" backdrop={<NoiseLayer kind="photocopy" />}>
-        <PosterSection.Type className="col-span-full md:col-span-8">
-          <SystemLabel>SEQ 04/05</SystemLabel>
-          <PosterHeading id="choose-heading" lines={["CHOOSE", "YOUR PATH_"]} size="section" className="mt-2" />
-          <p className="mt-4 max-w-[52ch] text-lg">Everyone starts with the shared core. Then pick the job you want.</p>
-        </PosterSection.Type>
-        <div className="col-span-full mt-14 grid gap-10 md:grid-cols-2 md:gap-x-12">
-          {launch.map((t, i) => {
-            const glyph = TRACK_GLYPHS[t.id as LaunchTrackId];
-            return (
-              <Reveal key={t.id} mode="rise" delay={i * 0.08} className={WALL[i]}>
-                <DossierCard fileNo={`TRACK ${String(i + 1).padStart(2, "0")}`} title={t.title} stamp="OPEN" stampTone={STAMP_TONE[t.id as LaunchTrackId]}>
-                  <TechnicalDiagram title={glyph.title} nodes={glyph.nodes} links={glyph.links} labels={false} ratio="16 / 6" className="my-4" />
-                  <p>{glyph.line}</p>
-                </DossierCard>
-              </Reveal>
-            );
-          })}
-        </div>
+      <PosterSection tone="paper" sceneId="operator" labelledBy="operator-heading" className="neon-hero" backdrop={<NoiseLayer kind="grain" />}>
+        <ScrollScene pin length={2} mobile="play" className={STAGE}>
+          <div data-camera={fx({ x: "6%", rotateY: -10 })} className={CAMERA}>
+            <div className="relative md:col-span-6 md:col-start-1 md:self-center">
+              <SystemLabel>SEQ 02/07</SystemLabel>
+              <PosterHeading id="operator-heading" lines={["YOU'RE NOT", "WATCHING", "A COURSE_"]} size="section" className="mt-2" />
+              <p data-from={fx({ opacity: 0, y: 30 })} data-at="0.45" data-dur="0.25" className="mt-6 max-w-[48ch] text-lg sm:text-xl">
+                You&apos;re the operator. Every rank is a set of missions: learn the idea, prove it, practise it on a simulated machine, then debrief like a
+                professional.
+              </p>
+            </div>
+            <div className="relative mx-auto w-3/4 md:col-span-6 md:col-start-7 md:w-full">
+              <div data-from={fx({ x: "-12%", scale: 1.15 })} data-dur="0.9" className="absolute -inset-[8%]">
+                <HalftoneField tone="current" density={7} angle={20} fade="radial" className="opacity-20" />
+              </div>
+              <div data-from={fx({ x: "14%", rotateY: 18, scale: 1.08 })} data-dur="0.8" className="relative">
+                <EditorialIllustration slot="operator" alt="Ink-and-halftone portrait of an anonymous operator wearing a cyan simulation visor" />
+              </div>
+              <div data-from={fx({ x: "26%", opacity: 0 })} data-at="0.25" data-dur="0.5" className="absolute inset-0">
+                <Annotation from={[0, 12]} to={[40, 22]} label="OPERATOR: YOU" />
+                <Annotation from={[64, 56]} to={[70, 34]} label="VISOR: SIM-ONLY" />
+                <Annotation from={[0, 92]} to={[30, 78]} label="CLEARANCE: RANK_00" />
+              </div>
+            </div>
+          </div>
+        </ScrollScene>
+      </PosterSection>
+      <InkEdge edge="bottom" tone="void" className="band-paper" />
+
+      {/* 03 SIGNAL — CYBERBLADE splits into CYBER + BLADE while scattered readings settle into a network. */}
+      <PosterSection tone="void" sceneId="signal" labelledBy="signal-heading">
+        <ScrollScene pin length={2.4} steps={SIGNAL_DIAGRAM.nodes.length} mobile="play" className={STAGE}>
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden font-display text-[length:var(--poster-section)] leading-none text-line max-md:hidden">
+            <span data-from={fx({ x: "30vw", y: "30vh", scale: 1.6 })} data-dur="0.45" className="absolute left-[2%] top-[6%]">
+              CYBER
+            </span>
+            <span data-from={fx({ x: "-30vw", y: "-30vh", scale: 1.6 })} data-dur="0.45" className="absolute bottom-[6%] right-[2%]">
+              BLADE
+            </span>
+          </div>
+          <div data-camera={fx({ scale: 0.82 })} className={CAMERA}>
+            <div className="relative md:col-span-5 md:self-center">
+              <SystemLabel tone="cyan">SEQ 03/07</SystemLabel>
+              <div data-chars={fx({ yPercent: -90, rotate: -10, stagger: 0.03 })} data-at="0.3" data-dur="0.3" className="mt-2">
+                <PosterHeading id="signal-heading" lines={["SIGNAL_"]} size="section" split="chars" />
+              </div>
+              <p data-from={fx({ opacity: 0, y: 24 })} data-at="0.62" data-dur="0.18" className="mt-6 max-w-[44ch] text-lg text-muted">
+                Every system is talking: connections, logins, lookups. Before you can protect anything, you learn to hear it.
+              </p>
+            </div>
+            <div data-morph-at="0.1" data-morph-dur="0.7" className="relative md:col-span-7">
+              <HalftoneField tone="cyan" density={7} fade="radial" className="opacity-20" />
+              <TechnicalDiagram {...SIGNAL_DIAGRAM} mobileNodes={stackVertically(SIGNAL_DIAGRAM.nodes)} tone="cyan" style="hand" ratio="16 / 11" />
+            </div>
+          </div>
+        </ScrollScene>
+      </PosterSection>
+
+      {/* 04 TRACE — the camera follows one route hop by hop as it draws itself across the frame. */}
+      <PosterSection tone="void" sceneId="trace" labelledBy="trace-heading" className="border-t border-line">
+        <ScrollScene pin length={2.4} steps={TRACE_DIAGRAM.nodes.length} mobile="play" className={STAGE}>
+          <div className="relative md:col-span-12">
+            <SystemLabel tone="pink">SEQ 04/07</SystemLabel>
+            <PosterHeading id="trace-heading" lines={["TRACE_"]} size="section" className="mt-2 text-pink" />
+            <p className="mt-4 max-w-[52ch] text-lg text-muted">
+              Follow one route hop by hop: where it was first seen, what it touched, where it ended. That&apos;s how an investigation reconstructs what
+              happened.
+            </p>
+          </div>
+          <div data-camera={fx({ xPercent: 18, rotateY: -8 })} className="draw-path relative md:col-span-12">
+            <TechnicalDiagram {...TRACE_DIAGRAM} mobileNodes={stackVertically(TRACE_DIAGRAM.nodes)} tone="pink" style="hand" ratio="21 / 7" numbered />
+            <div data-from={fx({ opacity: 0, x: 40 })} data-at="0.8" data-dur="0.15" className="mt-4 text-right">
+              <SystemLabel tone="pink">ROUTE RECONSTRUCTED: 5 HOPS</SystemLabel>
+            </div>
+          </div>
+        </ScrollScene>
+      </PosterSection>
+
+      {/* 05 ANALYZE — the word arrives out of depth, and the network re-arranges into readings you can act on. */}
+      <PosterSection tone="void" sceneId="analyze" labelledBy="analyze-heading" className="border-t border-line">
+        <ScrollScene pin length={2.4} mobile="play" className={STAGE}>
+          <div data-camera={fx({ rotateY: 16, rotateX: 6, scale: 0.88 })} className={CAMERA}>
+            <div className="relative md:col-span-12">
+              <SystemLabel tone="cyan">SEQ 05/07</SystemLabel>
+              <div data-chars={fx({ z: -900, rotateY: 50, stagger: 0.035 })} data-dur="0.4" className="mt-2">
+                <PosterHeading id="analyze-heading" lines={["ANALYZE_"]} size="section" split="chars" />
+              </div>
+            </div>
+            <div data-morph-at="0.2" data-morph-dur="0.6" className="relative md:col-span-8">
+              <TechnicalDiagram {...ANALYZE_DIAGRAM} mobileNodes={stackVertically(ANALYZE_DIAGRAM.nodes)} tone="cyan" ratio="16 / 8" />
+            </div>
+            <div className="relative md:col-span-4 md:self-center">
+              <div data-from={fx({ x: "40%", rotate: 12, opacity: 0 })} data-at="0.35" data-dur="0.35" className="mx-auto w-2/3 text-ink md:w-full">
+                <EditorialIllustration slot="signal" decorative />
+              </div>
+              <p className="mt-6 text-lg text-muted">Logs, packets, processes: evidence tells you what happened. You&apos;ll learn to read it.</p>
+            </div>
+          </div>
+        </ScrollScene>
+      </PosterSection>
+
+      {/* 06 DEFEND — the traced route rebuilds itself as defended zones; the camera pulls out to show the whole system. */}
+      <PosterSection tone="void" sceneId="defend" labelledBy="defend-heading" className="border-t border-cyan">
+        <ScrollScene pin length={2.2} mobile="play" className={STAGE}>
+          <div data-camera={fx({ scale: 1.15 })} className={CAMERA}>
+            <div className="relative md:col-span-8">
+              <SystemLabel tone="cyan">SEQ 06/07</SystemLabel>
+              <PosterHeading id="defend-heading" lines={["DEFEND_"]} size="section" className="mt-2 text-cyan" />
+              <p className="mt-4 max-w-[48ch] text-lg text-muted">Detect, contain, harden. The same understanding, turned into protection.</p>
+            </div>
+            <div className="relative hidden md:col-span-4 md:block">
+              <BladeMark className="ml-auto h-40 w-40 text-cyan" />
+            </div>
+            <div data-morph-at="0.1" data-morph-dur="0.6" className="relative md:col-span-12">
+              <TechnicalDiagram {...DEFEND_DIAGRAM} mobileNodes={stackVertically(DEFEND_DIAGRAM.nodes)} tone="cyan" style="hand" ratio="21 / 5" numbered />
+            </div>
+            <ul aria-label="The four disciplines" className="relative flex flex-wrap gap-x-10 gap-y-2 text-[length:var(--poster-label)] md:col-span-12">
+              {["LEARN.", "TRACE.", "ANALYZE.", "DEFEND."].map((w, i) => (
+                <li key={w} data-from={fx({ y: 60, rotate: i % 2 ? 6 : -6, opacity: 0 })} data-at={String(0.6 + i * 0.07)} data-dur="0.15" className="font-display">
+                  {w}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </ScrollScene>
+      </PosterSection>
+
+      {/* 07 ENTER THE SYSTEM — everything resolves into the training system, the four paths, and the way in. */}
+      <InkEdge edge="top" tone="paper" className="band-void" />
+      <PosterSection tone="paper" sceneId="enter" labelledBy="enter-heading" className="py-20 sm:py-28" backdrop={<NoiseLayer kind="photocopy" />}>
+        <ScrollScene scrub={false} mobile="play" className="col-span-full">
+          <div className="max-w-3xl">
+            <SystemLabel>SEQ 07/07</SystemLabel>
+            <PosterHeading id="enter-heading" lines={["ENTER THE", "SYSTEM_"]} size="section" className="mt-2" />
+          </div>
+          <ol className="mt-12 grid gap-0.5 border-2 border-current bg-current sm:grid-cols-2 lg:grid-cols-3">
+            {SYSTEM_STAGES.map((s, i) => (
+              <li key={s.id} data-stage={s.label} data-from={fx({ y: 40, opacity: 0 })} data-at={String(0.05 + i * 0.07)} data-dur="0.2" className="band-paper p-5">
+                <SystemLabel>{String(i + 1).padStart(2, "0")}</SystemLabel>
+                <h3 className="mt-1 font-display text-3xl">{s.label}</h3>
+                <p className="mt-2">{s.text}</p>
+              </li>
+            ))}
+          </ol>
+
+          <h2 className="mt-20 font-ui text-2xl">Then pick the job you want</h2>
+          <p className="mt-2 max-w-[52ch] text-lg">Everyone starts with the shared core. After Rank 2 you choose a path.</p>
+          <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-x-12">
+            {launch.map((t, i) => {
+              const glyph = TRACK_GLYPHS[t.id as LaunchTrackId];
+              return (
+                <div key={t.id} data-from={fx({ y: 60, rotate: i % 2 ? 4 : -4, opacity: 0 })} data-at={String(0.45 + i * 0.06)} data-dur="0.2" className={WALL[i]}>
+                  <DossierCard fileNo={`TRACK ${String(i + 1).padStart(2, "0")}`} title={t.title} stamp="OPEN" stampTone={STAMP_TONE[t.id as LaunchTrackId]}>
+                    <TechnicalDiagram title={glyph.title} nodes={glyph.nodes} links={glyph.links} labels={false} ratio="16 / 6" className="my-4" />
+                    <p>{glyph.line}</p>
+                  </DossierCard>
+                </div>
+              );
+            })}
+          </div>
+        </ScrollScene>
       </PosterSection>
       <InkEdge edge="bottom" tone="cyan" className="band-paper" />
 
-      {/* START — the way in. */}
-      <PosterSection
-        tone="cyan"
-        labelledBy="start-heading"
-        className="py-20 sm:py-28"
-        backdrop={<HalftoneField tone="current" density={6} fade="left" className="opacity-20" />}
-      >
+      <PosterSection tone="cyan" labelledBy="start-heading" className="py-20 sm:py-28" backdrop={<HalftoneField tone="current" density={6} fade="left" className="opacity-20" />}>
         <PosterSection.Type className="col-span-full md:col-span-8">
-          <SystemLabel>SEQ 05/05</SystemLabel>
-          <PosterHeading id="start-heading" lines={["START AT", "RANK_00"]} size="section" cursor className="mt-2" />
+          <PosterHeading id="start-heading" lines={["START AT", "RANK_00"]} size="section" cursor />
         </PosterSection.Type>
         <PosterSection.Caption className="col-span-full mt-10 md:col-span-4 md:self-end">
           <p className="text-lg">No experience needed. Choose a handle, accept the rules, and begin at Rank 0.</p>

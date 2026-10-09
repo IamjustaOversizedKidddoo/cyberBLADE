@@ -9,7 +9,8 @@ test.describe("smooth scrolling keeps the keyboard in charge", () => {
     await page.keyboard.press("End");
     await expect(page.locator("footer")).toBeInViewport({ timeout: 5000 });
     await page.keyboard.press("Home");
-    await expect(page.locator("#enter-heading")).toBeInViewport({ timeout: 5000 });
+    // At the very top the wordmark is the camera's macro close-up, so check the scroll position itself.
+    await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 10_000 }).toBeLessThan(5);
   });
 
   test("tabbing to a link far down the page brings it into view", async ({ page }) => {

@@ -1,4 +1,4 @@
-import type { DiagramLink, DiagramNode } from "./diagram";
+import type { DiagramLink, DiagramNode, Point } from "./diagram";
 
 type Diagram = { title: string; nodes: DiagramNode[]; links: DiagramLink[] };
 
@@ -98,4 +98,90 @@ export const TRACK_GLYPHS: Record<LaunchTrackId, Diagram & { line: string }> = {
       { from: "r1", to: "r2", dashed: true },
     ],
   },
+};
+
+// ===== The cinematic sequence (spec 2026-10-08 cinematic §4, owner option 1: an investigation-led story) =====
+
+/** The scenes of the landing sequence, in order. `id` is the scene's heading id. */
+export const SCENES = [
+  { id: "boot", seq: "01", name: "BOOT" },
+  { id: "operator", seq: "02", name: "OPERATOR" },
+  { id: "signal", seq: "03", name: "SIGNAL" },
+  { id: "trace", seq: "04", name: "TRACE" },
+  { id: "analyze", seq: "05", name: "ANALYZE" },
+  { id: "defend", seq: "06", name: "DEFEND" },
+  { id: "enter", seq: "07", name: "ENTER THE SYSTEM" },
+] as const;
+
+/** What the sequence resolves into: the stages of the training system, in product terms. */
+export const SYSTEM_STAGES = [
+  { id: "learn", label: "LEARN", text: "Lessons that start simple and go all the way to professional depth." },
+  { id: "practice", label: "PRACTICE", text: "Terminal checks and labs on simulated machines in your browser." },
+  { id: "trace", label: "TRACE", text: "Follow activity across networks and systems." },
+  { id: "analyze", label: "ANALYZE", text: "Read logs, packets and processes like evidence." },
+  { id: "defend", label: "DEFEND", text: "Detect, contain and harden." },
+  { id: "master", label: "MASTER", text: "Timed rank challenges and exam-style practice." },
+] as const;
+
+const node = (id: string, x: number, y: number, label: string, morph?: Point[], kind?: DiagramNode["kind"]): DiagramNode => ({ id, x, y, label, kind, morph });
+
+/** SIGNAL: scattered readings (a dot field) settle into a network. */
+const FIELD: Record<string, Point> = { a: { x: 12, y: 80 }, b: { x: 30, y: 12 }, c: { x: 46, y: 70 }, d: { x: 63, y: 30 }, e: { x: 78, y: 86 }, f: { x: 90, y: 18 } };
+const NET: Record<string, Point> = { a: { x: 10, y: 50 }, b: { x: 30, y: 22 }, c: { x: 32, y: 74 }, d: { x: 56, y: 48 }, e: { x: 78, y: 24 }, f: { x: 82, y: 72 } };
+const NET_LABELS: Record<string, string> = { a: "gateway", b: "dns", c: "mail", d: "web", e: "auth", f: "files" };
+const NET_LINKS: DiagramLink[] = [
+  { from: "a", to: "b" },
+  { from: "a", to: "c" },
+  { from: "b", to: "d" },
+  { from: "c", to: "d" },
+  { from: "d", to: "e" },
+  { from: "d", to: "f" },
+  { from: "e", to: "f", dashed: true },
+];
+export const SIGNAL_DIAGRAM: Diagram = {
+  title: "Scattered readings settle into a map of six connected systems",
+  nodes: Object.keys(NET).map((k) => node(k, NET[k].x, NET[k].y, NET_LABELS[k], [FIELD[k]], "signal")),
+  links: NET_LINKS,
+};
+
+/** ANALYZE: the same network re-arranges into a grid of readings — a dashboard you can read. */
+const GRID: Record<string, Point> = { a: { x: 15, y: 30 }, b: { x: 50, y: 30 }, c: { x: 85, y: 30 }, d: { x: 15, y: 74 }, e: { x: 50, y: 74 }, f: { x: 85, y: 74 } };
+export const ANALYZE_DIAGRAM: Diagram = {
+  title: "The network re-arranged as a grid of readings, one per system",
+  nodes: Object.keys(GRID).map((k) => node(k, GRID[k].x, GRID[k].y, NET_LABELS[k], [NET[k]], "host")),
+  links: [
+    { from: "a", to: "b", shape: "orthogonal" },
+    { from: "b", to: "c", shape: "orthogonal" },
+    { from: "d", to: "e", shape: "orthogonal" },
+    { from: "e", to: "f", shape: "orthogonal" },
+    { from: "b", to: "e", dashed: true },
+  ],
+};
+
+/** TRACE: one route followed hop by hop through the systems, the way an investigator reconstructs it. */
+const ROUTE: Record<string, Point> = { r1: { x: 6, y: 78 }, r2: { x: 30, y: 60 }, r3: { x: 54, y: 40 }, r4: { x: 78, y: 26 }, r5: { x: 94, y: 12 } };
+const ROUTE_LABELS: Record<string, string> = { r1: "first seen", r2: "proxy", r3: "web", r4: "app", r5: "database" };
+export const TRACE_DIAGRAM: Diagram = {
+  title: "A route followed hop by hop, from where it was first seen to the database",
+  nodes: Object.keys(ROUTE).map((k) => node(k, ROUTE[k].x, ROUTE[k].y, ROUTE_LABELS[k], undefined, "host")),
+  links: [
+    { from: "r1", to: "r2", shape: "orthogonal" },
+    { from: "r2", to: "r3", shape: "orthogonal" },
+    { from: "r3", to: "r4", shape: "orthogonal" },
+    { from: "r4", to: "r5", shape: "orthogonal" },
+  ],
+};
+
+/** DEFEND: the traced route's hops become layered, segmented zones with a control between each. */
+const ZONES: Record<string, Point> = { r1: { x: 10, y: 50 }, r2: { x: 30, y: 50 }, r3: { x: 50, y: 50 }, r4: { x: 70, y: 50 }, r5: { x: 90, y: 50 } };
+const ZONE_LABELS: Record<string, string> = { r1: "edge", r2: "filter", r3: "dmz", r4: "internal", r5: "vault" };
+export const DEFEND_DIAGRAM: Diagram = {
+  title: "The same route rebuilt as five defended zones in a row, from the edge to the vault",
+  nodes: Object.keys(ZONES).map((k) => node(k, ZONES[k].x, ZONES[k].y, ZONE_LABELS[k], [ROUTE[k]], "step")),
+  links: [
+    { from: "r1", to: "r2" },
+    { from: "r2", to: "r3" },
+    { from: "r3", to: "r4" },
+    { from: "r4", to: "r5" },
+  ],
 };

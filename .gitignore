@@ -47,3 +47,6 @@ next-env.d.ts
 /playwright-report
 .remember/
 .superpowers/
+
+# Local copy of the 10k-websites skill (installed user-level in ~/.claude/skills)
+/10k-websites/

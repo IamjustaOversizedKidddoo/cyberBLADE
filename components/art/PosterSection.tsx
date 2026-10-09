@@ -9,6 +9,8 @@ type Props = {
   labelledBy?: string;
   /** Full-bleed textures/art painted behind the composition (HalftoneField, NoiseLayer…). */
   backdrop?: React.ReactNode;
+  /** Marks the band as a scene of a cinematic sequence (data-scene-id). */
+  sceneId?: string;
   className?: string;
   children: React.ReactNode;
 };
@@ -18,9 +20,9 @@ type Props = {
  * stack in a fixed order (art under type, labels on top). The band clips anything that bleeds past
  * its edges, so oversized type never causes sideways page scroll.
  */
-export function PosterSection({ tone, labelledBy, backdrop, className = "", children }: Props) {
+export function PosterSection({ tone, labelledBy, backdrop, sceneId, className = "", children }: Props) {
   return (
-    <section aria-labelledby={labelledBy} data-band={tone} className={`relative overflow-clip ${TONES[tone]} ${className}`}>
+    <section aria-labelledby={labelledBy} data-band={tone} data-scene-id={sceneId} className={`relative overflow-clip ${TONES[tone]} ${className}`}>
       {backdrop}
       <div className="poster-grid relative">{children}</div>
     </section>
