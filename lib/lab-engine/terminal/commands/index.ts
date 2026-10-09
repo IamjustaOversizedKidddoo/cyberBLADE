@@ -12,9 +12,12 @@ import { groups } from "./groups";
 import { head, tail } from "./head-tail";
 import { id } from "./id";
 import { ip } from "./ip";
+import { kill } from "./kill";
 import { ls } from "./ls";
 import { mkdir } from "./mkdir";
+import { pgrep } from "./pgrep";
 import { ping } from "./ping";
+import { ps } from "./ps";
 import { pwd } from "./pwd";
 import { clear, history, hostname, whoami } from "./simple";
 import { ss } from "./ss";
@@ -40,7 +43,7 @@ const help: Command = {
   },
 };
 
-/** The lab command set (Rank 0 basics + Rank 1 networking). Each command lives in its own file. */
+/** The lab command set (Rank 0 basics + Rank 1 networking and Linux). Each command lives in its own file. */
 export const COMMANDS: Record<string, Command> = Object.fromEntries(
-  [cat, cd, chgrp, chmod, chown, clear, curl, dig, echo, env, exportCmd, find, grep, groups, head, help, history, hostname, id, ip, ls, mkdir, ping, pwd, ss, submit, tail, touch, tr, traceroute, umask, uname, unset, wc, whoami].map((c) => [c.name, c]),
+  [cat, cd, chgrp, chmod, chown, clear, curl, dig, echo, env, exportCmd, find, grep, groups, head, help, history, hostname, id, ip, kill, ls, mkdir, pgrep, ping, ps, pwd, ss, submit, tail, touch, tr, traceroute, umask, uname, unset, wc, whoami].map((c) => [c.name, c]),
 );
