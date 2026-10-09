@@ -24,7 +24,7 @@ export function LandingHeader() {
           <a href="#tracks" className="hidden font-ui text-sm tracking-wider underline-offset-4 hover:underline sm:inline">
             Tracks
           </a>
-          <Link href="/start" className="btn-glitch border-2 border-current px-4 py-1.5 font-ui text-sm tracking-wider">
+          <Link href="/start" className="btn-glitch inline-flex min-h-[44px] items-center justify-center border-2 border-current px-4 py-1.5 font-ui text-sm tracking-wider">
             Start
           </Link>
         </div>

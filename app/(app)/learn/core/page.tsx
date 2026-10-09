@@ -44,7 +44,7 @@ function LessonList({ lessons, progress, open }: { lessons: Lesson[]; progress: 
             {open ? (
               <Link
                 href={`/learn/${l.id}`}
-                className={`block border p-4 hover:border-cyan ${status === "completed" ? "border-purple" : "border-line"}`}
+                className={`block min-h-[44px] border p-4 hover:border-cyan ${status === "completed" ? "border-purple" : "border-line"}`}
               >
                 {body}
               </Link>
@@ -69,7 +69,7 @@ function ChallengeCard({ rank, summary }: { rank: number; summary: RankSummary }
         {kind === "passed" ? `Passed — Rank ${rank + 1} · ${rankName(rank + 1)} unlocked.` : CHALLENGE_TEXT[kind]}
       </p>
       {kind !== "locked" && (
-        <Link href={`/challenge/${rank}`} className="border border-cyan px-5 py-2 font-ui text-cyan hover:bg-cyan hover:text-void">
+        <Link href={`/challenge/${rank}`} className="inline-flex min-h-[44px] items-center justify-center border border-cyan px-5 py-2 font-ui text-cyan hover:bg-cyan hover:text-void">
           {kind === "active" ? "Return to the challenge" : "Open the challenge"}
         </Link>
       )}

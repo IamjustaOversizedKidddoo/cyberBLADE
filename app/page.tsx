@@ -36,7 +36,7 @@ import { TRACKS } from "@/lib/catalog/tracks";
 /** Scene-language helper: start values for the scene engine (lib/art/scene.ts). */
 const fx = (vars: Record<string, number | string>) => JSON.stringify(vars);
 
-const START_BUTTON = "btn-glitch inline-block border-2 px-8 py-3 font-ui text-xl";
+const START_BUTTON = "btn-glitch inline-flex min-h-[44px] items-center justify-center border-2 px-8 py-3 font-ui text-xl";
 const PLATE = "bg-void px-2 py-0.5 [box-decoration-break:clone]";
 const STAGE ="relative col-span-full grid min-h-[100svh] content-center gap-x-6 gap-y-8 py-16 md:grid-cols-12";
 const CAMERA = "contents md:col-span-12 md:grid md:grid-cols-12 md:gap-x-6 md:gap-y-8";

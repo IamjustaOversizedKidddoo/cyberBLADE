@@ -228,8 +228,8 @@
 .tilt-2 { rotate: 3deg; }
 .tilt--1 { rotate: -1.5deg; }
 .tilt--2 { rotate: -3deg; }
-@media (max-width: 639px) {
-  .tilt-1, .tilt-2, .tilt--1, .tilt--2 { rotate: none; }
+@media (max-width: 767px) {
+  .tilt-1, .tilt-2, .tilt--1, .tilt--2 { rotate: none; transform: none !important; }
 }
 
 /* Diagrams: a highlighted node, and scroll scenes stepping through nodes and their notes.

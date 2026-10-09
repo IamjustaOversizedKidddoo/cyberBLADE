@@ -59,7 +59,8 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
             return (
               <li
                 key={r.rank}
-                className={`grid grid-cols-[4rem_1fr_auto] gap-px bg-void ${isCurrent ? "ring-2 ring-cyan ring-inset" : ""}`}
+                data-rank-node={r.rank}
+                className={`grid grid-cols-1 sm:grid-cols-[4rem_1fr_auto] gap-px bg-void ${isCurrent ? "ring-2 ring-cyan ring-inset" : ""}`}
               >
                 {/* Giant rank numeral cell */}
                 <div
@@ -102,7 +103,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                   {isCurrent && (
                     <Link
                       href={`/learn/core#rank-${r.rank}`}
-                      className="btn-glitch border-2 border-cyan px-5 py-2 font-ui text-sm text-cyan hover:bg-cyan hover:text-void"
+                      className="btn-glitch inline-flex min-h-[44px] items-center justify-center border-2 border-cyan px-5 py-2 font-ui text-sm text-cyan hover:bg-cyan hover:text-void"
                     >
                       {rankProgress.done > 0 ? "CONTINUE →" : "BEGIN →"}
                     </Link>
@@ -110,7 +111,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                   {isCleared && (
                     <Link
                       href={`/learn/core#rank-${r.rank}`}
-                      className="border border-purple px-4 py-2 font-ui text-xs text-purple hover:bg-purple hover:text-void transition-colors"
+                      className="inline-flex min-h-[44px] items-center justify-center border border-purple px-4 py-2 font-ui text-xs text-purple hover:bg-purple hover:text-void transition-colors"
                     >
                       REVIEW
                     </Link>
@@ -127,10 +128,12 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
         </ol>
 
         {/* XP tally */}
-        <div className="mt-4 flex items-center gap-4 border border-line px-5 py-3">
-          <SystemLabel className="text-muted">XP TOTAL</SystemLabel>
-          <span className="font-display text-3xl text-cyan leading-none">{xp.toLocaleString("en-US")}</span>
-          <div aria-hidden="true" className="flex-1 h-px bg-line" />
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border border-line px-4 py-3 sm:px-5">
+          <div className="flex items-center gap-3">
+            <SystemLabel className="text-muted">XP TOTAL</SystemLabel>
+            <span className="font-display text-3xl text-cyan leading-none">{xp.toLocaleString("en-US")}</span>
+          </div>
+          <div aria-hidden="true" className="hidden sm:block flex-1 h-px bg-line mx-2" />
           <SystemLabel className="text-muted/60">
             {rankProgress.done}/{rankProgress.total} LESSONS COMPLETE
           </SystemLabel>
@@ -160,7 +163,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
               )}
               <div className="relative">
                 <SystemLabel className="text-muted/60">
-                  TRACK {String(i + 1).padStart(2, "0")} // {t.group.toUpperCase()}
+                  {`TRACK ${String(i + 1).padStart(2, "0")} // ${t.group.toUpperCase()}`}
                 </SystemLabel>
                 <p className="mt-2 font-ui text-lg text-ink">{t.title}</p>
                 <p className="mt-3 border-t border-line pt-3 font-ui text-xs tracking-wider text-muted/40">

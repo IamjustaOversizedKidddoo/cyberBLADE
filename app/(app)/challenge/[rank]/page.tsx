@@ -250,7 +250,7 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
                 <li className="flex gap-3">
                   <span className="font-ui text-cyan">02</span>
                   <span>
-                    Your machine is seeded uniquely — answers differ from every other operator's.
+                    Your machine is seeded uniquely — answers differ from every other operator&apos;s.
                   </span>
                 </li>
                 <li className="flex gap-3">
