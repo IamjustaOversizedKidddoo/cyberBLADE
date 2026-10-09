@@ -1,8 +1,9 @@
 /** Geometry for CYBERBLADE's technical diagrams. Coordinates are in a 0–100 viewBox on both axes. */
 
-export type DiagramNode = { id: string; x: number; y: number; label: string; kind?: "host" | "step" | "rank" | "cloud" | "signal" };
-export type DiagramLink = { from: string; to: string; shape?: "straight" | "orthogonal" | "curve"; dashed?: boolean };
 export type Point = { x: number; y: number };
+/** A node; `morph` lists where it was in earlier scenes (oldest first) — a scene interpolates from those to x/y. */
+export type DiagramNode = { id: string; x: number; y: number; label: string; kind?: "host" | "step" | "rank" | "cloud" | "signal"; morph?: Point[] };
+export type DiagramLink = { from: string; to: string; shape?: "straight" | "orthogonal" | "curve"; dashed?: boolean };
 
 const r = (n: number) => Math.round(n * 100) / 100;
 
