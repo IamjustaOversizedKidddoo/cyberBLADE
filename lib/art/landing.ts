@@ -159,7 +159,7 @@ export const ANALYZE_DIAGRAM: Diagram = {
 };
 
 /** TRACE: one route followed hop by hop through the systems, the way an investigator reconstructs it. */
-const ROUTE: Record<string, Point> = { r1: { x: 6, y: 78 }, r2: { x: 30, y: 60 }, r3: { x: 54, y: 40 }, r4: { x: 78, y: 26 }, r5: { x: 94, y: 12 } };
+const ROUTE: Record<string, Point> = { r1: { x: 6, y: 78 }, r2: { x: 30, y: 60 }, r3: { x: 54, y: 40 }, r4: { x: 78, y: 26 }, r5: { x: 90, y: 12 } };
 const ROUTE_LABELS: Record<string, string> = { r1: "first seen", r2: "proxy", r3: "web", r4: "app", r5: "database" };
 export const TRACE_DIAGRAM: Diagram = {
   title: "A route followed hop by hop, from where it was first seen to the database",
@@ -172,16 +172,28 @@ export const TRACE_DIAGRAM: Diagram = {
   ],
 };
 
-/** DEFEND: the traced route's hops become layered, segmented zones with a control between each. */
-const ZONES: Record<string, Point> = { r1: { x: 10, y: 50 }, r2: { x: 30, y: 50 }, r3: { x: 50, y: 50 }, r4: { x: 70, y: 50 }, r5: { x: 90, y: 50 } };
-const ZONE_LABELS: Record<string, string> = { r1: "edge", r2: "filter", r3: "dmz", r4: "internal", r5: "vault" };
-export const DEFEND_DIAGRAM: Diagram = {
-  title: "The same route rebuilt as five defended zones in a row, from the edge to the vault",
-  nodes: Object.keys(ZONES).map((k) => node(k, ZONES[k].x, ZONES[k].y, ZONE_LABELS[k], [ROUTE[k]], "step")),
-  links: [
-    { from: "r1", to: "r2" },
-    { from: "r2", to: "r3" },
-    { from: "r3", to: "r4" },
-    { from: "r4", to: "r5" },
-  ],
-};
+/** TRACE: what the investigator writes down at each hop. Ordinary log evidence, one line per system. */
+export const TRACE_EVIDENCE = [
+  { hop: "r1", time: "09:14:02", note: "Connection logged at the edge firewall" },
+  { hop: "r2", time: "09:14:03", note: "Proxy forwards the request and records the source" },
+  { hop: "r3", time: "09:14:05", note: "Web server access log: GET /login" },
+  { hop: "r4", time: "09:14:07", note: "App log: sign-in for user j.doe" },
+  { hop: "r5", time: "09:14:08", note: "Query from the app's service account" },
+] as const;
+
+/** ANALYZE: an example day of triage, from everything logged down to the one thing that matters. */
+export const TRIAGE = [
+  { value: 12480, label: "events logged" },
+  { value: 318, label: "alerts raised" },
+  { value: 9, label: "worth a closer look" },
+  { value: 1, label: "real incident" },
+] as const;
+
+/** DEFEND: defence in depth, outermost layer first, each with the control that guards it. */
+export const DEFENCE_LAYERS = [
+  { name: "EDGE", control: "Firewall rules" },
+  { name: "NETWORK", control: "Segmentation" },
+  { name: "HOST", control: "Patching and endpoint monitoring" },
+  { name: "IDENTITY", control: "Two-step sign-in, least privilege" },
+  { name: "DATA", control: "Encryption and backups" },
+] as const;

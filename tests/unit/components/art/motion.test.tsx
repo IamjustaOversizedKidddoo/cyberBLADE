@@ -69,6 +69,10 @@ describe("server HTML is the final, readable state", () => {
     render(<Counter to={99999} format={(n) => n.toLocaleString("en-IN")} />);
     expect(screen.getAllByText("99,999").length).toBeGreaterThan(0);
   });
+
+  test("Counter can group thousands without a format function (usable from server components)", () => {
+    expect(renderToString(<Counter to={12480} grouped />)).toContain("12,480");
+  });
 });
 
 test("Magnetic leaves the child's keyboard behaviour alone", () => {
