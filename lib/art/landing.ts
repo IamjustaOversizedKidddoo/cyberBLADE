@@ -69,7 +69,7 @@ export const TRACK_GLYPHS: Record<LaunchTrackId, Diagram & { line: string }> = {
   },
   pentest: {
     title: "An attack path: from the internet, through a web server and an internal host, to the target",
-    line: "Find the way in before attackers do — with permission, and with a report.",
+    line: "Find the way in before attackers do, with permission and with a report.",
     nodes: [
       { id: "net", x: 8, y: 82, label: "internet" },
       { id: "web", x: 36, y: 56, label: "web", kind: "host" },

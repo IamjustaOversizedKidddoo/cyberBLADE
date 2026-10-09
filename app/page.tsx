@@ -40,7 +40,7 @@ export default function Home() {
 
       {/* 01 BOOT — the camera starts on fragments of the wordmark and pulls back until CYBERBLADE stands whole. */}
       <PosterSection tone="void" sceneId="boot" labelledBy="boot-heading" backdrop={<NoiseLayer kind="crt" />}>
-        <ScrollScene pin length={2.2} mobile="play" className={STAGE}>
+        <ScrollScene pin length={2.6} mobile="play" className={STAGE}>
           <div className="pointer-events-none absolute inset-x-0 top-6 z-[var(--z-ui)] flex flex-wrap justify-between gap-2 opacity-80">
             <SystemLabel tone="cyan">SYS.BOOT 00:00:01</SystemLabel>
             <SystemLabel>NODE: PUBLIC</SystemLabel>
@@ -82,7 +82,7 @@ export default function Home() {
       {/* 02 OPERATOR — the poster comes alive: layers of the portrait move at different depths as the camera slides past. */}
       <InkEdge edge="top" tone="paper" className="band-void" />
       <PosterSection tone="paper" sceneId="operator" labelledBy="operator-heading" className="neon-hero" backdrop={<NoiseLayer kind="grain" />}>
-        <ScrollScene pin length={2} mobile="play" className={STAGE}>
+        <ScrollScene pin length={2.6} mobile="play" className={STAGE}>
           <div data-camera={fx({ x: "6%", rotateY: -10 })} className={CAMERA}>
             <div className="relative md:col-span-6 md:col-start-1 md:self-center">
               <SystemLabel>SEQ 02/07</SystemLabel>
@@ -112,7 +112,7 @@ export default function Home() {
 
       {/* 03 SIGNAL — CYBERBLADE splits into CYBER + BLADE while scattered readings settle into a network. */}
       <PosterSection tone="void" sceneId="signal" labelledBy="signal-heading">
-        <ScrollScene pin length={2.4} steps={SIGNAL_DIAGRAM.nodes.length} mobile="play" className={STAGE}>
+        <ScrollScene pin length={2.6} steps={SIGNAL_DIAGRAM.nodes.length} mobile="play" className={STAGE}>
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden font-display text-[length:var(--poster-section)] leading-none text-line max-md:hidden">
             <span data-from={fx({ x: "30vw", y: "30vh", scale: 1.6 })} data-dur="0.45" className="absolute left-[2%] top-[6%]">
               CYBER
@@ -141,7 +141,7 @@ export default function Home() {
 
       {/* 04 TRACE — the camera follows one route hop by hop as it draws itself across the frame. */}
       <PosterSection tone="void" sceneId="trace" labelledBy="trace-heading" className="border-t border-line">
-        <ScrollScene pin length={2.4} steps={TRACE_DIAGRAM.nodes.length} mobile="play" className={STAGE}>
+        <ScrollScene pin length={2.6} steps={TRACE_DIAGRAM.nodes.length} mobile="play" className={STAGE}>
           <div className="relative md:col-span-12">
             <SystemLabel tone="pink">SEQ 04/07</SystemLabel>
             <PosterHeading id="trace-heading" lines={["TRACE_"]} size="section" className="mt-2 text-pink" />
@@ -161,7 +161,7 @@ export default function Home() {
 
       {/* 05 ANALYZE — the word arrives out of depth, and the network re-arranges into readings you can act on. */}
       <PosterSection tone="void" sceneId="analyze" labelledBy="analyze-heading" className="border-t border-line">
-        <ScrollScene pin length={2.4} mobile="play" className={STAGE}>
+        <ScrollScene pin length={2.6} mobile="play" className={STAGE}>
           <div data-camera={fx({ rotateY: 16, rotateX: 6, scale: 0.88 })} className={CAMERA}>
             <div className="relative md:col-span-12">
               <SystemLabel tone="cyan">SEQ 05/07</SystemLabel>
@@ -184,7 +184,7 @@ export default function Home() {
 
       {/* 06 DEFEND — the traced route rebuilds itself as defended zones; the camera pulls out to show the whole system. */}
       <PosterSection tone="void" sceneId="defend" labelledBy="defend-heading" className="border-t border-cyan">
-        <ScrollScene pin length={2.2} mobile="play" className={STAGE}>
+        <ScrollScene pin length={2.6} mobile="play" className={STAGE}>
           <div data-camera={fx({ scale: 1.15 })} className={CAMERA}>
             <div className="relative md:col-span-8">
               <SystemLabel tone="cyan">SEQ 06/07</SystemLabel>
