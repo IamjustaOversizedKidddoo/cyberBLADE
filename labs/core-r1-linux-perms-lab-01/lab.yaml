@@ -1,0 +1,42 @@
+id: core-r1-linux-perms-lab-01
+title: "Permission Puzzle: Modes, Owners and Shared Folders"
+type: terminal
+track: core
+rank: 1
+estimated_minutes: 20
+briefing: briefing.md
+dataset:
+  generator: perms_lab
+  params: {}
+objectives:
+  - id: o1
+    prompt: "What is the three-digit octal permission mode of /srv/app/config.ini?"
+    check: { kind: flag, answer_from: generator.mode }
+  - id: o2
+    prompt: "Find the flag inside ~/vault/note.txt (you own the file, but it currently has no permissions)."
+    check: { kind: flag, answer_from: generator.flag }
+  - id: o3
+    prompt: "Which group has read access to /srv/payroll/salaries.csv?"
+    check: { kind: flag, answer_from: generator.group, case_sensitive: false }
+  - id: o4
+    prompt: "Which file in /srv/shared/ is dangerously world-writable?"
+    check: { kind: flag, answer_from: generator.writable }
+hints:
+  o1:
+    - "Inspect the permission letters of /srv/app/config.ini using the long listing flag."
+    - "Convert the owner, group, and others permission triplets into three octal digits (r=4, w=2, x=1)."
+    - "Run ls -l /srv/app/config.ini and calculate the 3-digit octal value from the rwx characters."
+  o2:
+    - "Try reading ~/vault/note.txt. Notice the Permission denied error even though you own it."
+    - "Since you are the owner, you can grant yourself read permission."
+    - "Run chmod u+r ~/vault/note.txt, then cat ~/vault/note.txt to reveal the flag."
+  o3:
+    - "Check the group ownership and permissions on /srv/payroll/salaries.csv."
+    - "Look at the group column in the ls -l output to see which group owns the file."
+    - "Run ls -l /srv/payroll/salaries.csv and submit the group name listed in the fourth column."
+  o4:
+    - "Search through /srv/shared/ for files that give write permission to others (the last triplet contains 'w')."
+    - "You can inspect the permissions with ls -l or use find with permission filtering."
+    - "Run find /srv/shared -perm -o+w to locate the one world-writable file."
+xp: 100
+mitre: ["T1222.002"]

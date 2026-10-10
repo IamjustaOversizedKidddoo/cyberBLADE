@@ -9,6 +9,9 @@ import { webLab } from "./network/web-lab";
 import { scanLab } from "./packet/scan-lab";
 import { dnsLab } from "./packet/dns-lab";
 import { httpLab } from "./packet/http-lab";
+import { permsLab } from "./linux/perms-lab";
+import { procLab } from "./linux/proc-lab";
+import { suidLab } from "./linux/suid-lab";
 
 export type GeneratorOutput = { env: LabEnv; answers: Record<string, string> };
 
@@ -26,4 +29,7 @@ export const GENERATORS: Record<string, Generator> = {
   scan_lab: scanLab,
   dns_lab: dnsLab,
   http_lab: httpLab,
+  perms_lab: permsLab,
+  proc_lab: procLab,
+  suid_lab: suidLab,
 };
