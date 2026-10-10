@@ -1,0 +1,66 @@
+lesson: core-r1-win-logs-sysmon-01
+questions:
+  - id: q1
+    prompt: "Which Windows Security Event ID is generated whenever an account fails an authentication or logon attempt?"
+    objectives: ["secplus:2.4"]
+    options:
+      - text: "Event ID 4625"
+        correct: true
+        explanation: "Correct. Event ID 4625 records failed logon attempts in the Security log channel."
+      - text: "Event ID 4624"
+        correct: false
+        explanation: "Event ID 4624 represents a successful account logon."
+      - text: "Event ID 4688"
+        correct: false
+        explanation: "Event ID 4688 records new process creation events."
+      - text: "Event ID 7045"
+        correct: false
+        explanation: "Event ID 7045 in the System log records new service installation."
+  - id: q2
+    prompt: "In a Windows Security Event ID 4624 record, what does LogonType 10 indicate?"
+    objectives: ["secplus:2.4"]
+    options:
+      - text: "RemoteInteractive logon (Remote Desktop Protocol / RDP)"
+        correct: true
+        explanation: "Correct. LogonType 10 indicates a remote graphical logon via Remote Desktop (Terminal Services)."
+      - text: "Interactive logon at the local physical keyboard (LogonType 2)"
+        correct: false
+        explanation: "Physical console logons are classified as LogonType 2."
+      - text: "Network connection to an SMB file share (LogonType 3)"
+        correct: false
+        explanation: "Network share access is classified as LogonType 3."
+      - text: "Windows Service startup (LogonType 5)"
+        correct: false
+        explanation: "Background service executions are recorded as LogonType 5."
+  - id: q3
+    prompt: "Why is Windows Security Event ID 1102 ('The audit log was cleared') considered a critical, high-fidelity security alert?"
+    objectives: ["secplus:4.1"]
+    options:
+      - text: "Legitimate enterprise systems rarely clear logs manually; log clearing is a classic anti-forensics technique used by adversaries to hide traces of compromise."
+        correct: true
+        explanation: "Correct. Adversaries use commands like 'wevtutil cl' to cover their tracks; Event 1102 warns defenders that logs were intentionally purged."
+      - text: "It indicates that the computer hardware has run out of disk space."
+        correct: false
+        explanation: "Disk space alerts are recorded in the System log and performance counters, not Event 1102."
+      - text: "It occurs automatically every time Windows installs a monthly security update."
+        correct: false
+        explanation: "Windows updates do not wipe the Security audit log."
+      - text: "It confirms that BitLocker encryption was successfully enabled."
+        correct: false
+        explanation: "BitLocker status is tracked in dedicated BitLocker-API event logs."
+  - id: q4
+    prompt: "Which Microsoft Sysmon event ID provides rich endpoint telemetry on process creation, including parent processes, full command lines, and hashes?"
+    objectives: ["secplus:2.4"]
+    options:
+      - text: "Sysmon Event ID 1"
+        correct: true
+        explanation: "Correct. Sysmon Event ID 1 captures detailed process creation metadata and cryptographic file hashes."
+      - text: "Sysmon Event ID 3"
+        correct: false
+        explanation: "Sysmon Event ID 3 captures outbound network connection telemetry."
+      - text: "Sysmon Event ID 7"
+        correct: false
+        explanation: "Sysmon Event ID 7 logs image (DLL) loading events."
+      - text: "Sysmon Event ID 13"
+        correct: false
+        explanation: "Sysmon Event ID 13 tracks registry value modifications."

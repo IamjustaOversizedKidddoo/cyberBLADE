@@ -1,0 +1,66 @@
+lesson: core-r1-win-proc-services-01
+questions:
+  - id: q1
+    prompt: "Which critical Windows core process is responsible for user authentication, password verification, and enforcing local security policy?"
+    objectives: ["aplus1202:1"]
+    options:
+      - text: "lsass.exe (Local Security Authority Subsystem Service)"
+        correct: true
+        explanation: "Correct. lsass.exe handles user authentication and generates security access tokens."
+      - text: "services.exe"
+        correct: false
+        explanation: "services.exe is the Service Control Manager responsible for managing background services."
+      - text: "csrss.exe"
+        correct: false
+        explanation: "csrss.exe is the Client Server Runtime Subsystem managing console windows and thread creation."
+      - text: "explorer.exe"
+        correct: false
+        explanation: "explorer.exe provides the interactive Windows desktop shell and file manager."
+  - id: q2
+    prompt: "In a standard Windows boot architecture, what is the legitimate parent process of the Service Control Manager (services.exe)?"
+    objectives: ["aplus1202:1"]
+    options:
+      - text: "wininit.exe"
+        correct: true
+        explanation: "Correct. wininit.exe initializes session 0 background subsystems and spawns services.exe and lsass.exe."
+      - text: "explorer.exe"
+        correct: false
+        explanation: "explorer.exe runs in the user session (session 1+), not session 0."
+      - text: "cmd.exe"
+        correct: false
+        explanation: "cmd.exe is an interactive shell and does not spawn core OS services."
+      - text: "powershell.exe"
+        correct: false
+        explanation: "powershell.exe is a command shell, not a system bootloader."
+  - id: q3
+    prompt: "Where does the Service Control Manager look in the registry to determine the executable path (ImagePath) and startup type for a Windows service?"
+    objectives: ["secplus:2.4"]
+    options:
+      - text: "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\<ServiceName>"
+        correct: true
+        explanation: "Correct. Each Windows service has its definition key under HKLM:\\SYSTEM\\CurrentControlSet\\Services."
+      - text: "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Services"
+        correct: false
+        explanation: "Windows services are system-wide objects and do not reside in HKCU."
+      - text: "C:\\Windows\\System32\\services.ini"
+        correct: false
+        explanation: "Windows uses the Registry rather than INI files to define services."
+      - text: "HKLM:\\SOFTWARE\\Classes\\CLSID"
+        correct: false
+        explanation: "This key defines COM class identifiers, not Windows service binaries."
+  - id: q4
+    prompt: "How does the 'Unquoted Service Path' vulnerability allow an unprivileged attacker to escalate privileges to SYSTEM?"
+    objectives: ["secplus:2.4"]
+    options:
+      - text: "Windows resolves unquoted paths with spaces sequentially from the filesystem root, executing an attacker-dropped binary if write permissions exist on parent directories."
+        correct: true
+        explanation: "Correct. When path segments contain spaces without quotes, Windows probes each segment until finding a matching EXE, potentially executing an attacker's file as SYSTEM."
+      - text: "It allows attackers to directly overwrite the Windows kernel file ntoskrnl.exe."
+        correct: false
+        explanation: "Kernel files are protected by TrustedInstaller and Windows File Protection."
+      - text: "It disables all firewall rules for incoming SMB traffic."
+        correct: false
+        explanation: "Unquoted service paths affect local process execution, not network firewall configurations."
+      - text: "It forces the computer to boot into Safe Mode with networking disabled."
+        correct: false
+        explanation: "This vulnerability does not alter the BCD boot configuration."

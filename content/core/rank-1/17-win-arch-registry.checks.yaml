@@ -1,0 +1,66 @@
+lesson: core-r1-win-arch-registry-01
+questions:
+  - id: q1
+    prompt: "Which Windows Registry root hive stores system-wide operating system, hardware, and installed software configurations applicable to all users?"
+    objectives: ["aplus1202:1"]
+    options:
+      - text: "HKEY_LOCAL_MACHINE (HKLM)"
+        correct: true
+        explanation: "Correct. HKEY_LOCAL_MACHINE stores global system configuration and installed software parameters."
+      - text: "HKEY_CURRENT_USER (HKCU)"
+        correct: false
+        explanation: "HKEY_CURRENT_USER contains settings specific to the currently logged-in user profile."
+      - text: "HKEY_CLASSES_ROOT (HKCR)"
+        correct: false
+        explanation: "HKEY_CLASSES_ROOT defines file extensions and COM object registrations."
+      - text: "HKEY_CURRENT_CONFIG (HKCC)"
+        correct: false
+        explanation: "HKEY_CURRENT_CONFIG points to hardware profile information gathered at system boot."
+  - id: q2
+    prompt: "Where is a standard user profile's registry hive physically saved on the local filesystem?"
+    objectives: ["aplus1202:1"]
+    options:
+      - text: "C:\\Users\\<Username>\\NTUSER.DAT"
+        correct: true
+        explanation: "Correct. The user's NTUSER.DAT file is mounted into HKEY_CURRENT_USER when they log in."
+      - text: "C:\\Windows\\System32\\config\\SAM"
+        correct: false
+        explanation: "The SAM hive stores local security account credentials, not user registry preferences."
+      - text: "C:\\Windows\\System32\\config\\SOFTWARE"
+        correct: false
+        explanation: "The SOFTWARE hive stores system-wide application settings for HKLM."
+      - text: "C:\\ProgramData\\registry.bin"
+        correct: false
+        explanation: "This is not a valid Windows registry storage location."
+  - id: q3
+    prompt: "Why do adversaries frequently target the Run key under HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run for persistence?"
+    objectives: ["secplus:2.4"]
+    options:
+      - text: "Standard users have write permissions to their own HKCU hive, allowing persistence without administrative privileges."
+        correct: true
+        explanation: "Correct. Unprivileged users can write to their own HKCU hive, executing their payload whenever that user logs in."
+      - text: "Entries in HKCU bypass all Windows Defender antivirus file scans."
+        correct: false
+        explanation: "Antivirus and EDR products actively monitor and scan files executed from HKCU."
+      - text: "HKCU automatically encrypts the executable binary using BitLocker."
+        correct: false
+        explanation: "HKCU stores configuration strings, not filesystem encryption keys."
+      - text: "HKCU keys run with SYSTEM privileges upon boot."
+        correct: false
+        explanation: "HKCU keys execute in the security context of the logged-in user, not as SYSTEM."
+  - id: q4
+    prompt: "Which Sysmon event IDs provide telemetry for Windows Registry object creation and value modification?"
+    objectives: ["secplus:2.4"]
+    options:
+      - text: "Event ID 12, 13, and 14"
+        correct: true
+        explanation: "Correct. Sysmon Event ID 12 (Create/Delete), 13 (Value Set), and 14 (Key/Value Rename) capture registry modifications."
+      - text: "Event ID 1, 2, and 3"
+        correct: false
+        explanation: "Event ID 1 is Process Creation, 2 is File Creation Time changed, 3 is Network Connection."
+      - text: "Event ID 4624 and 4625"
+        correct: false
+        explanation: "These are Windows Security logon success and failure event IDs."
+      - text: "Event ID 7045 and 7036"
+        correct: false
+        explanation: "These are Windows System service installation and state change event IDs."
