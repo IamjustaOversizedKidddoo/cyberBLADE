@@ -113,19 +113,42 @@ export const CHALLENGE_LAB: LoadedLab = {
   briefingText: "Night shift.",
 };
 
+export const CHALLENGE_R1_LAB: LoadedLab = {
+  ...labSchema.parse({
+    id: "test-challenge-r1-01",
+    title: "Test Rank 1 challenge",
+    type: "terminal",
+    track: "core",
+    rank: 1,
+    estimated_minutes: 30,
+    briefing: "briefing.md",
+    dataset: { generator: "flag_gen", params: {} },
+    objectives: [
+      { id: "o1", prompt: "flag?", check: { kind: "flag", answer_from: "generator.flag" } },
+      { id: "o2", prompt: "word?", check: { kind: "flag", answer_from: "generator.word" } },
+    ],
+    xp: 400,
+    challenge: { rank: 1, time_limit_minutes: 30, cooldown_minutes: 30 },
+  }),
+  briefingText: "Operation Iron Gate.",
+};
+
 export const LESSONS = [lesson("core-r0-test-alpha-01", 1, LAB.id), lesson("core-r0-test-beta-01", 2)];
+export const LESSONS_R1 = [{ ...lesson("core-r1-test-alpha-01", 1), rank: 1 }];
 
 export function fakeContent(): ContentSource {
+  const allLabs = [LAB, CHALLENGE_LAB, CHALLENGE_R1_LAB];
+  const allLessons = [...LESSONS, ...LESSONS_R1];
   return {
-    getLesson: async (id) => LESSONS.find((l) => l.id === id) ?? null,
-    getLessons: async (filter = {}) => LESSONS.filter((l) => filter.rank === undefined || l.rank === filter.rank),
+    getLesson: async (id) => allLessons.find((l) => l.id === id) ?? null,
+    getLessons: async (filter = {}) => allLessons.filter((l) => filter.rank === undefined || l.rank === filter.rank),
     loadChecks: async (id) => checks(id),
     loadLab: async (id) => {
-      const lab = [LAB, CHALLENGE_LAB].find((l) => l.id === id);
+      const lab = allLabs.find((l) => l.id === id);
       if (!lab) throw new Error(`unknown lab ${id}`);
       return lab;
     },
-    listLabs: async () => [LAB, CHALLENGE_LAB],
+    listLabs: async () => allLabs,
     generators: { flag_gen: flagGen },
   };
 }
