@@ -2,7 +2,7 @@
 
 **Created:** 2026-10-10  
 **Last Updated:** 2026-10-10  
-**Status:** In Progress — Phase 2A (Complete), Phase 2B (Complete), Phase 2C (Complete), Phase 2D (Complete), Phase 2E (Complete), Phase 2F (Next)  
+**Status:** In Progress — Phase 2A (Complete), Phase 2B (Complete), Phase 2C (Complete), Phase 2D (Complete), Phase 2E (Complete), Phase 2F (Complete), Phase 2G (Next Up)  
 **Branch Tracking:** Local-first on `main`, feature branches per phase
 
 ---
@@ -20,8 +20,8 @@ This report tracks all architecture, content, engine, lab, tutor, and challenge 
 | **2C** | **Rank 1 · Windows & PowerShell + Capstone** | ✅ **Complete** | Windows/PowerShell simulation, registry & event log triage labs, Orders 17–20, Rank 1 Capstone Challenge (`core-r1-challenge-01`), Operator → Watcher (Rank 2) promotion |
 | **2D** | **The Handler (AI Tutor)** | ✅ **Complete** | Socratic AI assistant drawer, Groq/Gemini multi-model routing + Heuristic fallback, 3-tier progressive hint disclosure, strict solution/flag leakage guardrails, challenge mode lockout |
 | **2E** | **Exam Readiness & Gamification** | ✅ **Complete** | Cert readiness scorecards (CompTIA Security+, Network+, Linux+, A+ Core 1 & 2, ISC2 CC), streak engine, 7-day telemetry HUD, 11-badge honors wall, dashboard integration |
-| **2F** | **Rank 2 · Watcher (Web Security)** | 🟡 **Next Up** | `webapp` in-browser iframe lab runner, OWASP Top 10 attack/defense modules |
-| **2G** | **Hosted Beta Foundation** | ⬜ Planned | Supabase Auth (Email + Google OAuth) + Postgres + RLS, production deployment |
+| **2F** | **Rank 2 · Watcher: Web Security Core** | ✅ **Complete** | `webapp` in-browser iframe lab runner, OWASP Top 10 labs (SQLi, XSS, IDOR), Orders 21–32 (12 lessons), Rank 2 Capstone Challenge ("Operation Watchtower"), Operator → Hunter (Rank 3) promotion |
+| **2G** | **Hosted Beta Foundation** | 🟡 **Next Up** | Supabase Auth (Email + Google OAuth) + Postgres + RLS, production deployment |
 
 ---
 
@@ -168,14 +168,17 @@ Phase 2E delivered the **Exam Readiness Engine**, **Habit Loops & Daily Streak E
 - Renders a 7-day rolling activity matrix displaying active/inactive nodes with high-contrast tactical styling.
 
 ### 3. Tactical Honors & Badges Wall (`lib/gamification/badges.ts`, `components/dashboard/BadgesWall.tsx`)
-- Dynamic rule evaluator computing unlock criteria for 11 honors:
+- Dynamic rule evaluator computing unlock criteria for 13 honors:
   - `INITIATE`: Enrolled at Rank 0.
   - `OPERATOR`: Elevated to Rank 1.
   - `WATCHER`: Elevated to Rank 2.
+  - `HUNTER`: Elevated to Rank 3.
   - `PACKET_SURGEON`: Completed network packet capture triage labs.
   - `ROOT_HUNTER`: Audited Linux permissions and SUID backdoors.
   - `POWERSHELL_WARDEN`: Triaged Windows registry run keys and security event logs.
   - `IRON_GATE_SURVIVOR`: Completed Operation Iron Gate (Rank 1 Capstone).
+  - `WEB_SENTINEL`: Completed all Rank 2 web security laboratories.
+  - `WATCHTOWER`: Conquered Operation Watchtower (Rank 2 Capstone).
   - `FIRST_BLOOD`: Solved first practical lab or lesson check.
   - `CLEAN_RUN`: Completed a lab without requesting hint disclosures.
   - `TACTICAL_STREAK`: Maintained a 3-day continuous streak.
@@ -189,25 +192,68 @@ Phase 2E delivered the **Exam Readiness Engine**, **Habit Loops & Daily Streak E
 
 ---
 
-## 6. Phase 2F: Rank 2 · Watcher (Web Security Core) (Next Up)
+## 6. Phase 2F: Rank 2 · Watcher: Web Security Core (Complete)
 
-### Key Objectives
-1. **Web App Sandbox Runner (`webapp`):**
-   - Sandboxed iframe lab runner with simulated browser address bar, HTTP request/response inspector, and cookie jar viewer.
-2. **Rank 2 Curriculum (Orders 21–32):**
-   - HTTP protocol deep dive, cookies, headers, sessions, and same-origin policy.
-   - OWASP Top 10 hands-on exploitation & remediation:
-     - SQL Injection (Error-based, Union-based, Blind).
-     - Cross-Site Scripting (Reflected, Stored, DOM).
-     - Authentication & Session Hijacking.
-     - Broken Object-Level Authorization (BOLA/IDOR).
-     - Server-Side Request Forgery (SSRF) and Command Injection.
-3. **Rank 2 Capstone Challenge:**
-   - Multi-stage web application security audit & defense operation.
+Phase 2F delivered the complete **Web Security Core** curriculum for Rank 2 (Watcher), the interactive in-browser `webapp` lab engine, 3 OWASP hands-on security labs, and the Rank 2 Capstone Challenge promoting operators to **Rank 3 (Hunter)**.
+
+### 1. In-Browser `webapp` Lab Engine & Dual Workspace (`lib/lab-engine/webapp/`, `components/labs/webapp/`)
+- **Browser Frame (`BrowserFrame.tsx`)**:
+  - Sandboxed iframe browser viewport running inside a tactical terminal chrome.
+  - Live address input, reload control, and postMessage event interception forwarding link clicks and form submissions back to the security simulation harness.
+- **HTTP Inspector & Cookie Jar (`HttpInspector.tsx`)**:
+  - Live traffic inspector recording HTTP request methods, paths, status codes, response headers, and response payloads.
+  - Tabbed Cookie Jar interface allowing operators to observe session cookies and manually tamper with/inject custom session cookies (e.g. `watchtower_role=superadmin`).
+- **Deterministic HTTP Simulator (`simulator.ts`)**:
+  - In-memory HTTP dispatcher simulating multi-hop redirects, query string parsing, form body parsing, cookie extraction, and dynamic route rendering for all lab web applications.
+- **Synchronous WebApp Lab Runner (`WebAppLab.tsx`)**:
+  - Synchronous request sequence executor avoiding cascading render loops and managing redirect follow hops up to 5 iterations.
+
+### 2. OWASP Top 10 Hands-on Security Labs
+- **`core-r2-sqli-lab-01` ("Apex Vault Core: SQLi Attack & Extraction")**:
+  - SQL injection authentication bypass (`' OR '1'='1`) against legacy authentication portal.
+  - UNION query injection (`' UNION SELECT 1,2,3,4--`) extracting confidential flags from internal assets database.
+- **`core-r2-xss-lab-01` ("DarkNet Intelligence: XSS Cookie Hijacking")**:
+  - Reflected XSS input analysis and stored script injection in persistent message boards.
+  - Automated session cookie extraction and privilege elevation.
+- **`core-r2-idor-lab-01` ("Horizon Financial: BOLA / IDOR Account Takeover")**:
+  - Horizontal and vertical authorization parameter tampering on REST API endpoints (`/api/accounts?id=...`).
+  - Property tests verified across 1,000 randomized seeds (`tests/labs/web-labs.test.ts`).
+
+### 3. Rank 2 Curriculum (`content/core/rank-2/`, Orders 21–32)
+- Authored 12 exhaustive lessons and companion `.checks.yaml` with strict adherence to the 7-part briefing format:
+  - **Order 21 (`21-http-protocol`)**: HTTP Protocol, Methods, and Header Triage (`core-r2-http-01`).
+  - **Order 22 (`22-cookies-sessions`)**: Cookies, State, and Session Security (`core-r2-cookies-01`).
+  - **Order 23 (`23-sop-cors`)**: Same-Origin Policy (SOP) & CORS Security (`core-r2-cors-01`).
+  - **Order 24 (`24-sqli`)**: SQL Injection: Mechanisms, Exploitation & Defense (`core-r2-sqli-01`).
+  - **Order 25 (`25-xss`)**: Cross-Site Scripting (XSS): Stored, Reflected, and DOM (`core-r2-xss-01`).
+  - **Order 26 (`26-idor-bola`)**: Broken Object Level Authorization (BOLA / IDOR) (`core-r2-idor-01`).
+  - **Order 27 (`27-csrf`)**: Cross-Site Request Forgery (CSRF) & Defense (`core-r2-csrf-01`).
+  - **Order 28 (`28-ssrf`)**: Server-Side Request Forgery (SSRF) & Cloud Metadata (`core-r2-ssrf-01`).
+  - **Order 29 (`29-cmd-injection`)**: Command Injection & Input Sanitization (`core-r2-cmdinj-01`).
+  - **Order 30 (`30-cryptography-pki`)**: Applied Cryptography, TLS/SSL, and PKI (`core-r2-crypto-01`).
+  - **Order 31 (`31-security-architecture`)**: Web Application Security Architecture & WAFs (`core-r2-waf-01`).
+  - **Order 32 (`32-security-tooling`)**: Web Security Tooling & Vulnerability Scanning (`core-r2-tooling-01`).
+- Total curriculum volume: **38 lessons, 19 labs, 27 objectives** across the platform.
+
+### 4. Rank 2 Capstone Challenge: Operation Watchtower (`labs/core-r2-challenge-01`)
+- **"Operation Watchtower"**: A 35-minute timed full-spectrum web exploitation and incident response operation.
+- 3 chained operational vectors:
+  - IDOR exploitation on defense contracts API (`/api/contracts?ref=CTR-7701`).
+  - SQL injection on order verification portal (`/orders/lookup?code=ORD-01' OR '1'='1`).
+  - Session cookie tampering on `/admin/debug` to escalate privileges to `watchtower_role=superadmin`.
+- Promotes operator from **Rank 2 (Watcher)** to **Rank 3 (Hunter)** upon successful completion (+400 XP, rank up celebration hero).
+
+### 5. Automated Verification Gates
+- **Content Check:** 38 lessons, 19 labs, 27 objectives valid.
+- **Typecheck:** 0 TypeScript errors.
+- **Lint:** 0 ESLint errors or warnings.
+- **Vitest Suite:** **118 test files passed, 758 tests passed (100%)**.
+- **Playwright E2E:** 2/2 tests passed (`tests/e2e/rank-2-web.spec.ts`) validating lesson reading, check answering, web lab navigation, SQL injection exploitation, and capstone challenge clearance into Rank 3.
+- **Production Build:** Clean Next.js Turbopack build with 0 errors.
 
 ---
 
-## 7. Phase 2G: Hosted Closed Beta Foundation (Planned)
+## 7. Phase 2G: Hosted Closed Beta Foundation (Next Up)
 
 ### Key Objectives
 1. **Supabase Backend Migration:**
@@ -217,3 +263,4 @@ Phase 2E delivered the **Exam Readiness Engine**, **Habit Loops & Daily Streak E
    - Supabase Auth supporting Email Magic Links and Google OAuth.
 3. **Production Deployment:**
    - Vercel production deployment with custom domain, edge middleware, and security headers (CSP, HSTS).
+
