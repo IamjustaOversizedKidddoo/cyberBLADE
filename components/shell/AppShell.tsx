@@ -37,14 +37,43 @@ export function AppShell({
             <BlinkCursor />
           </Link>
 
-          {/* CENTRE — operator HUD badge */}
-          <div className="hidden md:flex items-center gap-0 border border-line">
-            <span className="border-r border-line px-3 py-1.5 font-ui text-xs tracking-widest text-muted uppercase">
-              OPERATOR
-            </span>
-            <span className="px-3 py-1.5 font-ui text-xs tracking-widest text-cyan">
-              {operator.handle}
-            </span>
+          {/* CENTRE — navigation links + operator HUD badge */}
+          <div className="hidden md:flex items-center gap-3">
+            <div className="flex items-center gap-1 font-ui text-xs tracking-wider">
+              <Link
+                href="/dashboard"
+                className="px-2 py-1 text-muted hover:text-cyan transition-colors"
+              >
+                [DASHBOARD]
+              </Link>
+              <Link
+                href="/learn/core"
+                className="px-2 py-1 text-muted hover:text-cyan transition-colors"
+              >
+                [CURRICULUM]
+              </Link>
+              <Link
+                href="/labs"
+                className="px-2 py-1 text-muted hover:text-cyan transition-colors"
+              >
+                [LABS]
+              </Link>
+              <Link
+                href="/exam"
+                className="px-2 py-1 text-muted hover:text-cyan transition-colors"
+              >
+                [EXAM PREP]
+              </Link>
+            </div>
+
+            <div className="hidden xl:flex items-center gap-0 border border-line">
+              <span className="border-r border-line px-3 py-1 font-ui text-xs tracking-widest text-muted uppercase">
+                OPERATOR
+              </span>
+              <span className="px-3 py-1 font-ui text-xs tracking-widest text-cyan">
+                {operator.handle}
+              </span>
+            </div>
           </div>
 
           {/* RIGHT — rank + controls */}
@@ -66,6 +95,22 @@ export function AppShell({
             </form>
           </div>
         </nav>
+
+        {/* Mobile quick navigation row */}
+        <div className="flex md:hidden items-center justify-around border-t border-line/60 bg-console-deep px-2 py-1.5 font-ui text-[11px] tracking-wider text-muted">
+          <Link href="/dashboard" className="hover:text-cyan p-1">
+            [DASHBOARD]
+          </Link>
+          <Link href="/learn/core" className="hover:text-cyan p-1">
+            [CURRICULUM]
+          </Link>
+          <Link href="/labs" className="hover:text-cyan p-1">
+            [LABS]
+          </Link>
+          <Link href="/exam" className="hover:text-cyan p-1">
+            [EXAM PREP]
+          </Link>
+        </div>
       </header>
 
       {children}

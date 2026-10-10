@@ -11,6 +11,7 @@ mitre: ["T1021.004", "T1098.004", "T1070.002"]
 xp: 100
 status: draft
 last_reviewed: null
+lab: core-r1-siem-log-analysis-01
 ---
 
 ## Briefing
@@ -126,7 +127,9 @@ Attackers target SSH and logs throughout their post-exploitation operations:
 
 ## Lab
 
-This lesson has no scored lab. **Field exercise (not scored):** on your Linux machine or terminal, inspect `/var/log/auth.log` (or your system journal with `journalctl -u ssh`). Filter for recent login attempts using `grep sshd /var/log/auth.log`. Inspect your user's `~/.ssh` directory and verify the permissions on your authorized keys file.
+Launch the **CYBERBLADE SIEM Console** to investigate an active intrusion alert. You will query aggregated event logs, correlate brute force authentication attempts against the SSH and Windows event stream, isolate the attacker's source IP and compromised identity, and extract the persistent C2 flag.
+
+<LabLink />
 
 ## Debrief
 

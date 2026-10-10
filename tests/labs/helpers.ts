@@ -25,6 +25,15 @@ export async function openPacketLab(labId: string, seed: string) {
   return { lab, env, capture, answers, check };
 }
 
+export async function openSiemLab(labId: string, seed: string) {
+  const lab = await loadLab(labId);
+  const { env, answers } = generateLab(lab, seed);
+  if (env.kind !== "siem") throw new Error(`openSiemLab expected siem lab, got ${env.kind}`);
+  const { siem } = env;
+  const check = (objectiveId: string, answer: string) => checkObjective(lab, answers, objectiveId, answer);
+  return { lab, env, siem, answers, check };
+}
+
 export const SEEDS = ["seed-a", "seed-b", "seed-c", "learner-42", "exam-7"];
 
 /** Many seeds, for properties that must hold for every learner (uniqueness, solvability). */

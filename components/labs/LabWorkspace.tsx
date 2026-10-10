@@ -6,6 +6,7 @@ import { useCallback, useState } from "react";
 import type { LabEnv } from "@/lib/lab-engine/env";
 import { PacketLab } from "./packet/PacketLab";
 import { WebAppLab } from "./webapp/WebAppLab";
+import { SiemLab } from "./siem/SiemLab";
 import { ObjectivesPanel, type Objective, type SubmitResult } from "./ObjectivesPanel";
 
 // xterm.js needs the DOM: render the terminal in the browser only.
@@ -23,7 +24,7 @@ type Props = {
   attemptId?: string;
 };
 
-/** Terminal or packet viewer + objectives. Answers may come from either; this component owns what is solved. */
+/** Terminal, packet viewer, webapp or SIEM + objectives. Answers may come from either; this component owns what is solved. */
 export function LabWorkspace({
   env,
   objectives,
@@ -65,8 +66,10 @@ export function LabWorkspace({
         </>
       ) : env.kind === "packet" ? (
         <PacketLab capture={env.capture} />
-      ) : (
+      ) : env.kind === "webapp" ? (
         <WebAppLab env={env.app} />
+      ) : (
+        <SiemLab env={env.siem} />
       )}
       <ObjectivesPanel
         objectives={objectives}

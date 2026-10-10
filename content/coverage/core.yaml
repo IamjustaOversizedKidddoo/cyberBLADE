@@ -21,7 +21,7 @@
 # built_ranks: objectives whose target_rank is listed here must already have ≥1 lesson (CI fails otherwise).
 # A+ ids are domain-level (aplus1201:<domain>, aplus1202:<domain>) until objective-level mapping is done.
 
-built_ranks: [0]
+built_ranks: [0, 1, 2]
 
 certs:
   aplus1201: { name: "CompTIA A+ Core 1", exam: "220-1201" }
