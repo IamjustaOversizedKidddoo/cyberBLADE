@@ -17,7 +17,7 @@ test("system files come from sysinfo", () => {
 
 test("cmdline is NUL-separated; tr makes it readable", () => {
   const s = sh();
-  expect(s.exec("cat /proc/1500/cmdline").stdout).toBe("python3\0-m\0http.server\08000\0");
+  expect(s.exec("cat /proc/1500/cmdline").stdout).toBe("python3\x00-m\x00http.server\x008000\x00");
   expect(s.exec("cat /proc/1500/cmdline | tr '\\0' ' '").stdout).toBe("python3 -m http.server 8000 ");
   expect(s.exec("cat /proc/2/cmdline").stdout).toBe("");
   expect(s.exec("cat /proc/1500/comm").stdout).toBe("python3\n");

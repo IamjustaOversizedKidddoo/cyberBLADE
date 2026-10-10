@@ -32,6 +32,8 @@ export type CmdContext = {
   procs: ProcessTable;
   /** This running command as a process (ps lists itself). */
   self: Proc;
+  services?: import("../services").Service[];
+  runAs(user: string, argv: string[]): CmdResult;
   setCwd(path: string): void;
 };
 
