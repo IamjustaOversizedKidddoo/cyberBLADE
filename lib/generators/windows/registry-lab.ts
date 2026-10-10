@@ -1,3 +1,4 @@
+import type { RegistryHive } from "@/lib/lab-engine/terminal/windows/types";
 import { formatFlag } from "../flag";
 import type { Generator } from "../index";
 import { pickWinHostname, windowsBaseWorld } from "../terminal/windows-world";
@@ -24,7 +25,7 @@ export const registryLab: Generator = (rng) => {
   const pickedService = rng.pick(SUSPICIOUS_SERVICES);
   const labFlag = formatFlag(rng.hex(12));
 
-  const registry = {
+  const registry: RegistryHive = {
     "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run": {
       SecurityHealth: "C:\\Windows\\System32\\SecurityHealthSystray.exe",
       OneDriveSetup: "C:\\Windows\\System32\\OneDriveSetup.exe /thfirstsetup",

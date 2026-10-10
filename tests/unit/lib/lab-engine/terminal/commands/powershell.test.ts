@@ -36,8 +36,8 @@ describe("PowerShell cmdlets in lab shell", () => {
       },
     ],
     services: [
-      { name: "Spooler", description: "Print Spooler", active: true, enabled: true },
-      { name: "W32Time", description: "Windows Time", active: false, enabled: false },
+      { name: "Spooler", description: "Print Spooler", unitPath: "C:\\Windows\\System32\\spoolsv.exe", active: "active", enabled: "enabled", sub: "running" },
+      { name: "W32Time", description: "Windows Time", unitPath: "C:\\Windows\\System32\\w32time.dll", active: "inactive", enabled: "disabled", sub: "dead" },
     ],
     processes: [
       {
