@@ -114,7 +114,7 @@ export async function unlockRankChallenge(page: Page, rank: number): Promise<voi
   const now = new Date().toISOString();
   for (const progFile of candidates) {
     try {
-      let data: any = { lessons: {}, attempts: {}, xp: {}, challenges: {} };
+      let data: Record<string, Record<string, unknown>> = { lessons: {}, attempts: {}, xp: {}, challenges: {} };
       try {
         const raw = await fs.readFile(progFile, "utf8");
         data = JSON.parse(raw);
