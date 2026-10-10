@@ -52,6 +52,7 @@ type BaseOptions = {
   processes?: Proc[];
   services?: Service[];
   sudoers?: string;
+  usrLocalBin?: Record<string, Node>;
 };
 
 const elf = () => file("\x7fELF (simulated binary — not runnable in this lab)\n", { mode: 0o755 });
@@ -163,6 +164,9 @@ export function baseWorld(opts: BaseOptions): World {
         bin: dir({
           ...standardBinaries(),
           ...opts.bin,
+        }),
+        local: dir({
+          bin: dir(opts.usrLocalBin ?? {}),
         }),
       }),
       var: dir({ log: dir({ syslog: file(`Oct  6 06:00:01 ${hostname} systemd[1]: Started daily cleanup.\n`), ...opts.log }) }),

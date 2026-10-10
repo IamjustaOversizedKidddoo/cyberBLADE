@@ -1,0 +1,42 @@
+id: core-r1-linux-proc-lab-01
+title: "Process Hunt: Detecting Hidden and Disguised Workloads"
+type: terminal
+track: core
+rank: 1
+estimated_minutes: 20
+briefing: briefing.md
+dataset:
+  generator: proc_lab
+  params: {}
+objectives:
+  - id: o1
+    prompt: "What is the PID of the suspicious process running from a temporary directory with a disguised system name?"
+    check: { kind: flag, answer_from: generator.pid }
+  - id: o2
+    prompt: "Which user does this suspicious process run as?"
+    check: { kind: flag, answer_from: generator.user, case_sensitive: false }
+  - id: o3
+    prompt: "What is the name of the suspicious process's parent process?"
+    check: { kind: flag, answer_from: generator.parent, case_sensitive: false }
+  - id: o4
+    prompt: "What remote address (host:port) is specified in its command line?"
+    check: { kind: flag, answer_from: generator.remote }
+hints:
+  o1:
+    - "Attackers often execute malware out of world-writable directories such as /tmp or /dev/shm."
+    - "Run a full process listing and look for executables located under /tmp or /dev/shm."
+    - "Run ps -ef or ps aux and find the process whose command starts with /tmp/ or /dev/shm/ (excluding your own bash build/cleanup scripts)."
+  o2:
+    - "In the process listing, check the first column (USER or UID) for the suspicious process."
+    - "Check /proc/<PID>/status to see the user account that owns the process."
+    - "Run ps -ef | grep <PID> to read the user name in the UID column."
+  o3:
+    - "Every process has a Parent Process ID (PPID) that spawned it."
+    - "Find the PPID in ps -ef or by reading /proc/<PID>/status, then find which process has that PID."
+    - "Run ps -ef, look at the PPID column for the suspicious process, and match that number to its parent command name."
+  o4:
+    - "Inspect the full arguments passed to the suspicious process."
+    - "You can view full arguments in ps -ef or by reading /proc/<PID>/cmdline."
+    - "Run cat /proc/<PID>/cmdline | tr '\\0' ' ' to view the remote host:port argument."
+xp: 100
+mitre: ["T1057", "T1036.005"]

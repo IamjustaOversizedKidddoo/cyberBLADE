@@ -1,0 +1,42 @@
+id: core-r1-linux-suid-lab-01
+title: "Privilege Audit: SUID Binaries and Sudoers Rules"
+type: terminal
+track: core
+rank: 1
+estimated_minutes: 20
+briefing: briefing.md
+dataset:
+  generator: suid_lab
+  params: {}
+objectives:
+  - id: o1
+    prompt: "What is the full path of the non-standard SUID binary located outside of /usr/bin?"
+    check: { kind: flag, answer_from: generator.suid }
+  - id: o2
+    prompt: "How many total SUID files exist on the system?"
+    check: { kind: flag, answer_from: generator.count }
+  - id: o3
+    prompt: "Who is the owner of this non-standard SUID binary?"
+    check: { kind: flag, answer_from: generator.owner, case_sensitive: false }
+  - id: o4
+    prompt: "Which command may you run as root without entering a password, per sudo -l?"
+    check: { kind: flag, answer_from: generator.sudoCmd }
+hints:
+  o1:
+    - "Use the find command to scan the filesystem for files with the setuid bit (4000) enabled."
+    - "Standard system binaries live in /usr/bin. Look for any custom binaries placed in other paths like /usr/local/bin or /opt."
+    - "Run find / -perm -4000 2>/dev/null to list all SUID binaries, and identify the one outside /usr/bin."
+  o2:
+    - "Count the total number of lines returned by your SUID search."
+    - "Remember to redirect error output to /dev/null so permission denials do not clutter your count."
+    - "Run find / -perm -4000 2>/dev/null | wc -l to get the exact count."
+  o3:
+    - "Check file ownership using the long listing format."
+    - "The third column of ls -l displays the owner."
+    - "Run ls -l <path-to-suid-file> to inspect its owner."
+  o4:
+    - "Check the sudo privileges granted to your current user account."
+    - "The sudo command can list your allowed commands."
+    - "Run sudo -l and look for the command listed under NOPASSWD."
+xp: 100
+mitre: ["T1548.001", "T1548.003"]
