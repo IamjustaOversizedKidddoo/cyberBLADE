@@ -30,6 +30,12 @@ import { tr } from "./tr";
 import { traceroute } from "./traceroute";
 import { umask } from "./umask";
 import { uname } from "./uname";
+import { gi, getItem, getItemProperty, gp } from "./powershell/get-itemproperty";
+import { getProcess, gps } from "./powershell/get-process";
+import { getScheduledTask } from "./powershell/get-scheduledtask";
+import { getService, gsv } from "./powershell/get-service";
+import { getEventLog, getWinEvent } from "./powershell/get-winevent";
+import { selectString, sls } from "./powershell/select-string";
 import type { Command } from "./types";
 import { ok } from "./util";
 import { wc } from "./wc";
@@ -46,7 +52,13 @@ const help: Command = {
   },
 };
 
-/** The lab command set (Rank 0 basics + Rank 1 networking and Linux). Each command lives in its own file. */
+/** The lab command set (Rank 0 basics + Rank 1 networking, Linux, and Windows). Each command lives in its own file. */
 export const COMMANDS: Record<string, Command> = Object.fromEntries(
-  [cat, cd, chgrp, chmod, chown, clear, curl, dig, echo, env, exportCmd, find, grep, groups, head, help, history, hostname, id, ip, kill, ls, mkdir, pgrep, ping, ps, pwd, ss, su, submit, sudo, systemctl, tail, touch, tr, traceroute, umask, uname, unset, wc, whoami].map((c) => [c.name, c]),
+  [
+    cat, cd, chgrp, chmod, chown, clear, curl, dig, echo, env, exportCmd, find,
+    getEventLog, getItem, getItemProperty, getProcess, getScheduledTask, getService, getWinEvent,
+    gi, gp, gps, grep, groups, gsv, head, help, history, hostname, id, ip, kill, ls, mkdir,
+    pgrep, ping, ps, pwd, selectString, sls, ss, su, submit, sudo, systemctl, tail, touch,
+    tr, traceroute, umask, uname, unset, wc, whoami,
+  ].map((c) => [c.name, c]),
 );

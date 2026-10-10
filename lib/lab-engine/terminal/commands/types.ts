@@ -33,6 +33,9 @@ export type CmdContext = {
   /** This running command as a process (ps lists itself). */
   self: Proc;
   services?: import("../services").Service[];
+  registry?: import("../windows/types").RegistryHive;
+  eventLogs?: import("../windows/types").WinEvent[];
+  scheduledTasks?: import("../windows/types").WinTask[];
   runAs(user: string, argv: string[]): CmdResult;
   setCwd(path: string): void;
 };
