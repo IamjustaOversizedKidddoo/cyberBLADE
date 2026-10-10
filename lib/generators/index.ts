@@ -12,6 +12,8 @@ import { httpLab } from "./packet/http-lab";
 import { permsLab } from "./linux/perms-lab";
 import { procLab } from "./linux/proc-lab";
 import { suidLab } from "./linux/suid-lab";
+import { registryLab } from "./windows/registry-lab";
+import { eventlogLab } from "./windows/eventlog-lab";
 
 export type GeneratorOutput = { env: LabEnv; answers: Record<string, string> };
 
@@ -32,4 +34,6 @@ export const GENERATORS: Record<string, Generator> = {
   perms_lab: permsLab,
   proc_lab: procLab,
   suid_lab: suidLab,
+  win_registry_lab: registryLab,
+  win_eventlog_lab: eventlogLab,
 };

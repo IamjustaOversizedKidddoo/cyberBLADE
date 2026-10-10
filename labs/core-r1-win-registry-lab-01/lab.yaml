@@ -1,0 +1,42 @@
+id: core-r1-win-registry-lab-01
+title: "Registry Persistence Hunt: Run Keys & Service Binaries"
+type: terminal
+track: core
+rank: 1
+estimated_minutes: 20
+briefing: briefing.md
+dataset:
+  generator: win_registry_lab
+  params: {}
+objectives:
+  - id: o1
+    prompt: "What is the name of the rogue persistence value added under HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run?"
+    check: { kind: flag, answer_from: generator.runKeyName }
+  - id: o2
+    prompt: "What is the full binary path configured to execute from that Run key entry?"
+    check: { kind: flag, answer_from: generator.runBinaryPath }
+  - id: o3
+    prompt: "What is the ImagePath binary configured for the suspicious service under HKLM:\\SYSTEM\\CurrentControlSet\\Services?"
+    check: { kind: flag, answer_from: generator.serviceImagePath }
+  - id: o4
+    prompt: "What is the audit verification flag stored in HKLM:\\SOFTWARE\\CyberBlade\\Audit?"
+    check: { kind: flag, answer_from: generator.flag }
+hints:
+  o1:
+    - "Inspect the Run key under HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run using Get-ItemProperty or gp."
+    - "Look for an unexpected value that is not part of standard Windows boot components like SecurityHealth."
+    - "Run Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run and identify the unauthorized entry."
+  o2:
+    - "Look at the value data associated with the rogue property in the Run key."
+    - "Copy the complete absolute path including the drive letter and file extension."
+    - "Check the value of the property found in objective 1."
+  o3:
+    - "Enumerate registry keys under HKLM:\\SYSTEM\\CurrentControlSet\\Services."
+    - "Check the ImagePath property of non-default services."
+    - "Inspect HKLM:\\SYSTEM\\CurrentControlSet\\Services to find the service pointing to a suspicious binary path."
+  o4:
+    - "Query the HKLM:\\SOFTWARE\\CyberBlade\\Audit registry key."
+    - "Use Get-ItemProperty to retrieve the Flag property."
+    - "Run Get-ItemProperty HKLM:\\SOFTWARE\\CyberBlade\\Audit -Name Flag to obtain the flag."
+xp: 100
+mitre: ["T1547.001", "T1543.003"]

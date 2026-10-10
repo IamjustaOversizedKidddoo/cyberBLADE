@@ -1,0 +1,42 @@
+id: core-r1-win-eventlog-lab-01
+title: "Event Log Forensics: Brute Force & Rogue Service"
+type: terminal
+track: core
+rank: 1
+estimated_minutes: 20
+briefing: briefing.md
+dataset:
+  generator: win_eventlog_lab
+  params: {}
+objectives:
+  - id: o1
+    prompt: "What is the Windows Security Event ID associated with failed logon attempts?"
+    check: { kind: flag, answer_from: generator.failedLogonEventId }
+  - id: o2
+    prompt: "Which target user account was subjected to the brute force authentication attack?"
+    check: { kind: flag, answer_from: generator.targetUser, case_sensitive: false }
+  - id: o3
+    prompt: "What IP address was the source of these failed logon attempts?"
+    check: { kind: flag, answer_from: generator.attackerIp }
+  - id: o4
+    prompt: "What is the ServiceName of the newly installed service recorded in Event ID 7045?"
+    check: { kind: flag, answer_from: generator.serviceName }
+hints:
+  o1:
+    - "Standard Windows Security audit events use specific Event IDs for logon outcomes (4624 for success, 4625 for failure)."
+    - "Query the Security log using Get-WinEvent -LogName Security."
+    - "Enter 4625 for failed logons."
+  o2:
+    - "Filter the security events for failed logon attempts using -Id 4625 or Select-String."
+    - "Examine the TargetUserName field in the event messages."
+    - "Run Get-WinEvent -LogName Security -Id 4625 to find the targeted account name."
+  o3:
+    - "Look at the IpAddress field inside the 4625 failed logon event details."
+    - "Identify the IPv4 address originating the unauthorized logon requests."
+    - "Extract the IP from the failed logon messages."
+  o4:
+    - "Event ID 7045 is logged in the System log when a new service is installed."
+    - "Filter the System log with Get-WinEvent -LogName System -Id 7045."
+    - "Inspect the ServiceName field inside the 7045 event message."
+xp: 100
+mitre: ["T1110.001", "T1543.003", "T1078"]
