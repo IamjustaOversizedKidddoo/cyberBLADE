@@ -76,14 +76,14 @@ export class Vfs {
 
   /** Raw change, no permission check: callers (chmod, chown) decide who may. */
   setMode(path: string, mode: number): void {
-    if (this.isMounted(path)) throw new VfsError("EACCES", path);
+    if (this.isUnderMount(path)) throw new VfsError("EACCES", path);
     const node = this.stat(path);
     if (!node) throw new VfsError("ENOENT", path);
     node.mode = mode;
   }
 
   setOwner(path: string, owner?: string, group?: string): void {
-    if (this.isMounted(path)) throw new VfsError("EACCES", path);
+    if (this.isUnderMount(path)) throw new VfsError("EACCES", path);
     const node = this.stat(path);
     if (!node) throw new VfsError("ENOENT", path);
     if (owner !== undefined) node.owner = owner;
@@ -94,7 +94,7 @@ export class Vfs {
     this.mounts.set(path, provider);
   }
 
-  private isMounted(path: string): boolean {
+  private isUnderMount(path: string): boolean {
     return [...this.mounts.keys()].some((m) => path === m || path.startsWith(`${m}/`));
   }
 
@@ -169,7 +169,7 @@ export class Vfs {
   }
 
   write(path: string, content: string, user: string, append: boolean): void {
-    if (this.isMounted(path)) throw new VfsError("EACCES", path);
+    if (this.isUnderMount(path)) throw new VfsError("EACCES", path);
     const { parent, name } = this.parentOf(path, user);
     const existing = Object.hasOwn(parent.children, name) ? parent.children[name] : undefined;
     if (existing) {
@@ -186,7 +186,7 @@ export class Vfs {
   }
 
   mkdir(path: string, user: string, parents: boolean): void {
-    if (this.isMounted(path)) throw new VfsError("EACCES", path);
+    if (this.isUnderMount(path)) throw new VfsError("EACCES", path);
     const segs = split(path);
     for (let i = 1; i <= segs.length; i++) {
       const sub = "/" + segs.slice(0, i).join("/");
@@ -212,7 +212,7 @@ export class Vfs {
   }
 
   touch(path: string, user: string): void {
-    if (this.isMounted(path)) throw new VfsError("EACCES", path);
+    if (this.isUnderMount(path)) throw new VfsError("EACCES", path);
     const { parent, name } = this.parentOf(path, user);
     const existing = Object.hasOwn(parent.children, name) ? parent.children[name] : undefined;
     if (existing) {

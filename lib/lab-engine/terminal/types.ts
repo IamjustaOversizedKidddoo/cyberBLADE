@@ -1,5 +1,6 @@
 import type { Network } from "./network";
 import type { Proc } from "./processes";
+import type { Service } from "./services";
 
 type Meta = { owner: string; group: string; mode: number; mtime: string };
 
@@ -20,6 +21,8 @@ export type World = {
   umask?: number;
   /** Running processes (ps, kill, /proc). The learner's own bash is added by the shell. */
   processes?: Proc[];
+  /** Services managed by systemd (systemctl). */
+  services?: Service[];
   /** PID of the learner's bash (default 2201) and of its parent (default 1). */
   shellPid?: number;
   shellParent?: number;

@@ -86,12 +86,37 @@ export function createShell(world: World): Shell {
       }
 
       // Own keys only: "toString" or "constructor" must not resolve to Object.prototype members.
-      const impl = Object.hasOwn(COMMANDS, argv[0]) ? COMMANDS[argv[0]] : undefined;
       const isTty = index === parsed.commands.length - 1 && out.kind === "default";
       const alone = parsed.commands.length === 1 && redirects.length === 0;
-      const ran = impl
-        ? impl.run({ argv, stdin, vfs, cwd, user, home, hostname, env, history, isTty, alone, network: world.network, umask: vfs.umask, setUmask: (n) => (vfs.umask = n), procs, self: procs.spawnCommand(argv, user), setCwd })
-        : { stdout: "", stderr: `${argv[0]}: command not found\n`, code: 127 };
+
+      const dispatch = (targetUser: string, targetArgv: string[], targetStdin = stdin): CmdResult => {
+        const cmdImpl = Object.hasOwn(COMMANDS, targetArgv[0]) ? COMMANDS[targetArgv[0]] : undefined;
+        if (!cmdImpl) return { stdout: "", stderr: `${targetArgv[0]}: command not found\n`, code: 127 };
+        const cmdEnv = targetUser === user ? env : { ...env, USER: targetUser, HOME: targetUser === "root" ? "/root" : home };
+        return cmdImpl.run({
+          argv: targetArgv,
+          stdin: targetStdin,
+          vfs,
+          cwd,
+          user: targetUser,
+          home: targetUser === "root" ? "/root" : home,
+          hostname,
+          env: cmdEnv,
+          history,
+          isTty,
+          alone,
+          network: world.network,
+          umask: vfs.umask,
+          setUmask: (n) => (vfs.umask = n),
+          procs,
+          self: procs.spawnCommand(targetArgv, targetUser),
+          services: world.services,
+          runAs: (u, a) => dispatch(u, a, targetStdin),
+          setCwd,
+        });
+      };
+
+      const ran = dispatch(user, argv, stdin);
 
       // Errors are written first: tools report a bad operand before (or instead of) its output.
       let toPipe = "";

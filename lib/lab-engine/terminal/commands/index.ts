@@ -21,7 +21,10 @@ import { ps } from "./ps";
 import { pwd } from "./pwd";
 import { clear, history, hostname, whoami } from "./simple";
 import { ss } from "./ss";
+import { su } from "./su";
 import { submit } from "./submit";
+import { sudo } from "./sudo";
+import { systemctl } from "./systemctl";
 import { touch } from "./touch";
 import { tr } from "./tr";
 import { traceroute } from "./traceroute";
@@ -45,5 +48,5 @@ const help: Command = {
 
 /** The lab command set (Rank 0 basics + Rank 1 networking and Linux). Each command lives in its own file. */
 export const COMMANDS: Record<string, Command> = Object.fromEntries(
-  [cat, cd, chgrp, chmod, chown, clear, curl, dig, echo, env, exportCmd, find, grep, groups, head, help, history, hostname, id, ip, kill, ls, mkdir, pgrep, ping, ps, pwd, ss, submit, tail, touch, tr, traceroute, umask, uname, unset, wc, whoami].map((c) => [c.name, c]),
+  [cat, cd, chgrp, chmod, chown, clear, curl, dig, echo, env, exportCmd, find, grep, groups, head, help, history, hostname, id, ip, kill, ls, mkdir, pgrep, ping, ps, pwd, ss, su, submit, sudo, systemctl, tail, touch, tr, traceroute, umask, uname, unset, wc, whoami].map((c) => [c.name, c]),
 );
