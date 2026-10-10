@@ -2,7 +2,7 @@
 
 **Created:** 2026-10-10  
 **Last Updated:** 2026-10-10  
-**Status:** In Progress — Phase 2A (Complete), Phase 2B (Complete), Phase 2C (Complete), Phase 2D (Complete), Phase 2E (Next)  
+**Status:** In Progress — Phase 2A (Complete), Phase 2B (Complete), Phase 2C (Complete), Phase 2D (Complete), Phase 2E (Complete), Phase 2F (Next)  
 **Branch Tracking:** Local-first on `main`, feature branches per phase
 
 ---
@@ -19,8 +19,8 @@ This report tracks all architecture, content, engine, lab, tutor, and challenge 
 | **2B** | **Rank 1 · Linux** | ✅ **Complete** | 7 lessons, Linux machine simulator, 3 terminal labs (`perms`, `proc`, `suid`), cert coverage (`linuxplus`) |
 | **2C** | **Rank 1 · Windows & PowerShell + Capstone** | ✅ **Complete** | Windows/PowerShell simulation, registry & event log triage labs, Orders 17–20, Rank 1 Capstone Challenge (`core-r1-challenge-01`), Operator → Watcher (Rank 2) promotion |
 | **2D** | **The Handler (AI Tutor)** | ✅ **Complete** | Socratic AI assistant drawer, Groq/Gemini multi-model routing + Heuristic fallback, 3-tier progressive hint disclosure, strict solution/flag leakage guardrails, challenge mode lockout |
-| **2E** | **Exam Readiness & Gamification** | 🟡 **Next Up** | Cert readiness calculators (A+, Network+, Linux+, Security+, ISC2 CC), streak tracker, badge showcase |
-| **2F** | **Rank 2 · Watcher (Web Security)** | ⬜ Planned | `webapp` in-browser iframe lab runner, OWASP Top 10 attack/defense modules |
+| **2E** | **Exam Readiness & Gamification** | ✅ **Complete** | Cert readiness scorecards (CompTIA Security+, Network+, Linux+, A+ Core 1 & 2, ISC2 CC), streak engine, 7-day telemetry HUD, 11-badge honors wall, dashboard integration |
+| **2F** | **Rank 2 · Watcher (Web Security)** | 🟡 **Next Up** | `webapp` in-browser iframe lab runner, OWASP Top 10 attack/defense modules |
 | **2G** | **Hosted Beta Foundation** | ⬜ Planned | Supabase Auth (Email + Google OAuth) + Postgres + RLS, production deployment |
 
 ---
@@ -141,20 +141,55 @@ Phase 2D delivered **The Handler**, CyberBLADE's signature in-platform Socratic 
 
 ---
 
-## 5. Phase 2E: Exam Readiness Engine & Gamification (Next Up)
+## 5. Phase 2E: Exam Readiness Engine & Gamification (Complete)
 
-### Key Objectives
-1. **Certification Mapping & Readiness Scorecard:**
-   - Mappings against CompTIA A+ (Core 1 & 2), Network+, Security+, Linux+, and ISC2 Certified in Cybersecurity (CC).
-   - Weighted mastery scoring based on lesson check completion and lab execution times.
-2. **Gamification & Habit Loops:**
-   - Daily streak tracker with freeze mechanics.
-   - Activity heatmaps on the operator dashboard.
-   - Achievement badges (e.g., "Packet Surgeon", "Root Hunter", "PowerShell Warden", "Iron Gate Survivor").
+Phase 2E delivered the **Exam Readiness Engine**, **Habit Loops & Daily Streak Engine**, and the **Tactical Honors & Badges Wall** on the operator dashboard.
+
+### 1. Certification Target Matrix & Readiness Engine (`lib/readiness/`)
+- Ingests `content/coverage/core.yaml` certification objectives mapping.
+- Calculates mastery across 6 major certifications:
+  - CompTIA Security+ (`secplus` / SY0-701)
+  - CompTIA Network+ (`netplus` / N10-009)
+  - CompTIA Linux+ (`linuxplus` / XK0-006)
+  - CompTIA A+ Core 1 (`aplus1201` / 220-1201)
+  - CompTIA A+ Core 2 (`aplus1202` / 220-1202)
+  - ISC2 Certified in Cybersecurity (`isc2cc` / CC)
+- Categorizes operators into pedagogical grading bands (`docs/curriculum/teaching-style.md`):
+  - 0–49%: `Weak`
+  - 50–69%: `Needs review`
+  - 70–84%: `Good`
+  - 85–94%: `Strong`
+  - 95–100%: `Exam Ready`
+- Provides granular drill-down matrices showing covered lessons vs unaddressed certification exam codes.
+
+### 2. Operational Streak & Telemetry Engine (`lib/gamification/streaks.ts`)
+- Ingests timestamp telemetry from XP events, completed lesson milestones, and challenge attempts.
+- Computes consecutive operational streaks, all-time record streaks, and same-day active status.
+- Renders a 7-day rolling activity matrix displaying active/inactive nodes with high-contrast tactical styling.
+
+### 3. Tactical Honors & Badges Wall (`lib/gamification/badges.ts`, `components/dashboard/BadgesWall.tsx`)
+- Dynamic rule evaluator computing unlock criteria for 11 honors:
+  - `INITIATE`: Enrolled at Rank 0.
+  - `OPERATOR`: Elevated to Rank 1.
+  - `WATCHER`: Elevated to Rank 2.
+  - `PACKET_SURGEON`: Completed network packet capture triage labs.
+  - `ROOT_HUNTER`: Audited Linux permissions and SUID backdoors.
+  - `POWERSHELL_WARDEN`: Triaged Windows registry run keys and security event logs.
+  - `IRON_GATE_SURVIVOR`: Completed Operation Iron Gate (Rank 1 Capstone).
+  - `FIRST_BLOOD`: Solved first practical lab or lesson check.
+  - `CLEAN_RUN`: Completed a lab without requesting hint disclosures.
+  - `TACTICAL_STREAK`: Maintained a 3-day continuous streak.
+  - `DISCIPLINE_MASTER`: Maintained a 7-day continuous streak.
+- Renders unlocked badges with gold/cyan classification stamps and encrypted/classified locked state for future objectives.
+
+### 4. Verification & Testing
+- **Vitest Suite:** 116 test files passed, 749 tests passed (100%).
+- **Playwright E2E:** 2/2 tests passed (`tests/e2e/exam-readiness-gamification.spec.ts` across desktop and mobile viewports) validating complete lifecycle (onboarding -> initial standby -> lesson check -> streak activation -> badge unlock).
+- **Production Build:** Clean Next.js Turbopack build with 0 errors.
 
 ---
 
-## 6. Phase 2F: Rank 2 · Watcher (Web Security Core) (Planned)
+## 6. Phase 2F: Rank 2 · Watcher (Web Security Core) (Next Up)
 
 ### Key Objectives
 1. **Web App Sandbox Runner (`webapp`):**
