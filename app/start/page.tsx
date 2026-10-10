@@ -4,6 +4,7 @@ import { PosterHeading } from "@/components/art/PosterHeading";
 import { NoiseLayer } from "@/components/art/NoiseLayer";
 import { SystemLabel } from "@/components/art/SystemLabel";
 import { Scanlines } from "@/components/theme/Scanlines";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { safeNextPath } from "@/lib/identity/routes";
 import { BRAND } from "@/lib/brand";
 import { StartForm } from "./StartForm";
@@ -21,6 +22,7 @@ const INTAKE_FIELDS = [
 
 export default async function StartPage(props: PageProps<"/start">) {
   const { next } = await props.searchParams;
+  const isHosted = isSupabaseConfigured();
   return (
     <>
       <Scanlines />
@@ -86,7 +88,10 @@ export default async function StartPage(props: PageProps<"/start">) {
                 <p className="mb-8 font-mono text-xs tracking-widest text-muted/60">
                   &gt; INTAKE SEQUENCE INITIATED — COMPLETE ALL FIELDS TO PROCEED
                 </p>
-                <StartForm next={safeNextPath(typeof next === "string" ? next : null)} />
+                <StartForm
+                  next={safeNextPath(typeof next === "string" ? next : null)}
+                  isHosted={isHosted}
+                />
               </div>
             </div>
 
@@ -119,7 +124,7 @@ export default async function StartPage(props: PageProps<"/start">) {
                 <div className="space-y-2 font-ui text-muted/50">
                   <div className="flex justify-between">
                     <span>SESSION</span>
-                    <span>LOCAL</span>
+                    <span>{isHosted ? "HOSTED (SUPABASE)" : "LOCAL"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>CLEARANCE</span>

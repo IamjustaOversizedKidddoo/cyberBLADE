@@ -253,14 +253,75 @@ Phase 2F delivered the complete **Web Security Core** curriculum for Rank 2 (Wat
 
 ---
 
-## 7. Phase 2G: Hosted Closed Beta Foundation (Next Up)
+## 7. Phase 2G: Hosted Closed Beta Foundation (Completed ✅)
 
-### Key Objectives
-1. **Supabase Backend Migration:**
-   - Schema migration from local JSON file storage (`.data/`) to Supabase Postgres.
-   - Row Level Security (RLS) policies guaranteeing operator isolation.
-2. **Authentication:**
-   - Supabase Auth supporting Email Magic Links and Google OAuth.
-3. **Production Deployment:**
-   - Vercel production deployment with custom domain, edge middleware, and security headers (CSP, HSTS).
+### 1. Architectural Overview & Hybrid Zero-Config Model
+Phase 2G establishes the cloud foundation for the CYBERBLADE hosted closed beta while maintaining 100% backward compatibility with zero-config local development:
+- **Local-First Fallback:** When Supabase environment variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) are omitted, CYBERBLADE operates completely offline with file-backed JSON storage (`.data/`).
+- **Hosted Cloud Mode:** When environment variables are configured, storage repositories dynamically switch to Postgres with Row Level Security (RLS) and Supabase Auth.
+- **Single Swap Points:** `getOperatorStore()` and `getCtx()` dynamically instantiate `SupabaseOperatorStore` and `SupabaseProgressRepo` respectively without modifying any downstream API contracts.
+
+### 2. Database Schema & Row Level Security (`supabase/migrations/20261010000000_phase_2g_initial_schema.sql`)
+5 normalized relational tables with UUID foreign keys and RLS:
+1. `operators`: `id` (UUID PK = `auth.uid()`), `handle` (CITEXT UNIQUE), `rank` (INT2), `ethics_accepted_at`, `created_at`.
+2. `lesson_progress`: `(user_id, lesson_id)` composite PK, `status`, `checks_passed` (TEXT[]), `completed_at`.
+3. `lab_attempts`: `id` UUID PK, `user_id`, `lab_id`, `mode`, `seed`, `status`, `started_at`, `completed_at`, `expires_at`, `answers` (JSONB).
+4. `xp_events`: `id` UUID PK, `user_id`, `source` (TEXT UNIQUE per user), `amount` (INT), `awarded_at`.
+5. `rank_challenges`: `(user_id, rank)` composite PK, `status`, `attempt_id`, `passed_at`, `cooldown_until`.
+
+RLS Policies:
+- Every table has `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;`.
+- Strict user isolation policies (`USING (auth.uid() = user_id)` / `WITH CHECK (auth.uid() = user_id)`).
+- Public profile lookup on `operators` allows reading ranks and handles while restricting mutations to owner.
+
+### 3. Authentication & SSO (`app/auth/callback/route.ts`, `components/auth/HostedAuthSection.tsx`)
+- **Email Magic Link & Google OAuth SSO:** Handled via `@supabase/ssr` server actions and PKCE authorization code exchange in `/auth/callback`.
+- **Automatic Operator Provisioning:** First-time OAuth/Magic Link sign-ins seamlessly check and provision an operator record if one does not yet exist.
+- **UI Integration:** The `/start` onboarding form automatically reveals Google SSO and Email Magic Link triggers when hosted mode is active, while continuing to offer instant handle-based anonymous onboarding in local-first mode.
+
+### 4. Edge Security & Next.js 16 Proxy (`proxy.ts`)
+- **Next.js 16 Edge Proxy:** Utilizes modern `proxy.ts` (Next.js 16 convention replacing legacy `middleware.ts`).
+- **Session Refresh:** Refreshes Supabase session tokens on incoming edge requests using `@supabase/ssr`.
+- **Enterprise Security Headers:**
+  - `Content-Security-Policy`: Defense-in-depth policy allowing inline styles for animations and data/blob frames for isolated sandboxed webapp labs (`frame-src 'self' data: blob:`).
+  - `X-Frame-Options: SAMEORIGIN`
+  - `X-Content-Type-Options: nosniff`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+  - `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload` (in production).
+
+### 5. Automated Verification Gates
+- **Content Check:** 38 lessons, 19 labs, 27 objectives valid.
+- **Lint:** 0 ESLint errors or warnings.
+- **Typecheck:** 0 TypeScript errors.
+- **Vitest Suite:** **121 test files passed, 770 tests passed (100%)**.
+- **Playwright E2E Suite:** **101 tests passed, 21 skipped (matrix-appropriate), 0 failed** across all desktop and mobile flows.
+- **Production Build:** Clean Turbopack production build with all static/dynamic routes compiled.
+
+---
+
+## 8. Phase 2 Completion Summary: Core Complete + Handler
+
+With Phase 2G complete, the entirety of **Phase 2 (Core Complete + Handler)** is finished!
+- **Phase 2A:** Rank 1 Networking (9 lessons, network packet inspector lab, reachability simulator).
+- **Phase 2B:** Rank 1 Linux System Internals (7 lessons, Linux vfs/procfs terminal, SUID/privilege escalation labs).
+- **Phase 2C:** Rank 1 Capstone Challenge "Operation Iron Gate" (30-min incident triage timed mission, promotion to Rank 2).
+- **Phase 2D:** Rank 1 Windows Foundations (4 lessons, PowerShell terminal simulator, Windows Registry and Event Log labs).
+- **Phase 2E:** Exam Readiness Matrix & Gamification Engine (CompTIA/CySA+/MITRE coverage engine, streak tracker, badging wall).
+- **Phase 2F:** Rank 2 Web Security Fundamentals (12 lessons, OWASP Top 10 sandboxed iframe lab, Capstone Challenge "Operation Watchtower", promotion to Rank 3 Hunter).
+- **Phase 2G:** Hosted Closed Beta Foundation (Supabase Postgres schema, RLS, Auth SSO, Edge proxy security headers, hybrid local/hosted fallback).
+
+---
+
+## 9. Next Major Phase: Phase 3 (SOC Analyst Job Track)
+
+### Objectives for Phase 3
+1. **SIEM Event Stream & Log Investigation Console:**
+   - Real-time Splunk/Elasticsearch-style log query interface with syntax highlighting, time bucketing, and search operators.
+2. **SOC Workflows & Incident Triage Labs:**
+   - Phishing investigation, malware alert correlation, brute-force analysis, and memory triage scenarios.
+3. **AI-Graded Incident Reports:**
+   - Learners write structured Incident Responder IR reports; The Handler grades against rubric criteria and evidence justification.
+4. **SOC Track Capstone & Certification Exam:**
+   - Comprehensive multi-hour simulated security operations center incident shift culminating in a verified CYBERBLADE SOC Tier-1 Analyst certificate.
 

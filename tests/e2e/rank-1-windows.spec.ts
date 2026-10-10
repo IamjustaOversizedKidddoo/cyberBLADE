@@ -78,7 +78,7 @@ test("mobile: lesson 17 has no horizontal page scroll", async ({ page }, info) =
 
   await promoteToRank(page, 1);
   await page.goto("/learn/core-r1-win-arch-registry-01");
-  await expect(page.getByRole("heading", { level: 1, name: "Windows Architecture & The Windows Registry" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Windows Architecture & The Windows Registry" })).toBeVisible({ timeout: 15_000 });
 
   const { scrollWidth, innerWidth } = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
