@@ -39,6 +39,8 @@ export function SiteFooter() {
           <ul className="space-y-2 text-sm text-muted">
             <li><Link href="/learn/core" className="hover:text-cyan transition-colors">Course map</Link></li>
             <li><Link href="/dashboard" className="hover:text-cyan transition-colors">Dashboard</Link></li>
+            <li><Link href="/labs" className="hover:text-cyan transition-colors">Labs Range</Link></li>
+            <li><Link href="/exam" className="hover:text-cyan transition-colors">Exam Readiness</Link></li>
             <li><Link href="/start" className="hover:text-cyan transition-colors">Get started</Link></li>
           </ul>
         </div>

@@ -30,8 +30,13 @@ test("accepts a challenge block", () => {
   expect(lab.challenge).toEqual({ rank: 0, time_limit_minutes: 45, cooldown_minutes: 30 });
 });
 
+test("accepts a siem lab type", () => {
+  const lab = labSchema.parse({ ...valid, type: "siem" });
+  expect(lab.type).toBe("siem");
+});
+
 test.each([
-  ["a lab type that is not built yet", { type: "siem" }],
+  ["a lab type that is not built yet", { type: "cloud" }],
   ["a hint for a missing objective", { hints: { o9: ["nope"] } }],
   ["answer_from outside the generator", { objectives: [{ id: "o1", prompt: "?", check: { kind: "flag", answer_from: "answers.flag" } }] }],
   ["no objectives", { objectives: [] }],

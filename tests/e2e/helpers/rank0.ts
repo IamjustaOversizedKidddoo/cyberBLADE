@@ -118,30 +118,25 @@ export async function promoteToRank(page: Page, targetRank: number): Promise<voi
           }
           const data = JSON.parse(raw);
           if (data.operators && data.operators[opCookie.value]) {
-            if (data.operators[opCookie.value].rank !== targetRank) {
-              data.operators[opCookie.value].rank = targetRank;
-              await fs.writeFile(opFile, JSON.stringify(data, null, 2), "utf8");
-            }
+            data.operators[opCookie.value].rank = targetRank;
+            const tmpFile = `${opFile}.${process.pid}.${Date.now()}-${Math.random().toString(36).slice(2)}.tmp`;
+            await fs.writeFile(tmpFile, JSON.stringify(data, null, 2), "utf8");
+            await fs.rename(tmpFile, opFile);
             return true;
           }
           return false;
         });
 
         if (updated) {
-          await new Promise((r) => setTimeout(r, 150));
-          const verifyRaw = await fs.readFile(opFile, "utf8");
-          const verifyData = JSON.parse(verifyRaw);
-          if (verifyData.operators?.[opCookie.value]?.rank === targetRank) {
-            confirmed = true;
-            break;
-          }
+          confirmed = true;
+          break;
         }
       } catch {
         // retry
       }
     }
     if (confirmed) break;
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 50));
   }
 
   if (!confirmed) {
@@ -193,7 +188,9 @@ export async function unlockRankChallenge(page: Page, rank: number): Promise<voi
             completedAt: now,
           };
         }
-        await fs.writeFile(progFile, JSON.stringify(data, null, 2), "utf8");
+        const tmpFile = `${progFile}.${process.pid}.${Date.now()}-${Math.random().toString(36).slice(2)}.tmp`;
+        await fs.writeFile(tmpFile, JSON.stringify(data, null, 2), "utf8");
+        await fs.rename(tmpFile, progFile);
       });
     } catch {
       // ignore

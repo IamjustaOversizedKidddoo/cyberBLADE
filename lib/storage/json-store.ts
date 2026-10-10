@@ -27,8 +27,11 @@ async function renameWithRetry(from: string, to: string): Promise<void> {
       return await fs.rename(from, to);
     } catch (err) {
       const code = (err as NodeJS.ErrnoException).code;
-      // Windows can briefly lock files (antivirus, indexers).
-      if (attempt >= 5 || (code !== "EPERM" && code !== "EBUSY")) throw err;
+      // Windows can briefly lock files (antivirus, indexers, cross-process writes).
+      if (attempt >= 20 || (code !== "EPERM" && code !== "EBUSY")) {
+        await fs.unlink(from).catch(() => undefined);
+        throw err;
+      }
       await new Promise((r) => setTimeout(r, 20 * (attempt + 1)));
     }
   }
@@ -55,7 +58,7 @@ export function createJsonStore<T>(filePath: string, defaults: () => T): JsonSto
 
   async function save(data: T): Promise<void> {
     await fs.mkdir(path.dirname(key), { recursive: true });
-    const tmp = `${key}.tmp`;
+    const tmp = `${key}.${process.pid}.${Date.now()}-${Math.random().toString(36).slice(2)}.tmp`;
     await fs.writeFile(tmp, JSON.stringify(data, null, 2), "utf8");
     await renameWithRetry(tmp, key);
   }

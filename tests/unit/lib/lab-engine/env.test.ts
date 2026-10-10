@@ -42,4 +42,13 @@ describe("lab environments", () => {
       "lab pkt-01: generator returned terminal env for a packet lab",
     );
   });
+
+  it("assertEnvMatchesLab succeeds when generator returns siem env for a siem lab", () => {
+    expect(() =>
+      assertEnvMatchesLab(
+        { id: "test-siem", type: "siem" },
+        { kind: "siem", siem: { title: "SIEM", description: "test", events: [] } },
+      ),
+    ).not.toThrow();
+  });
 });

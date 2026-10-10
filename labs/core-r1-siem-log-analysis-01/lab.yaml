@@ -1,0 +1,49 @@
+id: core-r1-siem-log-analysis-01
+title: "SIEM Triage: Brute Force & Persistence Investigation"
+type: siem
+track: core
+rank: 1
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: siem_investigation
+  params: {}
+objectives:
+  - id: o1
+    prompt: "What external IP address originated the port scan and subsequent brute force attack?"
+    check: { kind: flag, answer_from: generator.attackerIp }
+  - id: o2
+    prompt: "Which internal user account was targeted during the brute force logon attempts?"
+    check: { kind: flag, answer_from: generator.targetUser, case_sensitive: false }
+  - id: o3
+    prompt: "How many consecutive failed logon attempts (Event ID 4625) occurred before the intrusion succeeded?"
+    check: { kind: flag, answer_from: generator.failedCount }
+  - id: o4
+    prompt: "What is the ServiceName of the malicious persistence service recorded in Event ID 7045?"
+    check: { kind: flag, answer_from: generator.serviceName, case_sensitive: false }
+  - id: o5
+    prompt: "What flag token (FLAG{...}) was passed in the ImagePath parameter of the installed service?"
+    check: { kind: flag, answer_from: generator.flag }
+hints:
+  o1:
+    - "Filter the logs by Severity: MEDIUM or search for PORT_SCAN or 4625 to find inbound external traffic."
+    - "Inspect the Source IP column on failed logon events."
+    - "Look for an untrusted external IP address that probes ports and issues repetitive logon requests."
+  o2:
+    - "Check the TargetUserName or User column on the Event ID 4625 entries."
+    - "Click any failed logon event to open the Event Details Inspector Drawer."
+    - "The targeted service account appears repeatedly under the user attribute."
+  o3:
+    - "Filter by EventID '4625' in the search bar."
+    - "Count the number of 4625 failed logon rows listed between the port scan and the first 4624 successful logon."
+    - "Check the attempt_num attribute in the Event Inspector or count the rows matching the attacker IP and target account."
+  o4:
+    - "Filter by EventID '7045' or Severity: CRITICAL to isolate newly installed Windows services."
+    - "Open the 7045 event in the Inspector and examine the ServiceName field."
+    - "Enter the exact name of the newly created service."
+  o5:
+    - "Inspect the Raw Log string or Extracted Attributes of Event ID 7045."
+    - "Look at the --c2-token argument inside ImagePath."
+    - "The token begins with FLAG{siem_ir_...}."
+xp: 150
+mitre: ["T1110.001", "T1078", "T1543.003", "T1046", "T1071.001"]
