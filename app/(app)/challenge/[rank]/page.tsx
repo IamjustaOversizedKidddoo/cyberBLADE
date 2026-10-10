@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChallengeTimer } from "@/components/challenge/ChallengeTimer";
+import { HandlerDrawer } from "@/components/handler/HandlerDrawer";
 import { LabWorkspace } from "@/components/labs/LabWorkspace";
 import { proseComponents } from "@/components/lesson/prose";
 import { HalftoneField } from "@/components/art/HalftoneField";
@@ -199,6 +200,14 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
             </form>
           </div>
         </div>
+        <HandlerDrawer
+          context={{
+            kind: "lab",
+            isChallenge: true,
+            labTitle: session.labTitle,
+          }}
+          operatorHandle={operator.handle}
+        />
       </main>
     );
   }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { HandlerDrawer } from "@/components/handler/HandlerDrawer";
 import { LabWorkspace } from "@/components/labs/LabWorkspace";
 import { proseComponents } from "@/components/lesson/prose";
 import { HeroBand } from "@/components/theme/HeroBand";
@@ -65,8 +66,20 @@ export default async function LabPage(props: PageProps<"/labs/[labId]">) {
           objectives={session.objectives}
           onSubmit={submitObjectiveAction.bind(null, session.attemptId)}
           continueTo={continueTo}
+          attemptId={session.attemptId}
         />
       </div>
+      <HandlerDrawer
+        context={{
+          kind: "lab",
+          labId: lab.id,
+          labTitle: lab.title,
+          rank: lab.rank,
+          objectives: session.objectives,
+          hints: lab.hints,
+        }}
+        operatorHandle={operator.handle}
+      />
     </main>
   );
 }
