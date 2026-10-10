@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { JsonStore } from "@/lib/storage/json-store";
-import type { AttemptMode, LabAttempt, LessonProgress, ProgressData, RankChallenge } from "./types";
+import type { AttemptMode, LabAttempt, LessonProgress, ProgressData, RankChallenge, XpEvent } from "./types";
 
 /**
  * Progress storage. Every mutation is a single atomic operation (no read-then-write in callers),
@@ -27,6 +27,8 @@ export interface ProgressRepo {
   /** False if this source already paid out (idempotent). */
   awardXp(userId: string, source: string, amount: number): Promise<boolean>;
   getXpTotal(userId: string): Promise<number>;
+  listXpEvents(userId: string): Promise<XpEvent[]>;
+  listAttempts(userId: string): Promise<LabAttempt[]>;
 
   getActiveChallenge(userId: string, rank: number): Promise<RankChallenge | null>;
   getLastFailedChallenge(userId: string, rank: number): Promise<RankChallenge | null>;
@@ -164,6 +166,14 @@ export class StoreProgressRepo implements ProgressRepo {
     return Object.values((await this.store.read()).xp)
       .filter((e) => e.userId === userId)
       .reduce((sum, e) => sum + e.amount, 0);
+  }
+
+  async listXpEvents(userId: string) {
+    return Object.values((await this.store.read()).xp).filter((e) => e.userId === userId);
+  }
+
+  async listAttempts(userId: string) {
+    return Object.values((await this.store.read()).attempts).filter((a) => a.userId === userId);
   }
 
   private async challenges(userId: string, rank: number) {
