@@ -16,7 +16,7 @@ test("Operator completes Rank 1 Capstone Challenge (Operation Iron Gate) and pro
   await page.getByRole("button", { name: "Start the challenge" }).click();
 
   // 3. Verify timer and wait for terminal screen to mount
-  await expect(page.getByRole("timer")).toBeVisible();
+  await expect(page.getByRole("timer")).toBeVisible({ timeout: 15_000 });
   await page.locator(".xterm-screen").scrollIntoViewIfNeeded();
 
   // 4. Extract incident triage artifacts

@@ -15,7 +15,7 @@ test("a promoted Operator explores Rank 1 networking lessons and completes a pac
   await expect(page.getByRole("heading", { name: /rank_1 · Operator/ })).toBeVisible();
 
   const rank1LessonLinks = page.locator('#rank-1 ol a[href^="/learn/core-r1-"]');
-  await expect(rank1LessonLinks).toHaveCount(16);
+  await expect(rank1LessonLinks).toHaveCount(20);
 
   // 3. Open lesson 4: TCP, UDP and Ports
   await page.goto("/learn/core-r1-net-tcpudp-01");
