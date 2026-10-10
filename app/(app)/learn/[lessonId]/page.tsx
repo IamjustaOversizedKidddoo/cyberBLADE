@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { HandlerDrawer } from "@/components/handler/HandlerDrawer";
 import { Callout } from "@/components/lesson/Callout";
 import { DraftBanner } from "@/components/lesson/DraftBanner";
 import { LessonNav } from "@/components/lesson/LessonNav";
@@ -75,6 +76,17 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
           <LessonNav lessons={siblings} currentId={lesson.id} />
         </div>
       </article>
+      <HandlerDrawer
+        context={{
+          kind: "lesson",
+          lessonId: lesson.id,
+          lessonTitle: lesson.title,
+          module: lesson.module,
+          rank: lesson.rank,
+          lessonExcerpt: lesson.body.slice(0, 1500),
+        }}
+        operatorHandle={operator.handle}
+      />
     </main>
   );
 }

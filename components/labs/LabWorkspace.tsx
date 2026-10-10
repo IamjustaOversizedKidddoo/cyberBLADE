@@ -19,10 +19,18 @@ type Props = {
   onSubmit: (objectiveId: string, answer: string) => Promise<SubmitResult>;
   doneMessage?: string;
   continueTo?: { href: string; label: string } | null;
+  attemptId?: string;
 };
 
 /** Terminal or packet viewer + objectives. Answers may come from either; this component owns what is solved. */
-export function LabWorkspace({ env, objectives, onSubmit, doneMessage = "Lab complete! XP added to your profile.", continueTo }: Props) {
+export function LabWorkspace({
+  env,
+  objectives,
+  onSubmit,
+  doneMessage = "Lab complete! XP added to your profile.",
+  continueTo,
+  attemptId,
+}: Props) {
   const router = useRouter();
   const [solved, setSolved] = useState(() => new Set(objectives.filter((o) => o.solved).map((o) => o.id)));
   const [status, setStatus] = useState(objectives.every((o) => o.solved) ? doneMessage : "");
@@ -57,7 +65,14 @@ export function LabWorkspace({ env, objectives, onSubmit, doneMessage = "Lab com
       ) : (
         <PacketLab capture={env.capture} />
       )}
-      <ObjectivesPanel objectives={objectives} solved={solved} onSubmit={submit} status={status} continueTo={continueTo} />
+      <ObjectivesPanel
+        objectives={objectives}
+        solved={solved}
+        onSubmit={submit}
+        status={status}
+        continueTo={continueTo}
+        attemptId={attemptId}
+      />
     </div>
   );
 }
