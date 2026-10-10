@@ -90,7 +90,17 @@ export function createShell(world: World): Shell {
       const alone = parsed.commands.length === 1 && redirects.length === 0;
 
       const dispatch = (targetUser: string, targetArgv: string[], targetStdin = stdin): CmdResult => {
-        const cmdImpl = Object.hasOwn(COMMANDS, targetArgv[0]) ? COMMANDS[targetArgv[0]] : undefined;
+        const cmdName = targetArgv[0];
+        let cmdImpl = Object.hasOwn(COMMANDS, cmdName) ? COMMANDS[cmdName] : undefined;
+        if (!cmdImpl) {
+          const lower = cmdName.toLowerCase();
+          for (const [k, v] of Object.entries(COMMANDS)) {
+            if (k.toLowerCase() === lower) {
+              cmdImpl = v;
+              break;
+            }
+          }
+        }
         if (!cmdImpl) return { stdout: "", stderr: `${targetArgv[0]}: command not found\n`, code: 127 };
         const cmdEnv = targetUser === user ? env : { ...env, USER: targetUser, HOME: targetUser === "root" ? "/root" : home };
         return cmdImpl.run({
@@ -111,6 +121,9 @@ export function createShell(world: World): Shell {
           procs,
           self: procs.spawnCommand(targetArgv, targetUser),
           services: world.services,
+          registry: world.registry,
+          eventLogs: world.eventLogs,
+          scheduledTasks: world.scheduledTasks,
           runAs: (u, a) => dispatch(u, a, targetStdin),
           setCwd,
         });

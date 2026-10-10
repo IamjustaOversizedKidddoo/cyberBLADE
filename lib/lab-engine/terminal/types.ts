@@ -26,4 +26,10 @@ export type World = {
   /** PID of the learner's bash (default 2201) and of its parent (default 1). */
   shellPid?: number;
   shellParent?: number;
+  /** Windows Registry keys and properties (Get-ItemProperty, HKLM, HKCU). */
+  registry?: Record<string, Record<string, string | number>>;
+  /** Windows Event Log records (Get-WinEvent, Security/System/Sysmon). */
+  eventLogs?: import("./windows/types").WinEvent[];
+  /** Windows Scheduled Tasks (Get-ScheduledTask). */
+  scheduledTasks?: import("./windows/types").WinTask[];
 };

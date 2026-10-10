@@ -57,9 +57,21 @@ function tokenize(line: string, env: Record<string, string>): Token[] | ParseErr
     return env[name] ?? "";
   };
 
+  let braceDepth = 0;
+
   while (i < line.length) {
     const c = line[i];
-    if (c === " " || c === "\t") {
+    if (c === "{") {
+      braceDepth++;
+      word += c;
+      inWord = true;
+      i++;
+    } else if (c === "}") {
+      if (braceDepth > 0) braceDepth--;
+      word += c;
+      inWord = true;
+      i++;
+    } else if (c === " " || c === "\t") {
       flush();
       i++;
     } else if (c === "|" || c === ">") {
@@ -77,11 +89,27 @@ function tokenize(line: string, env: Record<string, string>): Token[] | ParseErr
       tokens.push({ kind: "op", value: op });
       i += op.length;
     } else if (c === ";" || (c === "&" && line[i + 1] === "&")) {
-      return { error: UNSUPPORTED };
+      if (c === ";" && braceDepth > 0) {
+        word += ";";
+        inWord = true;
+        i++;
+      } else {
+        return { error: UNSUPPORTED };
+      }
     } else if (c === "\\") {
       inWord = true;
-      if (i + 1 < line.length) word += line[i + 1];
-      i += 2;
+      if (i + 1 < line.length) {
+        const next = line[i + 1];
+        if (/[ \t"'$|><;&\\]/.test(next)) {
+          word += next;
+        } else {
+          word += "\\" + next;
+        }
+        i += 2;
+      } else {
+        word += "\\";
+        i++;
+      }
     } else if (c === "'") {
       const end = line.indexOf("'", i + 1);
       if (end === -1) return { error: "syntax error: unexpected end of file" };
