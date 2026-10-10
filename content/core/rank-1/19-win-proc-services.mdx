@@ -1,0 +1,131 @@
+---
+id: core-r1-win-proc-services-01
+title: "Windows Processes, Services & Task Scheduling"
+track: core
+rank: 1
+module: windows
+order: 19
+estimated_minutes: 35
+objectives_covered: ["aplus1202:1", "secplus:2.4"]
+mitre: ["T1543.003", "T1057"]
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+Understanding what processes run on a Windows host—and how background tasks are sustained—is fundamental to both systems administration and security investigations.
+
+In Windows, program execution occurs across three key execution paradigms:
+1. **Interactive User Processes:** Programs initiated by a logged-on user executing in their security context (e.g., `explorer.exe`, web browsers, command prompts).
+2. **Windows Services:** Long-running background processes managed by the **Service Control Manager (SCM)** that start during operating system initialization, often running without interactive user intervention under privileged accounts like `NT AUTHORITY\SYSTEM`, `LOCAL SERVICE`, or `NETWORK SERVICE`.
+3. **Scheduled Tasks:** Automated jobs coordinated by the Windows Task Scheduler service (`Taskschd.msc`) triggered by specific schedules (e.g., daily at midnight), calendar intervals, or system events (e.g., upon user logon or workstation unlock).
+
+> **Authorisation note.** Stopping critical services or terminating system processes on production servers can cause immediate service disruption or system crashes. Practice process hunting and service enumeration only in controlled lab environments.
+
+### 2. Why it exists
+
+Operating systems must perform countless background duties independent of whether a human operator is sitting in front of the console:
+- Network file sharing (SMB/LanmanServer)
+- Time synchronization (W32Time)
+- Security event logging (EventLog)
+- Endpoint protection scanning (WinDefend)
+- Print queue coordination (Spooler)
+
+Windows Services and Scheduled Tasks decouple critical operating system functionality from individual user sessions. If a user logs off, background services remain active, ensuring enterprise services maintain high availability.
+
+### 3. How it works
+
+**Core Windows System Processes.** Windows maintains a rigid process parentage hierarchy during system boot. Deviations from this standard tree are primary indicators of compromise (IOCs):
+
+| Process Name | Typical PID / Parent | Security Context | Role |
+| :--- | :--- | :--- | :--- |
+| `System` | PID 4 / None | `SYSTEM` | Hosts kernel-mode system threads |
+| `smss.exe` | Spawned by `System` | `SYSTEM` | Session Manager Subsystem; starts session 0 and session 1 |
+| `csrss.exe` | Spawned by `smss.exe` | `SYSTEM` | Client Server Runtime Subsystem; manages console windows and threads |
+| `wininit.exe` | Spawned by `smss.exe` | `SYSTEM` | Initializes user-mode services for session 0 |
+| `services.exe` | Spawned by `wininit.exe` | `SYSTEM` | Service Control Manager (SCM); manages all system services |
+| `lsass.exe` | Spawned by `wininit.exe` | `SYSTEM` | Local Security Authority Subsystem; verifies logons and enforces security policies |
+| `svchost.exe` | Spawned by `services.exe` | `SYSTEM` / `NETWORK SERVICE` | Generic host process for services running from dynamic-link libraries (DLLs) |
+
+**Inspecting Services in PowerShell.**
+PowerShell provides native cmdlets for inspecting services:
+
+```console
+$ Get-Service -Name Spooler
+Status   Name               DisplayName
+------   ----               -----------
+Running  Spooler            Print Spooler
+```
+
+**Scheduled Tasks.**
+The Windows Task Scheduler maintains task definitions in XML format under `C:\Windows\System32\Tasks` and in the registry under `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache`. Tasks can be enumerated using `Get-ScheduledTask`:
+
+```console
+$ Get-ScheduledTask -TaskName ScheduledDefrag
+TaskPath                                TaskName                          State
+--------                                --------                          -----
+\Microsoft\Windows\Defrag\              \Microsoft\Windows\Defrag\ScheduledDefrag Ready
+```
+
+### 4. How attackers abuse it
+
+Adversaries heavily exploit services and tasks across multiple phases of the cyber kill chain:
+
+- **Persistence via Windows Service (MITRE ATT&CK T1543.003):** An attacker with local administrator privileges can create a rogue service or modify the `ImagePath` of an existing service to execute their malware payload automatically upon system boot with `SYSTEM` rights.
+- **Privilege Escalation via Unquoted Service Paths:** When a service binary path contains spaces and lacks quotation marks (e.g., `C:\Program Files\Vulnerable Software\service.exe`), Windows probes parent directory paths sequentially. An attacker with write access to `C:\` can drop a malicious `Program.exe` to escalate to `SYSTEM`.
+- **Scheduled Tasks for C2 Triggering (MITRE ATT&CK T1053.005):** Attackers register automated tasks running every hour or upon user logon to re-establish beaconing channels if their interactive process is terminated.
+- **LSASS Credential Dumping (MITRE ATT&CK T1003.001):** Attackers target `lsass.exe` using memory dump APIs to extract cached NTLM password hashes and Kerberos tickets.
+
+### 5. How defenders detect it
+
+- **Parent-Child Process Anomalies:** Legitimate system processes have known parents. If `services.exe` spawns `cmd.exe` or `powershell.exe`, or if `lsass.exe` is spawned by anything other than `wininit.exe`, it indicates process injection or exploitation.
+- **Monitoring Service Installation (Event ID 7045):** The System event log records Event ID 7045 whenever a new service is installed, detailing the service name, binary image path, and account context.
+- **Scheduled Task Telemetry (Event ID 4698):** Logs task creation events with complete action metadata.
+- **EDR Suspicious Process Path Rules:** Alerting on any service or scheduled task executing from user-writable directories like `C:\Users\Public` or `AppData`.
+
+### 6. How to prevent/fix it
+
+- **Audit and Quote Service Paths:** Review all service registry entries under `HKLM\SYSTEM\CurrentControlSet\Services` and ensure all paths containing spaces are wrapped in quotation marks.
+- **Enforce LSA Protection (RunAsPPL):** Configure Windows to run `lsass.exe` as a Protected Process Light (PPL), blocking non-protected processes from reading its memory space.
+- **Restrict Local Administrative Rights:** Ensure standard corporate users do not hold local administrator privileges, preventing unauthorized service creation.
+- **Enable Windows Credential Guard:** Utilize Virtualization-Based Security (VBS) to isolate credential secrets in an isolated hypervisor container.
+
+### 7. Common mistakes
+
+- **Assuming all svchost instances are legitimate:** Failing to inspect the actual DLL or command-line arguments hosted inside each `svchost.exe` process.
+- **Ignoring service account permissions:** Running custom services under `NT AUTHORITY\SYSTEM` when least privilege requires a dedicated low-privileged Managed Service Account (gMSA).
+- **Overlooking Task Scheduler hidden tasks:** Relying solely on the GUI Task Scheduler rather than querying registry caches and filesystem task directories.
+- **Terminating svchost abruptly:** Killing a critical svchost instance instead of identifying the underlying service DLL, leading to an immediate Windows Blue Screen crash.
+
+### Remember it like this
+
+> **services.exe manages background services. lsass.exe manages authentication. Event ID 7045 alerts on new services; Event ID 4698 alerts on new tasks. Always quote service paths.**
+
+### Interview answer
+
+> "Windows separates execution into user processes, background services managed by services.exe, and automated tasks. Attackers exploit services for persistence (MITRE ATT&CK T1543.003) and privilege escalation via unquoted service paths. To defend hosts, we monitor System Event ID 7045 for new services, enforce LSA Protection (`RunAsPPL`) to protect lsass.exe from credential dumping, and verify parent-child process relationships to detect unauthorized shells spawned by system processes."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no scored lab. **Field exercise (not scored):** on your Windows host, launch PowerShell as Administrator and run `Get-Service` to inspect running background daemons. Run `Get-ScheduledTask` to explore automated maintenance tasks, and use `whoami /priv` to inspect your assigned user token privileges.
+
+## Debrief
+
+**What a professional does here.** Security analysts investigate Windows processes using tools like Microsoft Sysinternals **Process Explorer** and **Process Monitor**. Process Explorer highlights process parentage in a colored tree, verifies digital signatures, and integrates with VirusTotal to check process image hashes in real time.
+
+**Real incident: NotPetya Ransomware Task Scheduling (2017).** During the NotPetya global cyberattack in 2017, the ransomware utilized harvested domain administrator credentials to move laterally across enterprise networks. On each compromised workstation, NotPetya executed `schtasks.exe` to create an automated scheduled task configured to force a system reboot at a scheduled minute. Upon restart, the malware encrypted the Master File Table. Incident response teams that monitored Event ID 4698 (Scheduled Task Created) and Event ID 7045 were able to intercept the malicious task registrations and contain the outbreak.
+
+**Key takeaways**
+
+- System boot follows a strict hierarchy: `System` -> `smss.exe` -> `wininit.exe` -> `services.exe` & `lsass.exe`.
+- Services reside in `HKLM\SYSTEM\CurrentControlSet\Services` and are managed by `services.exe`.
+- Event ID 7045 logs service installations; Event ID 4698 logs scheduled task creations.
+- Unquoted service paths allow privilege escalation if write permissions exist on parent directories.

@@ -1,0 +1,66 @@
+lesson: core-r1-win-powershell-01
+questions:
+  - id: q1
+    prompt: "What fundamental architectural difference distinguishes PowerShell pipelines from traditional Unix Bash pipelines?"
+    objectives: ["aplus1202:1"]
+    options:
+      - text: "PowerShell passes structured .NET objects across the pipeline, whereas Bash passes unstructured plaintext streams."
+        correct: true
+        explanation: "Correct. PowerShell cmdlets pass rich .NET objects with properties and methods, rather than raw text strings."
+      - text: "PowerShell cannot execute commands sequentially."
+        correct: false
+        explanation: "PowerShell supports full pipeline chaining and sequential script execution."
+      - text: "Bash passes binary compiled code, whereas PowerShell uses JSON text."
+        correct: false
+        explanation: "Bash operates on character streams, while PowerShell operates on in-memory objects."
+      - text: "PowerShell pipelines only function when connected to Active Directory."
+        correct: false
+        explanation: "PowerShell pipelines operate locally on any standalone system."
+  - id: q2
+    prompt: "What is the primary function of Microsoft's PowerShell Execution Policy setting?"
+    objectives: ["aplus1202:1"]
+    options:
+      - text: "It serves as a safety barrier to prevent accidental script execution, but is not a security boundary."
+        correct: true
+        explanation: "Correct. Execution Policy prevents unintentional script runs, but can be bypassed with command line arguments like -ExecutionPolicy Bypass."
+      - text: "It provides hardware-level sandbox isolation preventing any privilege escalation."
+        correct: false
+        explanation: "Execution policies do not sandbox processes or prevent memory exploitation."
+      - text: "It permanently disables the PowerShell command prompt on the machine."
+        correct: false
+        explanation: "Execution policies govern script file (.ps1) loading, not interactive cmdlet entry."
+      - text: "It encrypts all PowerShell scripts with BitLocker."
+        correct: false
+        explanation: "Execution policies do not perform disk or script encryption."
+  - id: q3
+    prompt: "Which PowerShell logging feature records the complete de-obfuscated script code as it executes in memory?"
+    objectives: ["secplus:2.4"]
+    options:
+      - text: "Script Block Logging (Event ID 4104)"
+        correct: true
+        explanation: "Correct. Script Block Logging captures the full plaintext syntax of script blocks as they are executed by the engine."
+      - text: "Windows Firewall Logging"
+        correct: false
+        explanation: "Firewall logging captures network packet drops and connections, not PowerShell syntax."
+      - text: "NTFS Transaction Logging"
+        correct: false
+        explanation: "NTFS logging tracks filesystem metadata changes on storage volumes."
+      - text: "Kerberos Ticket Audit (Event ID 4768)"
+        correct: false
+        explanation: "Event 4768 tracks Kerberos authentication ticket requests, not command-line scripts."
+  - id: q4
+    prompt: "Why do adversaries frequently employ 'Living off the Land' tactics using PowerShell?"
+    objectives: ["secplus:2.4"]
+    options:
+      - text: "PowerShell is pre-installed, digitally signed by Microsoft, and provides native access to Windows APIs and memory without dropping third-party binaries."
+        correct: true
+        explanation: "Correct. Leveraging native trusted administrative tools reduces detection from antivirus file scanners."
+      - text: "PowerShell automatically deletes all Windows event logs after every command."
+        correct: false
+        explanation: "PowerShell generates audit events unless an administrator manually clears log channels."
+      - text: "PowerShell commands cannot be inspected by EDR software."
+        correct: false
+        explanation: "Modern EDR solutions monitor PowerShell via AMSI, kernel event tracing (ETW), and API hooks."
+      - text: "PowerShell executes exclusively in Ring 0 kernel space."
+        correct: false
+        explanation: "PowerShell executes as a user-mode process in Ring 3."

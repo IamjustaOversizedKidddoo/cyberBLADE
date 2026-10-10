@@ -1,0 +1,128 @@
+---
+id: core-r1-win-powershell-01
+title: "PowerShell Fundamentals & Command Line Operations"
+track: core
+rank: 1
+module: windows
+order: 18
+estimated_minutes: 30
+objectives_covered: ["aplus1202:1", "secplus:2.4"]
+mitre: ["T1059.001"]
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+**Windows PowerShell** is Microsoft's task automation framework, command-line shell, and scripting language built on top of the .NET runtime. 
+
+Unlike traditional command-line shells (such as Unix Bash or Windows `cmd.exe`) that operate primarily on streams of unstructured text, PowerShell operates entirely on **objects**. When a PowerShell cmdlet executes, it receives structured .NET objects via the pipeline, inspects their properties and methods, and passes rich structured data down the command chain.
+
+Every PowerShell command follows a consistent `Verb-Noun` naming convention:
+- **Verbs:** Define the intended action (e.g., `Get`, `Set`, `New`, `Remove`, `Start`, `Stop`).
+- **Nouns:** Define the target resource (e.g., `Process`, `Service`, `ItemProperty`, `WinEvent`).
+
+> **Authorisation note.** PowerShell gives users direct access to system APIs, WMI/CIM repositories, and remote management endpoints. Use administrative PowerShell cmdlets only on authorized endpoints. Never execute encoded or obfuscated PowerShell commands from untrusted sources.
+
+### 2. Why it exists
+
+For over two decades, the primary Windows command processor was `cmd.exe`, an archaic environment inherited from MS-DOS. In `cmd.exe`:
+- Outputs were plaintext strings requiring complex parsing and regular expressions.
+- Scripting lacked robust error handling, typed variables, and direct access to native Windows API functions.
+- System administration across enterprise networks required fragmented third-party utilities.
+
+PowerShell was designed to bridge the gap between GUI administration and high-speed enterprise automation. By exposing the complete .NET class library, Windows Management Instrumentation (WMI), and the Component Object Model (COM), PowerShell allows administrators and security analysts to inspect and manipulate internal OS state with single-line commands.
+
+### 3. How it works
+
+**Cmdlets, Aliases, and the Pipeline.** PowerShell provides aliases for cmdlets to maintain muscle memory from other operating systems and shorthand environments:
+
+| Cmdlet | Common Alias | Linux Analogue | Purpose |
+| :--- | :--- | :--- | :--- |
+| `Get-Process` | `gps`, `ps` | `ps` | Lists running system processes |
+| `Get-Service` | `gsv` | `systemctl status` | Queries Windows service statuses |
+| `Get-ItemProperty` | `gp` | N/A | Inspects registry keys and item attributes |
+| `Select-String` | `sls` | `grep` | Searches text strings and regex patterns |
+| `Get-WinEvent` | N/A | `journalctl` | Queries Windows event log records |
+
+**The Object Pipeline.** In Bash, commands pass text over pipes:
+```bash
+# Bash: text output piped to grep
+ps aux | grep nginx
+```
+
+In PowerShell, objects retain their typed properties:
+```console
+$ Get-Process | Select-String svchost
+```
+
+PowerShell filters objects by their actual properties rather than relying on regex slicing of arbitrary column widths.
+
+**Execution Policies.** Windows includes an execution policy feature designed to protect administrators from inadvertently running untrusted scripts:
+- `Restricted`: No scripts may run. Only interactive commands are allowed.
+- `AllSigned`: Only scripts digitally signed by a trusted publisher may run.
+- `RemoteSigned`: Locally created scripts run unsigned; scripts downloaded from the internet must be signed.
+- `Unrestricted` / `Bypass`: All scripts execute without blocking or warning.
+
+> **Security Note:** Microsoft explicitly states that Execution Policy is a safety barrier to prevent accidental script execution, **not a security boundary**. Attackers easily bypass execution policies via flags such as `powershell.exe -ExecutionPolicy Bypass -File script.ps1`.
+
+### 4. How attackers abuse it
+
+PowerShell has historically been one of the most prominent "Living off the Land" (LotL) execution environments (MITRE ATT&CK T1059.001):
+
+- **Pre-installed & Trusted:** PowerShell is present on every modern Windows system, signed by Microsoft, and rarely blocked by application allowlisting policies.
+- **In-Memory Execution:** Attackers download and execute payloads entirely in memory without writing binaries to disk (`IEX (New-Object Net.WebClient).DownloadString(...)`).
+- **Obfuscation & Encoding:** Attackers frequently use `-EncodedCommand` (Base64-encoded UTF-16LE strings) or string concatenation to evade basic signature-based file scanners.
+
+### 5. How defenders detect it
+
+- **Script Block Logging (Event ID 4104):** Captures the complete, de-obfuscated code block as it executes in the PowerShell runtime. Even if an attacker uses multiple layers of encoding, Event ID 4104 records the final plaintext command.
+- **Module Logging (Event ID 4103):** Records pipeline execution events for specific modules and commands.
+- **Transcription (Event ID 400):** Writes complete interactive session transcripts to a secure, centralized directory.
+- **Antimalware Scan Interface (AMSI):** Passes memory buffers to antivirus or EDR solutions for scanning immediately prior to execution.
+
+### 6. How to prevent/fix it
+
+- **Enable Script Block Logging (EID 4104):** Enforce PowerShell Script Block Logging across all endpoints via Group Policy.
+- **Enforce Constrained Language Mode (CLM):** Restrict PowerShell to CLM using AppLocker or Windows Defender Application Control (WDAC), blocking access to arbitrary .NET APIs and Win32 functions.
+- **Restrict PowerShell v2:** Ensure PowerShell version 2.0 is uninstalled from all endpoints so attackers cannot downgrade to bypass AMSI and Event ID 4104 logging.
+- **Monitor Command-Line Arguments:** Ingest 4688 / Sysmon 1 logs to alert on suspicious command-line flags such as `-enc`, `-encodedcommand`, `-w hidden`, and `-nop`.
+
+### 7. Common mistakes
+
+- **Treating Execution Policy as a security barrier:** Assuming `Set-ExecutionPolicy Restricted` stops attackers, when any user can pass `-ExecutionPolicy Bypass`.
+- **Relying solely on Antivirus signatures:** Assuming AV will detect obfuscated PowerShell scripts without AMSI integration and Script Block Logging.
+- **Leaving PowerShell remoting (WinRM) exposed:** Enabling WinRM across untrusted subnets without firewall scoping or certificate-based mutual authentication.
+- **Failing to forward PowerShell event logs:** Leaving Event ID 4104 on local machines where an attacker with administrative rights can clear them.
+
+### Remember it like this
+
+> **PowerShell is object-oriented automation on .NET. Cmdlets follow Verb-Noun syntax. Attackers abuse it via in-memory download cradles; defenders catch them using Script Block Logging (Event ID 4104) and AMSI.**
+
+### Interview answer
+
+> "Windows PowerShell is an object-based command-line framework built on .NET. Unlike text-based shells, cmdlets pass structured objects over pipelines. Adversaries leverage PowerShell for Living-off-the-Land attacks (MITRE ATT&CK T1059.001), running in-memory scripts and bypassing execution policies via `-ExecutionPolicy Bypass`. To defend endpoints, we enable Script Block Logging (Event ID 4104) to capture de-obfuscated script text, enforce Constrained Language Mode via WDAC, and rely on AMSI to scan in-memory buffers."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no scored lab. **Field exercise (not scored):** on your Windows workstation or PowerShell prompt, practice pipeline querying with `Get-Process`, filter services using `Get-Service | Where-Object Status -eq 'Running'`, and inspect your current PowerShell execution policy using `Get-ExecutionPolicy`.
+
+## Debrief
+
+**What a professional does here.** Security engineers and incident responders configure centralized PowerShell logging via Group Policy: mandating Script Block Logging (Event ID 4104) and PowerShell Transcription, while disabling PowerShell 2.0. When hunting threats, analysts write detection rules in their SIEM looking for command lines containing flags like `-EncodedCommand`, `-WindowStyle Hidden`, or calls to `DownloadString`.
+
+**Real incident: FIN7 PowerShell Backdoors (2017).** In 2017, the FIN7 cybercrime syndicate targeted retail organizations using heavily obfuscated PowerShell download cradles delivered via weaponized Word macros. The scripts utilized backticks and string replacement to evade traditional antivirus software. Defending SOC teams that configured PowerShell Script Block Logging (Event ID 4104) immediately unmasked the decoded payload in their SIEM, identifying the memory-injection routines and neutralizing the intrusion.
+
+**Key takeaways**
+
+- PowerShell passes .NET objects across pipelines, not raw text strings.
+- Cmdlets use standardized Verb-Noun naming (`Get-Process`, `Get-Service`).
+- Execution Policy is an administrative safety guardrail, not a security boundary.
+- Script Block Logging (Event ID 4104) records decoded, de-obfuscated scripts in memory.

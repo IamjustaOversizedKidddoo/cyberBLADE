@@ -140,6 +140,22 @@ const DEMO_SERVICES: Service[] = [
     active: "inactive",
     sub: "dead",
   },
+  {
+    name: "Spooler",
+    description: "Print Spooler",
+    unitPath: "C:\\Windows\\System32\\spoolsv.exe",
+    enabled: "enabled",
+    active: "active",
+    sub: "running",
+  },
+  {
+    name: "WinDefend",
+    description: "Microsoft Defender Antivirus Service",
+    unitPath: "C:\\Program Files\\Windows Defender\\MsMpEng.exe",
+    enabled: "enabled",
+    active: "active",
+    sub: "running",
+  },
 ];
 
 /**
@@ -156,6 +172,44 @@ export function demoWorld(): World {
     network: demoNetwork(),
     processes: DEMO_PROCS,
     services: DEMO_SERVICES,
+    registry: {
+      "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run": {
+        SecurityHealth: "C:\\Windows\\system32\\SecurityHealthSystray.exe",
+      },
+      "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion": {
+        ProductName: "Windows 11 Enterprise",
+        CurrentVersion: "6.3",
+        CurrentBuild: "22631",
+      },
+    },
+    eventLogs: [
+      {
+        logName: "Security",
+        id: 4624,
+        timeCreated: "10/07/2026 09:00:00 AM",
+        message: "An account was successfully logged on. TargetUserName: SYSTEM, LogonType: 0.",
+      },
+      {
+        logName: "Security",
+        id: 4625,
+        timeCreated: "10/07/2026 09:01:15 AM",
+        message: "An account failed to log on. TargetUserName: Administrator, WorkstationName: ATTACK, IpAddress: 192.168.1.100.",
+      },
+      {
+        logName: "System",
+        id: 7045,
+        timeCreated: "10/07/2026 09:05:00 AM",
+        message: "A service was installed in the system. ServiceName: RemoteMonitor, ServiceFileName: C:\\Windows\\Temp\\mon.exe.",
+      },
+    ],
+    scheduledTasks: [
+      {
+        taskName: "\\Microsoft\\Windows\\Defrag\\ScheduledDefrag",
+        taskPath: "\\Microsoft\\Windows\\Defrag\\",
+        state: "Ready",
+        action: "defrag.exe -c -h -k -$",
+      },
+    ],
     shellPid: 2201,
     shellParent: 2200,
     root: dir({

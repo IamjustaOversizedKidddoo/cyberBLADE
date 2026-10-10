@@ -1,0 +1,126 @@
+---
+id: core-r1-win-arch-registry-01
+title: "Windows Architecture & The Windows Registry"
+track: core
+rank: 1
+module: windows
+order: 17
+estimated_minutes: 30
+objectives_covered: ["aplus1202:1", "secplus:2.4"]
+mitre: ["T1547.001", "T1112"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: core-r1-win-registry-lab-01
+---
+
+## Briefing
+
+### 1. What it is
+
+The Windows operating system relies on a centralized hierarchical database known as the **Windows Registry** to store low-level system settings, hardware configurations, device driver parameters, software installations, and user profile preferences.
+
+Unlike Linux, where system configurations are dispersed across plaintext files under `/etc`, Windows unifies almost all critical system state into binary hive files mounted into five primary root keys:
+
+1. **`HKEY_LOCAL_MACHINE` (`HKLM`):** Machine-wide settings applying to all users (operating system configuration, installed software, hardware settings, security policies).
+2. **`HKEY_CURRENT_USER` (`HKCU`):** Configuration settings specifically tied to the currently logged-on user profile (desktop environment, user-installed applications, network drive mappings).
+3. **`HKEY_USERS` (`HKU`):** Stores all actively loaded user profiles on the machine. `HKCU` is actually a symbolic link into the current user's security identifier (`SID`) branch under `HKU`.
+4. **`HKEY_CLASSES_ROOT` (`HKCR`):** File association mappings (which program opens `.pdf` or `.docx`) and COM object registrations. It merges `HKLM\SOFTWARE\Classes` with `HKCU\Software\Classes`.
+5. **`HKEY_CURRENT_CONFIG` (`HKCC`):** Hardware profile information gathered at system boot, linking to `HKLM\SYSTEM\CurrentControlSet\Hardware Profiles\Current`.
+
+> **Authorisation note.** Enumerate and modify the Windows Registry only on systems you own or have explicit legal permission to audit. Modifying registry keys on production machines without change control can cause system instability, crash services (Blue Screen of Death), or violate regulatory mandates.
+
+### 2. Why it exists
+
+In early versions of Windows (Windows 3.x), applications stored their settings in `.INI` initialization files scattered throughout the filesystem. As software complexity grew, `.INI` files presented severe limitations:
+
+- They lacked access control lists (ACLs) to enforce privilege separation.
+- Multiple applications frequently overwrote shared configuration settings without concurrency control.
+- Parsing thousands of independent text files during system startup caused extreme I/O bottlenecks.
+
+Microsoft introduced the Registry in Windows NT to provide an atomic, high-performance, indexed database protected by Windows Discretionary Access Control Lists (DACLs).
+
+### 3. How it works
+
+**Hives and Physical Storage.** The Registry is partitioned into physical files called **hives** stored on disk under `C:\Windows\System32\config`:
+
+| Hive Name | Registry Path | Disk Location |
+| :--- | :--- | :--- |
+| `SYSTEM` | `HKLM\SYSTEM` | `C:\Windows\System32\config\SYSTEM` |
+| `SOFTWARE` | `HKLM\SOFTWARE` | `C:\Windows\System32\config\SOFTWARE` |
+| `SAM` | `HKLM\SAM` | `C:\Windows\System32\config\SAM` |
+| `SECURITY` | `HKLM\SECURITY` | `C:\Windows\System32\config\SECURITY` |
+| User Profile | `HKCU` | `C:\Users\<Username>\NTUSER.DAT` |
+
+The `SAM` (Security Account Manager) and `SECURITY` hives store local password hashes (NTLM) and LSA secrets, and are strictly locked by the operating system kernel while Windows is active.
+
+**Registry Navigation with PowerShell.** PowerShell treats the Windows Registry as a virtual drive (`HKLM:` and `HKCU:`), allowing analysts to inspect keys using familiar item and property cmdlets:
+
+```console
+$ Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+SecurityHealth : C:\Windows\system32\SecurityHealthSystray.exe
+PSPath         : Microsoft.PowerShell.Core\Registry::HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run
+PSParentPath   : Microsoft.PowerShell.Core\Registry::HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion
+PSChildName    : Run
+PSDrive        : HKLM
+PSProvider     : Microsoft.PowerShell.Core\Registry
+```
+
+### 4. How attackers abuse it
+
+Adversaries value the Windows Registry for three primary tactics:
+
+- **Persistence via Run Keys (MITRE ATT&CK T1547.001):** The classic persistence mechanism involves writing an autostart entry into `HKCU:\Software\Microsoft\Windows\CurrentVersion\Run` or `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run`. Because standard unprivileged users have write access to their own `HKCU` hive, an attacker with initial access can maintain persistence across reboots without administrative rights.
+- **Defense Evasion (MITRE ATT&CK T1112):** Attackers modify security configuration keys to blind detection controls, such as disabling Windows Defender realtime monitoring or disabling PowerShell Script Block Logging.
+- **Credential Harvesting:** Attackers with elevated privileges dump the offline `SAM` and `SYSTEM` hives to extract local administrator password hashes for offline cracking.
+
+### 5. How defenders detect it
+
+- **Sysmon Registry Telemetry:** Microsoft System Monitor logs registry object creation, value modifications, and key deletions (Sysmon Event ID 12, 13, and 14), specifically alerting on changes to known autostart execution locations (ASEPs).
+- **Registry Auditing (SACLs):** Enabling auditing on sensitive keys generates Windows Security Event ID 4657 ("A registry value was modified"), capturing the subject user, process name, old value, and new value.
+- **EDR Baseline Comparison:** Endpoint Detection and Response (EDR) agents routinely baseline startup keys and flag newly added executables residing in untrusted user paths like `C:\Users\Public` or `AppData\Local\Temp`.
+
+### 6. How to prevent/fix it
+
+- **Enforce Least Privilege:** Restrict user accounts to Standard User privileges so they cannot modify system-wide hives under `HKLM`.
+- **Harden Registry Permissions:** Ensure write access to Run keys and Service keys under `HKLM` is restricted to `TrustedInstaller` and `SYSTEM`.
+- **Application Allowlisting:** Deploy Windows Defender Application Control (WDAC) or AppLocker so that even if an attacker adds a Run key entry, the unauthorized binary is blocked from executing.
+- **Enable Sysmon Event ID 13:** Actively ingest and alert on all value-set events targeting `CurrentVersion\Run` and `Services` keys.
+
+### 7. Common mistakes
+
+- **Assuming all Run keys require Administrator:** Overlooking `HKCU`, where unprivileged users can create persistent autostart entries without UAC prompts.
+- **Editing keys without transaction backups:** Modifying production registry keys directly without exporting a `.reg` backup file first.
+- **Ignoring 32-bit Registry Redirection:** Forgetting that on 64-bit Windows, 32-bit processes query the redirected `HKLM\SOFTWARE\WOW6432Node` hive.
+- **Relying solely on Antivirus signatures:** Expecting AV to catch malicious Run keys pointing to legitimate binaries executing malicious scripts (Living off the Land).
+
+### Remember it like this
+
+> **The Windows Registry is the operating system's database. HKLM is system-wide; HKCU is per-user. Persistence hides in Run keys and Services. Sysmon Event 12/13/14 catches registry tampering.**
+
+### Interview answer
+
+> "The Windows Registry is a hierarchical database storing configuration settings in hives like HKLM (system-wide) and HKCU (current user). Adversaries frequently exploit registry Run keys (`CurrentVersion\Run`) for persistence (MITRE ATT&CK T1547.001) because standard users can write to HKCU without elevation. Defenders monitor this activity using Sysmon Event IDs 12 and 13, enabling SACLs for Event 4657, and enforcing application allowlisting so unauthorized executables cannot launch even if registered."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+<LabLink />
+
+In this lab, you will investigate a compromised Windows host where an adversary established persistence via registry Run keys and rogue service entries. Use PowerShell cmdlets (`Get-ItemProperty`, `gp`) to hunt down the persistence mechanisms and extract the verification flag.
+
+## Debrief
+
+**What a professional does here.** Security analysts investigate registry persistence using PowerShell (`Get-ItemProperty`) and Sysinternals tools like `Autoruns`. Autoruns scans dozens of auto-start extensibility points (ASEPs)—including Run keys, Scheduled Tasks, Winlogon helpers, and service image paths—verifying digital signatures to spotlight unsigned or anomalous binaries immediately.
+
+**Real incident: TEARDROP Backdoor (SolarWinds, 2020).** During the investigation of the SolarWinds supply chain breach, forensic investigators discovered that the second-stage backdoor known as TEARDROP achieved persistence by dynamically registering an autostart Windows service under `HKLM\SYSTEM\CurrentControlSet\Services`. The malware pointed its `ImagePath` to a malicious payload in a staging directory. Analysts cross-referenced registry creation timestamps with network telemetry to reconstruct the intrusion timeline.
+
+**Key takeaways**
+
+- HKLM stores global configurations; HKCU stores user profile settings.
+- Run keys in `HKLM` and `HKCU` execute programs automatically upon user logon.
+- Service definitions reside in `HKLM\SYSTEM\CurrentControlSet\Services`.
+- Sysmon Event IDs 12, 13, and 14 provide essential detection telemetry for registry tampering.

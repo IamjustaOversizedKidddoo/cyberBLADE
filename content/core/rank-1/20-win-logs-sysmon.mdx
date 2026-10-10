@@ -1,0 +1,141 @@
+---
+id: core-r1-win-logs-sysmon-01
+title: "Windows Event Logs, Auditing & Sysmon"
+track: core
+rank: 1
+module: windows
+order: 20
+estimated_minutes: 35
+objectives_covered: ["secplus:2.4", "secplus:4.1"]
+mitre: ["T1078", "T1110.001", "T1070.001"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: core-r1-win-eventlog-lab-01
+---
+
+## Briefing
+
+### 1. What it is
+
+Every meaningful security event that transpires on a Windows operating system—a user logging on, a failed password attempt, a service being installed, or a firewall rule being altered—generates structured audit telemetry in the **Windows Event Log**.
+
+Windows Event Logs are binary XML files (`.evtx`) stored in `C:\Windows\System32\Winevt\Logs`. They are maintained by the Windows Event Log service (`EventLog`) and exposed through the Windows Event Subsystem architecture.
+
+Traditional Windows systems categorize logs into standard channels:
+1. **Security:** Authentication, privilege use, object access, policy changes, and account management.
+2. **System:** Operating system events, driver failures, service starts and crashes, and hardware errors.
+3. **Application:** Diagnostic logs and errors emitted by installed third-party programs.
+
+In enterprise environments, standard Windows logs are augmented by **Microsoft Sysmon (System Monitor)**, a free Sysinternals driver and service that records detailed host telemetry including process creation with full command lines, network connections, and file creation timestamps.
+
+> **Authorisation note.** Viewing and exporting security audit logs must be performed strictly within the scope of authorized investigations. Tampering with or clearing security event logs (`wevtutil cl` or `Clear-EventLog`) without written authorization constitutes unauthorized modification under computer crime legislation.
+
+### 2. Why it exists
+
+Plaintext log files (like `/var/log/syslog` in Linux) can be easily edited or corrupted with basic text editors. Windows uses a structured binary format (`.evtx`) that guarantees:
+- Fast indexed querying by Event ID, Provider Name, and Timestamp.
+- Strong access control: Only administrators and the `SYSTEM` account may read or clear the Security log channel.
+- Structured schema validation using XML, allowing SIEMs (like Splunk, Microsoft Sentinel, or Elastic) to parse fields without brittle regular expressions.
+
+Without detailed event logging, security analysts could not detect password spraying attacks, track lateral movement, or conduct root-cause forensic investigations after a ransomware detonation.
+
+### 3. How it works
+
+**Crucial Windows Security Event IDs.**
+Every cybersecurity practitioner must memorize the primary Windows Event IDs:
+
+| Event ID | Log Channel | Meaning | Key Investigation Fields |
+| :--- | :--- | :--- | :--- |
+| **4624** | Security | Successful Logon | `TargetUserName`, `LogonType`, `IpAddress` |
+| **4625** | Security | Failed Logon Attempt | `TargetUserName`, `FailureReason`, `IpAddress` |
+| **4672** | Security | Special Privileges Assigned | `SubjectUserName` (assigned admin rights like `SeDebugPrivilege`) |
+| **4688** | Security | A new process has been created | `NewProcessName`, `CommandLine`, `CreatorProcessName` |
+| **4698** | Security | A scheduled task was created | `TaskName`, `TaskContent` (action executed) |
+| **4720** | Security | A user account was created | `TargetUserName`, `SubjectUserName` |
+| **4738** | Security | A user account was modified | `TargetUserName`, `PasswordLastSet` |
+| **7045** | System | A service was installed | `ServiceName`, `ImagePath`, `AccountName` |
+| **1102** | Security | The audit log was cleared | `SubjectUserName` (high-fidelity indicator of tampering) |
+
+**Understanding Logon Types (Event 4624 & 4625).**
+The `LogonType` field reveals how the session was established:
+- **Type 2 (Interactive):** User typed credentials at the local physical keyboard or console.
+- **Type 3 (Network):** Connection over the network (e.g., accessing an SMB file share or IIS website).
+- **Type 4 (Batch):** Scheduled task execution.
+- **Type 5 (Service):** A background Windows service starting up.
+- **Type 7 (Unlock):** Workstation was unlocked by the user.
+- **Type 10 (RemoteInteractive):** Remote Desktop Protocol (RDP) session.
+
+**Querying Event Logs with PowerShell.**
+PowerShell's `Get-WinEvent` cmdlet provides robust filtering capabilities. For example, querying failed logon events:
+
+```console
+$ Get-WinEvent -LogName Security -Id 4625
+TimeCreated           Id LevelDisplayName Message
+-----------           -- ---------------- -------
+10/07/2026 09:01:15 AM 4625 Information      An account failed to log on. TargetUserName: Administrator, WorkstationName: ATTACK, IpAddress: 192.168.1.100.
+```
+
+### 4. How attackers abuse it
+
+Adversaries understand that logs are the primary obstacle to undetected compromise:
+
+- **Brute Force & Password Spraying (MITRE ATT&CK T1110.001):** Repeated failed authentication attempts generate bursts of Event ID 4625. Attackers adjust their spray speed to stay below detection thresholds.
+- **Account Creation & Manipulation (MITRE ATT&CK T1136 / T1098):** Creating backdoor accounts generates Event ID 4720 and 4728 (Member added to security-enabled global group).
+- **Log Evasion & Clearing (MITRE ATT&CK T1070.001):** Attackers attempting anti-forensics often run `wevtutil cl Security` to delete the audit trail. Doing so instantly logs Event ID 1102 ("The audit log was cleared"), alerting threat hunting teams to an active compromise.
+
+### 5. How defenders detect it
+
+- **Detecting Brute Force Attacks:** A single Event 4625 is normal user error. A spike of twenty 4625 events within two minutes against the same username or across dozens of usernames from a single external IP address is a high-priority alert.
+- **Service Installation Hunting:** Monitoring Event ID 7045 in the System log provides immediate visibility into newly created persistence backdoors.
+- **Sysmon Telemetry:**
+  - **Sysmon Event ID 1:** Process creation with full command lines and parent processes.
+  - **Sysmon Event ID 3:** Outbound network connections with initiating process names and destination IPs.
+  - **Sysmon Event ID 7:** Image (DLL) loaded by a process, detecting DLL side-loading.
+  - **Sysmon Event ID 8:** CreateRemoteThread, catching process injection techniques.
+
+### 6. How to prevent/fix it
+
+- **Centralized Event Forwarding (WEF / SIEM):** Ship event logs continuously to a remote collector over TLS so that local log clearance does not destroy forensic evidence.
+- **Configure Advanced Audit Policies:** Enable process creation command-line logging (`Audit Process Creation`) via GPO to capture complete attacker syntax.
+- **Deploy Microsoft Sysmon:** Augment default Windows logging with a hardened Sysmon configuration (e.g., SwiftOnSecurity or Olaf Hartong configs) across all endpoints.
+- **Account Lockout Thresholds:** Configure account lockout policies after repeated invalid attempts (Event 4625) to blunt brute-force tools.
+
+### 7. Common mistakes
+
+- **Relying solely on default Windows audit settings:** Assuming command lines are logged out of the box when they require explicit GPO activation.
+- **Leaving circular log sizes too small:** Allowing high-volume security channels to overwrite within hours during an active incident.
+- **Ignoring Event ID 1102:** Dismissing audit log cleared events as routine maintenance rather than an active IOC.
+- **Not correlating failed and successful logons:** Missing the transition where twenty 4625 events are followed by a single 4624 event, indicating a successful credential compromise.
+
+### Remember it like this
+
+> **Security log holds auth events: 4624 is logon success, 4625 is logon failure. 7045 in System log is a new service. 1102 is log cleared. Forward logs to a SIEM so attackers cannot wipe history.**
+
+### Interview answer
+
+> "Windows Event Logs store structured XML telemetry in .evtx files. The core security event IDs I monitor are 4624 (logon success), 4625 (logon failure), 7045 (new service installation in the System log), and 1102 (audit log cleared). LogonType 2 indicates local interactive access, while LogonType 10 indicates RDP. Because adversaries attempt log wiping (MITRE ATT&CK T1070.001), enterprise defenses forward events via WEF to a central SIEM and deploy Sysmon for granular process creation telemetry."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+<LabLink />
+
+In this lab, you will investigate a host subjected to an authentication brute-force attack followed by persistence installation. Use PowerShell cmdlets (`Get-WinEvent`, `Select-String`) to identify the targeted victim account, the attacking IP address, and the name of the rogue service installed on the host.
+
+## Debrief
+
+**What a professional does here.** SOC analysts configure detection rules in their SIEM targeting authentication thresholds: for example, triggering an alert when five or more Event ID 4625 failures occur within five minutes from the same IP, or when Event ID 1102 fires. When investigating an alert, analysts correlate the timeline of failed logons (4625) directly to any subsequent successful logon (4624) and subsequent process creation events (4688 / Sysmon 1).
+
+**Real incident: Hafnium Exchange Server Exploits (2021).** During the investigation of state-sponsored Hafnium intrusions exploiting Microsoft Exchange servers, threat responders analyzed Event Logs and Sysmon telemetry across thousands of affected organizations. Sysmon Event ID 1 immediately revealed the IIS worker process (`w3wp.exe`) executing suspicious child processes (`cmd.exe` and `powershell.exe`) to execute reconnaissance commands. Defenders correlated these process creation events with Web server access logs to identify compromised Exchange servers and deploy enterprise-wide patches.
+
+**Key takeaways**
+
+- Event ID 4624 represents successful logon; 4625 represents failed logon.
+- LogonType 2 is local interactive; LogonType 3 is network; LogonType 10 is RDP.
+- System Event ID 7045 records newly installed Windows services.
+- Event ID 1102 warns defenders that the Security audit log was manually cleared.
+- Sysmon Event ID 1 captures detailed process creation command lines and parentage.
