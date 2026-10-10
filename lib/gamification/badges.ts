@@ -81,6 +81,20 @@ export const BADGE_DEFINITIONS: BadgeDefinition[] = [
     code: "MAS-R1C",
   },
   {
+    id: "web_sentinel",
+    title: "Web Application Sentinel",
+    description: "Identified and exploited OWASP web application flaws (SQLi, XSS, IDOR).",
+    category: "tactical",
+    code: "TAC-WEB",
+  },
+  {
+    id: "watchtower",
+    title: "Watchtower Victor",
+    description: "Executed full-spectrum web IR and exploitation in Operation Watchtower.",
+    category: "mastery",
+    code: "MAS-R2C",
+  },
+  {
     id: "streak_3",
     title: "Tactical Discipline",
     description: "Maintained a 3-day continuous operational streak.",
@@ -125,6 +139,14 @@ export function evaluateBadges(input: {
   const hasChallengePassed =
     completedLabIds.has("core-r1-challenge-01") || operatorRank >= 2;
 
+  const hasWebLab =
+    completedLabIds.has("core-r2-sqli-lab-01") ||
+    completedLabIds.has("core-r2-xss-lab-01") ||
+    completedLabIds.has("core-r2-idor-lab-01");
+
+  const hasWatchtowerPassed =
+    completedLabIds.has("core-r2-challenge-01") || operatorRank >= 3;
+
   const hasCleanRun = completedAttempts.some((a) => a.hintsUsed === 0 && a.mode === "practice");
 
   const bestStreak = Math.max(currentStreak, longestStreak);
@@ -155,11 +177,17 @@ export function evaluateBadges(input: {
       case "powershell_warden":
         unlocked = hasWindowsLab;
         break;
+      case "web_sentinel":
+        unlocked = hasWebLab;
+        break;
       case "clean_run":
         unlocked = hasCleanRun;
         break;
       case "iron_gate":
         unlocked = hasChallengePassed;
+        break;
+      case "watchtower":
+        unlocked = hasWatchtowerPassed;
         break;
       case "streak_3":
         unlocked = bestStreak >= 3;

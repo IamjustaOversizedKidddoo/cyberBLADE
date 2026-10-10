@@ -1,0 +1,66 @@
+lesson: core-r2-crypto-pki-01
+questions:
+  - id: q1
+    prompt: "Why is standard fast hashing (such as raw SHA-256 or SHA-1) dangerous for storing user passwords?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "Cryptographic hash functions are engineered to be computationally fast, allowing modern GPU clusters to test billions of guesses per second during offline dictionary attacks."
+        correct: true
+        explanation: "Correct. Fast hashes can be brute-forced at astronomical speeds; password storage requires deliberately slow, memory-hard key derivation functions like Argon2id or bcrypt."
+      - text: "SHA-256 can be reversed mathematically by anyone who knows the alphabet."
+        correct: false
+        explanation: "Cryptographic hashes are one-way functions, not reversible alphabetic ciphers."
+      - text: "SHA-256 only supports passwords that contain numbers."
+        correct: false
+        explanation: "SHA-256 processes arbitrary binary and text inputs."
+      - text: "Web browsers automatically delete cookies whenever SHA-256 is used."
+        correct: false
+        explanation: "Browser cookie handling is independent of backend password hashing algorithms."
+  - id: q2
+    prompt: "In asymmetric cryptography, which key must be kept strictly confidential to maintain security?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "The Private Key"
+        correct: true
+        explanation: "Correct. The Private Key must remain confidential; if it is compromised, unauthorized parties can decrypt communications or forge digital signatures."
+      - text: "The Public Key"
+        correct: false
+        explanation: "The Public Key is intentionally published and shared openly."
+      - text: "The CA Root Certificate"
+        correct: false
+        explanation: "Root certificates are distributed publicly in operating system trust stores."
+      - text: "The Domain Name"
+        correct: false
+        explanation: "Domain names are public internet addressing records."
+  - id: q3
+    prompt: "What critical security benefit does Perfect Forward Secrecy (PFS) provide in TLS communication?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "Because session keys are generated ephemerally (via ECDHE) and discarded after communication ends, a future compromise of the server's long-term private key cannot decrypt previously recorded traffic."
+        correct: true
+        explanation: "Correct. Forward secrecy ensures past encrypted sessions remain secure even if long-term server private keys are compromised later."
+      - text: "It guarantees that web pages load in under 10 milliseconds."
+        correct: false
+        explanation: "PFS is a cryptographic confidentiality assurance, not a network latency guarantee."
+      - text: "It prevents hard drives from experiencing physical hardware failure."
+        correct: false
+        explanation: "Cryptography does not prevent hardware drive failures."
+      - text: "It prevents users from taking screenshots of the browser."
+        correct: false
+        explanation: "TLS does not prevent local client screenshots."
+  - id: q4
+    prompt: "What is the primary operational role of a Certificate Authority (CA) in Public Key Infrastructure (PKI)?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "To act as a trusted third party that verifies domain ownership and cryptographically signs digital certificates binding a public key to an entity's identity."
+        correct: true
+        explanation: "Correct. CAs establish trust by signing digital certificates (X.509) that prove public keys belong to legitimate organizations."
+      - text: "To store plaintext copies of all user passwords on the internet."
+        correct: false
+        explanation: "CAs never store or see user passwords."
+      - text: "To route physical fiber optic cables across oceans."
+        correct: false
+        explanation: "Telecommunications carriers manage physical cables, not Certificate Authorities."
+      - text: "To replace DNS root servers during network outages."
+        correct: false
+        explanation: "DNS root servers are managed by IANA/ICANN, separate from CAs."

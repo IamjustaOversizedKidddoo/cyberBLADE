@@ -1,0 +1,122 @@
+---
+id: core-r2-http-protocol-01
+title: "HTTP Protocol, Methods & Status Codes"
+track: core
+rank: 2
+module: web-security
+order: 21
+estimated_minutes: 30
+objectives_covered: ["secplus:1.4", "secplus:3.2"]
+mitre: ["T1071.001"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: null
+---
+
+## Briefing
+
+### 1. What it is
+
+The **Hypertext Transfer Protocol (HTTP)** is the foundation of the World Wide Web. It is an application-layer request-response protocol running over TCP (port 80 for HTTP, port 443 for HTTPS/TLS).
+
+Think of HTTP like sending a formal business letter:
+- The **Request** is the letter you send to a company: it states what you want (the Method and Path), who you are and what formats you accept (Headers), and optional enclosed documents (Body).
+- The **Response** is the letter the company sends back: it contains a delivery status stamp (Status Code), delivery metadata (Headers), and the requested document or confirmation message (Body).
+
+### 2. Why it matters
+
+Nearly all modern applications, cloud APIs, microservices, and identity providers communicate over HTTP:
+1. **Attack Surface:** Web applications are exposed directly to the public internet. Web vulnerabilities (injection, broken authorization, cross-site scripting) represent the primary vector for data breaches.
+2. **Plaintext Vulnerability:** Standard HTTP transmits all headers, URLs, cookies, and bodies in unencrypted cleartext. Without TLS (HTTPS), any intermediary on the network path can inspect credentials or alter traffic.
+3. **Telemetry & Detection:** Security Operations Centers (SOC) inspect HTTP request logs and reverse proxy telemetry to detect web shells, brute-force attacks, and C2 beacons.
+
+### 3. How it works
+
+An HTTP exchange consists of two phases:
+
+#### The Request
+```http
+POST /api/v1/auth/login HTTP/1.1
+Host: api.defense-corp.internal
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+Content-Type: application/json
+Accept: application/json
+Content-Length: 48
+
+{"username": "operator", "password": "SecretPassword123"}
+```
+
+#### The Response
+```http
+HTTP/1.1 200 OK
+Date: Sat, 10 Oct 2026 12:00:00 GMT
+Server: nginx/1.24.0
+Content-Type: application/json
+Set-Cookie: session_id=abc123xyz; Path=/; Secure; HttpOnly
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+{"status": "authenticated", "role": "operator"}
+```
+
+#### HTTP Methods & Status Codes
+- `GET`: Safe, idempotent retrieval of data.
+- `POST`: Submits data to create or process resources.
+- `PUT` / `DELETE`: Replaces or deletes resources.
+- `OPTIONS`: Discloses supported HTTP methods and preflights CORS.
+- **2xx Success:** `200 OK`, `201 Created`, `204 No Content`.
+- **3xx Redirection:** `301 Moved Permanently`, `302 Found`, `304 Not Modified`.
+- **4xx Client Errors:** `400 Bad Request`, `401 Unauthorized` (needs credentials), `403 Forbidden` (credentials recognized, access denied), `404 Not Found`.
+- **5xx Server Errors:** `500 Internal Server Error`, `502 Bad Gateway`, `503 Service Unavailable`.
+
+### 4. Real incident
+
+In 2021, misconfigured HTTP headers on a medical diagnostics portal allowed attackers to observe unencrypted session cookies over an open Wi-Fi network. Because the developers failed to include the `Secure` flag on `Set-Cookie` and neglected the `Strict-Transport-Security` (HSTS) header, client browsers automatically downgraded connections to unencrypted HTTP (`http://`), allowing session hijacking via passive packet sniffing.
+
+### 5. How to defend / mitigate
+
+- **Enforce Strict-Transport-Security (HSTS):** Forces browsers to only connect via HTTPS.
+- **X-Content-Type-Options: nosniff:** Prevents browsers from MIME-sniffing response types, blocking drive-by execution of disguised scripts.
+- **X-Frame-Options: DENY:** Blocks clickjacking attacks by forbidding rendering in `<iframe>` elements.
+- **Content-Security-Policy (CSP):** Whitelists approved sources for scripts, styles, and network requests.
+
+### 6. Commands & syntax
+
+Inspect HTTP headers and protocol transactions with `curl`:
+```bash
+curl -I https://example.com
+curl -v -X POST -H "Content-Type: application/json" -d '{"ping":1}' https://httpbin.org/post
+```
+
+### 7. Common mistakes
+
+- **Confusing 401 with 403:** Assuming 401 means forbidden when 401 specifically challenges for authentication credentials.
+- **Transmitting sensitive tokens in GET query strings:** Putting API keys or tokens in query parameters (`/api?token=...`) where they leak into web server access logs, browser history, and proxy logs.
+- **Omitting HSTS:** Relying on HTTP 301 redirects to HTTPS without sending HSTS headers, leaving the initial request vulnerable to SSL stripping.
+
+### Remember it like this
+
+> **HTTP is a stateless conversation: Request line, headers, body. 401 means authenticate; 403 means permission denied. Always enforce HSTS so traffic never downgrades to cleartext.**
+
+### Interview answer
+
+> "HTTP is the application-layer request-response protocol of the web. A request consists of a method, path, headers, and body; the server replies with a status code, response headers, and body. Critical security distinctions include 401 (unauthenticated) versus 403 (unauthorized). Production web servers must enforce defensive security headers such as HSTS to eliminate cleartext downgrades, X-Content-Type-Options: nosniff to prevent MIME confusion, and CSP to restrict script execution origins."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This foundational architecture lesson has no separate standalone lab. Hands-on HTTP testing and header manipulation continue in the companion web security labs.
+
+## Debrief
+
+**What a professional does here.** Security engineers inspect raw HTTP requests during audits using tools like Burp Suite, ensuring that no sensitive secrets leak into query strings or unencrypted headers, and validating that reverse proxies strip internal tracking headers before passing responses to clients.
+
+**Key takeaways**
+
+- HTTP methods define the semantic action (GET for safe retrieval, POST for creation).
+- Status codes communicate state (2xx success, 3xx redirect, 4xx client error, 5xx server error).
+- 401 challenges for authentication; 403 denies authorization.
+- HSTS and security headers protect clients from protocol downgrade and injection attacks.

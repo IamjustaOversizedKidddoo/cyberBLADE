@@ -1,0 +1,66 @@
+lesson: core-r2-sop-cors-01
+questions:
+  - id: q1
+    prompt: "Which three components define a web origin under the Same-Origin Policy (SOP)?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "Protocol (Scheme), Host (Domain/IP), and Port"
+        correct: true
+        explanation: "Correct. An origin is defined strictly as (Protocol, Host, Port). If any of these three elements differ, the browser classifies the destination as a distinct origin."
+      - text: "IP Address, MAC Address, and Subnet Mask"
+        correct: false
+        explanation: "These are Layer 2/3 network addressing components, not browser origin elements."
+      - text: "Username, Password, and Session Token"
+        correct: false
+        explanation: "These are user authentication credentials, not origin identifiers."
+      - text: "URL Path, Query String, and Fragment Identifier"
+        correct: false
+        explanation: "Paths, queries, and fragments represent resources within an origin, not the origin boundary."
+  - id: q2
+    prompt: "What fundamental browser behavior does the Same-Origin Policy (SOP) restrict by default?"
+    objectives: ["secplus:3.2"]
+    options:
+      - text: "It prevents client-side scripts loaded from one origin from reading data or responses returned by a different origin."
+        correct: true
+        explanation: "Correct. While browsers allow cross-origin requests to be sent in many scenarios, SOP prevents the requesting script from reading the returned response."
+      - text: "It prevents users from visiting two different websites on the same computer."
+        correct: false
+        explanation: "Users can visit multiple websites concurrently in different tabs or windows."
+      - text: "It blocks all DNS resolutions for external domains."
+        correct: false
+        explanation: "SOP operates at the browser application layer, not at the DNS resolution layer."
+      - text: "It encrypts server log files stored on disk."
+        correct: false
+        explanation: "SOP is a client-side browser policy, not a server storage encryption mechanism."
+  - id: q3
+    prompt: "Which CORS configuration represents a catastrophic security vulnerability when deployed on an authenticated internal API?"
+    objectives: ["secplus:3.2"]
+    options:
+      - text: "Dynamically reflecting the incoming 'Origin' header combined with 'Access-Control-Allow-Credentials: true'"
+        correct: true
+        explanation: "Correct. Echoing the request's Origin header alongside allow-credentials permits any arbitrary malicious website to read authenticated API responses for logged-in users."
+      - text: "Setting Access-Control-Allow-Origin to match a static, trusted company domain."
+        correct: false
+        explanation: "Restricting allow-origin to a static, trusted company domain is the recommended safe pattern."
+      - text: "Omitting CORS headers completely."
+        correct: false
+        explanation: "Omitting CORS headers enforces strict SOP, preventing cross-origin response access."
+      - text: "Setting Access-Control-Max-Age to 3600 seconds."
+        correct: false
+        explanation: "Max-Age simply caches the preflight OPTIONS response for one hour."
+  - id: q4
+    prompt: "Why does the browser send an HTTP OPTIONS request prior to certain cross-origin API calls?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "To perform a CORS preflight check, verifying that the destination server explicitly authorizes the HTTP method and custom headers before sending the actual request."
+        correct: true
+        explanation: "Correct. A preflight check verifies permissions on non-simple requests to ensure the server expects and allows cross-origin interaction."
+      - text: "To compress the payload using gzip."
+        correct: false
+        explanation: "OPTIONS does not compress payloads."
+      - text: "To verify the client's hardware CPU architecture."
+        correct: false
+        explanation: "HTTP preflights do not inspect hardware architecture."
+      - text: "To renew TLS certificates in real time."
+        correct: false
+        explanation: "TLS handshakes occur before HTTP requests are dispatched."

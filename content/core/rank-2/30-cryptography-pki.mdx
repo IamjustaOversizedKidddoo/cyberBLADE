@@ -1,0 +1,109 @@
+---
+id: core-r2-crypto-pki-01
+title: "Applied Cryptography, Hashes & Public Key Infrastructure"
+track: core
+rank: 2
+module: security-core
+order: 30
+estimated_minutes: 35
+objectives_covered: ["secplus:1.4"]
+mitre: ["T1573", "T1552.004"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: null
+---
+
+## Briefing
+
+### 1. What it is
+
+**Cryptography** is the mathematical foundation of digital security. It provides the mechanisms that enforce the three foundational security properties:
+- **Confidentiality:** Scrambling data so unauthorized parties cannot read it (Encryption).
+- **Integrity:** Ensuring data has not been altered or tampered with in transit or at rest (Hashing & MACs).
+- **Non-Repudiation & Authenticity:** Proving conclusively who created or signed a piece of data (Digital Signatures).
+
+Think of cryptographic primitives like three distinct security tools:
+- **Symmetric Encryption** is a lockbox with a single physical key: whoever holds the key can lock and unlock the box.
+- **Asymmetric Encryption** is a mailbox with a public mail slot: anyone can drop a letter inside (Public Key), but only the postal worker holding the private key can unlock the door to retrieve it (Private Key).
+- **A Cryptographic Hash** is a digital fingerprint: a one-way, irreversible 64-character digest. If a single character changes in the input, the output hash changes completely.
+
+### 2. Why it matters
+
+Flawed cryptographic implementations lead to severe systemic breaches:
+1. **Weak Password Hashing:** Storing passwords in MD5 or raw SHA-256 allows attackers who dump a database to crack billions of hashes per second using commercial GPUs.
+2. **Expired or Misconfigured TLS:** Lacking Perfect Forward Secrecy (PFS) allows adversaries who record encrypted network traffic today to decrypt all past communications if they ever compromise the server's private key in the future.
+3. **Impersonation & Man-in-the-Middle (MitM):** Failing to validate Public Key Infrastructure (PKI) certificate chains allows adversaries to intercept and manipulate traffic without warning.
+
+### 3. How it works
+
+#### 1. Symmetric Encryption (Bulk Data Protection)
+Uses the **same secret key** for both encryption and decryption. Fast and hardware-accelerated (AES-NI).
+- **Standards:** **AES-256-GCM** (Authenticated Encryption) and **ChaCha20-Poly1305**.
+
+#### 2. Asymmetric Encryption & Signatures (Key Exchange & Identity)
+Uses a **mathematically linked key pair**:
+- **Public Key:** Shared publicly with the world.
+- **Private Key:** Guarded secretly; never leaves the host.
+- **Operations:** Sender encrypts with Receiver's Public Key (Confidentiality). Sender signs with their Private Key, Receiver verifies with Sender's Public Key (Authentication).
+- **Algorithms:** RSA (2048/4096-bit) and Elliptic Curve Cryptography (**ECDSA**, **Ed25519**).
+
+#### 3. Hashes vs. Password Key Derivation Functions
+- **Cryptographic Hashes (SHA-256, SHA-3):** One-way, collision-resistant, and **fast** $\rightarrow$ Designed for file integrity, block verification, and digital signatures.
+- **Password Hashes (Argon2id, bcrypt, PBKDF2):** **Deliberately slow and memory-hard** $\rightarrow$ Designed to resist massive parallel brute-force attacks on GPUs.
+
+#### 4. PKI & TLS 1.3
+- **Certificate Authorities (CAs):** Cryptographically sign X.509 digital certificates binding a domain to a public key.
+- **TLS 1.3 Handshake:** Establishes ephemeral symmetric session keys via **ECDHE** (Elliptic Curve Diffie-Hellman Ephemeral), guaranteeing **Perfect Forward Secrecy (PFS)**.
+
+### 4. Real incident
+
+In 2012, professional networking platform LinkedIn suffered a breach in which 6.5 million user passwords were leaked online. The passwords had been stored using plain, unsalted SHA-1 hashes without key stretching. Within 48 hours of the dump appearing on an underground Russian forum, crowd-sourced GPU cracking clusters had cracked over 90% of the plain-text passwords using precomputed rainbow tables and brute-force dictionaries.
+
+### 5. How to defend / mitigate
+
+- **Never Roll Your Own Crypto:** Use standard, vetted libraries (OpenSSL, Libsodium, WebCrypto).
+- **Password Storage Standard:** Mandate **Argon2id** (or `bcrypt` with work factor $\ge 12$) with unique random salts per user.
+- **Enforce TLS 1.3 / 1.2:** Deprecate legacy SSLv3, TLS 1.0, and TLS 1.1; mandate Perfect Forward Secrecy (ECDHE).
+- **Automate Certificate Lifecycle:** Use ACME protocols (Let's Encrypt) to prevent certificate expirations.
+
+### 6. Commands & syntax
+
+Generate SHA-256 hashes and inspect TLS certificates:
+```bash
+echo -n "CyberBLADE" | sha256sum
+openssl s_client -connect google.com:443 -servername google.com
+```
+
+### 7. Common mistakes
+
+- **Using raw SHA-256 for passwords:** Assuming fast cryptographic hashes are safe for passwords when GPUs compute billions of guesses per second.
+- **Hardcoding encryption keys in source code:** Committing symmetric keys to GitHub repositories or Docker image layers.
+- **Disabling certificate validation:** Turning off TLS verification (`verify=False` in Python or `rejectUnauthorized: false` in Node.js) during development and shipping it to production.
+
+### Remember it like this
+
+> **Symmetric uses one key for speed. Asymmetric uses key pairs for exchange and signatures. Fast hashes are for integrity; slow, memory-hard Argon2id is for passwords.**
+
+### Interview answer
+
+> "Cryptography provides confidentiality (symmetric/asymmetric encryption), integrity (hashing), and non-repudiation (digital signatures). Key architectural principles include using AEAD symmetric ciphers like AES-GCM for bulk data, elliptic curves like Ed25519/ECDHE for key exchange and signatures with Perfect Forward Secrecy, and deliberately slow, memory-hard functions like Argon2id for password storage to defeat offline GPU brute forcing. PKI uses trusted Certificate Authorities to bind public keys to identities using X.509 certificates."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no standalone lab. Cryptographic token manipulation and verification are exercised in the upcoming challenge.
+
+## Debrief
+
+**What a professional does here.** Security engineers manage cryptographic keys using Hardware Security Modules (HSMs) or cloud Key Management Services (AWS KMS, Google Cloud KMS, HashiCorp Vault), ensuring encryption keys are rotated automatically and never exposed directly in application memory or config files.
+
+**Key takeaways**
+
+- Symmetric encryption uses a shared key; asymmetric encryption uses a public/private pair.
+- Fast hashes verify data integrity; slow, memory-hard KDFs (Argon2id) protect passwords.
+- Perfect Forward Secrecy (PFS) ensures past traffic cannot be decrypted if keys leak later.
+- PKI relies on Certificate Authorities to validate public key ownership.

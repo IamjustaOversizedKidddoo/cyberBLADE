@@ -1,0 +1,95 @@
+---
+id: core-r2-sop-cors-01
+title: "Same-Origin Policy (SOP) & CORS Security"
+track: core
+rank: 2
+module: web-security
+order: 23
+estimated_minutes: 30
+objectives_covered: ["secplus:1.4", "secplus:3.2"]
+mitre: ["T1189"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: null
+---
+
+## Briefing
+
+### 1. What it is
+
+The **Same-Origin Policy (SOP)** is the foundational security boundary enforced by modern web browsers. It dictates that scripts running in a webpage loaded from one **origin** cannot read data or inspect DOM elements from another origin.
+
+An **Origin** is defined strictly by the tuple:
+$$\text{Origin} = (\text{Protocol}, \text{Host}, \text{Port})$$
+
+If any one of these three elements differs, the browser classifies the destination as a completely different, untrusted origin.
+
+### 2. Why it matters
+
+Without SOP, visiting a malicious website (`evil.com`) in one tab while logged into your webmail or cloud console in another would be catastrophic:
+- JavaScript on `evil.com` could execute a background fetch request to your webmail API.
+- Your browser would attach your active session cookie.
+- Without SOP, `evil.com` could read your confidential emails and contacts.
+- **SOP prevents this:** while the browser may send cross-origin requests, **SOP forbids the requesting script from reading the returned response**.
+
+### 3. How it works
+
+#### Cross-Origin Resource Sharing (CORS)
+When an application legitimately needs to share resources across different subdomains (e.g. `app.corp.io` querying `api.corp.io`), the server uses **CORS** headers to instruct the browser that cross-origin reading is permitted:
+
+1. **Preflight Check:** For non-simple requests, the browser sends an HTTP `OPTIONS` request.
+2. **Access-Control-Allow-Origin:** The server returns the specific allowed domain (`https://app.corp.io`).
+3. **Access-Control-Allow-Credentials:** If set to `true`, the browser permits the client script to read responses that include cookies or authorization tokens.
+
+### 4. Real incident
+
+In 2018, a major cryptocurrency exchange implemented an insecure CORS policy on its private API endpoints. The server dynamically reflected the request's `Origin` header and set `Access-Control-Allow-Credentials: true`. Security researchers demonstrated that visiting an attacker-controlled site while logged into the exchange allowed the attacker's script to read the victim's wallet balances and API trading keys.
+
+### 5. How to defend / mitigate
+
+- **Strict Origin Whitelisting:** Never reflect the client's `Origin` header dynamically without matching it against a strict server-side whitelist.
+- **Never Whitelist `null`:** Sandboxed iframes and local files send `Origin: null`; never allow `null` in CORS headers.
+- **Avoid Wildcard with Credentials:** Browsers forbid `Access-Control-Allow-Origin: *` when credentials are included, but loose regex validation can inadvertently match attacker domains.
+
+### 6. Commands & syntax
+
+Test CORS configurations using `curl`:
+```bash
+curl -H "Origin: https://attacker.com" \
+     -H "Access-Control-Request-Method: POST" \
+     -X OPTIONS -I https://api.github.com
+```
+
+### 7. Common mistakes
+
+- **Reflecting the Origin header:** Writing dynamic code like `res.setHeader('Access-Control-Allow-Origin', req.headers.origin)` combined with credentials.
+- **Unanchored regular expressions:** Matching subdomains with `corp\.internal` without start/end anchors (`^...$`), allowing `attacker-corp.internal` to pass.
+- **Believing CORS protects the server:** Forgetting that CORS is a client-side browser policy; attackers using `curl` or Python scripts ignore CORS entirely.
+
+### Remember it like this
+
+> **SOP stops scripts on evil.com from reading data from bank.com. CORS lets a server safely relax that rule for trusted partners. Never echo the Origin header with credentials.**
+
+### Interview answer
+
+> "The Same-Origin Policy is the browser's primary security boundary, restricting scripts from one origin (protocol, host, and port) from accessing or reading responses from another. Cross-Origin Resource Sharing (CORS) allows servers to selectively relax this policy using HTTP headers like Access-Control-Allow-Origin. The most critical CORS vulnerability is dynamically reflecting the Origin header alongside Access-Control-Allow-Credentials: true, which completely breaks SOP and exposes authenticated API responses to third-party attackers."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no standalone lab. Cross-origin concepts and request headers are exercised in the upcoming web exploit labs.
+
+## Debrief
+
+**What a professional does here.** Security engineers audit CORS policies by sending requests with arbitrary `Origin` headers (e.g. `https://evil.com` and `null`), verifying that internal authenticated APIs reject unauthorized origins and never return `Access-Control-Allow-Credentials: true` to unknown callers.
+
+**Key takeaways**
+
+- An origin is defined by scheme, host, and port.
+- SOP prevents unauthorized sites from reading your private data.
+- CORS is a mechanism for servers to permit cross-origin access.
+- Dynamic reflection of the Origin header with credentials invalidates SOP.

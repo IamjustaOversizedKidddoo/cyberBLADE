@@ -18,7 +18,7 @@ export const lessonFrontmatterSchema = z.object({
   estimated_minutes: z.number().int().min(5).max(120),
   objectives_covered: z.array(z.string()),
   mitre: z.array(z.string().regex(/^T\d{4}(\.\d{3})?$/, "expected an ATT&CK id like T1059 or T1059.004")),
-  lab: z.string().optional(),
+  lab: z.string().nullable().optional(),
   xp: z.number().int().positive(),
   status: z.enum(["draft", "reviewed", "published"]),
   last_reviewed: isoDate.nullable(),

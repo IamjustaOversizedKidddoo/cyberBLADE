@@ -1,0 +1,66 @@
+lesson: core-r2-sqli-01
+questions:
+  - id: q1
+    prompt: "Why are Parameterized Queries (Prepared Statements) considered the definitive mitigation against SQL Injection?"
+    objectives: ["secplus:2.5"]
+    options:
+      - text: "The database pre-compiles the query template before receiving inputs, treating all user parameters strictly as literal data rather than executable SQL syntax."
+        correct: true
+        explanation: "Correct. Parameterization enforces a strict separation between executable code and data variables in the database query compiler."
+      - text: "They encrypt the database hard drive using AES-256."
+        correct: false
+        explanation: "Storage encryption at rest (TDE) is separate from SQL query compilation."
+      - text: "They block all SQL queries that contain more than 10 characters."
+        correct: false
+        explanation: "Prepared statements handle arbitrarily complex queries and data lengths."
+      - text: "They convert all relational SQL databases into NoSQL document stores."
+        correct: false
+        explanation: "Prepared statements are standard features of relational SQL database engines."
+  - id: q2
+    prompt: "In an authentication bypass attack using \"' OR 1=1 --\", what role does the \"--\" sequence serve?"
+    objectives: ["secplus:2.2"]
+    options:
+      - text: "It designates an SQL comment delimiter, instructing the database parser to ignore the remainder of the query, including subsequent password checks."
+        correct: true
+        explanation: "Correct. In SQL standard syntax, '--' marks the start of a comment; any subsequent clauses (such as 'AND password = ...') are skipped."
+      - text: "It triggers an immediate server reboot."
+        correct: false
+        explanation: "'--' is an SQL comment, not an operating system reboot command."
+      - text: "It converts text strings to lowercase."
+        correct: false
+        explanation: "String normalization is handled by functions like LOWER(), not comment markers."
+      - text: "It requests a preflight OPTIONS handshake."
+        correct: false
+        explanation: "Preflight handshakes are HTTP mechanisms, unrelated to SQL syntax."
+  - id: q3
+    prompt: "What prerequisite must be satisfied to successfully execute a UNION-based SQL injection attack?"
+    objectives: ["secplus:2.2"]
+    options:
+      - text: "The injected SELECT query must return the exact same number of columns and compatible data types as the original query."
+        correct: true
+        explanation: "Correct. An SQL UNION operation requires both queries to have matching column counts and compatible data types across each column."
+      - text: "The attacker must possess physical root access to the server rack."
+        correct: false
+        explanation: "UNION SQLi is executed remotely over standard web application HTTP inputs."
+      - text: "The web application must be hosted on Windows Server."
+        correct: false
+        explanation: "SQL injection affects any OS hosting a vulnerable database application."
+      - text: "The database must have less than 1,000 rows."
+        correct: false
+        explanation: "Table row count does not impact UNION SQL injection feasibility."
+  - id: q4
+    prompt: "How does an adversary extract database contents during a Time-Based Blind SQL injection attack?"
+    objectives: ["secplus:2.2"]
+    options:
+      - text: "By injecting conditional sleep commands (e.g. pg_sleep or WAITFOR DELAY) and observing the response latency to verify characters one by one."
+        correct: true
+        explanation: "Correct. Time-based blind SQLi leverages timed execution pauses to infer boolean truth values and reconstruct strings character by character."
+      - text: "By reading error tracebacks printed on the web page."
+        correct: false
+        explanation: "Error tracebacks are characteristic of Error-based SQLi, not blind SQLi."
+      - text: "By inspecting HTML tables returned in the HTTP response body."
+        correct: false
+        explanation: "Visible tables in HTTP responses are characteristic of in-band/UNION SQLi."
+      - text: "By cracking the database password hash using GPU hashcat clusters."
+        correct: false
+        explanation: "Offline hash cracking occurs after password hashes have already been exfiltrated."

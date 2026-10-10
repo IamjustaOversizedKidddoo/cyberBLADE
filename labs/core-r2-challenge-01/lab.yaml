@@ -1,0 +1,48 @@
+id: core-r2-challenge-01
+title: "Operation Watchtower: Full Web Spectrum IR & Exploitation"
+type: webapp
+track: core
+rank: 2
+estimated_minutes: 35
+briefing: briefing.md
+dataset:
+  generator: r2_challenge
+  params: {}
+objectives:
+  - id: exfiltrate_contract
+    prompt: "Exploit Broken Object Level Authorization on the contracts API to retrieve the classified defense contract flag."
+    check:
+      kind: flag
+      answer_from: generator.flag_idor
+  - id: extract_order
+    prompt: "Perform SQL injection on the order verification lookup to bypass validation and disclose the hidden flag."
+    check:
+      kind: flag
+      answer_from: generator.flag_sqli
+  - id: tamper_role
+    prompt: "Tamper with session role cookies to elevate privileges on the admin debug console and recover the master root flag."
+    check:
+      kind: flag
+      answer_from: generator.flag_root
+hints:
+  exfiltrate_contract:
+    - "Inspect the /api/contracts endpoint in the command portal. Try querying classified reference IDs like CTR-7701."
+    - "Analyze response bodies in the HTTP Inspector to observe returned authorization payloads."
+    - "The contract reference CTR-7701 returns the top secret classified payload flag."
+  extract_order:
+    - "The /orders/lookup?code=... endpoint is vulnerable to SQL injection."
+    - "Inject an SQL OR condition that evaluates to true (e.g. ORD-01' OR '1'='1) to dump all orders."
+    - "Look through the returned order records in the HTTP response to extract the flag."
+  tamper_role:
+    - "Navigate to /admin/debug. Notice the 403 Forbidden response requiring role=superadmin."
+    - "Switch to the Cookie Jar tab in the HTTP Inspector. Observe or set the watchtower_role cookie."
+    - "Change the watchtower_role value to 'superadmin' and refresh /admin/debug to unlock master root clearance."
+xp: 400
+mitre:
+  - T1190
+  - T1530
+  - T1550.004
+challenge:
+  rank: 2
+  time_limit_minutes: 35
+  cooldown_minutes: 5

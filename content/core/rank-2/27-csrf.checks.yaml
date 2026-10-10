@@ -1,0 +1,66 @@
+lesson: core-r2-csrf-01
+questions:
+  - id: q1
+    prompt: "Why does Cross-Site Request Forgery (CSRF) succeed if an application relies solely on cookies for authentication?"
+    objectives: ["secplus:2.2"]
+    options:
+      - text: "Web browsers automatically attach all stored cookies associated with a target domain to every HTTP request sent to that domain, even if initiated from a third-party website."
+        correct: true
+        explanation: "Correct. Ambient authority causes browsers to submit cookies automatically, allowing third-party sites to trigger authenticated actions."
+      - text: "Attackers can read and clone private TLS certificates from the client."
+        correct: false
+        explanation: "TLS certificates are stored securely and are not readable by third-party web pages."
+      - text: "Cookies are transmitted using unencrypted UDP packets."
+        correct: false
+        explanation: "HTTP/HTTPS communication uses TCP or QUIC, and cookie transport is unrelated to UDP."
+      - text: "The target application shuts down its firewall during POST requests."
+        correct: false
+        explanation: "CSRF exploits application business logic, not firewall outages."
+  - id: q2
+    prompt: "How does the Synchronizer Token Pattern (Anti-CSRF token) neutralize CSRF attacks?"
+    objectives: ["secplus:2.5"]
+    options:
+      - text: "The server requires a cryptographically random, secret token tied to the user's session to be submitted in the request body, which an external malicious origin cannot read or predict due to the Same-Origin Policy."
+        correct: true
+        explanation: "Correct. Because Same-Origin Policy forbids evil.com from reading the legitimate form to steal the token, the forged request is submitted without the token and rejected."
+      - text: "It hashes the user's password using MD5."
+        correct: false
+        explanation: "MD5 is a legacy hashing algorithm, unrelated to anti-CSRF token synchronization."
+      - text: "It prevents users from bookmarking websites."
+        correct: false
+        explanation: "CSRF tokens protect state-changing requests, not browser bookmarks."
+      - text: "It forces the web server to reboot after every transaction."
+        correct: false
+        explanation: "Tokens are validated in-memory or in cache without restarting servers."
+  - id: q3
+    prompt: "Why does the SameSite=Lax cookie attribute provide significant defense against traditional form-based CSRF?"
+    objectives: ["secplus:2.5"]
+    options:
+      - text: "Browsers withhold the cookie from cross-site POST and state-changing requests, attaching it only to safe top-level GET navigations."
+        correct: true
+        explanation: "Correct. SameSite=Lax blocks cookies on cross-origin POST form submissions, stopping traditional CSRF payloads."
+      - text: "It disables the user's mouse and keyboard during checkout."
+        correct: false
+        explanation: "SameSite is a cookie policy, not a hardware interlock."
+      - text: "It permanently deletes the user's browsing history."
+        correct: false
+        explanation: "SameSite controls request cookie attachment, not local history."
+      - text: "It forces all web traffic through an onion router network."
+        correct: false
+        explanation: "SameSite is enforced by standard web browsers, not Tor."
+  - id: q4
+    prompt: "What is an architectural rule regarding HTTP methods that minimizes the risk of accidental CSRF exploitation?"
+    objectives: ["secplus:2.5"]
+    options:
+      - text: "HTTP GET requests must be strictly safe and idempotent, never modifying server state, changing passwords, or executing financial transactions."
+        correct: true
+        explanation: "Correct. GET requests can be triggered via simple HTML tags (like <img> or <script>); state-changing operations must always require POST/PUT with CSRF tokens."
+      - text: "All POST requests must be converted to GET requests."
+        correct: false
+        explanation: "Converting POST to GET increases vulnerability to trivial image-tag CSRF."
+      - text: "Web servers must only accept HEAD requests."
+        correct: false
+        explanation: "HEAD requests return only headers, preventing normal data submission."
+      - text: "Only unauthenticated users should be allowed to use POST requests."
+        correct: false
+        explanation: "Authenticated users routinely submit state-changing POST requests."

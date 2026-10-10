@@ -1,0 +1,99 @@
+---
+id: core-r2-cookies-sessions-01
+title: "Cookies, Sessions & Token Security"
+track: core
+rank: 2
+module: web-security
+order: 22
+estimated_minutes: 30
+objectives_covered: ["secplus:1.4", "secplus:4.6"]
+mitre: ["T1539", "T1550.004"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: null
+---
+
+## Briefing
+
+### 1. What it is
+
+Because HTTP is stateless, web applications issue **State Tokens**—primarily **HTTP Cookies** and **JSON Web Tokens (JWT)**—to maintain user continuity across requests.
+
+Think of session cookies like a coat-check ticket:
+- You verify your identity once and receive a numbered ticket.
+- Every time you return to the counter, you simply present the ticket without showing your passport again.
+- If someone steals your ticket, they can claim your coat. In cybersecurity, this is **Session Hijacking**.
+
+### 2. Why it matters
+
+Session tokens represent the digital equivalent of full user credentials. Once an operator completes multi-factor authentication (MFA), their active session cookie holds equivalent authority to their raw username and password.
+
+Adversaries routinely bypass MFA through token theft:
+- **Infostealer Malware:** Harvesting stored cookie SQLite files from local browser directories.
+- **Cross-Site Scripting (XSS):** Reading unshielded `document.cookie` values.
+- **Adversary-in-the-Middle (AiTM):** Intercepting session cookies in transit via reverse phishing proxies.
+
+### 3. How it works
+
+A web server sets a cookie by including a `Set-Cookie` header in its HTTP response:
+```http
+Set-Cookie: session_token=e4c79f82d1; Path=/; Domain=defense.internal; Secure; HttpOnly; SameSite=Strict; Max-Age=3600
+```
+
+To protect session tokens, three flags are mandatory:
+1. `HttpOnly`: Forbids client-side JavaScript (`document.cookie`) from reading the cookie, mitigating cookie exfiltration via XSS.
+2. `Secure`: Instructs the browser to transmit the cookie strictly over encrypted HTTPS connections.
+3. `SameSite`: Regulates cross-site cookie transmission (`Strict` or `Lax`), neutralizing Cross-Site Request Forgery (CSRF).
+
+### 4. Real incident
+
+In 2022, threat actors compromised a major software studio by purchasing a stolen employee session cookie from an illicit marketplace. The employee had been infected with infostealer malware months prior. Because the corporate single-sign-on (SSO) session cookie remained valid and lacked device binding, the attacker imported the cookie into their browser, bypassed MFA completely, and cloned source code repositories.
+
+### 5. How to defend / mitigate
+
+- **Mandate HttpOnly and Secure:** Always set `HttpOnly` and `Secure` on session and authentication cookies.
+- **Session Regeneration:** Issue a completely new session ID upon login to eliminate Session Fixation attacks.
+- **Strict Inactivity Timeouts:** Expire idle sessions after 15–30 minutes, with hard expirations capped at 8–12 hours.
+- **SameSite Protection:** Deploy `SameSite=Strict` or `SameSite=Lax` to prevent session riding across third-party websites.
+
+### 6. Commands & syntax
+
+Inspect cookies from the command line or browser console:
+```javascript
+// Test if client scripts can read cookies:
+console.log(document.cookie);
+```
+
+### 7. Common mistakes
+
+- **Omitting HttpOnly:** Leaving cookies accessible to client scripts, allowing simple XSS bugs to turn into complete account takeovers.
+- **Storing JWTs in LocalStorage:** Placing sensitive tokens in browser `localStorage` where `HttpOnly` cannot protect them from XSS.
+- **Failing to rotate session IDs:** Keeping the same pre-authentication session token after successful login, enabling session fixation.
+
+### Remember it like this
+
+> **Session cookies are claim tickets: protect them with HttpOnly (blocks XSS theft), Secure (blocks cleartext sniff), and SameSite (blocks CSRF). Regenerate the ID on login.**
+
+### Interview answer
+
+> "Because HTTP is stateless, applications track authenticated users via cookies or tokens. Cookie security requires three essential flags: HttpOnly to prevent JavaScript access via XSS, Secure to mandate HTTPS transmission, and SameSite to mitigate CSRF. Applications must also regenerate the session identifier immediately upon login to prevent Session Fixation, and enforce hard timeouts to minimize the window of exposure for stolen tokens."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no standalone lab. Hands-on cookie extraction and manipulation are covered in the upcoming web vulnerability labs.
+
+## Debrief
+
+**What a professional does here.** Security engineers audit cookie issuance across every authentication flow, verifying that session IDs possess sufficient cryptographic entropy (at least 128 bits of randomness) and that sensitive tokens are stored in `HttpOnly; Secure; SameSite=Lax` cookies rather than unshielded browser `localStorage`.
+
+**Key takeaways**
+
+- Cookies allow stateless HTTP to maintain authenticated user sessions.
+- HttpOnly blocks JavaScript access, protecting against XSS cookie theft.
+- Secure ensures cookies are never transmitted over unencrypted HTTP.
+- Session regeneration on login eliminates session fixation attacks.

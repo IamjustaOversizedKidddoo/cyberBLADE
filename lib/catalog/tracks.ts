@@ -1,10 +1,14 @@
-import { RANKS } from "@/lib/progress/ranks";
-
 export type TrackStatus = "open" | "coming_soon";
 export type TrackGroup = "Flagship" | "Defend" | "Attack" | "Build" | "Emerging" | "Governance" | "Leadership";
 export type Track = { id: string; title: string; group: TrackGroup; status: TrackStatus };
 
-export const CORE = { id: "core", title: "Shared Core", ranks: RANKS } as const;
+export const CORE_RANKS = [
+  { rank: 0, name: "Initiate" },
+  { rank: 1, name: "Operator" },
+  { rank: 2, name: "Watcher" },
+] as const;
+
+export const CORE = { id: "core", title: "Shared Core", ranks: CORE_RANKS } as const;
 
 const open = (id: string, title: string, group: TrackGroup): Track => ({ id, title, group, status: "open" });
 const soon = (id: string, title: string, group: TrackGroup): Track => ({ id, title, group, status: "coming_soon" });

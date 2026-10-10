@@ -98,4 +98,31 @@ describe("Badges Evaluator", () => {
     });
     expect(badges7.find((b) => b.id === "streak_7")?.unlocked).toBe(true);
   });
+
+  it("unlocks web sentinel and watchtower badges", () => {
+    const badges = evaluateBadges({
+      operatorRank: 3,
+      completedLessons: [],
+      attempts: [
+        {
+          id: "w1",
+          userId: "u1",
+          labId: "core-r2-sqli-lab-01",
+          seed: "s",
+          mode: "practice",
+          objectivesSolved: ["o1"],
+          hintsUsed: 0,
+          startedAt: "2026-10-10T10:00:00Z",
+          expiresAt: null,
+          completedAt: "2026-10-10T10:15:00Z",
+          failedAt: null,
+        },
+      ],
+      currentStreak: 1,
+      longestStreak: 1,
+    });
+
+    expect(badges.find((b) => b.id === "web_sentinel")?.unlocked).toBe(true);
+    expect(badges.find((b) => b.id === "watchtower")?.unlocked).toBe(true);
+  });
 });

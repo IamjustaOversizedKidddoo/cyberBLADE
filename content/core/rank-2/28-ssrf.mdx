@@ -1,0 +1,97 @@
+---
+id: core-r2-ssrf-01
+title: "Server-Side Request Forgery (SSRF) & Webhook Security"
+track: core
+rank: 2
+module: web-security
+order: 28
+estimated_minutes: 30
+objectives_covered: ["secplus:2.2", "secplus:3.2"]
+mitre: ["T1190"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: null
+---
+
+## Briefing
+
+### 1. What it is
+
+**Server-Side Request Forgery (SSRF)** is a web vulnerability that occurs when a backend application fetches a remote resource (such as an image preview, PDF generator, webhook notification, or data import) based on a user-supplied URL, without properly validating the destination address.
+
+Because the request originates from the **trusted application server** itself rather than the external user, the server acts as an unwitting proxy, accessing internal systems, private subnets, and cloud management services that are shielded from direct public internet access by perimeter firewalls.
+
+Think of SSRF like handing an internal courier a letter addressed to an executive vault:
+- The building guards at the front entrance stop visitors from entering the executive floor.
+- But the courier is a trusted internal employee with access to every private hallway.
+- If you trick the courier into delivering your package to the private vault, you bypass perimeter security entirely.
+
+### 2. Why it matters
+
+SSRF is one of the most critical vulnerabilities in modern cloud infrastructure:
+1. **Cloud Metadata Exfiltration:** Extracting temporary IAM credentials, service account tokens, and instance bootstrap secrets from cloud provider metadata services (e.g. AWS, GCP, Azure).
+2. **Internal Network Scanning:** Probing internal RFC 1918 private subnets (`10.0.0.0/8`, `192.168.0.0/16`) to discover unauthenticated internal microservices, admin dashboards, and database consoles.
+3. **Internal Service Exploitation:** Communicating with unauthenticated internal datastores (e.g. Redis on port 6379, Elasticsearch on port 9200) to manipulate data or achieve Remote Code Execution.
+
+### 3. How it works
+
+#### The Prime Target: Cloud Instance Metadata Services (IMDS)
+Cloud providers run an internal HTTP metadata service at the link-local IP address `169.254.169.254`. In legacy AWS IMDSv1, an HTTP GET request to `http://169.254.169.254/latest/meta-data/iam/security-credentials/` directly returns the instance's temporary AWS secret keys, allowing attackers to assume the server's cloud identity.
+
+#### Filter Bypasses
+- **Decimal/Octal IP representations:** `http://2130706433/` or `http://0177.0.0.1/` resolving to `127.0.0.1`.
+- **DNS Rebinding:** Domains dynamically alternating between public and private IP addresses.
+- **HTTP Redirection:** Responding with a 302 redirect targeting `http://169.254.169.254/`.
+
+### 4. Real incident
+
+In 2019, an attacker exploited an SSRF vulnerability in a web application firewall (WAF) deployed by Capital One on AWS. By exploiting the SSRF flaw, the attacker coerced the EC2 instance into querying the AWS metadata service (`169.254.169.254`), exfiltrating the temporary IAM role credentials assigned to the server. Using these stolen cloud credentials, the attacker accessed over 700 S3 buckets, stealing personal data belonging to over 106 million customers.
+
+### 5. How to defend / mitigate
+
+- **Enforce IMDSv2 in Cloud Environments:** IMDSv2 requires a session-oriented HTTP PUT request with a custom token header, blocking simple GET-based SSRF vectors.
+- **Network-Layer Egress Filtering:** Prohibit application instances from connecting to RFC 1918 subnets or the link-local metadata address `169.254.169.254`.
+- **Pre-Resolution IP Validation:** Resolve domain names to IP addresses before connecting, and verify the resolved IP does not belong to private or loopback ranges.
+- **Disable HTTP Redirects:** Configure server HTTP client libraries to refuse following automatic redirects.
+
+### 6. Commands & syntax
+
+Test loopback resolution representations in terminal:
+```bash
+ping -c 1 2130706433
+ping -c 1 0177.0.0.1
+```
+
+### 7. Common mistakes
+
+- **Using naive regex blocklists:** Blocking the string `localhost` while failing to account for `127.0.0.1`, alternative IP encodings, or IPv6 `[::1]`.
+- **Validating domain names without checking IP resolution:** Checking that a domain ends in `.example.com` while failing to realize the domain points to `127.0.0.1`.
+- **Permitting automatic HTTP redirects:** Checking that the initial URL is public, but allowing the remote server to return a 302 redirect to an internal IP.
+
+### Remember it like this
+
+> **SSRF turns your server into an attacker's proxy. Never fetch user URLs without validating the resolved IP against private ranges. Always enforce IMDSv2 on cloud instances.**
+
+### Interview answer
+
+> "Server-Side Request Forgery (SSRF) occurs when an application fetches remote resources from a user-supplied URL without proper validation, enabling an attacker to coerce the server into connecting to internal systems or cloud metadata services. The most severe target is the cloud instance metadata IP 169.254.169.254, which can expose IAM credentials. Defense-in-depth requires enforcing IMDSv2, isolating application subnets with strict egress firewall rules, resolving and validating destination IPs against private/reserved ranges before connecting, and disabling HTTP redirects."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no standalone lab. SSRF concepts and cloud metadata defenses are exercised in the cloud and web capstones.
+
+## Debrief
+
+**What a professional does here.** Security engineers configure AWS Organization Service Control Policies (SCPs) requiring IMDSv2 across all EC2 instances (`ec2:MetadataHttpTokens = required`), deploy egress proxies with strict destination allowlists, and review webhooks using dedicated, isolated worker pools running on separate VPC subnets.
+
+**Key takeaways**
+
+- SSRF coerces backend servers into accessing private internal resources.
+- The link-local address 169.254.169.254 hosts cloud instance metadata and credentials.
+- IMDSv2 requires session tokens via PUT requests, mitigating simple GET SSRF.
+- Validate resolved IP addresses against private RFC 1918 ranges before connecting.

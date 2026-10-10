@@ -1,0 +1,33 @@
+id: core-r2-sqli-lab-01
+title: "SQL Injection: Auth Bypass & Union Extraction"
+type: webapp
+track: core
+rank: 2
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: sqli_lab
+  params: {}
+objectives:
+  - id: bypass_auth
+    prompt: "Bypass the login portal using SQL injection to recover the Tier-0 admin dashboard flag."
+    check:
+      kind: flag
+      answer_from: generator.flag_auth
+  - id: union_extract
+    prompt: "Exploit the asset catalog search query with a UNION-based attack to extract the classified secret."
+    check:
+      kind: flag
+      answer_from: generator.flag_union
+hints:
+  bypass_auth:
+    - "SQL authentication queries typically follow: SELECT * FROM users WHERE username = '...' AND password = '...'."
+    - "Enter a single quote in the username field followed by an OR clause that evaluates to TRUE (e.g. ' OR 1=1 --) to negate the password check."
+    - "Use comment syntax (-- or #) to comment out the rest of the backend query, allowing you to log in as administrator."
+  union_extract:
+    - "The search endpoint queries multiple columns: SELECT id, name, category, price FROM assets WHERE name LIKE '%...%'."
+    - "Append a UNION SELECT clause to join records from other tables or arbitrary literals into the result table."
+    - "Match the expected 4-column schema: ' UNION SELECT 1, 2, 3, 4 --. Observe how extracted columns reflect on the web page."
+xp: 150
+mitre:
+  - T1190

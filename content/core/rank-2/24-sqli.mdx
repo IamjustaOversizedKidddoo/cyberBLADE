@@ -1,0 +1,107 @@
+---
+id: core-r2-sqli-01
+title: "SQL Injection: Mechanisms, Exploitation & Defense"
+track: core
+rank: 2
+module: web-security
+order: 24
+estimated_minutes: 35
+objectives_covered: ["secplus:2.2", "secplus:2.5"]
+mitre: ["T1190"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: core-r2-sqli-lab-01
+---
+
+## Briefing
+
+### 1. What it is
+
+**SQL Injection (SQLi)** occurs when untrusted user input is directly concatenated into a Structured Query Language (SQL) statement, allowing an attacker to manipulate the query's syntax and execute arbitrary database commands.
+
+Think of an SQL query like a doctor's prescription slip:
+- The intended order reads: *"Dispense [Amoxicillin] to John Doe."*
+- If the patient writes their name as: *"John Doe; and 500 pills of Oxycodone --"*, and the pharmacist dispenses without question, the instruction is hijacked.
+- In software, treating user input as executable SQL syntax instead of literal data causes injection vulnerabilities.
+
+### 2. Why it matters
+
+SQL injection has occupied the OWASP Top 10 for over twenty years. A successful SQL injection flaw can result in:
+1. **Total Confidentiality Loss:** Dumping customer databases, password hashes, and financial records.
+2. **Authentication Bypass:** Gaining administrative access without valid credentials.
+3. **Data Tampering & Destruction:** Modifying account balances or deleting tables via `DROP TABLE`.
+4. **Remote Code Execution (RCE):** Leveraging database features (such as `xp_cmdshell` or `INTO OUTFILE`) to compromise the underlying server operating system.
+
+### 3. How it works
+
+Consider a backend authentication endpoint:
+```python
+# VULNERABLE: Direct string formatting
+query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
+cursor.execute(query)
+```
+
+If an attacker enters the username `admin' --`, the executed query becomes:
+```sql
+SELECT * FROM users WHERE username = 'admin' --' AND password = '...'
+```
+The `--` sequence denotes an SQL comment delimiter. Everything following the comment—including the password verification check—is discarded by the database parser! The query returns the `admin` row, and the user is authenticated as an administrator.
+
+#### Classes of SQLi
+- **In-Band (Auth Bypass & UNION Attacks):** Directly altering returned recordsets or bypassing login conditions using tautologies (`' OR 1=1 --`).
+- **Error-Based SQLi:** Forcing database syntax errors that reveal versions or extracted rows in error messages.
+- **Inferential (Blind) SQLi:** Reconstructing strings character-by-character using boolean checks or time delays (`pg_sleep(5)`).
+
+### 4. Real incident
+
+In 2017, credit reporting agency Equifax suffered a catastrophic breach compromising personal records of over 147 million consumers. While the initial entry vector exploited an Apache Struts vulnerability, post-exploitation lateral movement relied heavily on unparameterized internal SQL queries and unsegmented databases, allowing adversaries to extract massive datasets over several months.
+
+### 5. How to defend / mitigate
+
+- **Parameterized Queries (Prepared Statements):** The only definitive defense. The query structure is compiled before inputs are received, ensuring inputs are treated strictly as literal data.
+- **Principle of Least Privilege:** Connect web applications using database accounts restricted from dropping tables or accessing administrative procedures.
+- **Input Validation:** Enforce strict data type validation (e.g. verifying IDs are strictly numeric).
+
+### 6. Commands & syntax
+
+Example of secure parameterized queries in Python:
+```python
+# SECURE: Input passed as separate parameter tuple
+cursor.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
+```
+
+### 7. Common mistakes
+
+- **Relying on blacklist filters:** Trying to filter out single quotes or the word `SELECT` using regex, which attackers routinely bypass using encoding or alternate SQL syntax.
+- **Concatenating strings inside stored procedures:** Using dynamic SQL within stored procedures, reintroducing injection despite stored procedure use.
+- **Trusting internal administrative queries:** Assuming internal microservices do not require parameterization.
+
+### Remember it like this
+
+> **SQL injection occurs when code and data mix. Parameterized queries compile the SQL structure first, treating user input purely as data. Single quotes will never break the query.**
+
+### Interview answer
+
+> "SQL injection happens when untrusted user input alters the syntactic structure of an SQL query. The primary mitigation is parameterized queries (prepared statements). In a prepared statement, the database pre-compiles the query template before receiving parameters, guaranteeing that user input is treated strictly as literal data rather than executable SQL commands. Defense-in-depth requires least-privilege database user permissions and strict input allowlists."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+<LabLink />
+
+In this lab, you will audit the Apex Vault portal. Use authentication bypass techniques to unlock the administrative dashboard, then exploit a UNION-based query on the asset catalog search to extract the secret key.
+
+## Debrief
+
+**What a professional does here.** Security engineers enforce prepared statements across all Object-Relational Mappers (ORMs) and database abstraction layers, configure static analysis (SAST) tools to flag string concatenations in query builders, and deploy database activity monitoring (DAM) to detect anomalous query structures.
+
+**Key takeaways**
+
+- SQL injection subverts database query syntax via unvalidated user input.
+- Parameterized queries are the only comprehensive, permanent defense.
+- Auth bypasses use comment delimiters (`--`) to neutralize password checks.
+- UNION attacks require matching column counts and compatible data types.

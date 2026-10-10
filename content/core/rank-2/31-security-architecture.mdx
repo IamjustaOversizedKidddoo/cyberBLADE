@@ -1,0 +1,112 @@
+---
+id: core-r2-security-arch-01
+title: "Security Architecture: CIA Triad, Defense-in-Depth & MITRE ATT&CK"
+track: core
+rank: 2
+module: security-core
+order: 31
+estimated_minutes: 35
+objectives_covered: ["secplus:1.1", "secplus:1.2", "secplus:2.1"]
+mitre: ["T1078", "T1110"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: null
+---
+
+## Briefing
+
+### 1. What it is
+
+**Security Architecture** is the discipline of designing, implementing, and operating computing environments in structured layers so that no single failure, misconfiguration, or compromise allows an adversary to achieve catastrophic control.
+
+Rather than treating cybersecurity as a collection of disjointed tools, architecture organizes defense around three core pillars:
+1. **The CIA Triad:** The foundational goals of information security (Confidentiality, Integrity, Availability).
+2. **Defense-in-Depth:** Multiple overlapping protective layers ensuring that if one control fails, another halts the attack.
+3. **Threat Frameworks (MITRE ATT&CK & Cyber Kill Chain):** Standardized taxonomies mapping how real-world adversaries operate across stages of compromise.
+
+Think of security architecture like a medieval fortress:
+- It does not rely solely on a single outer stone wall.
+- It features a moat, a drawbridge, a portcullis, armed guards at the gate, inner keeps, compartmentalized vaults, and sentry towers continuously watching for intruders.
+- If an invader breaches the outer wall, the inner gates remain locked and guards sound the alarm.
+
+### 2. Why it matters
+
+Without security architecture, organizations operate in reactive chaos:
+- Buying expensive security products without understanding where they fit leads to major coverage blind spots.
+- Assuming the internal network is "safe" once past the firewall allows an attacker who compromises a single laptop to access the entire corporate network within minutes.
+- Architectural models like **Zero Trust** eliminate implicit trust, requiring continuous authentication and micro-segmentation across every transaction.
+
+### 3. How it works
+
+#### 1. The CIA Triad
+- **Confidentiality:** Preventing unauthorized disclosure of data (encryption, RBAC).
+- **Integrity:** Preventing unauthorized modification or deletion of data (hashes, digital signatures, auditing).
+- **Availability:** Ensuring authorized users have reliable access (redundancy, fault tolerance, DDoS mitigation).
+
+#### 2. Classification of Security Controls
+- **Preventive:** Block attacks before they happen (firewalls, MFA, parameterized queries).
+- **Detective:** Alert on incidents during occurrence (SIEM, IDS/IPS, audit logs).
+- **Corrective:** Remediate and recover after damage (backups, patch management, machine isolation).
+- **Deterrent:** Discourage attackers (legal warning banners).
+- **Compensating:** Alternative controls deployed when primary controls cannot be implemented (WAF in front of unpatchable legacy systems).
+
+#### 3. Defense-in-Depth
+Concentric defense rings: Perimeter $\rightarrow$ Network $\rightarrow$ Endpoint $\rightarrow$ Application $\rightarrow$ Data.
+
+#### 4. The MITRE ATT&CK Framework
+A globally accessible knowledge base of adversary tactics and techniques:
+- **Tactics (The "Why"):** The attacker's objective (Initial Access, Execution, Persistence, Privilege Escalation, Defense Evasion, Exfiltration).
+- **Techniques (The "How"):** Specific technical methods (e.g. `T1190` Exploit Public-Facing Application, `T1059` Command and Scripting Interpreter).
+
+### 4. Real incident
+
+In 2020, the SolarWinds supply-chain breach (APT29 / Nobelium) compromised over 18,000 organizations by trojanizing software updates. Organizations lacking defense-in-depth and internal network monitoring were blind to the intrusion for nine months. However, organizations with strong network egress controls, strict application whitelisting, and zero-trust conditional access detected the anomalous outbound C2 beacons and blocked unauthorized lateral movement before data exfiltration occurred.
+
+### 5. How to defend / mitigate
+
+- **Adopt Zero Trust Architecture:** Enforce "Never trust, always verify" across identity, device, and network layers.
+- **Implement Network Micro-segmentation:** Isolate critical databases and workloads into private VPCs with strict ingress/egress firewalls.
+- **Map Detections to MITRE ATT&CK:** Align SIEM rules and EDR alerts against specific ATT&CK techniques to eliminate detection blind spots.
+
+### 6. Commands & syntax
+
+Review MITRE ATT&CK technique details and mapping:
+```text
+Tactics: Initial Access -> Persistence -> Privilege Escalation
+Technique ID: T1190 (Exploit Public-Facing Application)
+Mitigations: M1050 (Exploit Protection), M1048 (Application Isolation)
+```
+
+### 7. Common mistakes
+
+- **Relying solely on perimeter firewalls:** Assuming inside the corporate network is safe, enabling rapid lateral movement once an attacker breaches one workstation.
+- **Treating compliance as security:** Ticking compliance checkboxes while ignoring real-world adversary techniques mapped in MITRE ATT&CK.
+- **Ignoring Availability in CIA:** Focusing entirely on confidentiality while neglecting disaster recovery, leading to total business paralysis during ransomware events.
+
+### Remember it like this
+
+> **Security architecture uses layers: CIA Triad defines the goals, Defense-in-Depth builds overlapping rings, Zero Trust verifies every request, and MITRE ATT&CK maps the enemy.**
+
+### Interview answer
+
+> "Security architecture provides a structured, layered defense designed around the CIA Triad (Confidentiality, Integrity, Availability). Rather than relying on a single perimeter wall, Defense-in-Depth enforces overlapping controls across the perimeter, network, endpoint, application, and data layers. Modern architecture embraces Zero Trust—assuming breach, validating every access request explicitly, and enforcing least privilege. Threat modeling leverages frameworks like MITRE ATT&CK to systematically evaluate adversarial tactics and ensure comprehensive detection and prevention across the entire kill chain."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no standalone lab. Architectural threat modeling and attack vector analysis are evaluated in the capstone challenge.
+
+## Debrief
+
+**What a professional does here.** Security architects create Threat Models (using methodologies like STRIDE and PASTA) before applications are built, identifying trust boundaries, mapping potential adversary techniques to MITRE ATT&CK, and verifying that compensatory controls exist for every single point of failure.
+
+**Key takeaways**
+
+- The CIA Triad balances Confidentiality, Integrity, and Availability.
+- Security controls are categorized as Preventive, Detective, Corrective, Deterrent, or Compensating.
+- Defense-in-Depth prevents single points of failure through concentric protective rings.
+- Zero Trust requires continuous verification, eliminating implicit trust based on network location.

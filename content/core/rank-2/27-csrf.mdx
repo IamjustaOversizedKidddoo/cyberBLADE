@@ -1,0 +1,111 @@
+---
+id: core-r2-csrf-01
+title: "Cross-Site Request Forgery (CSRF) & Defense Tokens"
+track: core
+rank: 2
+module: web-security
+order: 27
+estimated_minutes: 30
+objectives_covered: ["secplus:2.2", "secplus:2.5"]
+mitre: ["T1189"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: null
+---
+
+## Briefing
+
+### 1. What it is
+
+**Cross-Site Request Forgery (CSRF)**—also known as session riding—is an attack that tricks a victim's web browser into executing an unwanted, unauthorized action on a trusted website where the victim is currently authenticated.
+
+Think of CSRF like an identity theft spoofed bank transfer:
+- You are logged into your online bank in one browser tab.
+- In another tab, you visit a website containing a hidden script: *"Transfer \$5,000 to Attacker's Account."*
+- Because your browser automatically attaches your active session cookie to any request directed at `bank.com`, the bank's server processes the transfer believing **you** intentionally submitted the form.
+
+### 2. Why it matters
+
+CSRF targets state-changing operations rather than data theft (because the Same-Origin Policy typically prevents the attacker from reading the response):
+1. **Unauthorized Financial Transactions:** Submitting payments or purchasing assets.
+2. **Account Takeover:** Silently changing the victim's email address or password to an attacker-controlled address.
+3. **Privilege Escalation:** Forcing an authenticated administrator to create new administrative accounts or disable audit logging.
+
+### 3. How it works
+
+Web browsers automatically include all stored cookies mapped to a target domain with every HTTP request sent to that domain, **regardless of which website initiated the request**.
+
+#### Classic CSRF Exploitation
+An adversary crafts a trap page on `evil.com`:
+```html
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>Claim Your Free Gift!</h1>
+  <!-- Hidden form auto-submitting to bank.com -->
+  <form id="csrfForm" action="https://bank.com/transfer" method="POST">
+    <input type="hidden" name="amount" value="5000" />
+    <input type="hidden" name="recipient" value="attacker_account" />
+  </form>
+  <script>
+    document.getElementById('csrfForm').submit();
+  </script>
+</body>
+</html>
+```
+When the victim opens `evil.com`, the form submits immediately in the background. The victim's browser includes their valid `session_token` cookie, and `bank.com` processes the transfer.
+
+### 4. Real incident
+
+In 2010, popular consumer home Wi-Fi routers were targeted by massive CSRF campaigns. Cybercriminals hosted web advertisements containing hidden `<img>` tags pointing to the default local router IP (`http://192.168.1.1/setup.cgi?dns1=attacker_ip`). When home users browsed ordinary news sites while logged into their router's web admin console, their browsers fired requests that silently updated the router's DNS settings to rogue servers, redirecting all household web traffic to phishing clones.
+
+### 5. How to defend / mitigate
+
+- **Anti-CSRF Synchronizer Tokens:** Generate a cryptographically random, unpredictable token tied to the user's session, embed it as a hidden field in forms, and verify it on submission.
+- **SameSite Cookie Attribute:** Configure session cookies with `SameSite=Strict` or `SameSite=Lax` to prevent cookies from being attached to cross-site requests.
+- **Custom Request Headers:** Require custom headers (like `X-CSRF-Token`) for JSON API requests, which cross-origin requests cannot send without explicit CORS approval.
+- **Safe HTTP Methods:** Ensure GET requests are strictly idempotent and never perform state-changing operations.
+
+### 6. Commands & syntax
+
+Embedding a CSRF token in an HTML form:
+```html
+<form method="POST" action="/transfer">
+  <input type="hidden" name="csrf_token" value="d9a8f27b4e1c8430..." />
+  <button type="submit">Submit Transfer</button>
+</form>
+```
+
+### 7. Common mistakes
+
+- **Using GET for sensitive actions:** Allowing operations like `/user/delete?id=4` via GET, enabling trivial CSRF via simple `<img>` tags.
+- **Checking CSRF tokens only when present:** Verifying the token if supplied, but skipping validation if the attacker simply omits the parameter.
+- **Using guessable tokens:** Generating tokens using static hashes of the user's ID or timestamp.
+
+### Remember it like this
+
+> **CSRF rides on automatic cookie attachment. Block it with random Anti-CSRF Synchronizer Tokens in form bodies and SameSite=Strict on session cookies.**
+
+### Interview answer
+
+> "Cross-Site Request Forgery (CSRF) tricks a user's browser into executing unwanted state-changing actions on a trusted site where they are authenticated, exploiting the browser's ambient authority to attach cookies automatically. The primary defense is the Synchronizer Token Pattern, where a unique, unpredictable secret token tied to the user session is embedded into forms and verified by the server upon submission. Modern architectures supplement this with the SameSite=Strict or Lax cookie attribute and custom request headers for APIs."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no standalone lab. CSRF token validation and session protection are evaluated across the web capstone challenge.
+
+## Debrief
+
+**What a professional does here.** Security engineers configure framework-level CSRF middleware (such as Spring Security CSRF or Django's `CsrfViewMiddleware`) to automatically reject state-changing requests missing valid anti-forgery tokens, and ensure modern APIs rely on custom request headers and `SameSite` cookies.
+
+**Key takeaways**
+
+- CSRF exploits the browser's automatic inclusion of session cookies.
+- Synchronizer tokens cannot be read by third-party origins under SOP.
+- SameSite=Lax blocks cross-origin POST cookies, neutralizing standard form CSRF.
+- GET requests must never modify server state.
