@@ -1,0 +1,66 @@
+lesson: core-r2-cmd-injection-01
+questions:
+  - id: q1
+    prompt: "Why is executing system commands with shell=True dangerous when handling user-supplied variables?"
+    objectives: ["secplus:2.2"]
+    options:
+      - text: "The operating system shell interpreter parses the string, allowing injected metacharacters (e.g. ';', '&&', '|') to append and execute arbitrary commands."
+        correct: true
+        explanation: "Correct. With shell=True, the system shell evaluates metacharacters in the input string as command separators, executing injected payloads."
+      - text: "shell=True consumes 100% of network bandwidth continuously."
+        correct: false
+        explanation: "shell=True launches a command processor; it does not flood the network."
+      - text: "shell=True disables all hard drive encryption."
+        correct: false
+        explanation: "Shell execution is unrelated to disk encryption configurations."
+      - text: "shell=True forces the server to accept connections on port 21."
+        correct: false
+        explanation: "Port 21 is FTP; shell execution does not open FTP listening ports."
+  - id: q2
+    prompt: "How does passing arguments as a list of strings with shell=False prevent command injection?"
+    objectives: ["secplus:2.5"]
+    options:
+      - text: "The kernel directly passes the array elements as literal arguments to the executable via execve(), bypassing the shell parser so metacharacters are treated as literal text."
+        correct: true
+        explanation: "Correct. Without an intervening shell interpreter, characters like ';' or '|' cannot act as command delimiters."
+      - text: "It compiles the Python script into native C code."
+        correct: false
+        explanation: "Parameterized process execution does not transpile languages."
+      - text: "It prevents users from using punctuation on keyboard inputs."
+        correct: false
+        explanation: "Users can still supply punctuation, but it is handled safely as literal argument data."
+      - text: "It requires the user to solve a CAPTCHA before every command."
+        correct: false
+        explanation: "CAPTCHA is an anti-bot control, not a process execution mechanism."
+  - id: q3
+    prompt: "Which shell operator executes a secondary command only if the preceding command completes with an exit status code of 0 (success)?"
+    objectives: ["secplus:2.2"]
+    options:
+      - text: "&& (Logical AND)"
+        correct: true
+        explanation: "Correct. In bash and standard Unix/Windows shells, 'cmd1 && cmd2' runs cmd2 only if cmd1 succeeds."
+      - text: "|| (Logical OR)"
+        correct: false
+        explanation: "|| executes the second command only if the first command fails."
+      - text: "; (Semicolon)"
+        correct: false
+        explanation: "; executes commands sequentially regardless of success or failure."
+      - text: "| (Pipe)"
+        correct: false
+        explanation: "| redirects standard output of the first command into standard input of the second command."
+  - id: q4
+    prompt: "What is the recommended first-choice defense when an application requires functionality commonly performed by command-line utilities (e.g. compressing files or calculating file hashes)?"
+    objectives: ["secplus:2.5"]
+    options:
+      - text: "Use built-in language standard libraries or native APIs rather than invoking external operating system command-line utilities."
+        correct: true
+        explanation: "Correct. Using native APIs completely eliminates process execution and shell interpreters, avoiding command injection risks."
+      - text: "Run all commands as the root/administrator user."
+        correct: false
+        explanation: "Running commands as root violates least privilege and dramatically amplifies breach impact."
+      - text: "Store command outputs in public S3 buckets."
+        correct: false
+        explanation: "Storing data in public S3 buckets creates severe data exposure vulnerabilities."
+      - text: "Execute commands only during weekend maintenance windows."
+        correct: false
+        explanation: "Scheduling commands does not prevent injection vulnerabilities."

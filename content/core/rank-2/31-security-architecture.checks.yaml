@@ -1,0 +1,66 @@
+lesson: core-r2-security-arch-01
+questions:
+  - id: q1
+    prompt: "Which pillar of the CIA Triad is violated when an attacker performs a distributed denial-of-service (DDoS) attack taking an e-commerce website offline?"
+    objectives: ["secplus:1.2"]
+    options:
+      - text: "Availability"
+        correct: true
+        explanation: "Correct. Availability guarantees that systems and data remain accessible to authorized users when needed; DDoS disrupts service availability."
+      - text: "Confidentiality"
+        correct: false
+        explanation: "Confidentiality relates to protecting data from unauthorized viewing."
+      - text: "Integrity"
+        correct: false
+        explanation: "Integrity relates to preventing unauthorized modification or tampering."
+      - text: "Non-Repudiation"
+        correct: false
+        explanation: "Non-repudiation prevents a party from denying an action they performed."
+  - id: q2
+    prompt: "Under security control classifications, how is a Security Information and Event Management (SIEM) system categorized?"
+    objectives: ["secplus:1.1"]
+    options:
+      - text: "Detective Control"
+        correct: true
+        explanation: "Correct. A SIEM monitors, aggregates, and alerts on security events as they occur, making it a classic detective control."
+      - text: "Deterrent Control"
+        correct: false
+        explanation: "Deterrent controls discourage attackers through visible warnings or legal notices."
+      - text: "Corrective Control"
+        correct: false
+        explanation: "Corrective controls remediate and restore systems after damage has occurred (e.g. restoring backups)."
+      - text: "Physical Control"
+        correct: false
+        explanation: "Physical controls involve tangible security barriers like fences, locks, and guard posts."
+  - id: q3
+    prompt: "In the MITRE ATT&CK framework, what is the conceptual difference between a Tactic and a Technique?"
+    objectives: ["secplus:2.1"]
+    options:
+      - text: "A Tactic represents the adversary's tactical goal or objective (the 'Why'), whereas a Technique represents the specific technical action or method used to achieve it (the 'How')."
+        correct: true
+        explanation: "Correct. Tactics outline the attacker's objective (e.g. Initial Access, Persistence), while Techniques explain the method used (e.g. Phishing, Registry Run Keys)."
+      - text: "Tactics apply only to software; Techniques apply only to hardware."
+        correct: false
+        explanation: "Tactics and techniques encompass both software and infrastructure domains."
+      - text: "Tactics are authored by government agencies; Techniques are authored by private vendors."
+        correct: false
+        explanation: "The entire ATT&CK matrix is maintained collaboratively by the MITRE Corporation."
+      - text: "Tactics describe defensive measures; Techniques describe offensive weapons."
+        correct: false
+        explanation: "Both Tactics and Techniques map adversarial actions from an attacker's perspective."
+  - id: q4
+    prompt: "What is the foundational operational principle of Zero Trust Architecture?"
+    objectives: ["secplus:1.2"]
+    options:
+      - text: "'Never trust, always verify': explicitly authenticate and authorize every request and assume the internal network is breach-compromised."
+        correct: true
+        explanation: "Correct. Zero Trust assumes breach and requires continuous explicit verification rather than trusting internal network locations."
+      - text: "Trust all computers connected via blue ethernet cables."
+        correct: false
+        explanation: "Zero Trust explicitly eliminates trust based on physical cable or network topology."
+      - text: "Disable all passwords and rely solely on facial recognition."
+        correct: false
+        explanation: "Zero Trust enforces multi-factor authentication and dynamic access policies, not facial recognition exclusively."
+      - text: "Install antivirus software on the office microwave."
+        correct: false
+        explanation: "Zero Trust is an architectural security framework, not an appliance scanning gimmick."

@@ -1,10 +1,12 @@
 import type { World } from "@/lib/lab-engine/terminal/types";
 import type { Capture } from "@/lib/lab-engine/packet/types";
 import type { Lab } from "@/lib/lab-engine/lab-schema";
+import type { WebAppEnv } from "@/lib/lab-engine/webapp/types";
 
 export type LabEnv =
   | { kind: "terminal"; world: World }
-  | { kind: "packet"; capture: Capture };
+  | { kind: "packet"; capture: Capture }
+  | { kind: "webapp"; app: WebAppEnv };
 
 export function assertEnvMatchesLab(lab: Pick<Lab, "id" | "type">, env: LabEnv): void {
   if (lab.type !== env.kind) {

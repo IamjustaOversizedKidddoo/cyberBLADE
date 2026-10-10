@@ -1,0 +1,66 @@
+lesson: core-r2-ssrf-01
+questions:
+  - id: q1
+    prompt: "What is the primary mechanism of a Server-Side Request Forgery (SSRF) attack?"
+    objectives: ["secplus:2.2"]
+    options:
+      - text: "Coercing an application server into issuing unintended HTTP requests to internal networks, loopback interfaces, or cloud metadata endpoints using its own trusted network identity."
+        correct: true
+        explanation: "Correct. SSRF leverages the application server as an unauthorized proxy to access resources unreachable from the public internet."
+      - text: "Overheating the server's CPU with mathematical calculations."
+        correct: false
+        explanation: "Resource starvation or denial of service is not the mechanism of SSRF."
+      - text: "Cracking passwords using automated dictionary attacks."
+        correct: false
+        explanation: "Password brute-forcing is an authentication attack, not SSRF."
+      - text: "Listening to radio signals from the motherboard."
+        correct: false
+        explanation: "Radio side-channel analysis is unrelated to SSRF."
+  - id: q2
+    prompt: "What high-value asset is targeted by adversaries querying link-local address 169.254.169.254 on cloud virtual machines?"
+    objectives: ["secplus:3.2"]
+    options:
+      - text: "Temporary IAM role credentials, API access tokens, and cloud instance metadata from the Instance Metadata Service (IMDS)."
+        correct: true
+        explanation: "Correct. Cloud metadata services (like AWS IMDS) host temporary security credentials that grant attackers access to cloud resources."
+      - text: "The physical serial number of the datacenter cooling fans."
+        correct: false
+        explanation: "Datacenter facility telemetry is not exposed via instance metadata services."
+      - text: "The credit card numbers of all customers who visited the website in the past year."
+        correct: false
+        explanation: "Customer databases reside in databases, not in instance metadata services."
+      - text: "The operating system's optical disk drive configuration."
+        correct: false
+        explanation: "Virtual cloud machines do not host optical disk drives via IMDS."
+  - id: q3
+    prompt: "How does AWS IMDSv2 mitigate simple SSRF attacks compared to legacy IMDSv1?"
+    objectives: ["secplus:3.2"]
+    options:
+      - text: "IMDSv2 requires a session-oriented PUT request with a custom header to generate a temporary token before any metadata can be read, blocking simple GET-based SSRF payloads."
+        correct: true
+        explanation: "Correct. Requiring a token generated via HTTP PUT with custom headers neutralizes simple SSRF vectors that only execute GET requests."
+      - text: "IMDSv2 permanently turns off all internet access for the instance."
+        correct: false
+        explanation: "IMDSv2 does not disable external networking; it hardens metadata queries."
+      - text: "IMDSv2 deletes the virtual machine whenever an unauthorized IP connects."
+        correct: false
+        explanation: "Instances are not deleted upon failed metadata queries."
+      - text: "IMDSv2 encrypts all outgoing HTTP packets with 4096-bit RSA keys."
+        correct: false
+        explanation: "IMDSv2 uses standard HTTP headers, not custom per-packet RSA encryption."
+  - id: q4
+    prompt: "Why is resolving a domain to its IP address and validating it against RFC 1918 private ranges essential before establishing an outbound connection in webhook services?"
+    objectives: ["secplus:2.5"]
+    options:
+      - text: "To block requests targeting internal private addresses (e.g. 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, and 127.0.0.1) that bypass simple domain string matching."
+        correct: true
+        explanation: "Correct. Pre-resolving and validating IPs prevents attackers from using custom domain names (DNS rebinding) to hit private internal hosts."
+      - text: "To reduce server electricity consumption by 50%."
+        correct: false
+        explanation: "IP validation is a security control, not an energy efficiency optimization."
+      - text: "To speed up video streaming for mobile devices."
+        correct: false
+        explanation: "IP validation is unrelated to video streaming bitrates."
+      - text: "To convert all IPv4 packets into IPv6 format."
+        correct: false
+        explanation: "IP validation verifies allowed address ranges; it does not translate network protocols."

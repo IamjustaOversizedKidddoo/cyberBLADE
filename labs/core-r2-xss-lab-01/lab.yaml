@@ -1,0 +1,24 @@
+id: core-r2-xss-lab-01
+title: "Stored XSS & Session Hijacking"
+type: webapp
+track: core
+rank: 2
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: xss_lab
+  params: {}
+objectives:
+  - id: hijack_admin
+    prompt: "Inject a stored XSS payload into the operations feed and trigger the admin review bot to extract the administrator cookie flag."
+    check:
+      kind: flag
+      answer_from: generator.flag_cookie
+hints:
+  hijack_admin:
+    - "Inspect the comment posting form on the /board endpoint. Submissions are reflected without HTML entity encoding."
+    - "Try submitting an inline script tag (<script>alert(1)</script>) or an event handler payload (<img src=x onerror=alert(1)>)."
+    - "Trigger the Admin Review Bot via the provided link. When the crawler visits the board, your XSS payload executes in their browser context."
+xp: 150
+mitre:
+  - T1189

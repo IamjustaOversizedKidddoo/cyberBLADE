@@ -1,0 +1,103 @@
+---
+id: core-r2-security-tooling-01
+title: "Security Tooling: Web Interception Proxies, Port Scanning & Recon"
+track: core
+rank: 2
+module: tooling
+order: 32
+estimated_minutes: 35
+objectives_covered: ["secplus:3.2", "secplus:2.4"]
+mitre: ["T1046", "T1595.002"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: null
+---
+
+## Briefing
+
+### 1. What it is
+
+Security testing requires specialized diagnostic instrumentation to inspect, test, and audit networks, endpoints, and web applications.
+
+Two foundational tool classes form the core toolkit of security analysts and penetration testers:
+1. **Web Interception Proxies (Burp Suite & OWASP ZAP):** Applications that sit between your web browser and target web servers, capturing every HTTP request and response so you can inspect, modify, and replay traffic.
+2. **Network Scanners (Nmap):** Network exploration and audit engines that probe target IP addresses to identify open ports, running services, and underlying operating systems.
+
+Think of an interception proxy like an x-ray inspection station at an international border:
+- Nothing enters or leaves without being placed on the conveyor belt.
+- The inspector can pause any packet, open the contents, alter the documents inside, and send it on to its destination to observe how the recipient reacts.
+
+### 2. Why it matters
+
+Standard web browsers hide the raw mechanics of web communication:
+- When you click a button on a website, JavaScript might format a JSON payload, append hidden tokens, or send telemetry in background threads.
+- Trying to test or defend a web application through a normal browser GUI is like trying to diagnose an automobile engine without ever opening the hood.
+- Interception proxies expose the underlying truth of the protocol, enabling you to discover hidden API parameters, test injection payloads, and bypass client-side validation controls.
+
+### 3. How it works
+
+#### 1. Web Interception Proxies (Burp Suite)
+- **Proxy & Intercept:** Freezes outgoing requests before they leave your computer, allowing manual parameter tampering.
+- **Repeater:** Lets you isolate individual requests, edit payloads, send them repeatedly, and observe raw responses instantly.
+- **Intruder:** Automated fuzzing engine that injects wordlists into specified insertion points.
+- **Proxy CA Certificate:** Burp acts as a local Certificate Authority; you must install its public root CA into your browser to intercept HTTPS without certificate warnings.
+
+#### 2. Network Scanning (Nmap)
+- `-sS (TCP SYN Stealth Scan):` Sends a SYN; if SYN/ACK is returned, the port is **open**. Nmap tears down the connection with a RST packet without completing the 3-way handshake.
+- `-sT (TCP Connect Scan):` Completes the full 3-way handshake (`connect()`). Does not require root privileges.
+- `-sU (UDP Scan):` Probes UDP ports; ICMP Port Unreachable denotes closed ports.
+- `-sV (Service Version Detection):` Banner-grabs open ports to determine exact application versions.
+- `-sC (Default Scripts):` Runs standard Nmap Scripting Engine (NSE) scripts to identify known vulnerabilities.
+- **Port States:** `Open` (service listening), `Closed` (RST received, no service), `Filtered` (firewall dropping packets).
+
+### 4. Real incident
+
+During penetration tests on critical energy utility infrastructure, security consultants routinely discover unauthenticated industrial control interfaces (such as Modbus or SCADA web consoles) listening on non-standard ports (e.g. port 8443 or 9090). A simple Nmap service scan (`-sV -p-`) identifies the services within minutes, while an interception proxy allows testers to demonstrate that administrative endpoints lack authentication controls before real-world adversaries discover them.
+
+### 5. How to defend / mitigate
+
+- **Enforce Strict Rules of Engagement (RoE):** Never scan or intercept targets without explicit written authorization.
+- **Rate Limiting & Safety Controls:** Throttle scanning speeds (`-T3` instead of `-T5`) to avoid crashing legacy network switches or triggering denial-of-service conditions.
+- **Firewall & IDS Configuration:** Configure network firewalls to drop unauthorized incoming port probes, and monitor IDS/IPS alerts for Nmap scan signatures.
+
+### 6. Commands & syntax
+
+Essential Nmap discovery commands:
+```bash
+nmap -sS -p 80,443 scanme.nmap.org
+curl -i -X GET https://scanme.nmap.org
+```
+
+### 7. Common mistakes
+
+- **Scanning without written authorization:** Violating computer misuse laws by probing systems outside defined test scopes.
+- **Relying solely on top 1000 ports:** Skipping high-numbered ports where administrators frequently hide administrative services (`-p-` scans all 65,535 ports).
+- **Ignoring the Filtered state:** Assuming a filtered port is harmless, when it often indicates a critical internal service shielded only by a fragile firewall rule.
+
+### Remember it like this
+
+> **Burp Suite Repeater lets you dissect and replay web requests. Nmap SYN scans probe open ports with half-open handshakes. Always get written authorization before scanning.**
+
+### Interview answer
+
+> "Burp Suite is the primary web application testing tool, operating as an interception proxy between browser and server to capture, tamper with, and replay HTTP traffic via modules like Repeater and Intruder. To intercept HTTPS, the tester installs the proxy's custom CA certificate into the browser trust store. For network reconnaissance, Nmap is the industry standard; its TCP SYN stealth scan (-sS) performs half-open probes to determine whether ports are open, closed, or filtered by a firewall, while -sV identifies running service versions."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no standalone lab. Web inspection proxying and port reconnaissance methodology are integrated across the practical capstone operations.
+
+## Debrief
+
+**What a professional does here.** Security consultants configure automated Burp Suite active scans alongside manual Repeater testing, ensuring that client-side controls are thoroughly bypassed and that every external-facing port discovered via Nmap is cataloged in the attack surface inventory.
+
+**Key takeaways**
+
+- Interception proxies expose raw HTTP/HTTPS exchanges for inspection and replay.
+- Burp Repeater allows manual request editing and instant response viewing.
+- Nmap SYN scan (-sS) uses half-open connections for fast, stealthy port discovery.
+- Port states: Open (service active), Closed (RST received), Filtered (packet dropped by firewall).

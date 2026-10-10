@@ -1,0 +1,66 @@
+lesson: core-r2-cookies-sessions-01
+questions:
+  - id: q1
+    prompt: "What direct security protection does the 'HttpOnly' flag provide on an authentication cookie?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "It prevents client-side JavaScript (e.g. document.cookie) from accessing the cookie, mitigating cookie exfiltration via XSS."
+        correct: true
+        explanation: "Correct. HttpOnly blocks client scripts from reading the cookie, shielding session tokens against cross-site scripting theft."
+      - text: "It encrypts the cookie body on the user's hard drive."
+        correct: false
+        explanation: "HttpOnly does not encrypt client storage; it only restricts script access."
+      - text: "It forces the browser to transmit the cookie only over HTTPS."
+        correct: false
+        explanation: "The Secure flag enforces HTTPS transmission, not HttpOnly."
+      - text: "It invalidates the cookie after exactly one HTTP request."
+        correct: false
+        explanation: "Single-use tokens are enforced via backend application logic, not HttpOnly."
+  - id: q2
+    prompt: "What vulnerability occurs when an application keeps the same session ID before and after a user logs in with valid credentials?"
+    objectives: ["secplus:4.6"]
+    options:
+      - text: "Session Fixation"
+        correct: true
+        explanation: "Correct. In a session fixation attack, an adversary tricks a victim into using a known session ID, which remains valid after the victim logs in."
+      - text: "SQL Injection"
+        correct: false
+        explanation: "SQL injection manipulates database queries, not session identifiers."
+      - text: "Buffer Overflow"
+        correct: false
+        explanation: "Buffer overflows corrupt native memory spaces, not session tokens."
+      - text: "Directory Traversal"
+        correct: false
+        explanation: "Directory traversal accesses unauthorized files on the server filesystem."
+  - id: q3
+    prompt: "How does setting SameSite=Strict on a session cookie protect web applications against Cross-Site Request Forgery (CSRF)?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "The browser will refuse to attach the cookie to any request originating from a third-party website, even if the user clicks a link to the application."
+        correct: true
+        explanation: "Correct. SameSite=Strict ensures the cookie is never sent across origins, completely neutralizing cross-origin forged requests."
+      - text: "It converts all GET requests into POST requests."
+        correct: false
+        explanation: "SameSite controls cookie attachment; it does not alter HTTP methods."
+      - text: "It hides the server's IP address from external DNS queries."
+        correct: false
+        explanation: "SameSite is an application cookie attribute, unrelated to DNS."
+      - text: "It encrypts JSON Web Tokens using asymmetric elliptic curves."
+        correct: false
+        explanation: "SameSite is a cookie policy, not an encryption cipher."
+  - id: q4
+    prompt: "What is an inherent security drawback of purely stateless JSON Web Tokens (JWT) compared to server-managed sessions?"
+    objectives: ["secplus:4.6"]
+    options:
+      - text: "Revoking or invalidating an individual JWT immediately upon compromise is difficult without introducing stateful token blocklists."
+        correct: true
+        explanation: "Correct. Because JWT validity is checked purely against cryptographic signatures, an issued token remains valid until its expiration timestamp unless the server tracks revoked IDs."
+      - text: "JWTs cannot be transmitted over HTTPS."
+        correct: false
+        explanation: "JWTs are routinely transmitted over HTTPS via Authorization headers or cookies."
+      - text: "JWTs cannot store user roles or claims."
+        correct: false
+        explanation: "JWT payloads are specifically designed to carry claims and roles."
+      - text: "JWTs are vulnerable to SQL injection by default."
+        correct: false
+        explanation: "JWTs are Base64URL-encoded JSON objects, unrelated to SQL injection."

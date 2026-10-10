@@ -1,0 +1,66 @@
+lesson: core-r2-security-tooling-01
+questions:
+  - id: q1
+    prompt: "What is the primary function of the Repeater tool within web interception proxies like Burp Suite?"
+    objectives: ["secplus:2.4"]
+    options:
+      - text: "To isolate individual HTTP requests, manually modify parameters and headers, resend them repeatedly, and inspect raw server responses in real time."
+        correct: true
+        explanation: "Correct. Repeater enables security testers to rapidly tweak parameters, test injection payloads, and observe backend responses without browser interference."
+      - text: "To play background music during penetration tests."
+        correct: false
+        explanation: "Repeater is a technical HTTP testing utility, not an audio player."
+      - text: "To automatically delete all log files on the target server."
+        correct: false
+        explanation: "Repeater does not perform log deletion."
+      - text: "To translate web pages into foreign languages."
+        correct: false
+        explanation: "Repeater does not perform language translation."
+  - id: q2
+    prompt: "How does a TCP SYN Stealth scan (-sS in Nmap) determine if a target port is open without completing a full TCP 3-way handshake?"
+    objectives: ["secplus:3.2"]
+    options:
+      - text: "Nmap sends a SYN; if the target responds with SYN/ACK, the port is open, and Nmap immediately sends a RST packet to tear down the connection before it completes."
+        correct: true
+        explanation: "Correct. The half-open SYN scan identifies open listening ports quickly without establishing a full application-layer connection."
+      - text: "Nmap waits for the target server to email its configuration file."
+        correct: false
+        explanation: "Port scanning uses low-level TCP/IP packets, not email."
+      - text: "Nmap powers off the target machine's network card."
+        correct: false
+        explanation: "Port scanning does not disable hardware network interfaces."
+      - text: "Nmap cracks the router's Wi-Fi password using WPA2 handshakes."
+        correct: false
+        explanation: "SYN scans probe TCP ports on IP addresses, not Wi-Fi radio frequencies."
+  - id: q3
+    prompt: "When Nmap reports a port state as 'Filtered', what does this indicate about the target network path?"
+    objectives: ["secplus:3.2"]
+    options:
+      - text: "A firewall, network filter, or router rule is dropping the probe packets, preventing Nmap from reaching the port or receiving a response."
+        correct: true
+        explanation: "Correct. 'Filtered' indicates that an intermediate device or host firewall dropped the probe, so Nmap cannot determine if an application is listening."
+      - text: "The port is running a web browser."
+        correct: false
+        explanation: "Filtered describes packet reachability, not the presence of a web browser."
+      - text: "The port has been physically removed from the server motherboard."
+        correct: false
+        explanation: "Ports are logical 16-bit software numbers in the TCP/IP stack."
+      - text: "The server is running Windows 95."
+        correct: false
+        explanation: "Port filtering is independent of legacy operating system versions."
+  - id: q4
+    prompt: "Why must a security tester install their interception proxy's custom CA certificate into their browser trust store to inspect HTTPS traffic?"
+    objectives: ["secplus:2.4"]
+    options:
+      - text: "Because the proxy generates on-the-fly TLS certificates for visited websites to decrypt traffic; without the trusted proxy CA, browsers will display severe certificate invalidity errors."
+        correct: true
+        explanation: "Correct. To intercept encrypted TLS connections, the proxy acts as a local CA; trusting this CA allows the browser to accept the proxy's generated certificates without errors."
+      - text: "To increase internet download speed by 10 gigabits."
+        correct: false
+        explanation: "CA certificates establish trust boundaries; they do not alter internet connection speeds."
+      - text: "To prevent the computer monitor from turning off."
+        correct: false
+        explanation: "Certificates do not govern display sleep settings."
+      - text: "To enable Bluetooth pairing on the local network."
+        correct: false
+        explanation: "TLS certificates operate at the cryptographic transport layer, unrelated to Bluetooth."

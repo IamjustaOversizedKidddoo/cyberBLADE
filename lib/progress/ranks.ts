@@ -2,6 +2,7 @@ export const RANKS = [
   { rank: 0, name: "Initiate" },
   { rank: 1, name: "Operator" },
   { rank: 2, name: "Watcher" },
+  { rank: 3, name: "Hunter" },
 ] as const;
 
 export function rankName(rank: number): string {

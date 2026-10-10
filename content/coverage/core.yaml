@@ -119,4 +119,7 @@ objectives:
   - id: "secplus:4.6"
     summary: "Identity and access management concepts, credential controls, and privilege allocation"
     target_rank: 2
+  - id: "secplus:2.2"
+    summary: "Common vulnerability types: injection, broken access control, cross-site scripting, and misconfigurations"
+    target_rank: 2
 

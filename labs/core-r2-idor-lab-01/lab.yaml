@@ -1,0 +1,33 @@
+id: core-r2-idor-lab-01
+title: "BOLA / IDOR Horizontal Escalation"
+type: webapp
+track: core
+rank: 2
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: idor_lab
+  params: {}
+objectives:
+  - id: exfiltrate_ciso
+    prompt: "Inspect network API requests and tamper with user ID parameter to exfiltrate the CISO's confidential dossier."
+    check:
+      kind: flag
+      answer_from: generator.flag_profile
+  - id: exfiltrate_invoices
+    prompt: "Enumerate unlinked financial records on the invoice endpoint to capture the classified invoice flag."
+    check:
+      kind: flag
+      answer_from: generator.flag_invoice
+hints:
+  exfiltrate_ciso:
+    - "Examine your own profile page and the HTTP Inspector network tab. Notice how requests query /api/user/profile?id=104."
+    - "Web applications that rely solely on client-supplied IDs without verifying session ownership suffer from Broken Object Level Authorization (BOLA/IDOR)."
+    - "Change the id query parameter to lower integer values (e.g. 101 or 102) to access privileged personnel dossiers."
+  exfiltrate_invoices:
+    - "Inspect the assigned financials link: /api/invoices?userId=104."
+    - "Query the endpoint with the executive's identifier (userId=101) in the simulated URL bar."
+    - "Look through the returned JSON array of financial invoices to find the classified ledger flag."
+xp: 150
+mitre:
+  - T1530

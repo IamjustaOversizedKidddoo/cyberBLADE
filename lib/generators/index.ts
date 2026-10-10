@@ -16,6 +16,11 @@ import { registryLab } from "./windows/registry-lab";
 import { eventlogLab } from "./windows/eventlog-lab";
 import { r1Challenge } from "./terminal/r1-challenge";
 
+import { sqliLab } from "./webapp/sqli-lab";
+import { xssLab } from "./webapp/xss-lab";
+import { idorLab } from "./webapp/idor-lab";
+import { r2Challenge } from "./webapp/r2-challenge";
+
 export type GeneratorOutput = { env: LabEnv; answers: Record<string, string> };
 
 // Params come from lab.yaml, so generators validate what they read.
@@ -38,4 +43,8 @@ export const GENERATORS: Record<string, Generator> = {
   suid_lab: suidLab,
   win_registry_lab: registryLab,
   win_eventlog_lab: eventlogLab,
+  sqli_lab: sqliLab,
+  xss_lab: xssLab,
+  idor_lab: idorLab,
+  r2_challenge: r2Challenge,
 };

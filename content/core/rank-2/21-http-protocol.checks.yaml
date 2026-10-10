@@ -1,0 +1,66 @@
+lesson: core-r2-http-protocol-01
+questions:
+  - id: q1
+    prompt: "What is the critical distinction between HTTP status code 401 Unauthorized and 403 Forbidden?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "401 indicates authentication is missing or invalid; 403 indicates identity is authenticated but lacks required permissions."
+        correct: true
+        explanation: "Correct. 401 challenges for credentials, whereas 403 acknowledges who you are but denies access to the resource."
+      - text: "401 means the page does not exist; 403 means the server crashed."
+        correct: false
+        explanation: "404 indicates resource not found; 500 indicates server error."
+      - text: "401 is returned by client browsers; 403 is returned exclusively by firewalls."
+        correct: false
+        explanation: "Both status codes are returned by the origin server or reverse proxy."
+      - text: "401 applies only to GET requests; 403 applies only to POST requests."
+        correct: false
+        explanation: "Status codes apply to all HTTP methods."
+  - id: q2
+    prompt: "Which HTTP security header instructs web browsers to exclusively connect to a domain using HTTPS, preventing SSL stripping attacks?"
+    objectives: ["secplus:3.2"]
+    options:
+      - text: "Strict-Transport-Security (HSTS)"
+        correct: true
+        explanation: "Correct. HSTS forces compliant user agents to upgrade all HTTP connections to HTTPS automatically."
+      - text: "X-Frame-Options"
+        correct: false
+        explanation: "X-Frame-Options protects against clickjacking by controlling iframe embedding."
+      - text: "X-Content-Type-Options"
+        correct: false
+        explanation: "X-Content-Type-Options: nosniff prevents MIME-type confusion attacks."
+      - text: "Access-Control-Allow-Origin"
+        correct: false
+        explanation: "This is a CORS header regulating cross-origin resource sharing."
+  - id: q3
+    prompt: "Why is the HTTP OPTIONS method frequently analyzed during web application reconnaissance and CORS audits?"
+    objectives: ["secplus:3.2"]
+    options:
+      - text: "It allows clients to query supported HTTP methods and serves as the preflight request for cross-origin exchanges."
+        correct: true
+        explanation: "Correct. OPTIONS discloses server capabilities and validates CORS permissions prior to state-changing requests."
+      - text: "It encrypts the payload using symmetric keys."
+        correct: false
+        explanation: "OPTIONS does not provide encryption; TLS provides encryption."
+      - text: "It terminates active TCP connections immediately."
+        correct: false
+        explanation: "TCP termination is handled at Layer 4 via FIN/RST flags, not HTTP."
+      - text: "It downloads server configuration files to the client."
+        correct: false
+        explanation: "OPTIONS returns response headers, not server source files."
+  - id: q4
+    prompt: "Which HTTP request header informs the server about the MIME format of the data enclosed within the request body?"
+    objectives: ["secplus:1.4"]
+    options:
+      - text: "Content-Type"
+        correct: true
+        explanation: "Correct. Content-Type (e.g. application/json or multipart/form-data) specifies the format of the body."
+      - text: "Accept"
+        correct: false
+        explanation: "Accept informs the server which MIME types the client is willing to receive in the response."
+      - text: "Host"
+        correct: false
+        explanation: "Host specifies the domain name of the destination server for virtual hosting."
+      - text: "User-Agent"
+        correct: false
+        explanation: "User-Agent describes the client software making the request."

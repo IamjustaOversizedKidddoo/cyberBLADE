@@ -1,0 +1,66 @@
+lesson: core-r2-idor-bola-01
+questions:
+  - id: q1
+    prompt: "What is the root cause of an Insecure Direct Object Reference (IDOR / BOLA) vulnerability?"
+    objectives: ["secplus:2.2"]
+    options:
+      - text: "The backend server retrieves or modifies database objects based on client-supplied parameters without verifying whether the authenticated user owns or has permission to access that object."
+        correct: true
+        explanation: "Correct. IDOR occurs when authorization logic is missing, allowing clients to manipulate object references arbitrarily."
+      - text: "The web server runs out of physical RAM."
+        correct: false
+        explanation: "Resource exhaustion is unrelated to object-level access controls."
+      - text: "The client uses an unencrypted HTTP connection."
+        correct: false
+        explanation: "IDOR occurs identically over encrypted HTTPS connections; it is an application logic flaw."
+      - text: "The database uses foreign key constraints."
+        correct: false
+        explanation: "Foreign key constraints maintain relational integrity, not access authorization."
+  - id: q2
+    prompt: "What is the difference between Horizontal and Vertical Privilege Escalation?"
+    objectives: ["secplus:2.2"]
+    options:
+      - text: "Horizontal escalation accesses resources of another user at the same permission level; Vertical escalation accesses functions or data reserved for higher-privileged roles."
+        correct: true
+        explanation: "Correct. Horizontal involves peer-to-peer unauthorized access, whereas vertical involves elevating from unprivileged to administrative capabilities."
+      - text: "Horizontal escalation occurs over Wi-Fi; Vertical occurs over satellite."
+        correct: false
+        explanation: "The terms describe permission boundaries, not network physical layers."
+      - text: "Horizontal escalation affects only Linux servers; Vertical affects Windows."
+        correct: false
+        explanation: "Privilege escalation concepts apply across all operating systems and web applications."
+      - text: "Horizontal escalation is caused by hardware flaws; Vertical is caused by software bugs."
+        correct: false
+        explanation: "Both are software and architecture vulnerabilities."
+  - id: q3
+    prompt: "Which architectural pattern provides the most robust defense against IDOR vulnerabilities?"
+    objectives: ["secplus:2.5"]
+    options:
+      - text: "Tying every data query directly to the authenticated session context (e.g. querying WHERE id = :id AND owner_id = :session_user_id) at the database layer."
+        correct: true
+        explanation: "Correct. Enforcing ownership checks at the data layer guarantees that a user cannot query or mutate objects outside their authenticated identity."
+      - text: "Hiding the browser address bar from the user."
+        correct: false
+        explanation: "Attackers interact via proxies and custom scripts; hiding UI elements provides zero security."
+      - text: "Base64 encoding all numbers in the URL."
+        correct: false
+        explanation: "Base64 is trivial to decode and modify; encoding is not authorization."
+      - text: "Installing an SSL certificate on the web domain."
+        correct: false
+        explanation: "SSL/TLS encrypts transit but does not enforce backend authorization."
+  - id: q4
+    prompt: "Why is replacing sequential integer IDs with cryptographically random UUIDv4 identifiers considered defense-in-depth rather than a complete fix for IDOR?"
+    objectives: ["secplus:2.5"]
+    options:
+      - text: "UUIDs prevent attackers from trivially guessing the next sequential number, but if an attacker obtains a UUID (via links, logs, or APIs), the system still lacks authorization checks."
+        correct: true
+        explanation: "Correct. Obscuring identifiers does not replace access control checks; unguessability is merely defense-in-depth."
+      - text: "UUIDs are automatically decrypted by modern web browsers."
+        correct: false
+        explanation: "UUIDs are identifiers, not encrypted data."
+      - text: "UUIDs require 100 times more CPU time to parse."
+        correct: false
+        explanation: "UUID comparison is fast and computationally lightweight."
+      - text: "UUIDs are forbidden by the W3C HTTP standards."
+        correct: false
+        explanation: "UUIDs are universally supported across web standards and database engines."

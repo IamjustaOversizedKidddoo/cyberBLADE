@@ -1,0 +1,107 @@
+---
+id: core-r2-idor-bola-01
+title: "Insecure Direct Object References (IDOR / BOLA)"
+track: core
+rank: 2
+module: web-security
+order: 26
+estimated_minutes: 30
+objectives_covered: ["secplus:2.2", "secplus:2.5"]
+mitre: ["T1530"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: core-r2-idor-lab-01
+---
+
+## Briefing
+
+### 1. What it is
+
+**Insecure Direct Object References (IDOR)**—classified in the OWASP API Security Top 10 as **Broken Object Level Authorization (BOLA)**—occurs when an application exposes a direct identifier to an internal database record (such as an ID, filename, or UUID) in client-controlled parameters, without verifying whether the requesting user is authorized to access that specific object.
+
+Think of IDOR like a hotel room key system:
+- The hotel gives you key #304 for the room you reserved.
+- If the doors simply verify that the key has a valid physical shape without checking whether **you** booked that room, you could scratch off 304, carve 305, and walk straight into your neighbor's suite.
+- An application has an IDOR flaw when it verifies that you are logged in (Authentication), but fails to verify that the specific resource belongs to you (Object-Level Authorization).
+
+### 2. Why it matters
+
+BOLA/IDOR is recognized by security researchers as the **single most prevalent vulnerability in modern cloud APIs and mobile applications**:
+1. **Massive Data Breaches:** Attackers automate sequential counters (`id=1001` through `id=500000`) to harvest millions of personal profiles, tax documents, or medical records within hours.
+2. **Account Takeover:** If an endpoint updates user profiles or passwords based on an unverified user ID (`POST /api/user/update?userId=42`), attackers can take over arbitrary accounts.
+3. **Bypasses Firewalls:** Because IDOR exploits legitimate application business logic using valid user sessions, traditional Web Application Firewalls (WAFs) cannot differentiate between authorized and unauthorized requests.
+
+### 3. How it works
+
+#### Horizontal vs. Vertical Privilege Escalation
+- **Horizontal Privilege Escalation:** Accessing resources belonging to another user who possesses the **same privilege level** (e.g. User A changing `id=104` to `id=101` to view another user's private dossier).
+- **Vertical Privilege Escalation:** Accessing functionality or data reserved for **higher-privileged roles** (e.g. an unprivileged user altering parameters to invoke admin functions).
+
+#### Vulnerable Code Pattern
+```python
+# VULNERABLE: Only checks if document exists, not who owns it
+@app.route('/api/documents/<doc_id>')
+@login_required
+def get_document(doc_id):
+    doc = db.query(Document).filter_by(id=doc_id).first()
+    if not doc:
+        return {"error": "Not found"}, 404
+    # FLAW: Missing authorization check: doc.owner_id == current_user.id
+    return jsonify(doc.serialize())
+```
+
+### 4. Real incident
+
+In 2019, insurance giant First American Financial exposed over 885 million sensitive customer documents dating back to 2003—including bank account numbers, tax forms, wire transaction records, and driver's licenses. The web application used sequential integer URLs (`https://example.com/doc/0000001`). Anyone with a valid link to their own document could alter the digits in the URL and access any other customer's confidential financial records without authentication.
+
+### 5. How to defend / mitigate
+
+- **Enforce Authorization Checks at the Data Layer:** Every database query that fetches or modifies an object must include the authenticated user's session identifier (`WHERE id = :doc_id AND owner_id = :session_user_id`).
+- **Use Role-Based & Attribute-Based Access Control (RBAC/ABAC):** Implement centralized authorization policy middleware that evaluates user permissions before dispatching to business logic controllers.
+- **Use Unguessable Identifiers (UUIDv4):** While unguessable UUIDs do not replace authorization checks, they eliminate predictable sequential enumeration attacks.
+
+### 6. Commands & syntax
+
+Secure implementation tying queries to session context:
+```python
+# SECURE: Enforces object ownership at the database query level
+doc = db.query(Document).filter_by(id=doc_id, owner_id=current_user.id).first()
+if not doc:
+    return {"error": "Not found"}, 404
+```
+
+### 7. Common mistakes
+
+- **Relying on obscurity:** Assuming attackers will not guess sequential IDs or assuming client-side UI restrictions prevent users from tampering with API requests.
+- **Checking authentication but forgetting authorization:** Verifying a user has a valid JWT, but assuming that any valid JWT holder can read any object in the database.
+- **Failing to protect state-changing operations:** Securing GET requests but forgetting to verify object ownership on PUT, POST, or DELETE operations.
+
+### Remember it like this
+
+> **Authentication checks who you are; authorization checks what you can touch. Never trust an ID from the client without verifying the session owns that record.**
+
+### Interview answer
+
+> "Insecure Direct Object References (IDOR), or Broken Object Level Authorization (BOLA), occurs when an application retrieves or mutates database objects using client-supplied identifiers without verifying that the authenticated user owns or has permission to access that object. The definitive mitigation is enforcing object-level authorization checks at the data layer—ensuring every query explicitly filters on the authenticated user's session identifier (WHERE id = :id AND user_id = :current_user). Defense-in-depth includes using unguessable UUIDv4 identifiers and central RBAC/ABAC authorization middleware."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+<LabLink />
+
+In this lab, you will audit the Vanguard Defense portal. Inspect network API requests, tamper with user ID parameters to access the CISO's confidential dossier, and enumerate unlinked invoices to capture the flags.
+
+## Debrief
+
+**What a professional does here.** Security engineers implement automated integration tests that simulate multiple user tenants (e.g. Tenant A attempting to access Tenant B's objects across every REST endpoint), ensuring that every controller verifies object ownership and returns 403 Forbidden or 404 Not Found on unauthorized access attempts.
+
+**Key takeaways**
+
+- IDOR/BOLA occurs when user-supplied object IDs are trusted without ownership checks.
+- Horizontal escalation accesses peer records; vertical escalation accesses higher-privileged roles.
+- Authorization must be enforced at the data layer against the active session context.
+- UUIDv4 prevents trivial enumeration but does not replace authorization checks.
