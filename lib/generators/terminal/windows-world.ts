@@ -99,14 +99,14 @@ export function windowsBaseWorld(opts: WindowsWorldOptions = {}): World {
   };
 
   const defaultServices: Service[] = [
-    { name: "Spooler", description: "Print Spooler", active: true, enabled: true },
-    { name: "W32Time", description: "Windows Time", active: true, enabled: true },
-    { name: "WinDefend", description: "Microsoft Defender Antivirus Service", active: true, enabled: true },
-    { name: "LanmanServer", description: "Server (SMB File Sharing)", active: true, enabled: true },
-    { name: "LanmanWorkstation", description: "Workstation (SMB Client)", active: true, enabled: true },
-    { name: "Dnscache", description: "DNS Client Cache Service", active: true, enabled: true },
-    { name: "EventLog", description: "Windows Event Log", active: true, enabled: true },
-    { name: "MpsSvc", description: "Windows Defender Firewall", active: true, enabled: true },
+    { name: "Spooler", description: "Print Spooler", unitPath: "C:\\Windows\\System32\\spoolsv.exe", active: "active", enabled: "enabled", sub: "running" },
+    { name: "W32Time", description: "Windows Time", unitPath: "C:\\Windows\\System32\\w32time.dll", active: "active", enabled: "enabled", sub: "running" },
+    { name: "WinDefend", description: "Microsoft Defender Antivirus Service", unitPath: "C:\\Program Files\\Windows Defender\\MsMpEng.exe", active: "active", enabled: "enabled", sub: "running" },
+    { name: "LanmanServer", description: "Server (SMB File Sharing)", unitPath: "C:\\Windows\\System32\\srvsvc.dll", active: "active", enabled: "enabled", sub: "running" },
+    { name: "LanmanWorkstation", description: "Workstation (SMB Client)", unitPath: "C:\\Windows\\System32\\wkssvc.dll", active: "active", enabled: "enabled", sub: "running" },
+    { name: "Dnscache", description: "DNS Client Cache Service", unitPath: "C:\\Windows\\System32\\dnsapi.dll", active: "active", enabled: "enabled", sub: "running" },
+    { name: "EventLog", description: "Windows Event Log", unitPath: "C:\\Windows\\System32\\wevtsvc.dll", active: "active", enabled: "enabled", sub: "running" },
+    { name: "MpsSvc", description: "Windows Defender Firewall", unitPath: "C:\\Windows\\System32\\mpssvc.dll", active: "active", enabled: "enabled", sub: "running" },
     ...(opts.services ?? []),
   ];
 

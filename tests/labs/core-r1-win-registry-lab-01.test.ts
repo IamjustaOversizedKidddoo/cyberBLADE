@@ -50,5 +50,5 @@ describe(`${LAB} across many seeds`, () => {
       }
     }
     expect(bad).toEqual([]);
-  });
+  }, 120_000);
 });

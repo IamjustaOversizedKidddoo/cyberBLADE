@@ -87,3 +87,53 @@ export async function promoteToRank(page: Page, targetRank: number): Promise<voi
     }
   }
 }
+
+/** Marks all lessons of a given rank as completed in progress.json so its challenge unlocks. */
+export async function unlockRankChallenge(page: Page, rank: number): Promise<void> {
+  const cookies = await page.context().cookies();
+  const opCookie = cookies.find((c) => c.name === OPERATOR_COOKIE);
+  if (!opCookie) throw new Error("no operator cookie found");
+
+  const candidates = [
+    path.resolve(process.env.CYBERBLADE_DATA_DIR ?? ".data-e2e", "progress.json"),
+    path.resolve(".data-e2e", "progress.json"),
+    path.resolve(".data", "progress.json"),
+  ];
+
+  const contentDir = path.resolve("content/core", `rank-${rank}`);
+  const files = await fs.readdir(contentDir);
+  const lessonIds: string[] = [];
+  for (const f of files) {
+    if (f.endsWith(".mdx")) {
+      const content = await fs.readFile(path.join(contentDir, f), "utf8");
+      const match = content.match(/^id:\s*(\S+)/m);
+      if (match) lessonIds.push(match[1]);
+    }
+  }
+
+  const now = new Date().toISOString();
+  for (const progFile of candidates) {
+    try {
+      let data: any = { lessons: {}, attempts: {}, xp: {}, challenges: {} };
+      try {
+        const raw = await fs.readFile(progFile, "utf8");
+        data = JSON.parse(raw);
+      } catch {
+        // file will be created
+      }
+      data.lessons ||= {};
+      for (const id of lessonIds) {
+        data.lessons[`${opCookie.value}:${id}`] = {
+          userId: opCookie.value,
+          lessonId: id,
+          status: "completed",
+          checksPassed: ["q1", "q2", "q3", "q4"],
+          completedAt: now,
+        };
+      }
+      await fs.writeFile(progFile, JSON.stringify(data, null, 2), "utf8");
+    } catch {
+      // ignore
+    }
+  }
+}
