@@ -1,0 +1,66 @@
+lesson: core-r1-linux-services-01
+questions:
+  - id: q1
+    prompt: "Which command lists all systemd services that have failed to start or crashed on the system?"
+    objectives: ["linuxplus:2"]
+    options:
+      - text: "systemctl list-units --type=service --state=failed"
+        correct: true
+        explanation: "Correct. Filtering systemctl units by type 'service' and state 'failed' highlights any degraded or crashed services."
+      - text: "ps aux --state=failed"
+        correct: false
+        explanation: "The ps command does not feature a '--state=failed' argument."
+      - text: "kill -failed"
+        correct: false
+        explanation: "kill is used to send signals to specific processes, not list service unit states."
+      - text: "crontab -l --failed"
+        correct: false
+        explanation: "crontab lists scheduled cron jobs, not systemd service states."
+  - id: q2
+    prompt: "In a standard system crontab entry, what does the schedule expression '0 3 * * *' specify?"
+    objectives: ["linuxplus:2"]
+    options:
+      - text: "Run the command at 03:00 AM every day."
+        correct: true
+        explanation: "Correct. Minute 0, hour 3, with asterisks for day of month, month, and day of week schedules execution daily at 03:00."
+      - text: "Run the command every 3 minutes."
+        correct: false
+        explanation: "Every 3 minutes would be written as '*/3 * * * *'."
+      - text: "Run the command at 00:00 on the 3rd day of every month."
+        correct: false
+        explanation: "The 3rd day of every month at midnight would be '0 0 3 * *'."
+      - text: "Run the command on Wednesday (day 3) of every week."
+        correct: false
+        explanation: "Day of the week is the 5th field in a standard cron schedule."
+  - id: q3
+    prompt: "Why should system administrators and developers always specify full absolute binary paths in cron jobs and systemd unit files?"
+    objectives: ["linuxplus:2"]
+    options:
+      - text: "To prevent PATH hijacking attacks and ensure execution succeeds even in minimal default environments."
+        correct: true
+        explanation: "Correct. Full paths prevent attackers from placing malicious binaries in earlier PATH search directories and guarantee reliable execution."
+      - text: "Because relative paths cause Linux to compress the binary on execution."
+        correct: false
+        explanation: "Linux does not compress binaries based on path syntax."
+      - text: "Because absolute paths allow the command to bypass user permissions."
+        correct: false
+        explanation: "Permissions are enforced regardless of whether paths are absolute or relative."
+      - text: "To encrypt the command line in the process table."
+        correct: false
+        explanation: "Absolute paths are stored as plaintext command-line arguments in /proc."
+  - id: q4
+    prompt: "What made the 'Shellshock' vulnerability (CVE-2014-6271) so dangerous across internet-connected Linux servers?"
+    objectives: ["linuxplus:2"]
+    options:
+      - text: "Bash inadvertently executed trailing commands appended to function definitions inside environment variables passed from untrusted network requests."
+        correct: true
+        explanation: "Correct. Shellshock allowed remote code execution via environment variables passed by CGI scripts, DHCP, or SSH."
+      - text: "It allowed attackers to physically disconnect network cables from servers."
+        correct: false
+        explanation: "Shellshock was a software vulnerability in Bash, not a physical hardware exploit."
+      - text: "It deleted the systemd binary and prevented systems from rebooting."
+        correct: false
+        explanation: "The vulnerability targeted environment variable parsing in GNU Bash."
+      - text: "It forged TLS certificates for web browsers."
+        correct: false
+        explanation: "Shellshock was completely unrelated to TLS public key infrastructure."

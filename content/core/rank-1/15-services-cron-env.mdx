@@ -1,0 +1,173 @@
+---
+id: core-r1-linux-services-01
+title: "Services, Cron and the Environment"
+track: core
+rank: 1
+module: linux
+order: 15
+estimated_minutes: 35
+objectives_covered: ["linuxplus:2"]
+mitre: ["T1543.002", "T1053.003", "T1574.007"]
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+Linux servers rarely run as interactive desktop sessions; they operate continuously as background platforms hosting web servers, database engines, network proxies, and scheduled jobs.
+
+Managing these continuous tasks involves three core components:
+1. **systemd and Services (`systemctl`):** The system and service manager that bootstraps the user space, starts background daemons, supervises health, and handles dependencies.
+2. **Cron:** A time-based job scheduler that executes automated scripts and maintenance tasks at fixed dates, times, or intervals.
+3. **Environment Variables:** Dynamic key-value pairs stored in process memory (such as `PATH`, `USER`, `SHELL`) that determine how programs locate libraries, find executables, and behave.
+
+### 2. Why it exists
+
+In legacy Unix, services were managed by complex shell scripts placed in `/etc/init.d/`, which lacked standardized dependency tracking, failed to restart crashed services automatically, and offered no unified status interface.
+
+`systemd` solved these challenges by introducing standardized declarative configuration files called **unit files** (usually ending in `.service`). It manages the entire service lifecycle: starting, stopping, enabling at boot, and isolating service processes in Linux control groups (cgroups).
+
+For cybersecurity practitioners:
+- **Persistence mechanisms:** Attackers frequently install malicious services or add rogue cron jobs to ensure their access survives a system reboot.
+- **Environment manipulation:** Tampering with `$PATH` or shared library paths allows attackers to hijack legitimate program executions.
+
+### 3. How it works
+
+**Level 1 — Inspecting services with systemctl.** To check the operational status, PID, and recent health of a service, run `systemctl status`:
+
+```console
+$ systemctl status ssh
+● ssh.service - OpenBSD Secure Shell server
+     Loaded: loaded (/usr/lib/systemd/system/ssh.service; enabled; preset: enabled)
+     Active: active (running) since Wed 2026-10-07 08:55:04 IST; 1h 4min ago
+   Main PID: 812 (sshd)
+     CGroup: /system.slice/ssh.service
+             └─812 "sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups"
+```
+
+In the output above:
+- `Loaded`: Indicates the unit file path and that the service is `enabled` to start on boot.
+- `Active`: Shows that the service is currently running.
+- `Main PID`: The process ID of the master daemon (`812`).
+
+To identify failing services during incident triage or system diagnostics, filter by state:
+
+```console
+$ systemctl list-units --type=service --state=failed
+  UNIT              LOAD   ACTIVE SUB     DESCRIPTION
+● backup.service    loaded failed failed  Nightly Backup Job
+
+Legend: LOAD   = Reflects whether the unit definition was properly loaded.
+        ACTIVE = The high-level unit activation state, i.e. generalization of SUB.
+        SUB    = The low-level unit activation state, values depend on unit type.
+
+1 loaded units listed. Pass --all to see loaded but inactive units, too.
+To show all installed unit files use 'systemctl list-unit-files'.
+```
+
+On a real Linux machine, administrators control service states using verbs like `start`, `stop`, `restart`, `enable`, and `disable`:
+```text
+# on a real Linux machine
+sudo systemctl restart nginx
+sudo systemctl enable nginx
+```
+
+**Level 2 — Scheduled jobs with cron.** The cron daemon (`cron` or `crond`) checks system and user crontabs every minute. The system-wide schedule is configured in `/etc/crontab`:
+
+```console
+$ cat /etc/crontab
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+17 *	* * *	root    cd / && run-parts --report /etc/cron.hourly
+25 6	* * *	root	test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.daily; }
+47 6	* * 7	root	test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.weekly; }
+52 6	1 * *	root	test -x /usr/sbin/anacron || { cd / && run-parts --report /etc/cron.monthly; }
+```
+
+A crontab entry uses five time fields followed by the executing user (in system crontabs) and the command:
+```text
+┌───────────── minute (0 - 59)
+│ ┌───────────── hour (0 - 23)
+│ │ ┌───────────── day of the month (1 - 31)
+│ │ │ ┌───────────── month (1 - 12)
+│ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+│ │ │ │ │
+* * * * * <command-to-execute>
+```
+
+On a real Linux machine, users edit their own personal schedule using `crontab -e`:
+```text
+# on a real Linux machine
+crontab -e    # Edit current user's crontab
+crontab -l    # View current user's crontab
+```
+
+**Level 3 — Environment variables.** When a process starts, it inherits environment variables from its parent. To inspect environment variables, run `env`:
+
+```console
+$ env | grep SHELL
+SHELL=/bin/bash
+```
+
+The `$PATH` variable contains a colon-separated list of directories searched in order when you type a command without an absolute path.
+
+### 4. How attackers abuse it
+
+Attackers routinely abuse services, cron, and environments to establish persistence and hijack execution:
+
+- **Systemd service persistence (MITRE ATT&CK T1543.002):** Attackers with root access create rogue unit files in `/etc/systemd/system/` (such as `updater.service`) that execute reverse shells upon boot.
+- **Cron persistence (MITRE ATT&CK T1053.003):** Attackers add scheduled tasks to `/etc/cron.d/`, `/var/spool/cron/crontabs/`, or user crontabs to reconnect out to C2 servers every hour.
+- **PATH hijacking (MITRE ATT&CK T1574.007):** If an administrator or cron script relies on a relative command name and `$PATH` includes a writable directory (or `.` current directory) earlier in the search order, attackers place a malicious binary there to intercept execution.
+
+### 5. How defenders detect it
+
+- **Auditing unit file paths:** Incident responders inspect `/etc/systemd/system/` and `/usr/lib/systemd/system/` for newly created or modified unit files.
+- **Monitoring crontab directories:** FIM and auditd monitor `/etc/cron*` and `/var/spool/cron/crontabs/` for unexpected additions.
+- **Process lineage:** When cron executes a script, `cron` appears as the parent process (`PPID`) in `ps -ef` listings.
+
+### 6. How to prevent/fix it
+
+- **Use absolute paths in cron jobs and systemd units:** In crontabs and systemd unit `ExecStart` directives, always specify full binary paths (e.g., `/usr/bin/curl` rather than `curl`).
+- **Restrict write access to unit files:** Ensure systemd service files in `/etc/systemd/system/` are owned by `root:root` with mode `644` or `640`.
+- **Sanitize PATH variables:** Ensure `$PATH` never contains `.` (the current directory) or world-writable directories like `/tmp`.
+
+### 7. Common mistakes
+
+- **Assuming cron inherits your interactive shell environment:** Cron runs with a minimal default `$PATH` and does not load `~/.bashrc`. Scripts that work manually often fail in cron due to missing environment variables.
+- **Creating unit files with insecure permissions:** Leaving unit files writable by standard users allows unprivileged accounts to rewrite `ExecStart` and gain root execution.
+- **Forgetting to reload systemd daemon:** On a real machine, after editing unit files, you must run `sudo systemctl daemon-reload` before changes take effect.
+- **Placing `.` in `$PATH`:** Putting the current directory in `$PATH` allows attackers to place trojaned binaries like `ls` in any folder you visit.
+
+### Remember it like this
+
+> **`systemctl status` inspects daemons, `systemctl list-units --state=failed` finds broken services. Cron runs on five time fields (minute, hour, day, month, weekday). Always use absolute paths in automation to defeat PATH hijacking.**
+
+### Interview answer
+
+> "On modern Linux systems, background services are managed by `systemd`, which provides structured lifecycle control and logging via `systemctl`. Time-based tasks are scheduled using `cron` across `/etc/crontab` and `/var/spool/cron/`. Attackers frequently target both mechanisms for persistence (MITRE ATT&CK T1543.002, T1053.003), dropping malicious unit files or cron entries. To mitigate these risks, defenders audit new unit files and crontab modifications, ensure scripts use full absolute binary paths, and verify that `$PATH` does not contain insecure or writable directories."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no scored lab. **Field exercise (not scored):** on your Linux machine or terminal, run `systemctl status` on core services like `ssh` or `cron`. Inspect failed units using `systemctl list-units --type=service --state=failed`. View your system crontab using `cat /etc/crontab` and inspect your shell environment variables with `env`.
+
+## Debrief
+
+**What a professional does here.** System administrators and security engineers review system services and scheduled tasks to establish a known-good baseline, removing unnecessary daemons to shrink the attack surface and monitoring scheduled jobs for signs of compromise.
+
+**Real incident: Shellshock (CVE-2014-6271, September 2014).** Shellshock was a critical vulnerability in the GNU Bash shell that allowed arbitrary code execution via trailing function definitions in environment variables. Web servers (such as Apache running CGI scripts), OpenSSH configurations, and DHCP clients frequently passed untrusted network inputs into environment variables. When Bash processed these variables upon launch, it inadvertently executed any trailing shell commands appended to function definitions. Attackers used this flaw to execute commands on thousands of internet-facing servers without authentication. The incident underscored that environment variables are not merely passive configuration data—they interact directly with system interpreters and require strict validation.
+
+**Key takeaways**
+
+- `systemd` manages services via declarative unit files; inspect them with `systemctl status`.
+- `systemctl list-units --type=service --state=failed` identifies crashed services.
+- `cron` executes scheduled jobs defined by five time fields.
+- Attackers establish persistence via rogue systemd units and crontabs.
+- Always use absolute paths in scripts and unit files to prevent PATH hijacking.

@@ -1,0 +1,66 @@
+lesson: core-r1-linux-fs-01
+questions:
+  - id: q1
+    prompt: "In the Linux Filesystem Hierarchy Standard (FHS), which directory holds system-wide configuration files such as network settings and user databases?"
+    objectives: ["aplus1202:1", "linuxplus:1"]
+    options:
+      - text: "/etc"
+        correct: true
+        explanation: "Correct. The /etc directory contains system-wide configuration files and administrative settings."
+      - text: "/var"
+        correct: false
+        explanation: "/var contains variable data files that change during system operation, such as logs and mail spools."
+      - text: "/usr/bin"
+        correct: false
+        explanation: "/usr/bin contains user-executable binary applications, not configuration files."
+      - text: "/dev"
+        correct: false
+        explanation: "/dev contains special device nodes representing system hardware interfaces."
+  - id: q2
+    prompt: "Why do attackers frequently choose /tmp or /dev/shm to stage downloaded malicious binaries?"
+    objectives: ["linuxplus:1"]
+    options:
+      - text: "These directories are world-writable by default, allowing low-privileged service accounts to save and execute files."
+        correct: true
+        explanation: "Correct. Standard system permissions allow any user or service account to write to /tmp and /dev/shm, making them common staging grounds."
+      - text: "Files stored in these directories are automatically encrypted by the Linux kernel."
+        correct: false
+        explanation: "Neither /tmp nor /dev/shm encrypts files by default."
+      - text: "Commands executed from these directories are completely hidden from process listings."
+        correct: false
+        explanation: "Processes spawned from these locations remain visible in ps and /proc listings."
+      - text: "Root privileges are automatically granted to any binary executed from /tmp."
+        correct: false
+        explanation: "Executing a binary from /tmp inherits the calling user's permissions unless a specific privilege escalation vulnerability is exploited."
+  - id: q3
+    prompt: "In a Linux shell, what is the difference between the redirection operators '>' and '>>'?"
+    objectives: ["aplus1202:1"]
+    options:
+      - text: "'>' overwrites the destination file, while '>>' appends new output to the end of the file."
+        correct: true
+        explanation: "Correct. The single angle bracket truncates and overwrites, whereas the double angle bracket appends data."
+      - text: "'>' redirects standard error, while '>>' redirects standard output."
+        correct: false
+        explanation: "Standard error is redirected using '2>', while both '>' and '>>' handle standard output by default."
+      - text: "'>' sends text to a printer, while '>>' writes text to disk."
+        correct: false
+        explanation: "Both operators redirect output streams to files."
+      - text: "'>' executes the file after writing, while '>>' leaves it closed."
+        correct: false
+        explanation: "Redirection operators only write text streams; they do not execute files."
+  - id: q4
+    prompt: "How can Linux system administrators prevent attackers from running malware staged in /tmp or /dev/shm?"
+    objectives: ["linuxplus:1"]
+    options:
+      - text: "Mounting the filesystems with the 'noexec,nosuid,nodev' options in /etc/fstab."
+        correct: true
+        explanation: "Correct. The 'noexec' mount option instructs the kernel to reject execution of binaries situated on that filesystem partition."
+      - text: "Deleting the /tmp and /dev/shm directories entirely from the root filesystem."
+        correct: false
+        explanation: "Deleting these directories will break many legitimate applications and operating system services that require temporary storage."
+      - text: "Renaming the root directory to an unpredictable path."
+        correct: false
+        explanation: "The root directory '/' is hardcoded in the kernel and cannot be renamed."
+      - text: "Removing the Bash shell from the system."
+        correct: false
+        explanation: "Removing Bash does not prevent binary execution if other shells, interpreters, or system call mechanisms exist."

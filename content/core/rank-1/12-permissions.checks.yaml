@@ -1,0 +1,66 @@
+lesson: core-r1-linux-perms-01
+questions:
+  - id: q1
+    prompt: "What is the octal numerical representation of the permission string '-rwxr-xr--'?"
+    objectives: ["aplus1202:1", "linuxplus:3"]
+    options:
+      - text: "754"
+        correct: true
+        explanation: "Correct. rwx = 4+2+1 = 7; r-x = 4+0+1 = 5; r-- = 4+0+0 = 4. Total = 754."
+      - text: "755"
+        correct: false
+        explanation: "755 corresponds to -rwxr-xr-x, meaning Others would have execute (x) permission."
+      - text: "644"
+        correct: false
+        explanation: "644 corresponds to -rw-r--r--, with no execute permissions."
+      - text: "741"
+        correct: false
+        explanation: "741 would give group read-only (4) and others execute-only (1)."
+  - id: q2
+    prompt: "Why does an unprivileged user receive 'Permission denied' when attempting to execute 'cd /root' if the directory permissions are 'drwx------' owned by root?"
+    objectives: ["aplus1202:1", "linuxplus:3"]
+    options:
+      - text: "The directory lacks execute (x) permission for 'Others', which is required to enter or traverse a directory."
+        correct: true
+        explanation: "Correct. On directories, the execute (x) bit controls traversal (cd) and entering the path."
+      - text: "The directory is marked as read-only on the physical filesystem."
+        correct: false
+        explanation: "The permission string drwx------ grants read, write, and execute to root, but denies all access to Others."
+      - text: "Directories cannot be entered using cd without sudo."
+        correct: false
+        explanation: "Users can enter any directory where they have the execute (x) permission."
+      - text: "The shell does not support changing directories to root paths."
+        correct: false
+        explanation: "The limitation is enforced by standard file permissions, not the shell application."
+  - id: q3
+    prompt: "Which command should a security analyst run to find all files on a filesystem that are world-writable?"
+    objectives: ["linuxplus:3"]
+    options:
+      - text: "find / -type f -perm -o+w 2>/dev/null"
+        correct: true
+        explanation: "Correct. '-perm -o+w' matches files with the write bit enabled for Others, and '2>/dev/null' silences access errors."
+      - text: "ls -la / --writable"
+        correct: false
+        explanation: "ls does not have a --writable flag for searching filesystem trees."
+      - text: "grep -r 'writable' /etc"
+        correct: false
+        explanation: "grep searches file text content, not Linux filesystem permission bits."
+      - text: "chmod -R o+w /"
+        correct: false
+        explanation: "This command would dangerously grant world-write permissions to every file, destroying system security."
+  - id: q4
+    prompt: "How did the 'Dirty COW' (CVE-2016-5195) vulnerability bypass standard Linux file permissions?"
+    objectives: ["linuxplus:3"]
+    options:
+      - text: "A race condition in the kernel's copy-on-write memory subsystem allowed local attackers to write into read-only files."
+        correct: true
+        explanation: "Correct. Dirty COW exploited kernel copy-on-write handling to modify read-only root binaries in memory, circumventing permission checks."
+      - text: "It reset the root password to 'dirtycow' across network interfaces."
+        correct: false
+        explanation: "The vulnerability was an unprivileged local memory corruption race condition, not a network credential issue."
+      - text: "It modified file timestamps so chmod would fail silently."
+        correct: false
+        explanation: "The issue targeted copy-on-write memory faults, unrelated to file timestamps."
+      - text: "It deleted the /etc/shadow file upon reboot."
+        correct: false
+        explanation: "Dirty COW allowed overwriting existing read-only binaries and files without deleting /etc/shadow."

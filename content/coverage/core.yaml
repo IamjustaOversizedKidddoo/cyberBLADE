@@ -13,6 +13,11 @@
 # 5.5 and secplus:1.4, 3.2. The plan listed DHCP/DNS/NTP as netplus:3.5; public N10-009 study material
 # puts them in 3.4 (IPv4 and IPv6 network services), so 3.4 is used — confirm in the official PDF.
 #
+# VERIFY — added 2026-10-07 for Phase 2B (Linux module) and NOT checked by anyone yet:
+# linuxplus:1, linuxplus:2, linuxplus:3, linuxplus:5 (CompTIA Linux+ XK0-006 domain-level ids)
+# and secplus:2.4, secplus:2.5, secplus:4.1, secplus:4.6 (Security+ SY0-701 objectives).
+# Confirm against official exam objective guides before exam prep is released.
+#
 # built_ranks: objectives whose target_rank is listed here must already have ≥1 lesson (CI fails otherwise).
 # A+ ids are domain-level (aplus1201:<domain>, aplus1202:<domain>) until objective-level mapping is done.
 
@@ -24,6 +29,7 @@ certs:
   netplus: { name: "CompTIA Network+", exam: "N10-009" }
   secplus: { name: "CompTIA Security+", exam: "SY0-701" }
   isc2cc: { name: "ISC2 Certified in Cybersecurity", exam: "CC" }
+  linuxplus: { name: "CompTIA Linux+", exam: "XK0-006" }
 
 objectives:
   # --- Rank 0 targets -------------------------------------------------------
@@ -85,3 +91,32 @@ objectives:
   - id: "secplus:3.2"
     summary: "Securing network infrastructure (firewalls, proxies, and network segmentation)"
     target_rank: 2
+
+  # --- Linux+ objectives (Rank 1 targets) ---
+  - id: "linuxplus:1"
+    summary: "System management: hardware, storage, processes, and kernel operations"
+    target_rank: 1
+  - id: "linuxplus:2"
+    summary: "Services and user management: services, daemons, cron, and user accounts"
+    target_rank: 1
+  - id: "linuxplus:3"
+    summary: "Security: permissions, access controls, firewalls, and hardening"
+    target_rank: 1
+  - id: "linuxplus:5"
+    summary: "Troubleshooting: analyzing system performance, process diagnostics, and logs"
+    target_rank: 1
+
+  # --- Security+ objectives introduced in Rank 1/2 ---
+  - id: "secplus:2.4"
+    summary: "Indicators of malicious activity on endpoints and network devices"
+    target_rank: 2
+  - id: "secplus:2.5"
+    summary: "Mitigation techniques: least privilege, hardening, and configuration management"
+    target_rank: 2
+  - id: "secplus:4.1"
+    summary: "Security techniques for computing resources: host hardening and isolation"
+    target_rank: 2
+  - id: "secplus:4.6"
+    summary: "Identity and access management concepts, credential controls, and privilege allocation"
+    target_rank: 2
+

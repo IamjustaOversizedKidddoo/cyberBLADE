@@ -1,0 +1,143 @@
+---
+id: core-r1-linux-investigate-01
+title: "Logs, SSH and Investigating a Linux Host"
+track: core
+rank: 1
+module: linux
+order: 16
+estimated_minutes: 35
+objectives_covered: ["linuxplus:3", "linuxplus:5"]
+mitre: ["T1021.004", "T1098.004", "T1070.002"]
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+When a security alert fires, an incident responder or SOC analyst must quickly determine what happened on the affected endpoint: who logged in, which commands were executed, whether any files were altered, and how the intruder gained access.
+
+On Linux hosts, two technologies form the foundation of host investigation:
+1. **System Logging (`/var/log`):** The persistent record of operating system, authentication, and service events written by syslog daemons (`rsyslog`, `syslog-ng`) and the systemd journal.
+2. **Secure Shell (SSH):** The encrypted remote administration protocol (TCP port 22) used by administrators to manage servers and frequently targeted by attackers for initial access and lateral movement.
+
+> **Authorisation note.** Investigating logs and inspecting SSH configurations must only be performed on systems you own or have explicit authorization to audit, such as this platform's labs. Tampering with system log files, attempting to bypass SSH authentication, or accessing unauthorized user directories without permission can violate India's IT Act (sections 43 and 66) and international cybersecurity statutes.
+
+### 2. Why it exists
+
+Systems do not defend themselves silently; every authentication attempt, failed password, service start, and privileged escalation leaves an audit trail.
+
+Without structured logs, investigators would be blind:
+- They could not determine when an attacker first accessed a server.
+- They could not distinguish between a legitimate administrator and an unauthorized intruder.
+- They could not trace the scope of compromise or provide forensic proof of data exfiltration.
+
+Similarly, SSH replaced unencrypted protocols like Telnet and rlogin, which transmitted usernames and passwords in cleartext across the network. Enforcing key-based SSH authentication prevents credential theft and brute-force attacks.
+
+### 3. How it works
+
+**Level 1 — Authentication telemetry in /var/log/auth.log.** On Debian and Ubuntu systems, authentication events are recorded in `/var/log/auth.log` (on Red Hat and CentOS, this file is `/var/log/secure`):
+
+```console
+$ cat /var/log/auth.log | tail -n 5
+Oct  6 08:58:12 neon-demo sshd[812]: Accepted publickey for learner from 192.168.1.20 port 51514 ssh2
+Oct  6 09:02:41 neon-demo sshd[851]: Failed password for root from 203.0.113.7 port 40122 ssh2
+Oct  6 09:02:44 neon-demo sshd[851]: Failed password for root from 203.0.113.7 port 40122 ssh2
+Oct  6 09:02:47 neon-demo sshd[851]: Failed password for invalid user admin from 203.0.113.7 port 40130 ssh2
+Oct  6 09:15:03 neon-demo sudo:  learner : TTY=pts/0 ; PWD=/home/learner ; USER=root ; COMMAND=/usr/bin/apt update
+```
+
+Reading this log reveals:
+1. **Successful login:** At 08:58:12, user `learner` authenticated via SSH using a public key from IP `192.168.1.20`.
+2. **Brute-force password attempts:** Between 09:02:41 and 09:02:47, an external IP (`203.0.113.7`) repeatedly attempted password authentication against `root` and non-existent user `admin`.
+3. **Privilege elevation:** At 09:15:03, user `learner` ran `apt update` via sudo.
+
+**Level 2 — System event logs.** General operating system events are written to `/var/log/syslog` (or `/var/log/messages` on Red Hat):
+
+```console
+$ cat /var/log/syslog | head -n 1
+Oct  6 08:55:00 neon-demo systemd[1]: Started Daily apt download activities.
+```
+
+On a real Linux machine running systemd, you can query binary journal logs with `journalctl`:
+```text
+# on a real Linux machine
+journalctl -u ssh -n 20          # Last 20 lines of SSH service logs
+journalctl --since "1 hour ago"  # Logs from the past hour
+```
+
+**Level 3 — SSH architecture and authorized keys.** SSH uses public-key cryptography. A client generates a key pair (public and private). The server places the user's public key in `~/.ssh/authorized_keys`:
+
+```console
+$ cat ~/.ssh/authorized_keys
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExamplePublicKeyForLearnerAccess learner@laptop
+```
+
+Important permissions for SSH directories:
+- `~/.ssh/`: Mode `700` (`rwx------`), owned by the user.
+- `~/.ssh/authorized_keys`: Mode `600` (`rw-------`), owned by the user.
+- If these permissions are too permissive (such as world-writable), the SSH daemon (`sshd`) refuses to use them by default for security.
+
+The server's global configuration lives in `/etc/ssh/sshd_config`. Hardened production servers enforce:
+- `PermitRootLogin prohibit-password` or `no` (prevents direct root password attacks).
+- `PasswordAuthentication no` (mandates cryptographic public keys).
+
+### 4. How attackers abuse it
+
+Attackers target SSH and logs throughout their post-exploitation operations:
+
+- **SSH lateral movement and brute force (MITRE ATT&CK T1021.004):** Attackers scan for open port 22 to brute-force weak credentials or harvest private SSH keys (`id_rsa`, `id_ed25519`) from compromised developer workstations.
+- **SSH persistence via authorized_keys (MITRE ATT&CK T1098.004):** Once on a system, an attacker appends their own public key to `/root/.ssh/authorized_keys` or `/home/<user>/.ssh/authorized_keys` to ensure permanent backdoor access.
+- **Log tampering and clearance (MITRE ATT&CK T1070.002):** Attackers try to delete or truncate `/var/log/auth.log` or shell history files (`~/.bash_history`) to cover their tracks.
+
+### 5. How defenders detect it
+
+- **Monitoring authorized_keys:** Security tools monitor changes to `.ssh/authorized_keys` across all home directories. Any newly added key that was not approved via standard change management generates an alert.
+- **Centralized log forwarding (SIEM):** To prevent attackers from deleting local evidence, servers continuously forward logs to a centralized SIEM (Splunk, Wazuh, Elastic) over encrypted TLS. Even if the attacker wipes `/var/log` on the host, the evidence remains preserved in the SIEM.
+- **SSH brute-force detection:** Tools like `fail2ban` automatically ban IP addresses that generate repeated failed password attempts in `/var/log/auth.log`.
+
+### 6. How to prevent/fix it
+
+- **Disable password authentication in SSH:** Mandate public-key authentication by setting `PasswordAuthentication no` in `/etc/ssh/sshd_config`.
+- **Disable direct root logins:** Enforce `PermitRootLogin no`. Administrators must log in as their individual named account and elevate via sudo.
+- **Make log files append-only:** On critical servers, apply the immutable/append-only attribute using `chattr +a /var/log/auth.log`.
+- **Change default SSH port or enforce VPN:** Restrict SSH access behind an administrative bastion or VPN rather than exposing port 22 directly to the public internet.
+
+### 7. Common mistakes
+
+- **Leaving private keys unprotected:** Storing unencrypted private SSH keys (`id_rsa`) on world-readable shares or committing them to public git repositories.
+- **Permissive permissions on `~/.ssh`:** Setting `chmod 777 ~/.ssh`, which causes `sshd` to reject public key authentication with "StrictModes" enabled.
+- **Relying solely on local logs:** Failing to forward logs to a remote collector, allowing attackers who gain root to delete all evidence.
+- **Ignoring repeated failed login alerts:** Dismissing SSH authentication failures as background internet noise rather than checking whether any attempt eventually succeeded.
+
+### Remember it like this
+
+> **Authentication logs live in `/var/log/auth.log`. Inspect logins with `grep sshd`. Keys live in `~/.ssh/authorized_keys` (mode `600`). Disable password authentication and forward logs to a central SIEM so attackers cannot wipe evidence.**
+
+### Interview answer
+
+> "During a Linux host investigation, my primary source for authentication telemetry is `/var/log/auth.log` (or `/var/log/secure` on RHEL). I look for failed and successful logins, source IP addresses, and sudo executions. Attackers frequently establish persistence by appending rogue public keys into `~/.ssh/authorized_keys` (MITRE ATT&CK T1098.004) and attempt to wipe local log files (T1070.002). To defend against this, we harden SSH with `PasswordAuthentication no` and `PermitRootLogin no`, enforce strict file permissions on `.ssh` directories, and ship logs immediately to a remote SIEM."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no scored lab. **Field exercise (not scored):** on your Linux machine or terminal, inspect `/var/log/auth.log` (or your system journal with `journalctl -u ssh`). Filter for recent login attempts using `grep sshd /var/log/auth.log`. Inspect your user's `~/.ssh` directory and verify the permissions on your authorized keys file.
+
+## Debrief
+
+**What a professional does here.** Digital forensics and incident response (DFIR) specialists begin host analysis by creating a forensic timeline: correlating authentication timestamps from `/var/log/auth.log`, system reboots in `/var/log/syslog`, user command histories in `.bash_history`, and authorized keys to reconstruct exactly how an adversary operated.
+
+**Real incident: Ebury SSH Backdoor (ESET: Operation Windigo, 2014–2024).** Ebury is one of the most sophisticated and persistent Linux malware families in history. For more than a decade, Ebury compromised over 400,000 Linux servers worldwide by trojanizing the OpenSSH binary (`sshd`). Once installed, the modified sshd intercepted all plain-text passwords and private SSH keys entered by legitimate administrators logging into the server, and transmitted them to criminal command-and-control servers. The stolen credentials were then used to compromise thousands of additional downstream systems. Ebury also modified system libraries to hide its presence and evade local integrity checkers. ESET's extensive investigation revealed that credential harvesting through compromised SSH infrastructure remains one of the most dangerous threats to enterprise Linux environments.
+
+**Key takeaways**
+
+- Authentication and sudo events are logged in `/var/log/auth.log`.
+- General operating system events are logged in `/var/log/syslog`.
+- Public keys for incoming SSH logins are stored in `~/.ssh/authorized_keys` (mode `600`).
+- Hardened SSH requires key-based authentication and disables direct root logins.
+- Always forward logs to a centralized SIEM to prevent attackers from destroying evidence.

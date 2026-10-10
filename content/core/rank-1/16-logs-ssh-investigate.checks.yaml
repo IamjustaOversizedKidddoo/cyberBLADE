@@ -1,0 +1,66 @@
+lesson: core-r1-linux-investigate-01
+questions:
+  - id: q1
+    prompt: "On Debian and Ubuntu Linux systems, which log file contains records of SSH logins, authentication attempts, and sudo command invocations?"
+    objectives: ["linuxplus:3", "linuxplus:5"]
+    options:
+      - text: "/var/log/auth.log"
+        correct: true
+        explanation: "Correct. /var/log/auth.log is the standard authentication log for Debian/Ubuntu systems."
+      - text: "/var/log/dmesg"
+        correct: false
+        explanation: "/var/log/dmesg contains kernel ring buffer messages generated during system boot."
+      - text: "/etc/ssh/ssh_config"
+        correct: false
+        explanation: "/etc/ssh/ssh_config is the client configuration file, not an event log."
+      - text: "/var/log/nginx/access.log"
+        correct: false
+        explanation: "This file logs web server HTTP requests, not SSH logins or sudo executions."
+  - id: q2
+    prompt: "Where does SSH store approved client public keys that are permitted to log in as a specific Linux user without a password?"
+    objectives: ["linuxplus:3"]
+    options:
+      - text: "~/.ssh/authorized_keys"
+        correct: true
+        explanation: "Correct. The authorized_keys file inside the user's home .ssh directory stores allowed public keys."
+      - text: "/etc/shadow"
+        correct: false
+        explanation: "/etc/shadow stores hashed user passwords, not SSH public keys."
+      - text: "~/.ssh/known_hosts"
+        correct: false
+        explanation: "known_hosts stores public keys of remote servers that the client has previously connected to."
+      - text: "/etc/ssh/sshd_config"
+        correct: false
+        explanation: "sshd_config is the daemon configuration file, not a per-user key repository."
+  - id: q3
+    prompt: "Why is forwarding endpoint logs to a centralized SIEM over TLS considered a critical defensive control against advanced adversaries?"
+    objectives: ["linuxplus:5"]
+    options:
+      - text: "It preserves an immutable copy of forensic evidence even if an attacker gains root and wipes local logs."
+        correct: true
+        explanation: "Correct. Centralized log shipping prevents attackers from destroying audit evidence when tampering with local /var/log files."
+      - text: "It prevents users from executing bash scripts on the local host."
+        correct: false
+        explanation: "Log forwarding does not restrict script execution."
+      - text: "It automatically changes all user passwords every 24 hours."
+        correct: false
+        explanation: "SIEM log forwarding collects telemetry and does not manage local user password rotation."
+      - text: "It encrypts all network packets transmitted by SSH clients."
+        correct: false
+        explanation: "SSH already encrypts its own traffic; SIEM forwarding handles log transmission."
+  - id: q4
+    prompt: "How did the 'Ebury' backdoor (Operation Windigo) compromise hundreds of thousands of Linux servers over a decade?"
+    objectives: ["linuxplus:3"]
+    options:
+      - text: "By trojanizing the OpenSSH binary (sshd) to harvest plaintext passwords and private keys from legitimate administrator logins."
+        correct: true
+        explanation: "Correct. Ebury modified the OpenSSH daemon to steal credentials as administrators logged in, propagating access across infrastructure."
+      - text: "By deploying malware disguised as an image file on WordPress blogs."
+        correct: false
+        explanation: "Ebury operated by patching OpenSSH binaries and system libraries, not WordPress image uploads."
+      - text: "By brute-forcing Wi-Fi passwords on local office routers."
+        correct: false
+        explanation: "Ebury targeted enterprise servers and hosting providers over internet-facing SSH services."
+      - text: "By taking advantage of unpatched USB flash drives inserted into data centers."
+        correct: false
+        explanation: "Ebury was deployed remotely across network servers via stolen SSH credentials."
