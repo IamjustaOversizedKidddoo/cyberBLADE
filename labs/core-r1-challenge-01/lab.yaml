@@ -1,0 +1,53 @@
+id: core-r1-challenge-01
+title: "Operation Iron Gate"
+type: terminal
+track: core
+rank: 1
+estimated_minutes: 30
+briefing: briefing.md
+dataset:
+  generator: r1_challenge
+  params: {}
+objectives:
+  - id: o1
+    prompt: "What is the external destination IP address observed in the packet triage log (~/Triage/incident-report.txt)?"
+    check: { kind: flag, answer_from: generator.beaconIp }
+  - id: o2
+    prompt: "What is the suspicious external domain name resolved via DNS prior to the connection?"
+    check: { kind: flag, answer_from: generator.beaconDomain }
+  - id: o3
+    prompt: "What is the name of the unauthorized autostart persistence entry in HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run?"
+    check: { kind: flag, answer_from: generator.rogueRunName }
+  - id: o4
+    prompt: "Which user account successfully authenticated from the external IP address per Event ID 4624 in the Security log?"
+    check: { kind: flag, answer_from: generator.compromisedUser, case_sensitive: false }
+  - id: o5
+    prompt: "What is the incident containment flag stored in HKLM:\\SOFTWARE\\CyberBlade\\Verification?"
+    check: { kind: flag, answer_from: generator.flag }
+hints:
+  o1:
+    - "Inspect ~/Triage/incident-report.txt using cat or Select-String."
+    - "Look for the external IPv4 address in the Destination IP column."
+    - "Run cat ~/Triage/incident-report.txt to find the external destination IP."
+  o2:
+    - "Check the DNS query details in ~/Triage/incident-report.txt."
+    - "Identify the domain name requested in the standard query."
+    - "Extract the domain name from the DNS query line in the triage report."
+  o3:
+    - "Query the Windows Registry Run key using Get-ItemProperty or gp."
+    - "Inspect HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run for any non-standard entry pointing to C:\\Users\\Public."
+    - "Run Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run to identify the rogue property."
+  o4:
+    - "Query the Security event log for Event ID 4624 using Get-WinEvent."
+    - "Examine the TargetUserName field in the successful logon message originating from the external IP."
+    - "Run Get-WinEvent -LogName Security -Id 4624 to find the compromised account name."
+  o5:
+    - "Inspect the HKLM:\\SOFTWARE\\CyberBlade\\Verification registry key."
+    - "Use Get-ItemProperty -Name ContainmentFlag to retrieve the flag."
+    - "Run Get-ItemProperty HKLM:\\SOFTWARE\\CyberBlade\\Verification -Name ContainmentFlag."
+xp: 400
+mitre: ["T1071.001", "T1547.001", "T1078", "T1070.001"]
+challenge:
+  rank: 1
+  time_limit_minutes: 30
+  cooldown_minutes: 30

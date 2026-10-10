@@ -94,6 +94,26 @@ describe("rank challenge service", () => {
     expect(xp).toBe(100 + 100 + 150 + 300);
   });
 
+  test("passing Rank 1 challenge promotes operator to Rank 2 (Watcher)", async () => {
+    const { ctx, operators } = makeCtx(T0);
+    const op = await operators.create({ handle: "ghost", ethicsAcceptedAt: T0.toISOString() });
+    await operators.setRank(op.id, 1);
+
+    for (const q of ["q1", "q2", "q3"]) await answerCheck(ctx, USER, "core-r1-test-alpha-01", q, RIGHT(USER, "core-r1-test-alpha-01", q));
+
+    const started = await startChallenge(ctx, USER, 1);
+    expect(started.expiresAt).toBe(minutes(T0, 30).toISOString());
+
+    const flag = readFromWorld(started.env, "flag.txt");
+    const word = readFromWorld(started.env, "word.txt");
+    await submitChallengeObjective(ctx, USER, started.attemptId, "o1", flag);
+    const finalSub = await submitChallengeObjective(ctx, USER, started.attemptId, "o2", word);
+
+    expect(finalSub).toEqual({ correct: true, passed: true });
+    expect((await operators.get(USER))?.rank).toBe(2);
+    expect((await getRankSummary(ctx, USER, 1)).challenge).toEqual({ kind: "passed" });
+  });
+
   test("answers after the time limit are rejected server-side and start the cooldown", async () => {
     const { ctx, operators, clock } = makeCtx(T0);
     await operators.create({ handle: "ghost", ethicsAcceptedAt: T0.toISOString() });

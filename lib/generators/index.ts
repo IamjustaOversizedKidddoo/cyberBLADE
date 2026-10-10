@@ -14,6 +14,7 @@ import { procLab } from "./linux/proc-lab";
 import { suidLab } from "./linux/suid-lab";
 import { registryLab } from "./windows/registry-lab";
 import { eventlogLab } from "./windows/eventlog-lab";
+import { r1Challenge } from "./terminal/r1-challenge";
 
 export type GeneratorOutput = { env: LabEnv; answers: Record<string, string> };
 
@@ -25,6 +26,7 @@ export const GENERATORS: Record<string, Generator> = {
   files_perms: filesPerms,
   first_terminal: firstTerminal,
   r0_challenge: r0Challenge,
+  r1_challenge: r1Challenge,
   ip_lab: ipLab,
   reach_lab: reachLab,
   web_lab: webLab,
