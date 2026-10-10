@@ -1,0 +1,66 @@
+lesson: core-r1-linux-special-01
+questions:
+  - id: q1
+    prompt: "When an executable file with the SUID bit enabled (-rwsr-xr-x) is executed by a standard user, with whose permissions does the resulting process run?"
+    objectives: ["linuxplus:3"]
+    options:
+      - text: "The file's owner (typically root)"
+        correct: true
+        explanation: "Correct. The Set User ID (SUID) bit directs the kernel to run the executable with the privileges of the file's owner."
+      - text: "The invoking user who launched the command"
+        correct: false
+        explanation: "Running with the invoking user's permissions is standard behavior when SUID is NOT set."
+      - text: "The primary group of the invoking user"
+        correct: false
+        explanation: "Group permissions are controlled by the SGID bit, not SUID."
+      - text: "A sandboxed guest user without system access"
+        correct: false
+        explanation: "SUID elevated permissions run as the file owner, not a sandboxed guest."
+  - id: q2
+    prompt: "Which command searches the entire Linux filesystem for all files with the SUID bit set, while silencing permission errors?"
+    objectives: ["linuxplus:3"]
+    options:
+      - text: "find / -perm -4000 2>/dev/null"
+        correct: true
+        explanation: "Correct. '-perm -4000' matches files having the SUID octal bit, and '2>/dev/null' discards stderr access errors."
+      - text: "grep -r 'SUID' /"
+        correct: false
+        explanation: "grep inspects file contents, not filesystem metadata permission bits."
+      - text: "ls -la / --suid"
+        correct: false
+        explanation: "ls does not have a --suid flag or recursive filesystem search capability."
+      - text: "ps aux | grep suid"
+        correct: false
+        explanation: "ps checks currently running processes, not files stored on disk."
+  - id: q3
+    prompt: "How can a system administrator safely remove the SUID bit from an unnecessary custom executable?"
+    objectives: ["linuxplus:3"]
+    options:
+      - text: "chmod u-s /path/to/binary"
+        correct: true
+        explanation: "Correct. 'chmod u-s' removes the SetUID bit from the user permission set."
+      - text: "chown root:root /path/to/binary"
+        correct: false
+        explanation: "chown changes ownership, but leaves the SUID bit active."
+      - text: "chmod 777 /path/to/binary"
+        correct: false
+        explanation: "chmod 777 makes the binary world-writable, worsening the security risk."
+      - text: "rm /etc/sudoers"
+        correct: false
+        explanation: "Deleting /etc/sudoers does not remove SUID bits from files on disk and breaks administrative sudo access."
+  - id: q4
+    prompt: "How did the 'PwnKit' vulnerability (CVE-2021-4034) exploit the pkexec utility to achieve root privilege escalation?"
+    objectives: ["linuxplus:3"]
+    options:
+      - text: "Because pkexec had the SUID root bit set, out-of-bounds parameter handling allowed local users to inject environment variables and execute code as root."
+        correct: true
+        explanation: "Correct. PwnKit exploited argument handling in the SUID pkexec binary to gain instant local root privileges."
+      - text: "It cracked the encrypted root password in /etc/shadow using a dictionary attack."
+        correct: false
+        explanation: "PwnKit did not involve password cracking; it exploited memory corruption in a privileged binary."
+      - text: "It injected malicious routes into the BGP routing table."
+        correct: false
+        explanation: "PwnKit was a local host privilege escalation vulnerability, not a network routing attack."
+      - text: "It deleted the kernel log files so detection was impossible."
+        correct: false
+        explanation: "The vulnerability directly escalated user privileges to root via memory corruption in pkexec."

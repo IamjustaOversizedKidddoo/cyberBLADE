@@ -1,0 +1,163 @@
+---
+id: core-r1-linux-perms-01
+title: "Permissions: Read, Write, Execute"
+track: core
+rank: 1
+module: linux
+order: 12
+estimated_minutes: 30
+objectives_covered: ["aplus1202:1", "linuxplus:3"]
+mitre: ["T1222.002"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: core-r1-linux-perms-lab-01
+---
+
+## Briefing
+
+### 1. What it is
+
+Every file and directory in Linux has an associated set of **access permissions** that govern who may view, alter, or run it. The kernel checks these permissions on every system call before allowing an operation to proceed.
+
+A standard Linux permission string consists of ten characters displayed by `ls -l`. The first character indicates the file type (`-` for regular file, `d` for directory), followed by three sets of three permissions:
+1. **User (Owner):** Permissions for the user account that owns the file (`u`).
+2. **Group:** Permissions for members of the file's assigned group (`g`).
+3. **Others:** Permissions for every other account on the system (`o`).
+
+Each set contains three permission flags:
+- `r` (**read**): View the file contents, or list files within a directory.
+- `w` (**write**): Modify the file contents, or add/delete files within a directory.
+- `x` (**execute**): Run the file as a program or script, or enter/traverse a directory (`cd`).
+
+### 2. Why it exists
+
+In a multi-user environment, sensitive assets like private cryptographic keys, database passwords, and user records must not be visible to arbitrary users or unprivileged service accounts.
+
+Without permissions, any unprivileged web daemon or compromised service account could read `/etc/shadow`, overwrite system configuration files, or tamper with system binaries. Enforcing strict permissions implements the security principle of **least privilege**: every account possesses only the access necessary to perform its intended job, and nothing more.
+
+### 3. How it works
+
+**Level 1 — Reading permission strings.** Running `ls -l` reveals ownership and permission details:
+
+```console
+$ ls -l /etc/passwd
+-rw-r--r-- 1 root root 185 Oct  6 09:14 /etc/passwd
+```
+
+Breaking down `-rw-r--r--`:
+- `-`: Regular file.
+- `rw-`: Owner (`root`) can read and write.
+- `r--`: Group (`root`) can only read.
+- `r--`: Others can only read.
+
+In contrast, `/etc/shadow` is protected against unauthorized reading:
+
+```console
+$ ls -l /etc/shadow
+-rw-r----- 1 root shadow 70 Oct  6 09:14 /etc/shadow
+```
+
+Attempting to read `/etc/shadow` as an unprivileged user triggers a permission denial:
+
+```console
+$ cat /etc/shadow
+cat: /etc/shadow: Permission denied
+```
+
+**Level 2 — Octal (numeric) representation.** Linux administrators frequently use numbers instead of letters to represent permissions. Each permission has a numeric weight:
+- `r` = 4
+- `w` = 2
+- `x` = 1
+- `-` = 0
+
+Summing the values produces a three-digit octal number:
+- `rwx` = 4 + 2 + 1 = `7` (read, write, execute)
+- `rw-` = 4 + 2 + 0 = `6` (read and write)
+- `r-x` = 4 + 0 + 1 = `5` (read and execute)
+- `r--` = 4 + 0 + 0 = `4` (read-only)
+- `---` = 0 + 0 + 0 = `0` (no permissions)
+
+Common octal permissions:
+- `644` (`rw-r--r--`): Standard data file (owner writes, everyone reads).
+- `755` (`rwxr-xr-x`): Standard executable program or script.
+- `600` (`rw-------`): Private sensitive file (only owner reads and writes).
+- `700` (`rwx------`): Private directory (only owner enters and reads).
+
+**Level 3 — Modifying permissions with chmod.** To alter permissions, use `chmod` with either octal numbers or symbolic notation (`u+r`, `g-w`, `o=r`):
+
+```console
+$ chmod 600 ~/.bashrc
+$ ls -l ~/.bashrc
+-rw------- 1 learner learner 30 Oct  6 09:14 /home/learner/.bashrc
+```
+
+To restore standard read permissions for owner and group:
+
+```console
+$ chmod 644 ~/.bashrc
+$ ls -l ~/.bashrc
+-rw-r--r-- 1 learner learner 30 Oct  6 09:14 /home/learner/.bashrc
+```
+
+To change file ownership, administrators use `chown <user>:<group> <path>`.
+
+### 4. How attackers abuse it
+
+Attackers routinely look for weak or misconfigured permissions to elevate privileges or establish persistence (MITRE ATT&CK T1222.002):
+
+- **World-writable scripts:** If a root cron job runs a script marked `0777` (`-rwxrwxrwx`), an unprivileged attacker can modify the script to append malicious commands that execute as root.
+- **World-readable configuration files:** Web application config files containing cleartext database passwords or API keys left with `644` permissions allow any local user to read credentials.
+- **Permission tampering:** Once root is achieved, attackers may modify file permissions on logging utilities or audit configuration files to blind defenders.
+
+### 5. How defenders detect it
+
+- **Auditing world-writable files:** Security audits use the `find` command to detect files writable by others:
+  `find / -type f -perm -o+w 2>/dev/null`
+- **Scanning configuration files:** Automated hardening scripts flag files in `/etc` that are world-writable or sensitive keys in `/etc/ssh` that have permissions broader than `600`.
+- **FIM alerts:** File integrity monitoring triggers when unexpected permission changes occur on core binaries or configuration repositories.
+
+### 6. How to prevent/fix it
+
+- **Default umask configuration:** Configure a restrictive umask (such as `027` or `077`) in `/etc/profile` and `/etc/login.defs` so newly created files default to `640` or `600` rather than `666`.
+- **Never use `chmod 777`:** Avoid applying world-writable permissions to solve access errors. Grant access through dedicated user groups instead.
+- **Enforce read-only mounts:** Mount sensitive configuration or static asset partitions with read-only flags where possible.
+
+### 7. Common mistakes
+
+- **Using `chmod 777` as a quick troubleshooting fix:** Making a file or directory world-writable allows every attacker or compromised service on the host to replace its contents.
+- **Omitting execute (`x`) on directories:** A directory must have execute permissions for users to traverse it (`cd`) or access files inside, even if read permissions are set.
+- **Confusing owner and group:** Setting restrictive owner permissions while inadvertently leaving permissive group permissions for a shared group.
+- **Assuming file deletion requires write access to the file:** On Linux, deleting a file requires write permissions on the *parent directory*, regardless of who owns the file itself.
+
+### Remember it like this
+
+> **Read = 4, Write = 2, Execute = 1. Add them up for Owner, Group, and Others. `644` is standard files, `755` is scripts, and `600` is secrets. Never use `777`.**
+
+### Interview answer
+
+> "Linux permissions use three sets of read (4), write (2), and execute (1) bits for the owner, group, and others. For sensitive files like private keys, we enforce `600` (read-write for owner only), while executables typically use `755`. A common vulnerability is world-writable files (`o+w`), which attackers exploit to overwrite scripts executed by higher-privileged accounts. Defenders audit these using `find / -type f -perm -o+w 2>/dev/null` and enforce restrictive default umasks like `027`."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+<LabLink />
+
+In this lab, you will audit file permissions on a simulated production server: calculate the octal permissions of a service configuration, restore access to a locked confidential note using `chmod`, identify group access on restricted payroll records, and hunt down a dangerous world-writable file using `find`.
+
+## Debrief
+
+**What a professional does here.** Security auditors systematically scan servers for files with permissive access, verify that sensitive files in `/etc` and `/var` adhere to strict baselines, and assist developers in replacing unsafe `chmod 777` configurations with proper Linux groups.
+
+**Real incident: Dirty COW (CVE-2016-5195, October 2016).** Dirty COW was a privilege escalation vulnerability in the Linux kernel's copy-on-write (COW) memory management. A race condition allowed unprivileged attackers to write directly into read-only memory mappings of system files (such as `/usr/bin/passwd` or `/etc/passwd`). Because the kernel failed to handle race conditions during memory writes, an unprivileged user could overwrite read-only root binaries and become root in seconds. The vulnerability highlighted that file permissions rely completely on the kernel's integrity, making immediate kernel patching essential.
+
+**Key takeaways**
+
+- Linux permissions define Read (4), Write (2), and Execute (1) for User, Group, and Others.
+- Numeric modes sum values: `755` is executable, `644` is public read, `600` is private secret.
+- Directory execute (`x`) is required to enter or traverse a directory.
+- Attackers look for world-writable scripts to achieve local privilege escalation.
+- Audit world-writable files using `find / -perm -o+w`.

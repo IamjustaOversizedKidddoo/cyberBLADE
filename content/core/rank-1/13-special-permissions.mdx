@@ -1,0 +1,154 @@
+---
+id: core-r1-linux-special-01
+title: "SUID, SGID, the Sticky Bit and sudo Rules"
+track: core
+rank: 1
+module: linux
+order: 13
+estimated_minutes: 35
+objectives_covered: ["linuxplus:3"]
+mitre: ["T1548.001", "T1548.003"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: core-r1-linux-suid-lab-01
+---
+
+## Briefing
+
+### 1. What it is
+
+In standard Linux access control, when a user launches an executable, the resulting process runs with that user's own identity and permissions. If an unprivileged user runs `cat /etc/shadow`, the process runs as that user and the kernel denies access.
+
+However, certain tasks legitimately require elevated rights. For example, when standard users change their own password using the `passwd` command, the program must write the new password hash into `/etc/shadow`, a file owned by `root`. To solve this, Linux provides **special permission bits**:
+
+- **SUID (Set User ID):** When an executable with the SUID bit set is launched, the process executes with the privileges of the *file's owner* (typically `root`), rather than the invoking user.
+- **SGID (Set Group ID):** The process executes with the privileges of the *file's group*, or on directories, causes newly created files to inherit the parent directory's group.
+- **Sticky Bit:** Placed on shared world-writable directories (like `/tmp`), ensuring only the file's owner or root can delete or rename files inside it.
+- **sudo rules:** Fine-grained administrative permissions declared in `/etc/sudoers` specifying which exact commands a user or group may run as root.
+
+> **Authorisation note.** Auditing SUID binaries and testing privilege delegation mechanisms must only be performed on systems you own or have explicit written permission to test, such as this platform's labs. Unauthorised attempts to inspect or abuse privileged configurations on production systems without permission can constitute an offence under India's IT Act (sections 43 and 66) and computer crime legislation globally.
+
+### 2. Why it exists
+
+Without SUID, basic operating system functionality would break:
+- Non-root users could not update their passwords (`passwd`).
+- Users could not mount removable filesystems (`mount`).
+- Users could not ping remote hosts on legacy kernels that required raw network sockets (`ping`).
+- Users could not switch identity or invoke administrative privileges (`su`, `sudo`).
+
+However, SUID binaries represent a massive attack surface. If an SUID root binary has a memory corruption bug, command injection flaw, or allows arbitrary file reading, any local attacker can leverage it to gain full, unrestricted root access.
+
+### 3. How it works
+
+**Level 1 — Identifying SUID and SGID bits.** In `ls -l` output, special permission bits replace the standard execute (`x`) flag:
+- SUID replaces the owner `x` with `s` (or `S` if owner execute was not set): `-rwsr-xr-x`
+- SGID replaces the group `x` with `s` (or `S` if group execute was not set): `-rwxr-sr-x`
+- Sticky bit replaces others `x` with `t` (or `T` if others execute was not set): `drwxrwxrwt`
+
+Inspecting the system `passwd` binary shows SUID in action:
+
+```console
+$ ls -l /usr/bin/passwd
+-rwsr-xr-x 1 root root 53 Oct  6 09:14 /usr/bin/passwd
+```
+
+Notice the `s` in `-rwsr-xr-x`. Even though the learner runs `passwd`, the process runs as `root`.
+
+**Level 2 — Special octal representation.** In numeric notation, special permissions use a fourth prefix digit before the standard three:
+- SUID = `4` (e.g., `4755` = SUID + `rwxr-xr-x`)
+- SGID = `2` (e.g., `2755` = SGID + `rwxr-xr-x`)
+- Sticky Bit = `1` (e.g., `1777` = Sticky + `rwxrwxrwx`)
+
+**Level 3 — Auditing SUID binaries on a host.** Security defenders maintain an inventory of all SUID executables. To list all files with the SUID bit (`-4000`), search the root directory and redirect permission errors to `/dev/null`:
+
+```console
+$ find / -perm -4000 2>/dev/null
+/usr/bin/chfn
+/usr/bin/chsh
+/usr/bin/gpasswd
+/usr/bin/mount
+/usr/bin/newgrp
+/usr/bin/passwd
+/usr/bin/su
+/usr/bin/sudo
+/usr/bin/umount
+```
+
+On a standard Ubuntu system, these 9 binaries form the expected baseline. Any SUID binary outside of this standard baseline (such as in `/usr/local/bin`, `/opt`, or a user directory) is an immediate security anomaly that warrants thorough investigation.
+
+**Level 4 — Auditing sudo rules with sudo -l.** Sudo configuration in `/etc/sudoers` can grant specific commands without requiring a password (`NOPASSWD`). Attackers examine this configuration immediately:
+
+```console
+$ sudo -l
+Matching Defaults entries for learner on neon-demo:
+    env_reset, mail_badpass, secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin", use_pty
+
+User learner may run the following commands on neon-demo:
+    (ALL:ALL) ALL
+    (root) NOPASSWD: /usr/bin/systemctl status *
+```
+
+### 4. How attackers abuse it
+
+Attackers who gain initial shell access prioritize finding privilege escalation paths (MITRE ATT&CK T1548.001, T1548.003):
+
+- **Non-standard or custom SUID binaries:** Developers sometimes set SUID on custom diagnostic scripts, backup tools, or compilers (`chmod u+s /opt/backup/sync`). If the binary has insecure library paths or calls external shell commands without full paths, attackers easily escalate to root.
+- **Living-off-the-land binaries (GTFOBins):** Legitimate system binaries (such as `find`, `vim`, `less`, `awk`, `nmap`, `tar`) should **never** have the SUID bit or unrestricted sudo `NOPASSWD` rules. If an administrator mistakenly gives SUID to `find`, a user can invoke `find . -exec /bin/sh \; -quit` to get a root shell.
+- **Misconfigured NOPASSWD wildcards:** A sudoers rule like `ALL=(root) NOPASSWD: /usr/bin/systemctl status *` allows status inspection, but if a rule allows wildcard execution of scripts or editors, users can break out into a root shell.
+
+### 5. How defenders detect it
+
+- **Filesystem baseline comparison:** Security teams record an approved baseline of SUID and SGID files during initial server provisioning. Daily automated scans alert whenever a new SUID file appears.
+- **Endpoint Detection & Response (EDR):** Modern EDR sensors alert whenever a process with effective UID 0 (root) is spawned by a parent process running under an unprivileged user.
+- **Sudo audit logs in `/var/log/auth.log`:** Every command run with sudo is recorded with the user, directory, and exact command string.
+
+### 6. How to prevent/fix it
+
+- **Remove unnecessary SUID bits:** On a real Linux machine, if a binary does not need SUID, strip the bit:
+  ```text
+  # on a real Linux machine
+  sudo chmod u-s /usr/local/bin/unneeded-tool
+  ```
+- **Mount partitions with `nosuid`:** In `/etc/fstab`, mount user partitions, scratch storage (`/tmp`, `/var/tmp`), and removable media with the `nosuid` flag. Even if a user creates an SUID file on that partition, the kernel will refuse to execute it with elevated rights.
+- **Strict, specific sudo rules:** In `/etc/sudoers`, specify exact command arguments rather than open wildcards. Avoid granting sudo access to interpreters (`python`, `bash`, `perl`) or file editors (`vim`, `nano`).
+- **Audit custom software:** Never mark shell scripts (`#!/bin/bash`) SUID. On Linux, the kernel automatically ignores SUID on interpreted shell scripts for security reasons.
+
+### 7. Common mistakes
+
+- **Setting SUID on standard shell utilities:** Granting SUID to utilities like `cat`, `cp`, `find`, or `python` to solve a permission error.
+- **Overlooking SGID on directories:** Forgetting that SGID on a directory causes all newly created files inside to inherit the group of the folder.
+- **Permissive sudoers wildcards:** Writing `user ALL=(root) NOPASSWD: /usr/bin/cat /var/log/*` without realizing that `/var/log/../../etc/shadow` path traversal allows reading any file on the disk.
+- **Not redirecting error output in find:** Running `find / -perm -4000` without `2>/dev/null`, which prints hundreds of `Permission denied` lines that drown out actual SUID binaries.
+
+### Remember it like this
+
+> **SUID (`4000`, `s` in owner) runs as file owner. SGID (`2000`, `s` in group) runs as file group. Sticky bit (`1000`, `t` in others) prevents deleting other people's files in `/tmp`. Baseline standard SUIDs and remove unnecessary ones with `chmod u-s`.**
+
+### Interview answer
+
+> "The SUID bit allows an executable to run with the permissions of the file owner, typically root, which is required for utilities like `passwd` that need elevated access. However, custom or non-standard SUID binaries are a major privilege escalation risk (MITRE ATT&CK T1548.001). As a defender, I inventory SUID binaries using `find / -perm -4000 2>/dev/null`, compare them against standard OS baselines, mount user and temporary partitions with the `nosuid` option in `/etc/fstab`, and strip unnecessary SUID bits with `chmod u-s`."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+<LabLink />
+
+In this lab, you will perform a privilege audit on a Linux machine: scan the filesystem for all SUID binaries, count the total SUID footprint, identify an anomalous non-standard SUID binary outside the standard path, inspect its owner, and analyze sudo privileges granted under `sudo -l`.
+
+## Debrief
+
+**What a professional does here.** Security engineers audit servers against CIS (Center for Internet Security) benchmarks, which mandate scanning for rogue SUID/SGID files, mounting non-system partitions with `nosuid`, and enforcing strict sudoers configurations without dangerous wildcards.
+
+**Real incident: PwnKit (CVE-2021-4034, January 2022).** Qualys uncovered a memory corruption vulnerability in `pkexec`, an SUID root binary installed by default on almost every major Linux distribution (Ubuntu, Debian, Fedora, CentOS) since 2009. By executing `pkexec` with an empty argument array (`argc == 0`), an unprivileged attacker could trigger out-of-bounds parameter access and inject arbitrary environment variables into the process, resulting in instant, reliable root privilege escalation without leaving traces in standard logs. Because `pkexec` had the SUID bit set, any local unprivileged user could gain full control of the machine. The fix required updating polkit immediately or stripping the SUID bit using `chmod 0755 /usr/bin/pkexec` as a temporary mitigation.
+
+**Key takeaways**
+
+- SUID (`4000`) executes with owner privileges; SGID (`2000`) executes with group privileges.
+- SUID appears as `s` in owner execute (`-rwsr-xr-x`).
+- Audit SUID files using `find / -perm -4000 2>/dev/null`.
+- Non-standard SUID binaries outside `/usr/bin` are primary targets for privilege escalation.
+- Mount non-root partitions with `nosuid` and strip unnecessary SUID bits with `chmod u-s`.

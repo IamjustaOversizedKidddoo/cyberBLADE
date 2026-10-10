@@ -1,0 +1,66 @@
+lesson: core-r1-linux-users-01
+questions:
+  - id: q1
+    prompt: "Which file on a standard Linux system contains the salted password hashes for local user accounts and is restricted to root?"
+    objectives: ["aplus1202:1", "linuxplus:2"]
+    options:
+      - text: "/etc/shadow"
+        correct: true
+        explanation: "Correct. /etc/shadow holds hashed passwords and aging information, readable only by root and the shadow group."
+      - text: "/etc/passwd"
+        correct: false
+        explanation: "/etc/passwd is readable by all users and contains user metadata, not modern password hashes."
+      - text: "/etc/group"
+        correct: false
+        explanation: "/etc/group lists group memberships and group identifiers."
+      - text: "/var/log/auth.log"
+        correct: false
+        explanation: "/var/log/auth.log records authentication events, not the password hashes themselves."
+  - id: q2
+    prompt: "Which command allows a Linux user to list the administrative privileges granted to their account in the sudoers file?"
+    objectives: ["linuxplus:2"]
+    options:
+      - text: "sudo -l"
+        correct: true
+        explanation: "Correct. 'sudo -l' lists the allowed and forbidden commands for the invoking user."
+      - text: "whoami"
+        correct: false
+        explanation: "'whoami' displays your current effective username, not your sudo privileges."
+      - text: "id -g"
+        correct: false
+        explanation: "'id -g' prints only the primary group ID number."
+      - text: "groups -a"
+        correct: false
+        explanation: "'groups' lists your group memberships, not specific sudo rules."
+  - id: q3
+    prompt: "Why should system administrators always use the 'visudo' utility instead of a regular text editor when modifying /etc/sudoers?"
+    objectives: ["aplus1202:1", "linuxplus:2"]
+    options:
+      - text: "visudo locks the file against concurrent edits and validates syntax before saving, preventing administrative lockouts."
+        correct: true
+        explanation: "Correct. A syntax error in /etc/sudoers can break sudo completely; visudo verifies the file before writing changes to disk."
+      - text: "visudo automatically encrypts the sudoers file with an AES key."
+        correct: false
+        explanation: "The sudoers file remains plaintext; visudo does not encrypt it."
+      - text: "visudo automatically reboots the server after any edit."
+        correct: false
+        explanation: "Changes to /etc/sudoers take effect immediately without requiring a system reboot."
+      - text: "visudo transmits copies of the file to remote backup servers."
+        correct: false
+        explanation: "visudo is a local editing tool and does not manage network backups."
+  - id: q4
+    prompt: "How does the 'Baron Samedit' vulnerability (CVE-2021-3156) illustrate the security risk of privilege delegation utilities?"
+    objectives: ["linuxplus:2"]
+    options:
+      - text: "A heap-based buffer overflow in sudo allowed unprivileged local users to gain root access without a password."
+        correct: true
+        explanation: "Correct. Baron Samedit allowed local attackers to exploit command-line argument parsing in sudo to achieve instant root privilege escalation."
+      - text: "It allowed remote attackers to guess passwords across the network without rate limits."
+        correct: false
+        explanation: "Baron Samedit was a local memory corruption flaw, not a remote password-guessing issue."
+      - text: "It exposed the private SSH host keys of the server on port 80."
+        correct: false
+        explanation: "The vulnerability existed within sudo's parsing logic, unrelated to web servers or SSH host keys."
+      - text: "It allowed attackers to delete the kernel image while the system was running."
+        correct: false
+        explanation: "The exploit targeted memory corruption in sudo to elevate privileges to root."

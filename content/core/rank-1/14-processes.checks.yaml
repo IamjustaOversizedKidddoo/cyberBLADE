@@ -1,0 +1,66 @@
+lesson: core-r1-linux-proc-01
+questions:
+  - id: q1
+    prompt: "Which command option combination prints a full process listing in standard UNIX format, explicitly displaying the Parent Process ID (PPID) column?"
+    objectives: ["linuxplus:1", "linuxplus:5"]
+    options:
+      - text: "ps -ef"
+        correct: true
+        explanation: "Correct. 'ps -ef' prints a full listing with UID, PID, and PPID (Parent Process ID) columns."
+      - text: "ps"
+        correct: false
+        explanation: "'ps' without flags displays only processes associated with the current terminal session."
+      - text: "kill -l"
+        correct: false
+        explanation: "'kill -l' lists available signal names, not running processes."
+      - text: "pgrep -l"
+        correct: false
+        explanation: "'pgrep' matches process names, but does not display full column tables with PPIDs."
+  - id: q2
+    prompt: "Why is a process with an executable path originating from /tmp or /dev/shm considered a strong indicator of compromise?"
+    objectives: ["linuxplus:5"]
+    options:
+      - text: "Standard operating system utilities live in /usr/bin or /bin; legitimate services rarely execute binaries out of world-writable scratch spaces."
+        correct: true
+        explanation: "Correct. Scratch spaces are world-writable and frequently abused by attackers to stage and execute malicious payloads."
+      - text: "Processes in /tmp are automatically prevented from sending network packets."
+        correct: false
+        explanation: "Processes in /tmp can send network packets unless restricted by firewall rules or network namespaces."
+      - text: "Files in /dev/shm cannot be inspected by system administrators."
+        correct: false
+        explanation: "Administrators can inspect /dev/shm contents and associated processes at any time."
+      - text: "Linux kernels prohibit all background execution from temporary directories."
+        correct: false
+        explanation: "By default, standard kernels permit execution unless the partition is explicitly mounted with noexec."
+  - id: q3
+    prompt: "What is the key functional difference between signal SIGTERM (15) and signal SIGKILL (9)?"
+    objectives: ["linuxplus:1"]
+    options:
+      - text: "SIGTERM requests a graceful termination that the process can handle, while SIGKILL immediately halts the process at the kernel level."
+        correct: true
+        explanation: "Correct. SIGTERM allows the application to clean up state and shut down cleanly; SIGKILL cannot be intercepted or ignored."
+      - text: "SIGTERM restarts the process, while SIGKILL reboots the entire server."
+        correct: false
+        explanation: "Neither signal restarts processes or reboots servers; both terminate execution."
+      - text: "SIGTERM only terminates root processes, while SIGKILL targets unprivileged users."
+        correct: false
+        explanation: "Signals target processes based on process ownership permissions, not signal type."
+      - text: "SIGTERM writes a memory dump to /var/log, while SIGKILL deletes the executable from disk."
+        correct: false
+        explanation: "SIGTERM does not write memory dumps, and SIGKILL does not delete files from disk."
+  - id: q4
+    prompt: "How did Microsoft engineer Andres Freund discover the sophisticated XZ Utils backdoor (CVE-2024-3094)?"
+    objectives: ["linuxplus:5"]
+    options:
+      - text: "By observing unexpected CPU consumption and latency anomalies during sshd login processes."
+        correct: true
+        explanation: "Correct. Freund noticed microsecond latency spikes in sshd authentication, investigated process profiling traces, and uncovered the backdoor."
+      - text: "By reading an alert posted on a public vulnerability disclosure forum."
+        correct: false
+        explanation: "Freund discovered the backdoor independently through meticulous performance troubleshooting before any public disclosure existed."
+      - text: "By running an antivirus scanner that matched a known signature."
+        correct: false
+        explanation: "The backdoor was a zero-day with no existing antivirus signatures."
+      - text: "The attacker accidentally emailed the backdoor source code to kernel developers."
+        correct: false
+        explanation: "The backdoor was deliberately injected through subtle build script modifications over several years."

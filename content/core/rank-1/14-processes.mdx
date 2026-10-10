@@ -1,0 +1,155 @@
+---
+id: core-r1-linux-proc-01
+title: "Processes, Signals and /proc"
+track: core
+rank: 1
+module: linux
+order: 14
+estimated_minutes: 35
+objectives_covered: ["linuxplus:1", "linuxplus:5"]
+mitre: ["T1057", "T1036.005"]
+xp: 100
+status: draft
+last_reviewed: null
+lab: core-r1-linux-proc-lab-01
+---
+
+## Briefing
+
+### 1. What it is
+
+A **process** is an actively executing instance of a computer program. Every time you run a command in the shell, start a service, or launch a background worker, the Linux kernel allocates memory, opens file descriptors, and assigns a unique identifier called a **Process ID (PID)**.
+
+Linux processes exist in a strict family tree:
+- **Parent Process ID (PPID):** Every process (except `init`/`systemd`, which has PID 1) is spawned by a parent process.
+- **Process State:** Indicates whether a process is running (`R`), sleeping interruptibly (`S`), sleeping uninterruptibly (`D`), or a defunct zombie (`Z`).
+- **`/proc` filesystem:** A virtual, memory-backed pseudo-filesystem maintained by the kernel that exposes live metrics, memory layouts, command-line arguments, and environment variables for every running process.
+
+> **Authorisation note.** Inspecting processes and sending process signals must only be done on systems you own or have written permission to administer, such as this platform's labs. Terminating processes or attaching diagnostic tracers to services on production systems without authorization can cause unexpected service outages, data corruption, or violate India's IT Act (sections 43 and 66).
+
+### 2. Why it exists
+
+Multi-tasking operating systems require strict process isolation: one misbehaving program must not overwrite memory belonging to another. Process accounting allows the kernel's scheduler to allocate CPU time and RAM fairly across competing workloads.
+
+For cybersecurity defenders and incident responders, process inspection is the core of host triage:
+- Attackers must run code to achieve their objectives.
+- Malicious binaries, remote reverse shells, and persistence scripts leave identifiable footprints in the process tree.
+- Analyzing parent-child relationships reveals how an intrusion began (e.g., a web server spawning an interactive shell).
+
+### 3. How it works
+
+**Level 1 — Process snapshots with ps.** Running `ps` with no arguments displays only the processes running in your current terminal session:
+
+```console
+$ ps
+    PID TTY          TIME CMD
+   2201 pts/0    00:00:00 bash
+   2202 pts/0    00:00:00 ps
+```
+
+To see all processes across the entire machine, administrators use two standard option syntaxes:
+1. `ps aux` (BSD syntax): Shows `USER`, `PID`, `%CPU`, `%MEM`, `VSZ`, `RSS`, `TTY`, `STAT`, `START`, `TIME`, and `COMMAND`.
+2. `ps -ef` (Standard UNIX syntax): Shows `UID`, `PID`, `PPID` (Parent PID), `C`, `STIME`, `TTY`, `TIME`, and `CMD`.
+
+Filtering `ps aux` with `grep` lets you locate specific services and their executing user accounts:
+
+```console
+$ ps aux | grep nginx
+root         900  0.0  0.2  13500  6200 ?        Ss   08:55   0:00 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
+www-data     901  0.0  0.1  14100  5800 ?        S    08:55   0:00 nginx: worker process
+```
+
+In the output above:
+- PID `900` is the Nginx master process running as `root` (needed to bind to privileged TCP port 80).
+- PID `901` is the Nginx worker process running as `www-data` (dropped privileges to handle public HTTP requests safely).
+
+**Level 2 — Finding PIDs with pgrep.** Rather than piping through grep and filtering out the grep process itself, `pgrep` searches active processes directly by name:
+
+```console
+$ pgrep cron
+640
+```
+
+**Level 3 — Signals and process termination.** **Signals** are asynchronous notifications sent to a process to request an action:
+- `SIGTERM` (Signal 15): Graceful termination request. The process can catch this signal, close database connections, flush logs, and exit cleanly.
+- `SIGKILL` (Signal 9): Immediate kernel kill. The kernel halts the process immediately; the process cannot catch or ignore this signal.
+- `SIGHUP` (Signal 1): Hangup signal, commonly sent to daemons to reload configuration files without restarting.
+
+Sending signals uses the `kill` command:
+```text
+# on a real Linux machine
+kill -15 640   # Graceful termination (SIGTERM)
+kill -9 640    # Unconditional kernel kill (SIGKILL)
+```
+
+**Level 4 — Investigating processes via /proc.** Every running process has a corresponding directory at `/proc/<PID>`. Reading files inside reveals ground truth about the process:
+- `/proc/<PID>/cmdline`: The full arguments used to launch the process, separated by null bytes (`\0`).
+- `/proc/<PID>/status`: Detailed status information including UID, GID, and PPID.
+- `/proc/<PID>/exe`: Symbolic link pointing to the executable binary on disk.
+- `/proc/<PID>/cwd`: Symbolic link pointing to the current working directory.
+
+For example, reading `/proc/1/cmdline` reveals the boot parameters of PID 1:
+
+```console
+$ cat /proc/1/cmdline | tr '\0' ' '
+/sbin/init splash 
+```
+
+### 4. How attackers abuse it
+
+Malicious actors employ various techniques to disguise processes and evade detection (MITRE ATT&CK T1057, T1036.005):
+
+- **Masquerading as system processes (T1036.005):** Attackers name malicious binaries to mimic kernel worker threads (e.g., `[kworker/0:1]` or `[kthreadd]`) or standard daemons (`cron-service`, `systemd-sync`).
+- **Anomalous execution paths:** While malware names may mimic system tools, their binaries frequently reside in world-writable scratch spaces like `/tmp` or `/dev/shm` rather than `/usr/sbin` or `/usr/bin`.
+- **Anomalous parentage:** A web application (`nginx` or `apache2`) or database service should almost never spawn a shell (`/bin/sh`, `/bin/bash`) or an outbound network tool (`curl`, `nc`). An unprivileged web worker spawning an interactive process indicates a web shell or remote code execution.
+
+### 5. How defenders detect it
+
+- **Parent-Process ID (PPID) analysis:** Defenders correlate parent and child processes in SIEM and EDR telemetry. If `www-data` executes `bash` or `python` connecting to a remote IP address, high-severity alerts fire.
+- **Path-based anomaly detection:** Monitoring for any process whose executable path (`/proc/<PID>/exe`) is deleted (`(deleted)`) or originates from `/tmp`, `/dev/shm`, or `/var/tmp`.
+- **Command-line argument inspection:** Monitoring for encoded commands, IP addresses, or netcat listeners passed as command-line arguments in `/proc/<PID>/cmdline`.
+
+### 6. How to prevent/fix it
+
+- **Drop process privileges early:** Daemons should start as root only if needed to bind ports, and immediately drop privileges to a dedicated service account.
+- **Restrict process execution with AppArmor or SELinux:** Mandatory Access Control (MAC) frameworks restrict what system binaries can spawn, preventing web servers from launching external utilities.
+- **Containerization and process namespaces:** Run applications inside dedicated namespaces so compromised processes cannot view or interact with processes outside their container.
+
+### 7. Common mistakes
+
+- **Relying solely on process names:** Assuming a process named `sshd` or `cron` is legitimate without verifying its binary path and parent PID.
+- **Using `kill -9` prematurely:** Jumping immediately to `kill -9` without trying `SIGTERM` (15) first, which risks leaving lock files or corrupting database records.
+- **Forgetting that `cat /proc/<PID>/cmdline` uses null bytes:** Null-separated strings look concatenated in terminals unless piped through `tr '\0' ' '`.
+- **Filtering out grep with `ps aux | grep ...`:** Running `ps aux | grep myproc` will display the grep process itself unless filtered (`grep -v grep`) or searched using `pgrep`.
+
+### Remember it like this
+
+> **Every process has a PID and PPID. `ps -ef` reveals parentage, `ps aux` reveals resources, `pgrep` searches by name, and `/proc/<PID>` exposes ground truth. Beware processes masquerading under system names but running from `/tmp`.**
+
+### Interview answer
+
+> "A Linux process is an executing program identified by a PID and a parent PPID, with live metadata exposed in the `/proc/<PID>` filesystem. As a defender, I triage running workloads using `ps -ef` or `ps aux` to correlate parentage, looking for anomalous relationships like a web server worker spawning `/bin/bash` or processes executing from `/tmp` or `/dev/shm` (MITRE ATT&CK T1036.005). To terminate malicious processes cleanly, I send `SIGTERM` (15), and fall back to `SIGKILL` (9) if the process fails to exit."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+<LabLink />
+
+In this lab, you will investigate a suspected compromise on a Linux host: inspect the process table using `ps -ef`, detect a hidden workload disguised as a kernel thread running out of a temporary directory, identify its executing user account, determine its parent process name, and extract the remote command-and-control connection string.
+
+## Debrief
+
+**What a professional does here.** Security analysts investigate host alerts by tracing process lineage: identifying the root cause by walking up the PPID chain to discover how an intruder initially established code execution.
+
+**Real incident: XZ Utils Backdoor (CVE-2024-3094, March 2024).** Software engineer Andres Freund at Microsoft noticed an unexpected 500-millisecond latency spike and high CPU utilization in SSH login processes (`sshd`) on Debian unstable systems. By profiling process execution using diagnostic utilities (`valgrind` and `perf`), Freund uncovered a sophisticated, multi-year supply-chain backdoor injected into the `xz-utils` data compression library (liblzma). The backdoor had been crafted to intercept RSA cryptographic verification in `sshd` to grant pre-authentication remote root access to specific attackers. The discovery prevented one of the most critical supply-chain compromises in open-source history, demonstrating that careful observation of process timing and resource behavior is a vital defensive skill.
+
+**Key takeaways**
+
+- Every process has a PID, PPID, and state exposed via `ps` and `/proc/<PID>`.
+- `ps -ef` shows parent process IDs; `ps aux` shows resource consumption.
+- `/proc/<PID>/cmdline` holds exact command arguments.
+- Signals: `SIGTERM` (15) is graceful termination; `SIGKILL` (9) is unconditional.
+- Attackers disguise malware names to mimic kernel threads, but run from `/tmp` or `/dev/shm`.

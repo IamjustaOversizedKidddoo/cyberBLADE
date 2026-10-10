@@ -1,0 +1,140 @@
+---
+id: core-r1-linux-fs-01
+title: "The Linux Filesystem and the Shell"
+track: core
+rank: 1
+module: linux
+order: 10
+estimated_minutes: 30
+objectives_covered: ["aplus1202:1", "linuxplus:1"]
+mitre: ["T1083"]
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+The **Linux filesystem** is a single unified directory tree starting from a single root (`/`). Unlike Windows, which assigns letters (`C:\`, `D:\`) to separate physical disks or partitions, Linux mounts every disk, device, and network share somewhere under that single root directory.
+
+The **shell** (most commonly Bash) is the command-line interface that allows administrators, defenders, and software to interact with the operating system kernel. In cybersecurity, the Linux shell is where incident responders triage compromised servers, where security engineers audit configurations, and where attackers attempt to navigate once they compromise a system.
+
+### 2. Why it exists
+
+The Linux directory structure is standardized by the **Filesystem Hierarchy Standard (FHS)**. Standardizing directory locations ensures that software and administrators know exactly where to find configuration files, logs, executables, and temporary storage regardless of whether the distribution is Ubuntu, Debian, Red Hat, or Alpine:
+
+- `/etc` holds system-wide configuration files.
+- `/var/log` holds audit and application event logs.
+- `/usr/bin` holds standard user executables.
+- `/tmp` provides temporary scratch space writable by all users.
+
+Understanding this layout is critical for defenders: attackers rely on predictable directory locations to drop staging scripts, plant persistence mechanisms, and locate sensitive credentials.
+
+### 3. How it works
+
+**Level 1 — The unified tree.** Every absolute path begins with `/`. When you log into an interactive shell, you start in your user home directory (such as `/home/learner`), represented by the tilde symbol `~`.
+
+```console
+$ pwd
+/home/learner
+```
+
+Listing the root directory reveals the foundational FHS branches:
+
+```console
+$ ls /
+dev  etc  home  root  tmp  usr  var
+```
+
+Key directories every security analyst must know:
+
+| Directory | Purpose | Security Significance |
+|---|---|---|
+| `/etc` | System configuration | Hostname, user lists (`passwd`), and service settings |
+| `/var/log` | System and service logs | Primary source for incident investigation (`auth.log`, `syslog`) |
+| `/tmp` | Temporary scratch directory | World-writable; frequent drop site for initial malware staging |
+| `/dev/shm` | Shared memory filesystem (`tmpfs`) | Stored in volatile RAM; attackers abuse it to evade disk forensics |
+| `/home` | User home directories | User data, shell history (`.bash_history`), SSH keys (`~/.ssh`) |
+| `/proc` | Virtual filesystem exposed by kernel | Real-time process and kernel diagnostics |
+
+**Level 2 — Inspecting files.** To examine file content, utilities like `head`, `tail`, and `cat` allow reading data without opening a full-screen text editor:
+
+```console
+$ head -n 2 /etc/passwd
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+```
+
+**Level 3 — Shell pipelines and redirection.** In Unix philosophy, commands do one job well and communicate via text streams. The pipe operator (`|`) connects the standard output (`stdout`) of one command directly into the standard input (`stdin`) of the next:
+
+```console
+$ cat /etc/passwd | grep bash
+root:x:0:0:root:/root:/bin/bash
+learner:x:1000:1000:Learner:/home/learner:/bin/bash
+```
+
+Redirection controls where output is saved:
+- `>` writes stdout to a file, overwriting existing contents.
+- `>>` appends stdout to the end of a file without overwriting.
+- `2>` redirects standard error (`stderr`), commonly used as `2>/dev/null` to silence permission errors during searches.
+
+### 4. How attackers abuse it
+
+Attackers who gain initial code execution (such as via a web application vulnerability) typically run with low-privileged service accounts (like `www-data`). Because service accounts cannot write to `/root` or `/etc`, attackers leverage world-writable directories:
+
+- **Staging payloads in `/tmp`:** Malware downloaders frequently fetch secondary implants directly into `/tmp` because any user account can write files there.
+- **In-memory staging in `/dev/shm`:** Shared memory (`/dev/shm`) is a RAM-backed filesystem. Placing scripts or cryptominers in `/dev/shm` avoids writing files to physical disk blocks, reducing detection by basic file-integrity monitoring tools.
+- **Filesystem enumeration (MITRE ATT&CK T1083):** Attackers run commands like `find / -name "*.conf" 2>/dev/null` or `ls -la /home` to identify sensitive backups, configuration tokens, and writable paths.
+
+### 5. How defenders detect it
+
+Security operations centers (SOCs) detect filesystem abuse by monitoring unexpected file creation and execution paths:
+
+- **Process execution from `/tmp` and `/dev/shm`:** Production applications should rarely execute binaries directly from temporary folders. Endpoint Detection and Response (EDR) rules alert whenever an executable is launched from `/tmp`, `/var/tmp`, or `/dev/shm`.
+- **File integrity monitoring (FIM):** Tools like OSSEC, Wazuh, or Tripwire monitor `/etc`, `/bin`, and `/usr/bin` for unauthorized modifications.
+- **Auditd telemetry:** The Linux audit framework logs system calls such as `execve` and `open` to track when unprivileged accounts create executable files in public scratch areas.
+
+### 6. How to prevent/fix it
+
+- **Mount `/tmp` and `/dev/shm` with `noexec`:** In `/etc/fstab`, mount temporary filesystems with the `noexec,nosuid,nodev` options. This prevents binaries from executing directly out of scratch folders.
+- **Enforce least privilege on web directories:** Ensure web server accounts (`www-data`) do not possess write permissions over document roots unless strictly required for file uploads.
+- **Regular automated hygiene:** Use scheduled clean-up jobs and auditing scripts to inspect files created within world-writable directories.
+
+### 7. Common mistakes
+
+- **Accidental file truncation with `>`:** Typing `command > file` instead of `command >> file` wipes out existing file contents.
+- **Treating `/dev/shm` as a regular disk folder:** Not realizing that `/dev/shm` is stored in RAM and empties upon system reboot.
+- **Ignoring hidden files:** Forgetting that filenames beginning with a dot (`.bashrc`, `.ssh`) are hidden by default unless `ls -a` is passed.
+- **Executing scripts without reviewing them:** Downloading and running scripts directly (`curl ... | bash`) without inspecting the destination folder or contents.
+
+### Remember it like this
+
+> **The filesystem is a single tree rooted at `/`. Config lives in `/etc`, logs in `/var/log`, and temporary scratch space in `/tmp` and `/dev/shm`. Pipelines (`|`) pass data between tools, while `>` overwrites and `>>` appends.**
+
+### Interview answer
+
+> "The Linux filesystem organizes all disks and resources into a single hierarchy under the root directory `/`. Key directories include `/etc` for configuration files, `/var/log` for system telemetry, and `/tmp` or `/dev/shm` for temporary storage. Attackers often stage malware in `/tmp` or `/dev/shm` because they are world-writable, which is why defenders monitor process execution from those directories and mount them with the `noexec` flag. In the shell, I use pipelines and redirection like `cat /etc/passwd | grep bash` and `2>/dev/null` to filter and analyze system state."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no scored lab. **Field exercise (not scored):** on your own computer or test virtual machine, open a terminal. Run `pwd`, `ls /`, and `df -h` to see how filesystems are mounted under `/`. Inspect `/tmp` and `/dev/shm` to verify what temporary files currently exist on your system.
+
+## Debrief
+
+**What a professional does here.** When investigating a newly reported alert on a Linux host, an incident responder immediately checks temporary directories (`/tmp`, `/var/tmp`, `/dev/shm`) for unauthorized executables, checks shell histories (`~/.bash_history`), and verifies the integrity of critical configuration files in `/etc`.
+
+**Real incident: Kinsing cryptomining campaigns (2020–2023).** Kinsing is a widespread Linux malware campaign targeting misconfigured Docker APIs, Redis servers, and vulnerable web applications. Upon gaining initial remote execution, the Kinsing shell script routinely downloads its miner binary into `/tmp` or `/dev/shm`, marks it executable with `chmod +x`, and executes it in the background under disguised names like `kworker`. Because defenders learned to monitor `/tmp` and mount it with `noexec`, the malware authors adapted by attempting execution from `/dev/shm`. Understanding both directories allows defenders to configure proactive mount protections and detect staged malware.
+
+**Key takeaways**
+
+- The Linux filesystem begins at `/` and follows the Filesystem Hierarchy Standard (FHS).
+- `/etc` holds system configurations, `/var/log` holds logs, and `/tmp` and `/dev/shm` are world-writable scratch areas.
+- Attackers stage malware in `/tmp` and `/dev/shm` to bypass permission barriers and disk tracking.
+- Pipe operators (`|`) connect commands, `>` overwrites, and `>>` appends.
+- Hardening includes mounting scratch filesystems with `noexec,nosuid,nodev`.

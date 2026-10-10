@@ -1,0 +1,136 @@
+---
+id: core-r1-linux-users-01
+title: "Users, Groups and sudo"
+track: core
+rank: 1
+module: linux
+order: 11
+estimated_minutes: 30
+objectives_covered: ["aplus1202:1", "linuxplus:2"]
+mitre: ["T1087.001", "T1078.003"]
+xp: 100
+status: draft
+last_reviewed: null
+---
+
+## Briefing
+
+### 1. What it is
+
+Linux is a multi-user operating system designed so that multiple people and services can run tasks simultaneously without interfering with one another. Every person, service, and running process has an assigned **identity**:
+
+- A **User ID (UID)**: a unique integer identifying the account (UID `0` is always the superuser, `root`).
+- A **Group ID (GID)**: an integer grouping accounts together so they can share access to files and resources.
+- **sudo (superuser do)**: a security utility that allows authorized users to execute specific commands with root or alternative privileges while logging the action.
+
+### 2. Why it exists
+
+In early computing, administrators logged directly into the `root` account for daily administration. This created major security hazards:
+
+1. **No accountability:** If several administrators shared the root password, audit logs could not pinpoint who ran a destructive command.
+2. **Blast radius:** Any typo or bug while running as root could wipe out system files or damage the entire operating system.
+3. **No least privilege:** A user who only needed to restart a single web service was given full, unrestricted control of the entire server.
+
+`sudo` solves these problems by allowing unprivileged users to run only the specific administrative commands they need, requiring their own individual password (or explicit NOPASSWD rules), and writing an immutable audit record to `/var/log/auth.log`.
+
+### 3. How it works
+
+**Level 1 — Identity commands.** To find out who you are and what security groups you belong to, use `whoami`, `id`, and `groups`:
+
+```console
+$ whoami
+learner
+```
+
+The `id` command displays your numeric UID, primary GID, and any supplementary groups:
+
+```console
+$ id
+uid=1000(learner) gid=1000(learner) groups=1000(learner),27(sudo)
+```
+
+The `groups` command prints group names in a human-readable list:
+
+```console
+$ groups
+learner sudo
+```
+
+**Level 2 — User databases.** Account metadata is stored in two essential system files:
+- `/etc/passwd`: Readable by all users. Each line contains `username:x:UID:GID:Comment:HomeDirectory:Shell`. The `x` indicates that the encrypted password hash is stored securely in `/etc/shadow`.
+- `/etc/group`: Readable by all users. Lists group names, GIDs, and member accounts (`group_name:x:GID:user1,user2`).
+- `/etc/shadow`: Readable only by `root` and the `shadow` group. Holds salted password hashes and password expiration policies.
+
+**Level 3 — sudo rules and sudo -l.** Sudo configuration is stored in `/etc/sudoers`. To see what administrative commands your account is permitted to execute, run `sudo -l`:
+
+```console
+$ sudo -l
+Matching Defaults entries for learner on neon-demo:
+    env_reset, mail_badpass, secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin", use_pty
+
+User learner may run the following commands on neon-demo:
+    (ALL:ALL) ALL
+    (root) NOPASSWD: /usr/bin/systemctl status *
+```
+
+In the listing above:
+- `%sudo ALL=(ALL:ALL) ALL` means members of group `sudo` may run any command as root by entering their password.
+- `(root) NOPASSWD: /usr/bin/systemctl status *` means the learner can inspect any systemctl status without entering a password.
+
+### 4. How attackers abuse it
+
+Attackers who gain a foothold immediately survey user identities and privilege boundaries:
+
+- **Local account discovery (MITRE ATT&CK T1087.001):** Reading `/etc/passwd` allows attackers to discover which software is installed (e.g., `mysql`, `postgres`, `jenkins`), identify valid user names, and find interactive login shells.
+- **Sudo rule abuse (MITRE ATT&CK T1078.003):** Attackers run `sudo -l` to identify overly permissive NOPASSWD rules. If a user can run utilities like `find`, `vim`, `less`, or `awk` via sudo, standard shell escape sequences can be leveraged to escalate to a root shell.
+- **Credential stuffing:** Attackers target user accounts that reuse weak passwords across SSH or administrative services.
+
+### 5. How defenders detect it
+
+- **Telemetry in `/var/log/auth.log`:** Every execution of `sudo` appends a structured audit entry detailing the executing user, working directory, target user, and command executed.
+- **Alerting on sudo failures:** Failed sudo attempts or attempts by users not in the sudoers file generate explicit alert lines (`user NOT in sudoers`).
+- **Monitoring account file alterations:** File integrity monitoring (FIM) tools alert on modifications to `/etc/passwd`, `/etc/shadow`, and `/etc/sudoers`.
+
+### 6. How to prevent/fix it
+
+- **Apply the principle of least privilege in sudoers:** Avoid granting `ALL` commands. Specify exact binary paths and arguments (e.g., `/usr/bin/systemctl restart nginx`).
+- **Safely edit sudoers with `visudo`:** On a real Linux machine, always use `sudo visudo` rather than opening `/etc/sudoers` directly in an editor. `visudo` validates syntax before saving, preventing accidental syntax lockouts.
+- **Disable direct root SSH logins:** In `/etc/ssh/sshd_config`, ensure `PermitRootLogin prohibit-password` or `PermitRootLogin no` is configured.
+- **Lock inactive accounts:** Use `usermod -L <username>` or assign `/usr/sbin/nologin` as the shell for service accounts.
+
+### 7. Common mistakes
+
+- **Granting NOPASSWD: ALL:** Giving developers or operators passwordless sudo over all commands removes all defensive controls and audit value.
+- **Editing `/etc/sudoers` with a generic editor:** A syntax typo in `/etc/sudoers` can break sudo across the entire system, locking all administrators out of root access.
+- **Confusing `su` with `sudo`:** `su` switches the entire shell session to another user (requiring the *target* user's password), whereas `sudo` runs a single command with granted rights (requiring your *own* password).
+- **Leaving default credentials on service accounts:** Creating service accounts with predictable passwords or interactive login shells.
+
+### Remember it like this
+
+> **Every account has a UID and GID; root is always UID 0. Passwords hashes are protected in `/etc/shadow`. Use `sudo -l` to check allowed privileges, edit rules only with `visudo`, and never grant blanket root access.**
+
+### Interview answer
+
+> "User management in Linux relies on UIDs and GIDs defined in `/etc/passwd` and `/etc/group`, with password hashes stored securely in `/etc/shadow`. Rather than sharing the root account, we enforce least privilege using `sudo`, which permits specific commands based on rules in `/etc/sudoers` and logs every invocation to `/var/log/auth.log`. When auditing a system, I check `id` and `sudo -l` to assess privilege boundaries, alert on failed sudo attempts, and ensure administrative rules are edited exclusively via `visudo` to prevent locking out administrators."
+
+## Terminal Check
+
+<TerminalCheck />
+
+## Lab
+
+This lesson has no scored lab. **Field exercise (not scored):** on your Linux machine or terminal, run `whoami`, `id`, and `groups`. Inspect the first five lines of `/etc/passwd` using `head -n 5 /etc/passwd`. Then run `sudo -l` to review which administrative commands your current user is authorized to execute.
+
+## Debrief
+
+**What a professional does here.** Security engineers regularly audit the sudoers configuration to ensure that unprivileged service accounts and standard users cannot escalate their privileges to root. They verify that no interactive shells or file viewers (which contain shell escape shortcuts) are assigned blanket `NOPASSWD` permissions.
+
+**Real incident: Baron Samedit (CVE-2021-3156, January 2021).** Qualys security researchers uncovered a catastrophic heap-based buffer overflow vulnerability in `sudo` that had existed unnoticed for nearly a decade. By exploiting argument handling when sudo was invoked in shell mode (`sudoedit -s`), any local unprivileged user could bypass authentication and gain root privileges without knowing a root password or being listed in `/etc/sudoers`. The vulnerability demonstrated that privilege management tools are themselves critical attack surfaces. Defenders responded by applying vendor security patches immediately, restricting local access, and hardening endpoint monitoring.
+
+**Key takeaways**
+
+- Linux identifies users by UID and groups by GID; root is UID 0.
+- Account information is stored in `/etc/passwd`; password hashes are restricted to `/etc/shadow`.
+- `sudo` enforces least privilege and audits every administrative action in `/var/log/auth.log`.
+- Run `sudo -l` to inspect privileges granted to your account.
+- Always use `visudo` to prevent syntax corruption in `/etc/sudoers`.

@@ -14,6 +14,7 @@ Legend — format: **MCQ** multiple choice · **PBQ** performance-based simulati
 | Network+ | CompTIA | MCQ + PBQ | |
 | Security+ | CompTIA | MCQ + PBQ | Most-requested entry cert in Indian job posts |
 | Certified in Cybersecurity (CC) | ISC2 | MCQ | |
+| Linux+ | CompTIA | MCQ + PBQ | Covers Linux administration and security essentials |
 
 ## SOC Analyst
 
