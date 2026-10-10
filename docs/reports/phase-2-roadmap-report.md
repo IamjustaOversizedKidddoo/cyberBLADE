@@ -2,14 +2,14 @@
 
 **Created:** 2026-10-10  
 **Last Updated:** 2026-10-10  
-**Status:** In Progress — Phase 2A (Complete), Phase 2B (Complete), Phase 2C (Complete), Phase 2D (Next)  
+**Status:** In Progress — Phase 2A (Complete), Phase 2B (Complete), Phase 2C (Complete), Phase 2D (Complete), Phase 2E (Next)  
 **Branch Tracking:** Local-first on `main`, feature branches per phase
 
 ---
 
 ## 1. Executive Summary
 
-This report tracks all architecture, content, engine, lab, and challenge deliverables across **Phase 2 (Core Complete + Handler + Beta)** of the CyberBLADE cybersecurity platform.
+This report tracks all architecture, content, engine, lab, tutor, and challenge deliverables across **Phase 2 (Core Complete + Handler + Beta)** of the CyberBLADE cybersecurity platform.
 
 ### Phase Status Overview
 
@@ -18,8 +18,8 @@ This report tracks all architecture, content, engine, lab, and challenge deliver
 | **2A** | **Rank 1 · Networking** | ✅ **Complete** | 9 lessons, packet engine, 3 packet labs, cert coverage (`netplus`, `secplus`) |
 | **2B** | **Rank 1 · Linux** | ✅ **Complete** | 7 lessons, Linux machine simulator, 3 terminal labs (`perms`, `proc`, `suid`), cert coverage (`linuxplus`) |
 | **2C** | **Rank 1 · Windows & PowerShell + Capstone** | ✅ **Complete** | Windows/PowerShell simulation, registry & event log triage labs, Orders 17–20, Rank 1 Capstone Challenge (`core-r1-challenge-01`), Operator → Watcher (Rank 2) promotion |
-| **2D** | **The Handler (AI Tutor)** | 🟡 **Next Up** | Socratic AI assistant drawer, Groq/Gemini multi-model routing, 3-tier progressive hint disclosure, strict solution/flag leakage guardrails |
-| **2E** | **Exam Readiness & Gamification** | ⬜ Planned | Cert readiness calculators (A+, Network+, Linux+, Security+, ISC2 CC), streak tracker, badge showcase |
+| **2D** | **The Handler (AI Tutor)** | ✅ **Complete** | Socratic AI assistant drawer, Groq/Gemini multi-model routing + Heuristic fallback, 3-tier progressive hint disclosure, strict solution/flag leakage guardrails, challenge mode lockout |
+| **2E** | **Exam Readiness & Gamification** | 🟡 **Next Up** | Cert readiness calculators (A+, Network+, Linux+, Security+, ISC2 CC), streak tracker, badge showcase |
 | **2F** | **Rank 2 · Watcher (Web Security)** | ⬜ Planned | `webapp` in-browser iframe lab runner, OWASP Top 10 attack/defense modules |
 | **2G** | **Hosted Beta Foundation** | ⬜ Planned | Supabase Auth (Email + Google OAuth) + Postgres + RLS, production deployment |
 
@@ -64,9 +64,7 @@ Phase 2C delivered the Windows and PowerShell subsystem, forensic triage labs, W
   - `Get-ItemProperty` (`gp`): reads registry key values with case-insensitive property lookups.
   - `Get-WinEvent`: query filtering by `-LogName`, `-FilterHashtable @{Id=...; LogName=...}`, `-MaxEvents`.
   - `Select-String` (`sls`): regex and pattern matching across pipeline streams and files with line numbering.
-  - `Get-Service` (`gsv`): lists Windows services with status, display names, and binary paths.
-  - `Get-Process` (`ps`, `gps`): lists running processes with PID, Handles, NPM, PM, WS, and CPU metrics.
-  - `Get-ScheduledTask`: enumerates scheduled tasks and action payloads.
+  - `Get-Service` (`gsv`), `Get-Process` (`ps`, `gps`), `Get-ScheduledTask`.
   - `whoami`, `whoami /priv`, `whoami /groups`: Windows security context readouts.
 - Upgraded `parser.ts` to cleanly handle Windows backslashes in paths and preserve hashtable semicolons (`@{...}`).
 
@@ -89,47 +87,61 @@ Phase 2C delivered the Windows and PowerShell subsystem, forensic triage labs, W
 
 ### 4. Rank 1 Capstone Challenge (`core-r1-challenge-01`)
 - **"Operation Iron Gate"**: A 30-minute timed incident response operation.
-- 5 comprehensive multi-domain objectives spanning the complete Rank 1 curriculum:
-  1. *Network Perimeter Investigation*: Extract C2 IP communicating over anomalous port from PCAP capture.
-  2. *Linux Host Intrusion Triage*: Uncover unauthorized SUID backdoor implanted in system directories.
-  3. *Linux Authentication Forensics*: Identify targeted username subjected to brute-force attack from `/var/log/auth.log`.
-  4. *Windows Persistence Discovery*: Query Registry `Run` keys with `Get-ItemProperty` to uncover persistence payload.
-  5. *Windows Privilege Audit*: Locate unauthorized administrative service installed via Event ID 7045.
+- 5 comprehensive multi-domain objectives spanning the complete Rank 1 curriculum (Network, Linux, Windows).
 - Tested and verified across 1,000 randomized seeds.
 - Promotes operator from **Rank 1 (Operator)** to **Rank 2 (Watcher)** upon completion (+400 XP, rank up celebration screen).
 
-### 5. Automated Verification Gates
-- **Typecheck:** 0 TypeScript errors across the entire codebase.
+---
+
+## 4. Phase 2D Deliverables (Complete)
+
+Phase 2D delivered **The Handler**, CyberBLADE's signature in-platform Socratic AI tutor, embedded into lessons, labs, and challenge views.
+
+### 1. Professor Mode Engine (`lib/handler/`)
+- Implements the platform's binding **Teaching Style Guide** (`docs/curriculum/teaching-style.md`):
+  - 5-second rule: What is it in 1–2 simple sentences first!
+  - Simple explanation first, technical definition after.
+  - Zero jargon without translation.
+  - Real-world cybersecurity analogies (IP = house address, port = numbered door, firewall = security guard, DNS = phonebook, IAM = security desk, SIEM = control room).
+  - Dedicated responses to core learner commands: `what is X?`, `why?`, `explain again`, `simplify`, `deep dive`, `example`, `diagram` (ASCII architecture diagrams), `test` (5-question check), `interview`, `revision`, `recap`, `hint`.
+
+### 2. Multi-Model Provider Architecture
+- **Resilient Fallback Chain (`factory.ts`)**:
+  - **Groq Provider (`groq.ts`)**: Ultra-low latency inference (`llama-3.3-70b-versatile` / `GROQ_API_KEY`).
+  - **Gemini Provider (`gemini.ts`)**: Deep diagnostic feedback (`gemini-1.5-flash` / `GEMINI_API_KEY`).
+  - **Heuristic Provider (`heuristic.ts`)**: Deterministic, offline/local fallback generating authentic Professor Mode explanations, ASCII diagrams, and lab hints with 0 external API dependencies.
+
+### 3. Three-Tier Progressive Hint Disclosure (`hints.ts`)
+- Leverages the `hints` ladder declared in `lab.yaml`:
+  - **Tier 1 (Nudge):** Concept reminder and tool syntax.
+  - **Tier 2 (Direction):** Specific file path, log channel, or registry hive to inspect.
+  - **Tier 3 (Walkthrough):** Step-by-step investigation methodology.
+- Direct `[Request Hint]` integration in `ObjectivesPanel.tsx` advances hint tiers and tracks `hintsUsed` on `LabAttempt`.
+
+### 4. Anti-Cheat & Security Policy Guardrails (`guardrails.ts`)
+- Never reveals raw flags (automatically masks strings matching `FLAG{...}` or `flag{...}`).
+- Never yields exact objective answer strings verbatim.
+- **Challenge Lockout:** In timed rank challenges (`/challenge/[rank]`), Handler communication is severed (`[COMM LINK SEVERED]`), forcing operators to rely on their own methodology.
+
+### 5. Tactical Cyberpunk UI Drawer (`components/handler/HandlerDrawer.tsx`)
+- Slide-out drawer with blade styling, scanline accents, and focus management (ESC to close).
+- Suggestion chips for one-click prompts (`What is this?`, `Why?`, `Simplify`, `ASCII Diagram`, `Test me`, `Hint`).
+- Integrated across:
+  - Lessons (`app/(app)/learn/[lessonId]/page.tsx`)
+  - Labs (`app/(app)/labs/[labId]/page.tsx`)
+  - Challenges (`app/(app)/challenge/[rank]/page.tsx`)
+
+### 6. Automated Verification Gates
+- **Typecheck:** 0 TypeScript errors.
 - **Lint:** 0 ESLint errors or warnings.
 - **Content Check:** 26 lessons, 15 labs, 26 objectives verified and valid.
-- **Vitest Suite:** 106 test files passed, 705 unit & property tests passed (100%).
-- **Build:** Next.js Turbopack production build compiled with 0 errors.
-- **Playwright E2E:** Full user journey tests passing on desktop and mobile viewports (`tests/e2e/rank-1-windows.spec.ts` & `tests/e2e/rank-1-challenge.spec.ts`).
+- **Vitest Suite:** **112 test files passed, 734 tests passed (100%)**.
+- **Production Build:** Next.js Turbopack compiled successfully with 0 errors.
+- **Playwright E2E:** 4/4 end-to-end tests passing on Chromium desktop and mobile viewports (`tests/e2e/handler.spec.ts`).
 
 ---
 
-## 4. Phase 2D: The Handler (Socratic AI Tutor) — Next Up
-
-Phase 2D builds the embedded AI coaching system that mentors students through hints without ever spoiling solutions.
-
-### Key Objectives
-1. **Drawer UI Component:**
-   - Slide-out or collapsible terminal-side panel with blade styling.
-   - Live context awareness: passes current lab ID, objective index, recent terminal commands, and error output to the prompt context.
-2. **Multi-Model Provider Integration:**
-   - Groq (e.g. `llama-3.3-70b-versatile` or `mixtral-8x7b-32768`) for sub-second low latency hints.
-   - Google Gemini 1.5/2.0 Flash for structured deep diagnostic feedback when Groq is unavailable or rate-limited.
-   - Fallback offline heuristic hint provider for zero-API/local environments.
-3. **Three-Tier Progressive Hint Disclosure:**
-   - **Tier 1 (Nudge):** Concept reminder and relevant command syntax (costs 0 penalty).
-   - **Tier 2 (Direction):** Specific file or log path to investigate with suggested flags (-5 XP).
-   - **Tier 3 (Walkthrough):** Step-by-step methodology guidance (-10 XP, strictly forbids outputting the raw flag).
-4. **Guardrails & Anti-Cheat System:**
-   - System prompts enforce strict negative constraints: never generate raw flags (`FLAG{...}` or regex matches), never execute commands directly on behalf of the user, never bypass the current objective.
-
----
-
-## 5. Phase 2E: Exam Readiness Engine & Gamification (Planned)
+## 5. Phase 2E: Exam Readiness Engine & Gamification (Next Up)
 
 ### Key Objectives
 1. **Certification Mapping & Readiness Scorecard:**
