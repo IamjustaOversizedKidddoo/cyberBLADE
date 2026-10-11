@@ -54,3 +54,21 @@ test.each([
 ])("%s → error, exit 2", (line, stderr) => {
   expect(run(line)).toMatchObject({ stderr, code: 2 });
 });
+
+test("grep -r searches directories recursively", () => {
+  const sh = shell();
+  const res = sh.exec("grep -r secret /");
+  expect(res.code).toBe(0);
+  expect(res.stdout).toContain("secret");
+});
+
+test("grep -w matches whole words only, -l lists filenames, -q is quiet", () => {
+  const sh = shell();
+  sh.exec("cd /var/log");
+  expect(sh.exec("grep -w ok sys.log").stdout).toBe("boot ok\n");
+  expect(sh.exec("grep -w o sys.log").stdout).toBe("");
+  expect(sh.exec("grep -l ok sys.log app.txt").stdout).toBe("sys.log\n");
+  expect(sh.exec("grep -q ok sys.log")).toEqual({ stdout: "", stderr: "", code: 0 });
+  expect(sh.exec("grep -q notfound sys.log")).toEqual({ stdout: "", stderr: "", code: 1 });
+});
+

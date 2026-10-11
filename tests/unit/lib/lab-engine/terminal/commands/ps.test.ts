@@ -49,3 +49,12 @@ test("a world without processes still has your shell", () => {
   delete w.processes;
   expect(createShell(w).exec("ps").stdout).toBe("    PID TTY          TIME CMD\n   2201 pts/0    00:00:00 bash\n   2202 pts/0    00:00:00 ps\n");
 });
+
+test("ps accepts -aux alias, -e/-A, and split -e -f flags", () => {
+  const s = sh();
+  expect(s.exec("ps -aux").stdout).toContain("USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND");
+  expect(s.exec("ps -e -f").stdout).toContain("UID          PID    PPID  C STIME TTY          TIME CMD");
+  expect(s.exec("ps -e").stdout).toContain("    PID TTY          TIME CMD\n");
+  expect(s.exec("ps -A").stdout).toContain("    PID TTY          TIME CMD\n");
+});
+

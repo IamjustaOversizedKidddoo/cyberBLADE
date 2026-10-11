@@ -18,23 +18,32 @@ function date(iso: string): string {
   return `${MONTHS[d.getUTCMonth()]} ${String(d.getUTCDate()).padStart(2, " ")} ${hh}:${mm}`;
 }
 
-const size = (node: Node) => (node.kind === "dir" ? 4096 : byteLength(node.content));
+const rawSize = (node: Node) => (node.kind === "dir" ? 4096 : byteLength(node.content));
 
-function longLines(entries: [string, Node][]): string[] {
+function formatSize(node: Node, human: boolean): string {
+  const bytes = rawSize(node);
+  if (!human) return String(bytes);
+  if (bytes < 1024) return String(bytes);
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1).replace(/\.0$/, "")}K`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1).replace(/\.0$/, "")}M`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, "")}G`;
+}
+
+function longLines(entries: [string, Node][], human = false): string[] {
   const ownerW = Math.max(...entries.map(([, n]) => n.owner.length));
   const groupW = Math.max(...entries.map(([, n]) => n.group.length));
-  const sizeW = Math.max(...entries.map(([, n]) => String(size(n)).length));
+  const sizeW = Math.max(...entries.map(([, n]) => formatSize(n, human).length));
   return entries.map(
     ([name, n]) =>
-      `${formatMode(n)} 1 ${n.owner.padEnd(ownerW)} ${n.group.padEnd(groupW)} ${String(size(n)).padStart(sizeW)} ${date(n.mtime)} ${name}`,
+      `${formatMode(n)} 1 ${n.owner.padEnd(ownerW)} ${n.group.padEnd(groupW)} ${formatSize(n, human).padStart(sizeW)} ${date(n.mtime)} ${name}`,
   );
 }
 
-function render(entries: [string, Node][], long: boolean, isListing: boolean, isTty: boolean): string {
+function render(entries: [string, Node][], long: boolean, isListing: boolean, isTty: boolean, human = false, oneCol = false): string {
   if (entries.length === 0) return long && isListing ? "total 0\n" : "";
-  // Into a pipe or a file, GNU ls prints one name per line.
-  if (!long) return entries.map(([name]) => name).join(isTty ? "  " : "\n") + "\n";
-  const lines = longLines(entries);
+  // Into a pipe or a file or with -1, GNU ls prints one name per line.
+  if (!long) return entries.map(([name]) => name).join(isTty && !oneCol ? "  " : "\n") + "\n";
+  const lines = longLines(entries, human);
   return (isListing ? `total ${entries.length}\n` : "") + lines.join("\n") + "\n";
 }
 
@@ -49,14 +58,17 @@ function dirEntries(ctx: CmdContext, path: string, all: boolean): [string, Node]
 
 export const ls: Command = {
   name: "ls",
-  summary: "list files (-a shows hidden files, -l shows details)",
+  summary: "list files (-a all, -l long, -h human sizes, -R recursive, -1 single column)",
   run(ctx) {
-    const { flags, operands, bad } = parseFlags(ctx.argv.slice(1), "la");
+    const { flags, operands, bad } = parseFlags(ctx.argv.slice(1), "lahR1tdF");
     if (bad) {
       return { stdout: "", stderr: `ls: invalid option -- '${bad}'\nTry 'ls --help' for more information.\n`, code: 2 };
     }
     const long = flags.has("l");
     const all = flags.has("a");
+    const human = flags.has("h");
+    const oneCol = flags.has("1");
+    const recursive = flags.has("R");
     const targets = operands.length ? operands : ["."];
     let stderr = "";
     const files: [string, Node][] = [];
@@ -66,7 +78,7 @@ export const ls: Command = {
       const path = resolvePath(ctx.cwd, arg, ctx.home);
       try {
         const node = ctx.vfs.lookup(path, ctx.user);
-        if (node.kind === "dir") dirs.push({ label: arg, path });
+        if (node.kind === "dir" && !flags.has("d")) dirs.push({ label: arg, path });
         else files.push([arg, node]);
       } catch (err) {
         stderr += `ls: cannot access '${arg}': ${errorText(err)}\n`;
@@ -74,17 +86,33 @@ export const ls: Command = {
     }
 
     const blocks: string[] = [];
-    if (files.length) blocks.push(render(files.sort(byName), long, false, ctx.isTty));
-    const headers = targets.length > 1;
-    for (const { label, path } of dirs.sort((a, b) => compareNames(a.label, b.label))) {
+    if (files.length) blocks.push(render(files.sort(byName), long, false, ctx.isTty, human, oneCol));
+    const headers = targets.length > 1 || recursive;
+
+    const processDir = (label: string, dirPath: string) => {
       try {
-        const body = render(dirEntries(ctx, path, all), long, true, ctx.isTty);
+        const entries = dirEntries(ctx, dirPath, all);
+        const body = render(entries, long, true, ctx.isTty, human, oneCol);
         blocks.push(headers ? `${label}:\n${body}` : body);
+
+        if (recursive) {
+          const subdirs = entries.filter(([name, node]) => node.kind === "dir" && name !== "." && name !== "..");
+          for (const [subname] of subdirs) {
+            const subPath = dirPath === "/" ? `/${subname}` : `${dirPath}/${subname}`;
+            const subLabel = label === "." ? `./${subname}` : `${label}/${subname}`;
+            processDir(subLabel, subPath);
+          }
+        }
       } catch (err) {
         if (!(err instanceof VfsError)) throw err;
         stderr += `ls: cannot open directory '${label}': ${errorText(err)}\n`;
       }
+    };
+
+    for (const { label, path } of dirs.sort((a, b) => compareNames(a.label, b.label))) {
+      processDir(label, path);
     }
+
     return { stdout: blocks.join("\n"), stderr, code: stderr ? 2 : 0 };
   },
 };

@@ -77,3 +77,13 @@ test("ls -l shows special bits like GNU ls", () => {
   );
   expect(sh.exec("ls -l /").stdout).toMatch(/^drwxrwxrwt 1 root root 4096 Oct  6 09:14 tmp$/m);
 });
+
+test("ls supports -1 (one per line on tty), -h (human sizes), and -R (recursive)", () => {
+  const s = shell();
+  expect(s.exec("ls -1").stdout).toBe("Docs\nnotes.txt\n");
+  expect(s.exec("ls -lh").stdout).toContain("total 2");
+  const rec = s.exec("ls -R").stdout;
+  expect(rec).toContain("Docs:");
+  expect(rec).toContain("notes.txt");
+});
+

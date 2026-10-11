@@ -21,6 +21,7 @@ const FIELDS = new Set([
   "tcp.flags.ack",
   "tcp.flags.fin",
   "tcp.flags.reset",
+  "tcp.flags.rst",
   "dns.qry.name",
   "dns.flags.response",
   "dns.a",
@@ -396,6 +397,7 @@ function buildFieldPresenceCheck(field: string): Predicate {
     case "tcp.flags.fin":
       return (p) => Boolean(p.tcp?.flags?.fin);
     case "tcp.flags.reset":
+    case "tcp.flags.rst":
       return (p) => Boolean(p.tcp?.flags?.rst);
     case "frame.number":
       return (p) => p.no !== undefined;
@@ -404,6 +406,33 @@ function buildFieldPresenceCheck(field: string): Predicate {
     default:
       return () => false;
   }
+}
+
+function ipToInt(ip: string): number | null {
+  const parts = ip.split(".");
+  if (parts.length !== 4) return null;
+  let res = 0;
+  for (const p of parts) {
+    const n = Number(p);
+    if (isNaN(n) || n < 0 || n > 255 || !Number.isInteger(n)) return null;
+    res = (res << 8) | n;
+  }
+  return res >>> 0;
+}
+
+function matchCidr(ip: string, cidr: string): boolean | null {
+  const slash = cidr.indexOf("/");
+  if (slash === -1) return null;
+  const baseIpStr = cidr.slice(0, slash);
+  const prefixStr = cidr.slice(slash + 1);
+  const prefix = Number(prefixStr);
+  if (isNaN(prefix) || prefix < 0 || prefix > 32 || !Number.isInteger(prefix)) return null;
+  const ipNum = ipToInt(ip);
+  const baseNum = ipToInt(baseIpStr);
+  if (ipNum === null || baseNum === null) return null;
+  if (prefix === 0) return true;
+  const mask = ((0xffffffff << (32 - prefix)) >>> 0);
+  return (ipNum & mask) === (baseNum & mask);
 }
 
 function buildComparison(field: string, op: string, rawVal: string): { pred: Predicate } | { error: string } {
@@ -429,11 +458,19 @@ function buildComparison(field: string, op: string, rawVal: string): { pred: Pre
     }
 
     if (op === "==") {
+      if (typeof fieldVal === "string" && rawVal.includes("/")) {
+        const cidrMatch = matchCidr(fieldVal, rawVal);
+        if (cidrMatch !== null) return cidrMatch;
+      }
       if (typeof fieldVal === "number" && isNum) return fieldVal === numVal;
       return String(fieldVal) === rawVal;
     }
 
     if (op === "!=") {
+      if (typeof fieldVal === "string" && rawVal.includes("/")) {
+        const cidrMatch = matchCidr(fieldVal, rawVal);
+        if (cidrMatch !== null) return !cidrMatch;
+      }
       if (typeof fieldVal === "number" && isNum) return fieldVal !== numVal;
       return String(fieldVal) !== rawVal;
     }
@@ -510,6 +547,7 @@ function buildComparison(field: string, op: string, rawVal: string): { pred: Pre
       return { pred: (p) => Boolean(p.tcp && compare(p.tcp.flags.fin ? 1 : 0)) };
 
     case "tcp.flags.reset":
+    case "tcp.flags.rst":
       return { pred: (p) => Boolean(p.tcp && compare(p.tcp.flags.rst ? 1 : 0)) };
 
     case "dns.qry.name":

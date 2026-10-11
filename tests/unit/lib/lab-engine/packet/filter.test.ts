@@ -46,6 +46,14 @@ describe("packet display filters", () => {
     expect(filter("tcp.flags.syn == 1 && tcp.flags.ack == 0")).toEqual([5]);
     expect(filter("tcp.flags.syn == 1 && tcp.flags.ack == 1")).toEqual([6]);
     expect(filter("tcp.flags.reset == 1")).toEqual([10]);
+    expect(filter("tcp.flags.rst == 1")).toEqual([10]);
+    expect(filter("tcp.flags.rst")).toEqual([10]);
+  });
+
+  it("filters by CIDR subnet notation", () => {
+    expect(filter("ip.src == 10.0.2.0/24")).toEqual([3, 4, 5, 7, 8, 11, 12]);
+    expect(filter("ip.addr == 10.0.2.0/24")).toEqual([3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    expect(filter("ip.addr == 203.0.113.0/24")).toEqual([5, 6, 7, 8, 9, 10, 11]);
   });
 
   it("filters by udp ports", () => {
