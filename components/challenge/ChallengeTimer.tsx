@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { IconClock, IconAlertTriangle, IconFlame } from "@/components/ui/icons";
 
 const format = (ms: number) => {
   const total = Math.max(0, Math.ceil(ms / 1000));
@@ -32,16 +33,37 @@ export function ChallengeTimer({ expiresAt }: { expiresAt: string }) {
   const isWarning = left < 5 * 60_000;
   const isCritical = left < 60_000;
 
+  const statusConfig = isCritical
+    ? {
+        border: "border-danger text-danger bg-danger/10 animate-pulse",
+        icon: <IconFlame className="h-4 w-4 text-danger shrink-0" />,
+        label: "CRITICAL",
+      }
+    : isWarning
+    ? {
+        border: "border-warning text-warning bg-warning/10",
+        icon: <IconAlertTriangle className="h-4 w-4 text-warning shrink-0" />,
+        label: "FINAL 5M",
+      }
+    : {
+        border: "border-cyan/50 text-cyan bg-cyan/5",
+        icon: <IconClock className="h-4 w-4 text-cyan shrink-0" />,
+        label: "OPERATIONAL",
+      };
+
   return (
-    <div className={`flex items-center gap-2 border px-3 py-1.5 font-ui text-xs tracking-widest ${
-      isCritical
-        ? "border-pink text-pink animate-pulse"
-        : isWarning
-        ? "border-pink/60 text-pink"
-        : "border-line text-muted"
-    }`}>
-      <span className="hidden sm:inline text-muted/60">T-MINUS</span>
-      <span role="timer" aria-label={`${format(left)} remaining`} className="font-display text-xl leading-none">
+    <div
+      className={`flex items-center gap-2.5 rounded-xs border px-3 py-1.5 font-ui text-xs tracking-wider uppercase ${statusConfig.border}`}
+    >
+      {statusConfig.icon}
+      <span className="hidden sm:inline font-mono text-[10px] text-muted">
+        [{statusConfig.label}]
+      </span>
+      <span
+        role="timer"
+        aria-label={`${format(left)} remaining - ${statusConfig.label}`}
+        className="font-mono text-lg font-bold leading-none text-ink"
+      >
         {format(left)}
       </span>
     </div>

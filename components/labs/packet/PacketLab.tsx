@@ -101,7 +101,7 @@ export function PacketLab({ capture }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line/60 pb-2 font-mono text-xs text-muted">
         <div className="flex items-center gap-3">
           <span>
-            Displayed: <strong className="text-ink">{filteredPackets.length}</strong> of {capture.packets.length} packets
+            Displayed: {filteredPackets.length} of {capture.packets.length} packets
           </span>
           {activeFilterText && (
             <span className="text-cyan font-semibold">Filter: &quot;{activeFilterText}&quot;</span>

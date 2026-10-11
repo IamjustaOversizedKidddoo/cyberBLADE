@@ -6,7 +6,7 @@ import { getLessons } from "@/lib/content/lessons";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 
-export const metadata: Metadata = { title: "Tactical Labs Range" };
+export const metadata: Metadata = { title: "Tactical Labs Range · CyberBLADE" };
 
 export default async function LabsIndexPage() {
   const operator = await requireOperator();

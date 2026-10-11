@@ -1,18 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CertReadiness, GradingBand } from "@/lib/readiness/types";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 
 function bandClass(band: GradingBand): string {
   switch (band) {
     case "Exam Ready":
-      return "border-cyan bg-cyan/20 text-cyan shadow-[0_0_10px_rgba(15,190,255,0.3)]";
+      return "border-cyan bg-cyan/15 text-cyan shadow-[0_0_8px_rgba(15,190,255,0.25)]";
     case "Strong":
-      return "border-cyan/70 bg-cyan/10 text-cyan";
+      return "border-cyan/60 bg-cyan/10 text-cyan";
     case "Good":
-      return "border-purple bg-purple/10 text-purple";
+      return "border-purple bg-purple/15 text-purple";
     case "Needs review":
-      return "border-pink bg-pink/10 text-pink";
+      return "border-warning bg-warning/15 text-warning";
     case "Weak":
     default:
       return "border-line bg-void text-muted";
@@ -21,6 +22,16 @@ function bandClass(band: GradingBand): string {
 
 export function CertReadinessSection({ readiness }: { readiness: CertReadiness[] }) {
   const [expandedCert, setExpandedCert] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setExpandedCert(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <section aria-labelledby="readiness-heading" className="space-y-6">
@@ -33,7 +44,7 @@ export function CertReadinessSection({ readiness }: { readiness: CertReadiness[]
             OBJECTIVE MASTERY MATRIX AGAINST INDUSTRY EXAM TARGETS
           </p>
         </div>
-        <span className="font-ui text-xs text-cyan border border-cyan/40 px-3 py-1">
+        <span className="font-ui text-xs text-cyan border border-cyan/40 px-3 py-1 font-mono">
           {readiness.length} CERTIFICATIONS TRACKED
         </span>
       </div>
@@ -41,12 +52,16 @@ export function CertReadinessSection({ readiness }: { readiness: CertReadiness[]
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {readiness.map((cert) => {
           const isExpanded = expandedCert === cert.certId;
+          const barVariant =
+            cert.scorePercent >= 80 ? "cyan" : cert.scorePercent >= 50 ? "purple" : "amber";
 
           return (
             <div
               key={cert.certId}
-              className={`border p-5 transition-all ${
-                isExpanded ? "border-cyan bg-console-raised" : "border-line bg-console hover:border-line/80"
+              className={`border p-5 transition-all rounded-xs ${
+                isExpanded
+                  ? "border-cyan bg-surface-raised shadow-[0_0_15px_rgba(15,190,255,0.08)]"
+                  : "border-line bg-console hover:border-line/80"
               }`}
             >
               {/* Header */}
@@ -60,7 +75,7 @@ export function CertReadinessSection({ readiness }: { readiness: CertReadiness[]
                   </span>
                 </div>
                 <span
-                  className={`border px-2 py-0.5 font-ui text-[11px] font-bold tracking-widest uppercase ${bandClass(
+                  className={`border px-2 py-0.5 font-ui text-[11px] font-bold tracking-widest uppercase rounded-xs ${bandClass(
                     cert.band,
                   )}`}
                 >
@@ -74,19 +89,12 @@ export function CertReadinessSection({ readiness }: { readiness: CertReadiness[]
                   <span>MASTERY</span>
                   <span className="text-ink font-bold font-mono">{cert.scorePercent}%</span>
                 </div>
-                <div className="h-2 w-full bg-void overflow-hidden border border-line/40">
-                  <div
-                    className={`h-full transition-all duration-500 ${
-                      cert.scorePercent >= 85 ? "bg-cyan" : cert.scorePercent >= 50 ? "bg-purple" : "bg-muted/40"
-                    }`}
-                    style={{ width: `${cert.scorePercent}%` }}
-                    role="progressbar"
-                    aria-valuenow={cert.scorePercent}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`${cert.name} readiness: ${cert.scorePercent}%`}
-                  />
-                </div>
+                <ProgressBar
+                  value={cert.scorePercent}
+                  variant={barVariant}
+                  size="sm"
+                  aria-label={`${cert.name} readiness: ${cert.scorePercent}%`}
+                />
               </div>
 
               {/* Progress counter & expand toggle */}
@@ -97,44 +105,72 @@ export function CertReadinessSection({ readiness }: { readiness: CertReadiness[]
                 </span>
                 <button
                   type="button"
+                  aria-expanded={isExpanded}
                   onClick={() => setExpandedCert(isExpanded ? null : cert.certId)}
-                  className="font-ui text-xs text-cyan hover:underline"
+                  className="font-ui text-xs text-cyan hover:underline focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan rounded-xs px-1 py-0.5"
                 >
                   {isExpanded ? "[Hide details]" : "[View matrix]"}
                 </button>
               </div>
 
-              {/* Expanded Objectives List */}
+              {/* Expanded Objectives Breakdown */}
               {isExpanded && (
-                <div className="mt-4 border-t border-line/60 pt-3 space-y-2 max-h-60 overflow-y-auto">
-                  <p className="font-ui text-[11px] tracking-wider text-muted uppercase">
-                    Objective Audit Breakdown:
-                  </p>
-                  <ul className="space-y-1.5 font-mono text-xs">
-                    {cert.objectives.map((obj) => (
-                      <li
-                        key={obj.id}
-                        className={`p-2 border ${
-                          obj.covered ? "border-cyan/40 bg-cyan/5 text-ink" : "border-line/40 bg-void/60 text-muted/60"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className={obj.covered ? "text-cyan font-bold" : "text-muted/80"}>
-                            {obj.id}
-                          </span>
-                          <span className="font-ui text-[10px]">
-                            {obj.covered ? "✓ COVERED" : "PENDING"}
-                          </span>
-                        </div>
-                        <p className="text-[11px] leading-snug">{obj.summary}</p>
-                        {obj.lessonTitle && (
-                          <p className="mt-1 font-ui text-[10px] text-cyan/80 truncate">
-                            Via: {obj.lessonTitle}
-                          </p>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="mt-4 border-t border-line/60 pt-3 space-y-2.5 max-h-72 overflow-y-auto">
+                  <div className="flex items-center justify-between">
+                    <p className="font-ui text-[11px] tracking-wider text-muted uppercase font-semibold">
+                      Objective Audit Breakdown:
+                    </p>
+                    <span className="text-[10px] font-mono text-muted/60">Press Esc to close</span>
+                  </div>
+
+                  <div className="overflow-x-auto rounded-xs border border-line/60">
+                    <table className="w-full text-left font-mono text-xs text-muted">
+                      <thead className="bg-void/80 border-b border-line/60 text-[10px] text-ink uppercase">
+                        <tr>
+                          <th className="px-2.5 py-1.5 font-semibold">ID</th>
+                          <th className="px-2.5 py-1.5 font-semibold">Status</th>
+                          <th className="px-2.5 py-1.5 font-semibold">Requirement</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-line/40">
+                        {cert.objectives.map((obj) => (
+                          <tr
+                            key={obj.id}
+                            className={`transition-colors ${
+                              obj.covered
+                                ? "bg-cyan/5 text-ink hover:bg-cyan/10"
+                                : "bg-void/40 text-muted/70 hover:bg-void/80"
+                            }`}
+                          >
+                            <td className="px-2.5 py-2 align-top whitespace-nowrap">
+                              <span className={obj.covered ? "text-cyan font-bold" : "text-muted"}>
+                                {obj.id}
+                              </span>
+                            </td>
+                            <td className="px-2.5 py-2 align-top whitespace-nowrap">
+                              <span
+                                className={`font-ui text-[10px] font-bold ${
+                                  obj.covered ? "text-success" : "text-muted/60"
+                                }`}
+                              >
+                                {obj.covered ? "✓ COVERED" : "PENDING"}
+                              </span>
+                            </td>
+                            <td className="px-2.5 py-2 align-top">
+                              <p className="text-[11px] font-sans leading-snug text-ink/90">
+                                {obj.summary}
+                              </p>
+                              {obj.lessonTitle && (
+                                <p className="mt-0.5 font-ui text-[10px] text-cyan truncate">
+                                  Via: {obj.lessonTitle}
+                                </p>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -144,3 +180,4 @@ export function CertReadinessSection({ readiness }: { readiness: CertReadiness[]
     </section>
   );
 }
+
