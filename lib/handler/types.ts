@@ -38,6 +38,10 @@ export type HandlerContext = {
   labTitle?: string;
   objectives?: HandlerObjective[];
   hints?: Record<string, string[]>;
+  activeObjectiveId?: string;
+  activeTier?: number;
+  unlockedHintText?: string;
+  supportedCommands?: string[];
   recentCommands?: string[];
   isChallenge?: boolean;
 };
@@ -48,4 +52,6 @@ export type HandlerResponse = {
   hintTierAwarded?: number;
   blocked?: boolean;
   providerUsed: "groq" | "gemini" | "heuristic";
+  isOfflineFallback?: boolean;
+  quotaExceeded?: boolean;
 };
