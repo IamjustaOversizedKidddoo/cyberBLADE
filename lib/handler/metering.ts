@@ -103,6 +103,16 @@ export function getTodayDateString(now = new Date()): string {
   return now.toISOString().slice(0, 10);
 }
 
+const GLOBAL_USER_ID = "__global_daily_ceiling__";
+
+export async function checkGlobalDailySpendCeiling(now = new Date()): Promise<boolean> {
+  const maxTokens = Number(process.env.HANDLER_GLOBAL_DAILY_TOKEN_LIMIT) || 500_000;
+  const dateStr = getTodayDateString(now);
+  const globalUsage = await activeStore.getUsage(GLOBAL_USER_ID, dateStr);
+  const totalTokens = globalUsage.inputTokens + globalUsage.outputTokens;
+  return totalTokens >= maxTokens;
+}
+
 export async function checkDailyQuota(
   userId: string,
   now = new Date(),
@@ -119,7 +129,8 @@ export async function checkDailyQuota(
   const usage = await activeStore.getUsage(userId, dateStr);
 
   const totalTokens = usage.inputTokens + usage.outputTokens;
-  const quotaExceeded = usage.requests >= maxRequests || totalTokens >= maxTokens;
+  const globalExceeded = await checkGlobalDailySpendCeiling(now);
+  const quotaExceeded = usage.requests >= maxRequests || totalTokens >= maxTokens || globalExceeded;
 
   return {
     allowed: !quotaExceeded,
@@ -136,5 +147,7 @@ export async function recordHandlerUsage(
   now = new Date(),
 ): Promise<HandlerDailyUsage> {
   const dateStr = getTodayDateString(now);
-  return activeStore.recordUsage(userId, dateStr, inputTokens, outputTokens);
+  const userUsage = await activeStore.recordUsage(userId, dateStr, inputTokens, outputTokens);
+  await activeStore.recordUsage(GLOBAL_USER_ID, dateStr, inputTokens, outputTokens);
+  return userUsage;
 }
