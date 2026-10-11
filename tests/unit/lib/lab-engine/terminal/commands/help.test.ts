@@ -10,8 +10,8 @@ test("lists every command with its summary", () => {
 });
 
 test("the lab command set is complete", () => {
-  expect(Object.keys(COMMANDS).sort()).toEqual(
-    [
+  expect(Object.keys(COMMANDS).sort()).toEqual([
+    "base64",
       "cat",
       "cd",
       "chgrp",
@@ -19,10 +19,13 @@ test("the lab command set is complete", () => {
       "chown",
       "clear",
       "curl",
+      "cut",
+      "date",
       "dig",
       "echo",
       "env",
       "export",
+      "file",
       "find",
       "Get-EventLog",
       "Get-Item",
@@ -52,7 +55,10 @@ test("the lab command set is complete", () => {
       "pwd",
       "Select-String",
       "sls",
+      "sort",
       "ss",
+      "stat",
+      "strings",
       "su",
       "submit",
       "sudo",
@@ -63,8 +69,10 @@ test("the lab command set is complete", () => {
       "traceroute",
       "umask",
       "uname",
+      "uniq",
       "unset",
       "wc",
+      "which",
       "whoami",
     ].sort(),
   );

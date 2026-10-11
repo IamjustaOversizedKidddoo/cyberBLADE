@@ -30,6 +30,15 @@ import { tr } from "./tr";
 import { traceroute } from "./traceroute";
 import { umask } from "./umask";
 import { uname } from "./uname";
+import { base64 } from "./base64";
+import { cut } from "./cut";
+import { date } from "./date";
+import { file } from "./file";
+import { sort } from "./sort";
+import { stat } from "./stat";
+import { strings } from "./strings";
+import { uniq } from "./uniq";
+import { which } from "./which";
 import { gi, getItem, getItemProperty, gp } from "./powershell/get-itemproperty";
 import { getProcess, gps } from "./powershell/get-process";
 import { getScheduledTask } from "./powershell/get-scheduledtask";
@@ -55,10 +64,10 @@ const help: Command = {
 /** The lab command set (Rank 0 basics + Rank 1 networking, Linux, and Windows). Each command lives in its own file. */
 export const COMMANDS: Record<string, Command> = Object.fromEntries(
   [
-    cat, cd, chgrp, chmod, chown, clear, curl, dig, echo, env, exportCmd, find,
+    base64, cat, cd, chgrp, chmod, chown, clear, curl, cut, date, dig, echo, env, exportCmd, file, find,
     getEventLog, getItem, getItemProperty, getProcess, getScheduledTask, getService, getWinEvent,
     gi, gp, gps, grep, groups, gsv, head, help, history, hostname, id, ip, kill, ls, mkdir,
-    pgrep, ping, ps, pwd, selectString, sls, ss, su, submit, sudo, systemctl, tail, touch,
-    tr, traceroute, umask, uname, unset, wc, whoami,
+    pgrep, ping, ps, pwd, selectString, sls, sort, ss, stat, strings, su, submit, sudo, systemctl, tail, touch,
+    tr, traceroute, umask, uname, uniq, unset, wc, which, whoami,
   ].map((c) => [c.name, c]),
 );
