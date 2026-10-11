@@ -30,6 +30,7 @@ export function ObjectivesPanel({ objectives, solved, onSubmit, status, continue
   const [hintPending, setHintPending] = useState<string | null>(null);
 
   async function submit(id: string, form: HTMLFormElement) {
+    if (pending || solved.has(id)) return;
     const answer = String(new FormData(form).get("answer") ?? "");
     if (!answer.trim()) {
       setFeedback((f) => ({ ...f, [id]: "Type an answer first." }));
@@ -129,10 +130,11 @@ export function ObjectivesPanel({ objectives, solved, onSubmit, status, continue
                 />
                 <button
                   type="submit"
-                  disabled={pending === o.id}
+                  disabled={pending !== null}
+                  aria-busy={pending === o.id}
                   className="border border-cyan px-4 py-1 text-cyan hover:bg-cyan hover:text-void disabled:opacity-40"
                 >
-                  Submit
+                  {pending === o.id ? "Checking..." : "Submit"}
                 </button>
               </form>
             )}
