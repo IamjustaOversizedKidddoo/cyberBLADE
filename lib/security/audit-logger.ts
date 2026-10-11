@@ -1,5 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { Json } from "@/lib/supabase/types";
 import { createHash } from "node:crypto";
 
 export type AuditSeverity = "info" | "warn" | "security_alert";
@@ -37,7 +38,7 @@ export async function logSecurityEvent(event: AuditEventInput): Promise<void> {
         user_id: event.userId ?? null,
         event_type: event.eventType,
         severity,
-        metadata: metadata as any,
+        metadata: metadata as unknown as Json,
         ip_hash: ipHash,
       });
       return;

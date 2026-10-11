@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { NextRequest } from "next/server";
+import fs from "node:fs";
+import path from "node:path";
 import { proxy } from "@/proxy";
 import { OPERATOR_COOKIE } from "@/lib/identity/constants";
 
@@ -76,8 +78,6 @@ describe("Security Part D: Browser Security, CSP & Hostile String Sanitization",
   describe("Lab Sandbox Isolation Boundary", () => {
     it("verifies sandbox iframe attributes omit allow-same-origin to maintain origin separation", () => {
       // The sandbox attribute in components/labs/webapp/BrowserFrame.tsx must be strictly checked
-      const fs = require("node:fs");
-      const path = require("node:path");
       const browserFramePath = path.resolve(
         process.cwd(),
         "components/labs/webapp/BrowserFrame.tsx"

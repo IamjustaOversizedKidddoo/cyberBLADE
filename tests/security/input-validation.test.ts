@@ -51,7 +51,7 @@ describe("Security Part E: Input Validation & Injection Hardening", () => {
       } catch {
         // Expected VfsError
       }
-      expect((Object.prototype as any).polluted).toBeUndefined();
+      expect((Object.prototype as Record<string, unknown>).polluted).toBeUndefined();
     });
   });
 

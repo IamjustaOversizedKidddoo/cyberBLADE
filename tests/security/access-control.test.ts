@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { checkAttemptAnswer, submitObjective, type Ctx } from "@/lib/progress/service";
@@ -6,6 +6,8 @@ import { MemoryProgressRepo } from "@/lib/progress/memory-repo";
 import { requestProgressiveHint } from "@/lib/handler/service";
 import type { OperatorStore } from "@/lib/identity/operator-store";
 import type { Operator } from "@/lib/identity/types";
+import type { Lesson } from "@/lib/content/schema";
+import type { LoadedLab } from "@/lib/lab-engine/lab-schema";
 
 describe("Security Part B: Access Control & Progression Integrity (IDOR / BOLA / Mass Assignment)", () => {
   let repo: MemoryProgressRepo;
@@ -44,7 +46,7 @@ describe("Security Part B: Access Control & Progression Integrity (IDOR / BOLA /
       repo,
       operators,
       content: {
-        getLesson: async () => null as any,
+        getLesson: async () => null as unknown as Lesson,
         getLessons: async () => [],
         loadChecks: async () => ({ lesson: "test-lesson", questions: [] }),
         loadLab: async (id: string) => ({
@@ -58,7 +60,7 @@ describe("Security Part B: Access Control & Progression Integrity (IDOR / BOLA /
           hints: {
             "obj-1": ["hint 1", "hint 2", "hint 3"],
           },
-        } as any),
+        } as unknown as LoadedLab),
         listLabs: async () => [],
       },
       now: () => new Date(),
@@ -121,6 +123,7 @@ describe("Security Part B: Access Control & Progression Integrity (IDOR / BOLA /
         handle: "learner_cheat",
         ethicsAcceptedAt: new Date().toISOString(),
         id: "learner-C",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ...({ rank: 99 } as any), // Mass assignment attempt
       });
       expect(forged.rank).toBe(0);
