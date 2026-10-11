@@ -33,3 +33,6 @@ export type WebAppEnv = {
   database: Record<string, Array<Record<string, unknown>>>;
   config: Record<string, unknown>;
 };
+
+export type { DispatchResult } from "./simulator";
+
