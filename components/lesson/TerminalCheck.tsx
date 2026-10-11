@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { PublicQuestion } from "@/lib/content/checks";
+import { IconCheck, IconAlertTriangle, IconRotateCcw } from "@/components/ui/icons";
 
 export type CheckResult = { correct: boolean; explanations: string[]; lessonCompleted: boolean };
 
@@ -44,47 +45,117 @@ function Question({
     }
   }
 
+  const isAnswered = result !== null;
+  const isCorrect = result?.correct ?? false;
+
   return (
     <fieldset
-      className="border border-line p-4"
+      className={`rounded-sm border p-5 transition-all ${
+        passed || isCorrect
+          ? "border-success/40 bg-surface shadow-[0_0_15px_rgba(16,185,129,0.06)]"
+          : isAnswered && !isCorrect
+          ? "border-amber-500/40 bg-surface shadow-[0_0_15px_rgba(245,158,11,0.06)]"
+          : "border-line bg-surface"
+      }`}
       data-attempts={attempts}
       data-result={pending ? "pending" : result ? (result.correct ? "correct" : "wrong") : "idle"}
     >
-      <legend className="px-2 text-ink">{q.prompt}</legend>
-      {passed && <p className="mb-2 font-ui text-sm text-cyan">Passed</p>}
-      <ul className="space-y-2">
-        {q.options.map((text, i) => (
-          <li key={i}>
-            <label className="flex items-start gap-3">
-              <input
-                type="radio"
-                name={q.id}
-                className="mt-1.5 accent-cyan"
-                checked={choice === i}
-                onChange={() => setChoice(i)}
-              />
-              <span>{text}</span>
-            </label>
-            {result && (
-              <p className={`ml-7 mt-1 text-sm ${i === choice ? "text-ink" : "text-muted"}`}>{result.explanations[i]}</p>
-            )}
-          </li>
-        ))}
+      <legend className="px-2 font-ui text-sm font-semibold tracking-wide text-ink uppercase">
+        {q.prompt}
+      </legend>
+
+      {passed && (
+        <div className="mb-3 flex items-center gap-1.5 font-ui text-xs font-semibold text-success">
+          <IconCheck className="h-3.5 w-3.5" />
+          <span>Passed</span>
+        </div>
+      )}
+
+      {/* Options list with comfortable hit targets */}
+      <ul className="space-y-2.5 my-3">
+        {q.options.map((text, i) => {
+          const isSelected = choice === i;
+          return (
+            <li key={i} className="rounded-xs transition-colors">
+              <label
+                className={`flex items-start gap-3 p-3 rounded-xs border cursor-pointer select-none transition-all ${
+                  isSelected
+                    ? "border-cyan/60 bg-cyan/10 text-ink shadow-[0_0_10px_rgba(15,190,255,0.1)]"
+                    : "border-line/60 bg-surface-subtle/50 text-ink/80 hover:border-line hover:bg-surface-raised"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name={q.id}
+                  className="mt-0.5 h-4 w-4 accent-cyan cursor-pointer focus:ring-2 focus:ring-cyan"
+                  checked={isSelected}
+                  onChange={() => setChoice(i)}
+                />
+                <span className="font-sans text-sm leading-relaxed">{text}</span>
+              </label>
+
+              {result && (
+                <div
+                  className={`ml-7 mt-1.5 p-2 rounded-xs border text-xs font-sans leading-relaxed ${
+                    i === choice
+                      ? result.correct
+                        ? "border-success/30 bg-success/10 text-success"
+                        : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                      : "border-line/40 bg-surface-subtle text-muted"
+                  }`}
+                >
+                  {result.explanations[i]}
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
-      <div className="mt-4 flex flex-wrap items-center gap-4">
+
+      {/* Actions and verdict row */}
+      <div className="mt-5 flex flex-wrap items-center gap-4 pt-3 border-t border-line/60">
         <button
           type="button"
           onClick={check}
           disabled={choice === null || pending}
-          className="border border-cyan px-4 py-1 text-cyan hover:bg-cyan hover:text-void disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-xs border-2 border-cyan bg-cyan/10 px-5 py-1.5 font-ui text-xs font-bold tracking-wider text-cyan transition-all hover:bg-cyan hover:text-void disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
         >
-          Check answer
+          {pending ? (
+            <span>Verifying...</span>
+          ) : isAnswered && !isCorrect ? (
+            <>
+              <IconRotateCcw className="h-3 w-3" />
+              <span>Check answer</span>
+            </>
+          ) : (
+            <span>Check answer</span>
+          )}
         </button>
+
         {result && (
-          <span className={`font-ui ${result.correct ? "text-cyan" : "text-pink"}`}>{result.correct ? "Correct" : "Not quite"}</span>
+          <span
+            className={`inline-flex items-center gap-1.5 font-ui text-xs font-semibold px-2.5 py-0.5 rounded-xs border ${
+              result.correct
+                ? "border-success/40 bg-success/10 text-success"
+                : "border-amber-500/40 bg-amber-500/10 text-amber-400"
+            }`}
+          >
+            {result.correct ? (
+              <>
+                <IconCheck className="h-3.5 w-3.5" />
+                <span>Correct</span>
+              </>
+            ) : (
+              <>
+                <IconAlertTriangle className="h-3.5 w-3.5" />
+                <span>Not quite</span>
+              </>
+            )}
+          </span>
         )}
+
         {error && (
-          <span role="alert" className="text-sm text-pink">
+          <span role="alert" className="font-ui text-xs text-danger">
             {error}
           </span>
         )}
@@ -99,7 +170,14 @@ export function TerminalCheck({ questions, initialPassed, answer }: Props) {
   const [completed, setCompleted] = useState(false);
 
   return (
-    <div className="not-prose space-y-4">
+    <div className="not-prose my-8 space-y-5">
+      <div className="flex items-center gap-2 border-b border-line/60 pb-2">
+        <span className="h-2 w-2 rounded-full bg-cyan shadow-[0_0_8px_rgba(15,190,255,0.8)]" />
+        <h4 className="font-ui text-xs tracking-widest text-cyan uppercase font-bold">
+          TERMINAL KNOWLEDGE VERIFICATION
+        </h4>
+      </div>
+
       {questions.map((q) => (
         <Question
           key={q.id}
@@ -112,9 +190,16 @@ export function TerminalCheck({ questions, initialPassed, answer }: Props) {
           }}
         />
       ))}
-      <p role="status" className="font-ui text-purple">
-        {completed ? "Lesson complete! XP added to your profile." : ""}
-      </p>
+
+      {completed && (
+        <div
+          role="status"
+          className="rounded-sm border border-purple/50 bg-purple/10 p-4 font-ui text-sm text-purple font-semibold flex items-center gap-2 shadow-[0_0_15px_rgba(200,60,255,0.15)]"
+        >
+          <IconCheck className="h-4 w-4" />
+          <span>Lesson complete! XP added to your profile.</span>
+        </div>
+      )}
     </div>
   );
 }

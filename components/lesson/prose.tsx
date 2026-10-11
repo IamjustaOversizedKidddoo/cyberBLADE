@@ -1,28 +1,106 @@
 import type { MDXComponents } from "mdx/types";
 
 /**
- * Lesson typography (Phase 0 theme roles): ## in Hacked, ### in Pixel Operator, prose in the
- * readable sans, code in mono with horizontal scroll inside the block only.
+ * Lesson typography (CyberBLADE HUD theme):
+ * - H2/H3 headings with distinct hierarchy and anchor support
+ * - Readable sans prose with comfortable 1.65 line-height and 65-75ch measure
+ * - Monospace code blocks with tokenized dark surfaces and horizontal scroll safety
+ * - Responsive table containers
  */
 export const proseComponents: MDXComponents = {
-  h2: (p) => <h2 className="mb-4 mt-14 text-4xl text-ink first:mt-0" {...p} />,
-  h3: (p) => <h3 className="mb-3 mt-8 text-xl text-cyan" {...p} />,
-  h4: (p) => <h4 className="mb-2 mt-6 text-lg text-ink" {...p} />,
-  p: (p) => <p className="my-4 text-ink/90" {...p} />,
-  ul: (p) => <ul className="my-4 list-disc space-y-1 pl-6" {...p} />,
-  ol: (p) => <ol className="my-4 list-decimal space-y-1 pl-6" {...p} />,
-  li: (p) => <li className="text-ink/90" {...p} />,
-  a: (p) => <a className="text-cyan underline" {...p} />,
-  strong: (p) => <strong className="font-semibold text-ink" {...p} />,
-  blockquote: (p) => <blockquote className="my-6 border-l-2 border-purple pl-4 text-muted" {...p} />,
-  pre: (p) => <pre className="my-6 overflow-x-auto border border-line bg-[#05070a] p-4 text-sm leading-relaxed" {...p} />,
-  code: (p) => <code className="font-mono text-[0.92em]" {...p} />,
-  table: (p) => (
-    <div className="my-6 overflow-x-auto">
-      <table className="w-full border-collapse text-left text-sm" {...p} />
+  h2: (p) => (
+    <h2
+      className="mb-4 mt-12 text-2xl sm:text-3xl font-display text-ink first:mt-0 tracking-wide border-b border-line/40 pb-2"
+      {...p}
+    />
+  ),
+  h3: (p) => (
+    <h3
+      className="mb-3 mt-8 font-ui text-lg sm:text-xl text-cyan font-semibold tracking-wide"
+      {...p}
+    />
+  ),
+  h4: (p) => (
+    <h4
+      className="mb-2 mt-6 font-ui text-base text-ink font-medium"
+      {...p}
+    />
+  ),
+  p: (p) => (
+    <p
+      className="my-4 font-sans text-base leading-[1.7] text-ink/90"
+      {...p}
+    />
+  ),
+  ul: (p) => (
+    <ul
+      className="my-4 list-disc space-y-1.5 pl-6 font-sans text-base leading-relaxed text-ink/90"
+      {...p}
+    />
+  ),
+  ol: (p) => (
+    <ol
+      className="my-4 list-decimal space-y-1.5 pl-6 font-sans text-base leading-relaxed text-ink/90"
+      {...p}
+    />
+  ),
+  li: (p) => (
+    <li
+      className="text-ink/90"
+      {...p}
+    />
+  ),
+  a: (p) => (
+    <a
+      className="text-cyan underline underline-offset-4 decoration-cyan/40 hover:decoration-cyan transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan rounded-xs"
+      {...p}
+    />
+  ),
+  strong: (p) => (
+    <strong
+      className="font-semibold text-ink"
+      {...p}
+    />
+  ),
+  blockquote: (p) => (
+    <blockquote
+      className="my-6 rounded-r-xs border-l-4 border-l-purple border-y border-r border-line/40 bg-purple/5 p-4 font-sans italic text-muted leading-relaxed"
+      {...p}
+    />
+  ),
+  pre: (p) => (
+    <div className="relative my-6 overflow-hidden rounded-sm border border-line bg-surface-subtle">
+      <pre
+        className="overflow-x-auto p-4 font-mono text-sm leading-relaxed text-ink/90 selection:bg-cyan/20"
+        {...p}
+      />
     </div>
   ),
-  th: (p) => <th className="border-b border-line px-3 py-2 font-ui text-ink" {...p} />,
-  td: (p) => <td className="border-b border-line/50 px-3 py-2 align-top text-ink/90" {...p} />,
-  hr: () => <hr className="my-10 border-line" />,
+  code: (p) => (
+    <code
+      className="rounded-xs border border-line/60 bg-surface-raised px-1.5 py-0.5 font-mono text-[0.88em] text-cyan"
+      {...p}
+    />
+  ),
+  table: (p) => (
+    <div className="my-6 w-full overflow-x-auto rounded-sm border border-line bg-surface">
+      <table
+        className="w-full border-collapse text-left font-ui text-sm"
+        {...p}
+      />
+    </div>
+  ),
+  th: (p) => (
+    <th
+      className="border-b border-line bg-surface-raised px-4 py-2.5 font-semibold text-muted uppercase tracking-wider text-xs"
+      {...p}
+    />
+  ),
+  td: (p) => (
+    <td
+      className="border-b border-line/40 px-4 py-2.5 align-top text-ink/90 font-sans text-sm"
+      {...p}
+    />
+  ),
+  hr: () => <hr className="my-10 border-line/60" />,
 };

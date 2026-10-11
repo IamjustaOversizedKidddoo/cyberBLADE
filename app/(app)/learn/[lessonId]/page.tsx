@@ -7,6 +7,8 @@ import { DraftBanner } from "@/components/lesson/DraftBanner";
 import { LessonNav } from "@/components/lesson/LessonNav";
 import { proseComponents } from "@/components/lesson/prose";
 import { TerminalCheck } from "@/components/lesson/TerminalCheck";
+import { ReadingProgress } from "@/components/lesson/ReadingProgress";
+import { TableOfContents } from "@/components/lesson/TableOfContents";
 import { HeroBand } from "@/components/theme/HeroBand";
 import { toPublicChecks } from "@/lib/content/checks";
 import { loadChecks } from "@/lib/content/checks-server";
@@ -15,11 +17,12 @@ import { renderMdx } from "@/lib/content/mdx";
 import { requireOperator } from "@/lib/identity/session";
 import { canAccessRank } from "@/lib/progress/access";
 import { getCtx } from "@/lib/progress/context";
+import { IconCheck, IconTerminal } from "@/components/ui/icons";
 import { answerCheckAction } from "../actions";
 
 export async function generateMetadata(props: PageProps<"/learn/[lessonId]">): Promise<Metadata> {
   const lesson = await getLesson((await props.params).lessonId);
-  return { title: lesson?.title ?? "Lesson" };
+  return { title: `${lesson?.title ?? "Lesson"} · CyberBLADE` };
 }
 
 export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) {
@@ -50,32 +53,77 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
     ),
     LabLink: () =>
       lesson.lab ? (
-        <p className="my-6">
-          <Link
-            href={`/labs/${lesson.lab}?lesson=${lesson.id}`}
-            className="inline-block border border-cyan px-5 py-2 font-ui text-lg text-cyan hover:bg-cyan hover:text-void"
-          >
-            {labDone ? "✓ Lab solved — open again" : "Open the lab"}
-          </Link>
-        </p>
+        <div className="not-prose my-8 rounded-sm border border-cyan/40 bg-surface-raised p-5 shadow-[0_4px_20px_rgba(15,190,255,0.1)]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xs border border-cyan/40 bg-cyan/15 flex items-center justify-center text-cyan shrink-0">
+                <IconTerminal className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="font-ui text-[11px] text-cyan font-bold tracking-widest uppercase">
+                  PRACTICAL LAB WORKSPACE CLEARED
+                </span>
+                <h4 className="font-sans text-sm font-semibold text-ink">
+                  Interactive Hands-On Exercise
+                </h4>
+              </div>
+            </div>
+            <Link
+              href={`/labs/${lesson.lab}?lesson=${lesson.id}`}
+              className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xs border-2 border-cyan bg-cyan/15 px-5 py-2 font-ui text-xs font-bold tracking-wider text-cyan hover:bg-cyan hover:text-void transition-all shadow-[0_0_12px_rgba(15,190,255,0.25)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
+            >
+              {labDone ? (
+                <>
+                  <IconCheck className="h-3.5 w-3.5" />
+                  <span>✓ Lab solved — open again</span>
+                </>
+              ) : (
+                <span>Open the lab</span>
+              )}
+            </Link>
+          </div>
+        </div>
       ) : null,
   });
 
   return (
-    <main>
+    <main className="min-h-screen bg-canvas text-ink pb-24">
+      <ReadingProgress />
       <DraftBanner status={lesson.status} />
-      <HeroBand title={lesson.title} kicker={`> rank_${lesson.rank} · ${lesson.module} · ${lesson.estimated_minutes} min`}>
-        <p>
-          {completed ? "✓ Completed" : `${lesson.xp} XP`}
-          {lesson.mitre.length > 0 && ` · MITRE ATT&CK ${lesson.mitre.join(", ")}`}
-        </p>
-      </HeroBand>
-      <article className="mx-auto max-w-[72ch] px-4 py-12">
-        {body}
-        <div className="mt-16">
-          <LessonNav lessons={siblings} currentId={lesson.id} />
+
+      <HeroBand
+        title={lesson.title}
+        kicker={`> rank_${lesson.rank} · ${lesson.module} · ${lesson.estimated_minutes} min`}
+      >
+        <div className="flex flex-wrap items-center gap-3">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-xs border px-2.5 py-0.5 font-ui text-xs font-semibold uppercase tracking-wider ${
+              completed
+                ? "border-success/50 bg-success/15 text-success"
+                : "border-cyan/40 bg-cyan/10 text-cyan"
+            }`}
+          >
+            {completed ? "✓ COMPLETED" : `${lesson.xp} XP`}
+          </span>
+          {lesson.mitre.length > 0 && (
+            <span className="font-mono text-xs text-muted">
+              MITRE ATT&CK: {lesson.mitre.join(", ")}
+            </span>
+          )}
         </div>
-      </article>
+      </HeroBand>
+
+      {/* Main content grid: Article + Sticky Table of Contents */}
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 flex justify-center gap-12">
+        <article className="w-full max-w-[70ch] leading-relaxed">
+          {body}
+          <LessonNav lessons={siblings} currentId={lesson.id} />
+        </article>
+
+        {/* Sticky Table of Contents */}
+        <TableOfContents />
+      </div>
+
       <HandlerDrawer
         context={{
           kind: "lesson",
