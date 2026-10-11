@@ -9,6 +9,27 @@ export type SupabaseEnv = {
   serviceRoleKey?: string;
 };
 
+export function assertSafeStorageMode(): void {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+
+  // If any Supabase variable is set, require full client configuration
+  const anySet = Boolean(url || anonKey || serviceKey);
+  if (anySet && (!url || !anonKey)) {
+    throw new Error(
+      "CONFIGURATION ERROR: Partial Supabase configuration detected. Both NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be provided.",
+    );
+  }
+
+  // Refuse local-first file storage in production
+  if (process.env.NODE_ENV === "production" && !isSupabaseConfigured()) {
+    throw new Error(
+      "PRODUCTION SECURITY VIOLATION: Local-first JSON file storage cannot be active in production (NODE_ENV=production). Valid NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required.",
+    );
+  }
+}
+
 export function isSupabaseConfigured(): boolean {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();

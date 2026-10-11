@@ -17,8 +17,20 @@ function serialize<R>(key: string, task: () => Promise<R>): Promise<R> {
 }
 
 export function dataPath(name: string): string {
+  if (!name || typeof name !== "string") {
+    throw new Error("Invalid storage file name: name must be a non-empty string");
+  }
+  if (name.includes("..") || path.isAbsolute(name) || /[\/\\]/.test(name)) {
+    throw new Error(`Invalid storage file name '${name}': path traversal characters are rejected`);
+  }
+  const baseDir = process.env.NEON_DATA_DIR ?? ".data";
+  const resolved = path.resolve(baseDir, name);
+  const resolvedBase = path.resolve(baseDir);
+  if (!resolved.startsWith(resolvedBase)) {
+    throw new Error(`Path traversal attempt detected for file: ${name}`);
+  }
   // Runtime data dir, not a build input: keep Turbopack from tracing the whole project.
-  return path.join(/* turbopackIgnore: true */ process.env.NEON_DATA_DIR ?? ".data", name);
+  return path.join(/* turbopackIgnore: true */ baseDir, name);
 }
 
 async function renameWithRetry(from: string, to: string): Promise<void> {
