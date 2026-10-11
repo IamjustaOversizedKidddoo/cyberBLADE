@@ -4,8 +4,8 @@
   --color-void: #000000;
   --color-ink: #ffffff;
   --color-paper: #f5fafc;
-  --color-muted: #ccd6dd;
-  --color-line: rgb(255 255 255 / 0.2);
+  --color-muted: #9cb0c4;
+  --color-line: rgb(255 255 255 / 0.16);
   --color-cyan: #0fbeff;
   --color-purple: #c83cff;
   --color-pink: #ff1065;
@@ -13,6 +13,32 @@
   --color-console: #05070a;
   --color-console-deep: #020408;
   --color-console-raised: #0a0f18;
+  /* Tactical surface hierarchy */
+  --color-surface: var(--bg-surface);
+  --color-surface-raised: var(--bg-surface-raised);
+  --color-surface-subtle: var(--bg-surface-subtle);
+  --color-surface-hover: var(--bg-surface-hover);
+  /* Tactical border hierarchy */
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-accent: var(--border-accent);
+  /* Semantic status colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #0fbeff;
+  /* Rank colors */
+  --color-rank-0: #94a3b8;
+  --color-rank-1: #0fbeff;
+  --color-rank-2: #c084fc;
+  --color-rank-3: #f59e0b;
+  /* SIEM Severity colors */
+  --color-severity-critical: #ef4444;
+  --color-severity-high: #f97316;
+  --color-severity-medium: #eab308;
+  --color-severity-low: #0ea5e9;
+  --color-severity-info: #64748b;
 }
 
 @theme inline {
@@ -25,6 +51,10 @@
 [data-contrast="high"] {
   --color-muted: #ffffff;
   --color-line: rgb(255 255 255 / 0.6);
+  --text-muted: #ffffff;
+  --border-subtle: rgb(255 255 255 / 0.5);
+  --border-default: rgb(255 255 255 / 0.7);
+  --border-strong: #ffffff;
 }
 
 @layer base {
@@ -72,6 +102,30 @@
     outline: 2px solid var(--color-cyan);
     outline-offset: 2px;
   }
+  ::selection {
+    background: rgb(15 190 255 / 0.3);
+    color: #ffffff;
+  }
+}
+
+/* Tactical slim scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.2) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.35);
 }
 
 @layer components {
@@ -182,6 +236,51 @@
 
 /* ===== CYBERBLADE art system: visual tokens and composition utilities (spec 2026-10-08 §4, §6) ===== */
 :root {
+  /* Tactical console surfaces */
+  --bg-void: #000000;
+  --bg-canvas: #020408;
+  --bg-surface: #0a0f18;
+  --bg-surface-raised: #101726;
+  --bg-surface-subtle: #060b13;
+  --bg-surface-hover: #162238;
+
+  /* Tactical borders */
+  --border-subtle: rgb(255 255 255 / 0.08);
+  --border-default: rgb(255 255 255 / 0.16);
+  --border-strong: rgb(255 255 255 / 0.32);
+  --border-accent: rgb(15 190 255 / 0.5);
+
+  /* Typography color roles */
+  --text-primary: #f3f6f9;
+  --text-secondary: #9cb0c4;
+  --text-muted: #62758d;
+  --text-inverse: #030712;
+
+  /* Semantics */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #0fbeff;
+
+  /* Rank palette */
+  --rank-0: #94a3b8;
+  --rank-1: #0fbeff;
+  --rank-2: #c084fc;
+  --rank-3: #f59e0b;
+
+  /* Severity palette */
+  --severity-critical: #ef4444;
+  --severity-high: #f97316;
+  --severity-medium: #eab308;
+  --severity-low: #0ea5e9;
+  --severity-info: #64748b;
+
+  /* Elevation & glows */
+  --shadow-card: 0 4px 20px -2px rgb(0 0 0 / 0.5);
+  --shadow-raised: 0 8px 30px -4px rgb(0 0 0 / 0.7);
+  --glow-cyan-sm: 0 0 10px rgb(15 190 255 / 0.35);
+  --glow-cyan-lg: 0 0 25px rgb(15 190 255 / 0.25);
+
   /* Poster type scale: display type as artwork. */
   --poster-hero: clamp(4rem, 21vw, 19rem);
   /* A ten-letter wordmark across the full width. */
