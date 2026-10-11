@@ -142,6 +142,10 @@ export async function promoteToRank(page: Page, targetRank: number): Promise<voi
   if (!confirmed) {
     throw new Error(`Failed to promote operator ${opCookie.value} to rank ${targetRank}`);
   }
+
+  // Ensure server session observes the updated rank on dashboard
+  await page.goto("/dashboard");
+  await expect(page.getByText(new RegExp(`Rank ${targetRank}`)).first()).toBeVisible({ timeout: 10_000 });
 }
 
 /** Marks all lessons of a given rank as completed in progress.json so its challenge unlocks. */
