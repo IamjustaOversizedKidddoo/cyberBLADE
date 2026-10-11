@@ -1,7 +1,9 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Kbd } from "@/components/ui/Kbd";
 import { canAccessRank } from "@/lib/progress/access";
 
 type LabSummary = {
@@ -42,9 +44,26 @@ export function LabsDirectory({
   operatorRank: number;
 }) {
   const searchInputId = useId();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [filterType, setFilterType] = useState<string>("ALL");
   const [filterRank, setFilterRank] = useState<number | "ALL">("ALL");
   const [search, setSearch] = useState("");
+
+  // Global '/' keyboard shortcut to focus search input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === "/" &&
+        document.activeElement?.tagName !== "INPUT" &&
+        document.activeElement?.tagName !== "TEXTAREA"
+      ) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -68,7 +87,7 @@ export function LabsDirectory({
   return (
     <div className="space-y-8">
       {/* ── CONTROLS & TELEMETRY ─────────────────────────────────────────── */}
-      <div className="border border-line bg-console p-5 space-y-4">
+      <div className="rounded-xs border border-line bg-console p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line/60 pb-4">
           <div>
             <h2 className="font-ui text-lg font-bold text-ink tracking-wider uppercase">
@@ -79,10 +98,10 @@ export function LabsDirectory({
             </p>
           </div>
           <div className="flex items-center gap-3 font-ui text-xs">
-            <span className="border border-cyan/40 bg-cyan/10 px-3 py-1 text-cyan font-mono">
+            <span className="rounded-xs border border-cyan/40 bg-cyan/10 px-3 py-1 text-cyan font-mono">
               SOLVED: <strong>{solvedCount}</strong> / {labs.length} LABS
             </span>
-            <span className="border border-purple/40 bg-purple/10 px-3 py-1 text-purple font-mono">
+            <span className="rounded-xs border border-purple/40 bg-purple/10 px-3 py-1 text-purple font-mono">
               CLEARANCE: RANK {operatorRank}
             </span>
           </div>
@@ -97,7 +116,7 @@ export function LabsDirectory({
                 type="button"
                 aria-label={`Filter lab type: ${t}`}
                 onClick={() => setFilterType(t)}
-                className={`border px-3 py-1.5 font-ui text-xs tracking-wider transition-colors ${
+                className={`rounded-xs border px-3 py-1.5 font-ui text-xs tracking-wider transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan ${
                   filterType === t
                     ? "border-cyan bg-cyan/20 text-cyan font-bold"
                     : "border-line bg-void text-muted hover:text-ink hover:border-line/80"
@@ -116,7 +135,7 @@ export function LabsDirectory({
                 type="button"
                 aria-label={`Filter clearance rank: ${r}`}
                 onClick={() => setFilterRank(r)}
-                className={`border px-2.5 py-1 font-mono text-xs ${
+                className={`rounded-xs border px-2.5 py-1 font-mono text-xs focus:outline-none focus-visible:ring-1 focus-visible:ring-purple ${
                   filterRank === r
                     ? "border-purple bg-purple/20 text-purple font-bold"
                     : "border-line bg-void text-muted hover:text-ink"
@@ -129,27 +148,45 @@ export function LabsDirectory({
         </div>
 
         {/* Search Bar */}
-        <div>
+        <div className="relative">
           <label htmlFor={searchInputId} className="sr-only">
             Filter by lab title, MITRE ATT&CK technique, or keyword
           </label>
           <input
+            ref={searchInputRef}
             id={searchInputId}
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search labs by title, MITRE technique (e.g. T1110), or keywords..."
-            className="w-full border border-line bg-console-deep px-4 py-2 text-xs font-mono text-ink placeholder:text-muted/60 focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+            className="w-full rounded-xs border border-line bg-console-deep px-4 py-2 text-xs font-mono text-ink placeholder:text-muted/60 focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
           />
+          <div className="absolute right-3 top-2 hidden sm:flex items-center gap-1.5 pointer-events-none">
+            <span className="text-[10px] text-muted/60 font-ui">Press</span>
+            <Kbd>/</Kbd>
+          </div>
         </div>
       </div>
 
       {/* ── LABS GRID ──────────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="border border-line bg-console p-12 text-center text-muted">
-          <p className="font-ui text-base text-ink">No labs match query criteria</p>
-          <p className="mt-1 text-xs">Try selecting ALL filters or clearing search terms.</p>
-        </div>
+        <EmptyState
+          title="No labs match query criteria"
+          description="Try selecting ALL filters or clearing search terms."
+          action={
+            <button
+              type="button"
+              onClick={() => {
+                setFilterType("ALL");
+                setFilterRank("ALL");
+                setSearch("");
+              }}
+              className="rounded-xs border border-cyan/60 px-4 py-1.5 font-ui text-xs text-cyan hover:bg-cyan hover:text-void transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+            >
+              Reset filters
+            </button>
+          }
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((l) => {
@@ -159,7 +196,7 @@ export function LabsDirectory({
             return (
               <div
                 key={l.id}
-                className={`border p-5 flex flex-col justify-between transition-all ${
+                className={`rounded-xs border p-5 flex flex-col justify-between transition-all ${
                   l.solved
                     ? "border-purple/60 bg-console hover:border-purple"
                     : unlocked
@@ -170,7 +207,7 @@ export function LabsDirectory({
                 <div>
                   {/* Top Badges */}
                   <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className={`border px-2 py-0.5 font-ui text-[10px] tracking-wider uppercase ${typeBadge(l.type, l.isChallenge)}`}>
+                    <span className={`rounded-xs border px-2 py-0.5 font-ui text-[10px] tracking-wider uppercase ${typeBadge(l.type, l.isChallenge)}`}>
                       {l.isChallenge ? "TIMED CHALLENGE" : l.type.toUpperCase()}
                     </span>
                     <div className="flex items-center gap-1.5 font-ui text-xs">
@@ -218,7 +255,7 @@ export function LabsDirectory({
                   {unlocked ? (
                     <Link
                       href={targetHref}
-                      className="border border-cyan px-3 py-1 font-ui text-xs text-cyan hover:bg-cyan hover:text-void transition-colors"
+                      className="rounded-xs border border-cyan px-3 py-1 font-ui text-xs text-cyan hover:bg-cyan hover:text-void transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
                     >
                       {l.solved ? "RETRY →" : "LAUNCH →"}
                     </Link>
@@ -236,3 +273,4 @@ export function LabsDirectory({
     </div>
   );
 }
+

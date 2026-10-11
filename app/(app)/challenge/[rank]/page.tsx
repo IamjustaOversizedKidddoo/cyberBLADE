@@ -11,6 +11,7 @@ import { PosterHeading } from "@/components/art/PosterHeading";
 import { NoiseLayer } from "@/components/art/NoiseLayer";
 import { SystemLabel } from "@/components/art/SystemLabel";
 import { TerminalPanel } from "@/components/theme/TerminalPanel";
+import { IconAlertTriangle, IconCheck, IconLock } from "@/components/ui/icons";
 import { renderMdx } from "@/lib/content/mdx";
 import { requireOperator } from "@/lib/identity/session";
 import { canAccessRank } from "@/lib/progress/access";
@@ -27,18 +28,19 @@ import {
   submitChallengeObjectiveAction,
 } from "../actions";
 
-export const metadata: Metadata = { title: "Rank challenge" };
+export const metadata: Metadata = { title: "Rank Challenge · CyberBLADE" };
 
 // ─── styled button variants ────────────────────────────────────────────────────
 const BTN_START =
-  "btn-glitch border-2 border-cyan px-8 py-3 font-ui text-lg text-cyan hover:bg-cyan hover:text-void";
+  "btn-glitch rounded-xs border-2 border-cyan px-8 py-3 font-ui text-lg text-cyan hover:bg-cyan hover:text-void transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan";
 const BTN_DANGER =
-  "border border-pink px-5 py-2 font-ui text-sm text-pink hover:bg-pink hover:text-void transition-colors";
+  "rounded-xs border border-pink px-5 py-2 font-ui text-sm text-pink hover:bg-pink hover:text-void transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink";
 const BTN_GHOST =
-  "border border-line px-5 py-2 font-ui text-sm text-muted hover:border-cyan hover:text-cyan transition-colors";
+  "rounded-xs border border-line px-5 py-2 font-ui text-sm text-muted hover:border-cyan hover:text-cyan transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan";
 
 export default async function ChallengePage(props: PageProps<"/challenge/[rank]">) {
   const { rank: raw } = await props.params;
+
   if (!/^[0-2]$/.test(raw)) notFound();
   const rank = Number(raw);
 
@@ -166,11 +168,20 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
         </div>
 
         {/* Briefing + workspace */}
-        <div className="mx-auto max-w-7xl space-y-10 px-4 py-10 sm:px-6">
+        <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
+          {/* Handler Lockdown Notice */}
+          <div className="rounded-xs border border-warning/40 bg-warning/10 p-3.5 font-ui text-xs text-warning flex items-center gap-3">
+            <IconAlertTriangle className="h-4 w-4 shrink-0 text-warning" />
+            <div className="space-y-0.5">
+              <span className="font-bold uppercase tracking-wider block">CHALLENGE PROTOCOL // HANDLER STANDBY</span>
+              <span className="text-warning/80">The Socratic AI Handler is locked down during rank certification challenges. Solve all objectives independently.</span>
+            </div>
+          </div>
+
           {/* Briefing card */}
-          <section aria-labelledby="briefing-heading" className="border-2 border-pink">
-            <div className="flex items-center gap-0 border-b border-pink">
-              <span className="border-r border-pink px-4 py-2 font-ui text-xs tracking-widest text-pink">
+          <section aria-labelledby="briefing-heading" className="rounded-xs border-2 border-pink bg-console">
+            <div className="flex items-center gap-0 border-b border-pink/60 bg-pink/5">
+              <span className="border-r border-pink/60 px-4 py-2 font-ui text-xs tracking-widest text-pink font-semibold">
                 BRIEFING
               </span>
               <span className="px-4 py-2 font-ui text-xs tracking-widest text-muted">
@@ -283,10 +294,13 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
             <div>
               <SystemLabel className="text-muted block mb-3">MISSION STATUS</SystemLabel>
               {state.kind === "locked" && (
-                <div className="border-2 border-line px-4 py-3">
-                  <p className="font-ui text-xs tracking-widest text-muted/60 mb-4">
-                    ▒ LOCKED — COMPLETE ALL RANK_{rank} LESSONS
-                  </p>
+                <div className="rounded-xs border-2 border-line bg-console p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <IconLock className="h-4 w-4 text-muted/70 shrink-0" />
+                    <span className="font-ui text-xs tracking-wider uppercase text-muted font-semibold">
+                      LOCKED — COMPLETE ALL RANK_{rank} LESSONS
+                    </span>
+                  </div>
                   <ul className="space-y-2">
                     {summary.lessons.map((l) => (
                       <li key={l.id} className="flex items-center gap-2">
@@ -309,21 +323,27 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
                 </div>
               )}
               {state.kind === "cooldown" && (
-                <div className="border-2 border-pink px-4 py-4">
-                  <SystemLabel className="text-pink block mb-2">COOLDOWN ACTIVE</SystemLabel>
-                  <p className="text-muted">
+                <div className="rounded-xs border-2 border-pink bg-pink/5 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <IconAlertTriangle className="h-4 w-4 text-pink shrink-0" />
+                    <SystemLabel className="text-pink">COOLDOWN ACTIVE</SystemLabel>
+                  </div>
+                  <p className="text-muted text-xs leading-relaxed">
                     Retry available after{" "}
-                    <time dateTime={state.retryAt} className="text-ink">
+                    <time dateTime={state.retryAt} className="text-ink font-mono font-semibold">
                       {new Date(state.retryAt).toUTCString().slice(17, 22)} UTC
                     </time>
-                    . Use the time to review your weak lessons.
+                    . Review weak lessons before re-attempting.
                   </p>
                 </div>
               )}
               {state.kind === "ready" && (
-                <div className="border-2 border-cyan px-4 py-4 mb-6">
-                  <SystemLabel className="text-cyan block mb-1">READY TO DEPLOY</SystemLabel>
-                  <p className="text-muted text-sm">
+                <div className="rounded-xs border-2 border-cyan bg-cyan/5 p-4 mb-6">
+                  <div className="flex items-center gap-2 mb-1">
+                    <IconCheck className="h-4 w-4 text-cyan shrink-0" />
+                    <SystemLabel className="text-cyan">READY TO DEPLOY</SystemLabel>
+                  </div>
+                  <p className="text-muted text-xs leading-relaxed">
                     Machine will be generated when you start. The clock begins immediately.
                   </p>
                 </div>
