@@ -64,7 +64,7 @@ In plain English: a `/24` keeps the first three numbers fixed. The last number c
 **How many hosts fit in a subnet?** There are `32 − prefix` host bits. Each extra bit doubles the number of addresses:
 
 - Total addresses = 2^(32 − prefix)
-- **Usable hosts = 2^(32 − prefix) − 2**: the first address names the network and the last is the broadcast, so neither can be given to a device.
+- **Usable hosts = 2^(32 − prefix) − 2**: the first address names the network and the last is the broadcast, so neither can be given to a device. *(Exception: Under RFC 3021, `/31` point-to-point subnets have 2 usable addresses with no separate network or broadcast addresses. A `/32` prefix represents a single host route with 1 address.)*
 
 | Prefix | Host bits | Total | Usable hosts |
 |---|---|---|---|
@@ -72,6 +72,7 @@ In plain English: a `/24` keeps the first three numbers fixed. The last number c
 | /26 | 6 | 64 | 62 |
 | /28 | 4 | 16 | 14 |
 | /30 | 2 | 4 | 2 |
+| /31 | 1 | 2 | 2 (RFC 3021 point-to-point) |
 
 Example: a `/26` has 32 − 26 = 6 host bits, so 2^6 = 64 addresses and 64 − 2 = **62 usable hosts**.
 

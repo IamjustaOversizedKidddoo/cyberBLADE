@@ -46,26 +46,41 @@ Other paths you'll see later include incident response, digital forensics, malwa
 - **Confidentiality** — what you see during work stays private.
 - **Responsible disclosure** — if you find a flaw by accident, report it privately to the owner (or through CERT-In, India's national cyber incident response team) instead of exploiting or publicising it.
 
-Professional bodies write these down as codes of ethics — for example, the ISC2 Code of Ethics that holders of its certifications must follow.
+Professional bodies write these down as codes of ethics — for example, the **ISC2 Code of Ethics** that holders of its certifications must follow, with four non-negotiable canons:
+1. Protect society, the common good, necessary public trust and confidence, and the infrastructure.
+2. Act honorably, honestly, justly, responsibly, and legally.
+3. Provide diligent and competent service to principals.
+4. Advance and protect the profession.
 
-**The law in India (in plain words).** The main law is the **Information Technology Act, 2000 (IT Act)**:
+**Foundational cybersecurity laws and compliance frameworks (CompTIA Security+ 5.4 & ISC2 CC).**
+Global security professionals operate under statutory laws and industry compliance standards:
+
+| Law / Framework | Scope & Purpose | Key Mandate for Security Professionals |
+|---|---|---|
+| **CFAA (18 U.S.C. § 1030)** | **Computer Fraud and Abuse Act (US)** | Prohibits accessing a protected computer without authorization or exceeding authorized access. Unauthorized access alone is a crime, even without file alteration. |
+| **Computer Misuse Act 1990** | **UK Cybercrime Statute** | Criminalizes unauthorized access to computer material and unauthorized acts with intent to impair computer operation. |
+| **GDPR (Regulation EU 2016/679)** | **General Data Protection Regulation (EU)** | Requires lawful processing, data minimization, privacy by design, and **mandatory notification of personal data breaches to supervisory authorities within 72 hours**. |
+| **HIPAA** | **Health Insurance Portability and Accountability Act (US)** | Mandates strict administrative, physical, and technical safeguards (encryption, audit logging) for **Protected Health Information (PHI)**. |
+| **PCI-DSS** | **Payment Card Industry Data Security Standard** | Global technical security standard required for any organization storing, processing, or transmitting credit card and cardholder data. Mandates firewalls, encryption, and regular vulnerability scanning. |
+
+**The law in India (jurisdictional implementation in plain words).** In India, the primary statute is the **Information Technology Act, 2000 (IT Act)**:
 
 | Section | In plain words |
 |---|---|
-| **43** | Accessing, copying data from, damaging or disrupting someone's computer system **without permission** makes you liable to pay compensation. |
-| **66** | Doing any act in section 43 **dishonestly or fraudulently** is a crime — punishable with up to 3 years in prison, a fine up to ₹5 lakh, or both. |
-| **66C** | **Identity theft** — fraudulently using someone else's password, electronic signature or other unique identification. |
-| **66D** | **Cheating by impersonation** using a computer or phone — the law behind many phishing and "fake customer care" cases. |
-| **66F** | **Cyber terrorism** — attacks meant to threaten India's unity, security or sovereignty, or to harm critical systems. The most serious offence in the Act, punishable with imprisonment up to life. |
-| **72A** | Disclosing someone's personal information obtained under a contract, without consent, to cause them loss. |
+| **43** | Accessing, copying data from, damaging or disrupting someone's computer system **without permission** makes you liable to pay civil compensation. |
+| **66** | Doing any act in section 43 **dishonestly or fraudulently** is a criminal offence — punishable with up to 3 years in prison, a fine up to ₹5 lakh, or both. |
+| **66C** | **Identity theft** — fraudulently using someone else's password, electronic signature or unique identification. |
+| **66D** | **Cheating by impersonation** using a computer or phone — the law behind many phishing and fake customer care scams. |
+| **66F** | **Cyber terrorism** — attacks meant to threaten national unity, security or sovereignty, or to harm critical systems. Offence punishable with imprisonment up to life. |
+| **72A** | Disclosing someone's personal information obtained under a contract, without consent, to cause wrongful loss. |
 
-The **Digital Personal Data Protection Act, 2023 (DPDP Act)** governs how organisations handle personal data. In its language, a **data fiduciary** (the organisation) must collect personal data lawfully, usually with consent, use it only for stated purposes, protect it with reasonable security safeguards, and notify the **Data Protection Board** and affected people of a breach. Failing to take reasonable security safeguards can lead to penalties of up to ₹250 crore. The Act's rules are being brought into force in phases — always check the current status on the official MeitY website.
+The **Digital Personal Data Protection Act, 2023 (DPDP Act)** governs how organisations handle personal data. A **data fiduciary** must collect data lawfully, protect it with reasonable security safeguards, and notify the Data Protection Board and affected users in the event of a breach.
 
-**CERT-In** also issues binding directions to organisations. Its 2022 directions require many kinds of cyber incidents to be reported within 6 hours of noticing them, and require organisations to keep the logs of their ICT systems (Information and Communication Technology — servers, networks, applications) securely for 180 days, within India. For a SOC analyst that rule matters directly: the logs you investigate with must exist, and must still be there six months later.
+**CERT-In** (India's national Computer Emergency Response Team) issues binding directions requiring specified cyber incidents to be reported within 6 hours of noticing them, and requiring ICT system logs to be securely maintained for 180 days within India.
 
-> This is a plain-language summary for learning, not legal advice. Laws change; for real decisions, read the official text and ask a qualified lawyer.
+> This is a plain-language educational summary for exam preparation and foundational learning, not formal legal advice. Laws change; consult official statutory text and qualified legal counsel for professional determinations.
 
-**Level 3 — professional.** On the job you will meet these rules as paperwork: a **rules of engagement** document before a penetration test, an incident-reporting procedure that includes the CERT-In deadline, and data-protection requirements that decide which logs you may keep and for how long.
+**Level 3 — professional.** On the job you will meet these rules as formal compliance: a **Rules of Engagement (RoE)** document before a penetration test, strict data protection and breach notification procedures (e.g. GDPR 72-hour window or CERT-In 6-hour requirement), and security baselines required by standards like PCI-DSS and HIPAA.
 
 ### 4. How attackers abuse it
 
@@ -100,7 +115,7 @@ For you, as a learner:
 
 ### Interview answer
 
-> "Security skills are dual-use, so the line is authorisation. Before any testing I need written permission and a defined scope, I avoid harm, keep what I see confidential, and disclose issues responsibly. In India, unauthorised access is covered by the IT Act — section 43 for civil liability and section 66 when it's dishonest or fraudulent — and the DPDP Act 2023 requires organisations to protect personal data and report breaches. I'd also follow CERT-In's incident-reporting directions, which set very short reporting deadlines."
+> "Security skills are dual-use, so the line is explicit authorisation. Before testing, professionals establish written permission and a defined scope of engagement (RoE), do no harm, preserve confidentiality, and disclose findings responsibly under codes like the ISC2 Code of Ethics. Legally, accessing systems without authorization is a statutory crime—such as under the US CFAA or UK Computer Misuse Act, or India's IT Act sections 43 and 66. Organizations must also adhere to regulatory compliance frameworks: GDPR for personal data privacy with a 72-hour breach notification window, HIPAA for healthcare PHI, and PCI-DSS for cardholder security controls."
 
 ## Terminal Check
 
@@ -114,13 +129,13 @@ This lesson has no terminal lab. **Field exercise (not scored):** read this plat
 
 ## Debrief
 
-**What a professional does here.** Before every engagement, a penetration tester checks the signed scope document. Before reporting an incident, a SOC lead checks the reporting obligations. Knowing the rules is part of the job, not an extra.
+**What a professional does here.** Before every engagement, a penetration tester checks the signed scope document. Before reporting an incident, a SOC lead checks regulatory reporting obligations (e.g., GDPR 72-hour or CERT-In 6-hour deadlines). Knowing the rules is part of the job, not an extra.
 
 **Real incident: AIIMS New Delhi ransomware (2022).** In late November 2022, a ransomware attack took down the systems of the All India Institute of Medical Sciences in New Delhi, one of India's most important hospitals. For about two weeks, staff fell back to manual registration and paper records while systems were rebuilt, and national agencies including CERT-In were involved in the response. The attack showed what availability means in real life — patients waiting in queues — and why incident response, backups and reporting rules matter. It also shows why the people who defend such systems must be trustworthy: they hold the keys to services a whole country depends on.
 
 **Key takeaways**
 
 - Cybersecurity has many job families; the shared core prepares you for all of them.
-- Permission and scope separate professionals from criminals.
-- IT Act 2000 (sections 43, 66, 66C, 66D, 72A) and the DPDP Act 2023 set the legal boundaries in India.
+- Permission and scope separate professionals from criminals under the CFAA, Computer Misuse Act, and regional statutes like India's IT Act 2000.
+- Regulatory frameworks dictate baseline controls: PCI-DSS for payment card data, HIPAA for healthcare PHI, and GDPR / DPDP Act for personal data privacy.
 - Report vulnerabilities responsibly and incidents on time — and practise only where you're allowed.

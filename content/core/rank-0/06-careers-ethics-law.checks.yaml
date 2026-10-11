@@ -41,7 +41,7 @@ questions:
         explanation: "Correct. Without authorisation it's unauthorised access, whatever your intentions."
       - text: "Go ahead, because looking is not illegal."
         correct: false
-        explanation: "Unauthorised access is covered by the IT Act even if nothing is changed."
+        explanation: "Unauthorised access is a statutory crime under the CFAA, Computer Misuse Act, and IT Act even if nothing is altered or damaged."
       - text: "Go ahead at night when nobody is using it."
         correct: false
         explanation: "Timing doesn't create permission."
@@ -49,18 +49,18 @@ questions:
         correct: false
         explanation: "Trying to avoid being traced makes it worse, not legal."
   - id: q4
-    prompt: "A caller pretends to be from your bank and tricks someone into sharing an OTP, then empties their account. Which IT Act section most directly covers cheating by impersonation like this?"
+    prompt: "An e-commerce business processes customer credit cards and stores cardholder billing information. Which cybersecurity regulatory standard specifically mandates strict technical safeguards, including firewall isolation and cardholder data encryption?"
     objectives: ["secplus:5.4"]
     options:
-      - text: "Section 66D"
+      - text: "PCI-DSS (Payment Card Industry Data Security Standard)"
         correct: true
-        explanation: "Correct. Section 66D covers cheating by personation using a computer resource or communication device."
-      - text: "Section 43"
+        explanation: "Correct. PCI-DSS mandates strict technical, physical, and network security controls for any entity that processes, stores, or transmits payment card data."
+      - text: "HIPAA (Health Insurance Portability and Accountability Act)"
         correct: false
-        explanation: "Section 43 covers unauthorised access and damage to computer systems, with compensation."
-      - text: "Section 72A"
+        explanation: "HIPAA mandates protections for Protected Health Information (PHI) in healthcare environments, not credit card processing."
+      - text: "CFAA (Computer Fraud and Abuse Act)"
         correct: false
-        explanation: "72A is about disclosing personal information in breach of a contract."
-      - text: "The DPDP Act's consent rules"
+        explanation: "The CFAA is a criminal statute prohibiting unauthorized computer access; it does not define commercial payment card security standards."
+      - text: "The DMCA (Digital Millennium Copyright Act)"
         correct: false
-        explanation: "The DPDP Act governs how organisations handle personal data, not individual fraud by impersonation."
+        explanation: "The DMCA governs intellectual property and digital copyright enforcement, not cardholder financial transaction security."
