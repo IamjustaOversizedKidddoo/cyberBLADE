@@ -13,9 +13,17 @@ export function generateLab(lab: Lab, seed: string, registry: Record<string, Gen
   return out;
 }
 
-/** Trims (incl. newlines from copy-paste) and collapses inner runs of whitespace. */
+/** Trims whitespace, strips matching outer quotes, and collapses inner whitespace. */
 export function normalizeAnswer(s: string): string {
-  return s.trim().replace(/\s+/g, " ");
+  let trimmed = s.trim().replace(/\s+/g, " ");
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"') && trimmed.length >= 2) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'") && trimmed.length >= 2) ||
+    (trimmed.startsWith("`") && trimmed.endsWith("`") && trimmed.length >= 2)
+  ) {
+    trimmed = trimmed.slice(1, -1).trim().replace(/\s+/g, " ");
+  }
+  return trimmed;
 }
 
 export function checkObjective(lab: Lab, answers: Record<string, string>, objectiveId: string, submitted: string): boolean {
@@ -24,7 +32,15 @@ export function checkObjective(lab: Lab, answers: Record<string, string>, object
   const key = objective.check.answer_from.slice("generator.".length);
   if (!Object.hasOwn(answers, key)) throw new Error(`lab ${lab.id}: generator gave no answer for ${key} (missing)`);
   const expected = normalizeAnswer(answers[key]);
-  const given = normalizeAnswer(submitted);
+  let given = normalizeAnswer(submitted);
   if (given === "") return false;
+
+  // Tolerant flag normalization: if expected is a flag like FOO{bar} and learner included trailing dot or semicolon
+  if (expected.includes("{") && expected.endsWith("}")) {
+    if ((given.endsWith("}.") || given.endsWith("};")) && given.length === expected.length + 1) {
+      given = given.slice(0, -1);
+    }
+  }
+
   return objective.check.case_sensitive ? given === expected : given.toLowerCase() === expected.toLowerCase();
 }
