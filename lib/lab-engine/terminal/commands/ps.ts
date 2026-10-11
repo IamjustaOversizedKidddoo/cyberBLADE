@@ -30,7 +30,8 @@ export const ps: Command = {
       return ok(`    PID TTY          TIME CMD\n${rows.length ? rows.join("\n") + "\n" : ""}`);
     }
 
-    if (args.length === 1 && args[0] === "aux") {
+    const isAux = args.length === 1 && (args[0] === "aux" || args[0] === "-aux" || args[0] === "ax");
+    if (isAux) {
       const rows = allProcs.map((p) => {
         const user = p.user.length > 8 ? p.user.slice(0, 7) + "+" : p.user.padEnd(8);
         const pid = String(p.pid).padStart(7);
@@ -48,7 +49,10 @@ export const ps: Command = {
       return ok(`USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\n${rows.join("\n")}\n`);
     }
 
-    if (args.length === 1 && args[0] === "-ef") {
+    const isEF =
+      (args.length === 1 && args[0] === "-ef") ||
+      (args.length === 2 && ((args[0] === "-e" && args[1] === "-f") || (args[0] === "-f" && args[1] === "-e")));
+    if (isEF) {
       const rows = allProcs.map((p) => {
         const uid = p.user.length > 8 ? p.user.slice(0, 7) + "+" : p.user.padEnd(8);
         const pid = String(p.pid).padStart(7);
@@ -61,6 +65,18 @@ export const ps: Command = {
         return `${uid} ${pid} ${ppid} ${c} ${stime} ${tty} ${time} ${cmd}`;
       });
       return ok(`UID          PID    PPID  C STIME TTY          TIME CMD\n${rows.join("\n")}\n`);
+    }
+
+    const isEOrA = args.length === 1 && (args[0] === "-e" || args[0] === "-A");
+    if (isEOrA) {
+      const rows = allProcs.map((p) => {
+        const pid = String(p.pid).padStart(7);
+        const tty = p.tty.padEnd(8);
+        const time = formatTimeEF(p.cpuTime);
+        const cmd = commOf(p);
+        return `${pid} ${tty} ${time} ${cmd}`;
+      });
+      return ok(`    PID TTY          TIME CMD\n${rows.length ? rows.join("\n") + "\n" : ""}`);
     }
 
     return fail("ps: this lab supports ps, ps aux and ps -ef\n");
