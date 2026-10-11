@@ -46,7 +46,7 @@ describe("Supabase config", () => {
 
   describe("assertSafeStorageMode", () => {
     it("refuses to run local-first file store in production", () => {
-      process.env.NODE_ENV = "production";
+      (process.env as Record<string, string | undefined>).NODE_ENV = "production";
       delete process.env.NEXT_PUBLIC_SUPABASE_URL;
       delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -65,7 +65,7 @@ describe("Supabase config", () => {
     });
 
     it("passes when fully configured in production", () => {
-      process.env.NODE_ENV = "production";
+      (process.env as Record<string, string | undefined>).NODE_ENV = "production";
       process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-token-123";
 
@@ -73,7 +73,7 @@ describe("Supabase config", () => {
     });
 
     it("passes in test/dev when Supabase is unconfigured", () => {
-      process.env.NODE_ENV = "test";
+      (process.env as Record<string, string | undefined>).NODE_ENV = "test";
       delete process.env.NEXT_PUBLIC_SUPABASE_URL;
       delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       delete process.env.SUPABASE_SERVICE_ROLE_KEY;

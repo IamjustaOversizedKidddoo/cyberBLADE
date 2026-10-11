@@ -60,7 +60,6 @@ export async function askHandlerAction(rawInput: {
   if (!ipCheck.allowed) {
     return {
       reply: `[TRANSMISSION THROTTLED] Network request velocity limit reached. Please wait ${Math.ceil(ipCheck.retryAfterMs / 1000)}s before transmitting again.`,
-      commandRecognized: false,
       blocked: true,
       providerUsed: "heuristic",
     };

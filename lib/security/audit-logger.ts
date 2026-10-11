@@ -37,7 +37,7 @@ export async function logSecurityEvent(event: AuditEventInput): Promise<void> {
         user_id: event.userId ?? null,
         event_type: event.eventType,
         severity,
-        metadata,
+        metadata: metadata as any,
         ip_hash: ipHash,
       });
       return;

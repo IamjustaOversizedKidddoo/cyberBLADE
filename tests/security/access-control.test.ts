@@ -35,6 +35,9 @@ describe("Security Part B: Access Control & Progression Integrity (IDOR / BOLA /
         const op = opsMap.get(id);
         if (op) op.rank = rank;
       },
+      async delete(id: string) {
+        opsMap.delete(id);
+      },
     };
 
     ctx = {
@@ -43,7 +46,7 @@ describe("Security Part B: Access Control & Progression Integrity (IDOR / BOLA /
       content: {
         getLesson: async () => null as any,
         getLessons: async () => [],
-        loadChecks: async () => ({ questions: [] }),
+        loadChecks: async () => ({ lesson: "test-lesson", questions: [] }),
         loadLab: async (id: string) => ({
           id,
           title: "Test Lab",

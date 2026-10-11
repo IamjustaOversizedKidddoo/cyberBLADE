@@ -59,6 +59,7 @@ export function checkRateLimit(
   return {
     allowed: true,
     remaining: maxPerWindow - rec.timestamps.length,
+    retryAfterMs: 0,
   };
 }
 
