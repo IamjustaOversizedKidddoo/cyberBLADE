@@ -10,7 +10,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "check:content": "tsx scripts/check-content.mts"
+    "check:content": "tsx scripts/check-content.mts",
+    "eval:handler": "tsx scripts/eval-handler.mts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
