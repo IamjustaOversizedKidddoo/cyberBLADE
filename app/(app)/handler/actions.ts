@@ -53,6 +53,20 @@ export async function askHandlerAction(rawInput: {
     throw new Error(`Access denied for rank ${parsed.context.rank}`);
   }
 
+  // Authoritative server-side challenge lockout: check if operator has an active challenge session
+  const ctx = getCtx();
+  let hasActiveChallenge = false;
+  for (let r = 0; r <= 2; r++) {
+    const active = await ctx.repo.getActiveChallenge(operator.id, r);
+    if (active) {
+      hasActiveChallenge = true;
+      break;
+    }
+  }
+  if (hasActiveChallenge) {
+    parsed.context.isChallenge = true;
+  }
+
   return askHandler({
     context: parsed.context,
     history: parsed.history,

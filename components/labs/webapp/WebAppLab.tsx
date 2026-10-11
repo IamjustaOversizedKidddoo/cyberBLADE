@@ -1,16 +1,18 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import type { HttpExchange, WebAppEnv } from "@/lib/lab-engine/webapp/types";
+import { useCallback, useMemo, useState } from "react";
+import type { DispatchResult, HttpExchange, WebAppEnv } from "@/lib/lab-engine/webapp/types";
 import { dispatchHttpRequest } from "@/lib/lab-engine/webapp/simulator";
+import { dispatchWebAppRequestAction } from "@/app/(app)/labs/actions";
 import { BrowserFrame } from "./BrowserFrame";
 import { HttpInspector } from "./HttpInspector";
 
 type Props = {
   env: WebAppEnv;
+  attemptId?: string;
 };
 
-function executeRequestLoop(
+function executeRequestLoopSync(
   env: WebAppEnv,
   initialTarget: string,
   initialMethod: "GET" | "POST",
@@ -89,17 +91,116 @@ function executeRequestLoop(
   };
 }
 
-export function WebAppLab({ env }: Props) {
-  const [initial] = useState(() =>
-    executeRequestLoop(
-      env,
-      env.initialUrl,
-      "GET",
-      undefined,
-      env.initialCookies ?? {},
-      env.initialStorage ?? {},
-      env.database,
-    ),
+async function executeRequestLoop(
+  env: WebAppEnv,
+  initialTarget: string,
+  initialMethod: "GET" | "POST",
+  initialBody: string | undefined,
+  startCookies: Record<string, string>,
+  startStorage: Record<string, string>,
+  startDatabase: Record<string, Array<Record<string, unknown>>>,
+  attemptId?: string,
+) {
+  let currentTarget = initialTarget;
+  let method = initialMethod;
+  let body = initialBody;
+  let curCookies = startCookies;
+  let curStorage = startStorage;
+  let curDatabase = startDatabase;
+  let hops = 0;
+  const newExchanges: HttpExchange[] = [];
+  let finalUrl = initialTarget;
+  let finalHtml = "<p>Connecting to target application...</p>";
+
+  while (hops < 5) {
+    hops++;
+    const fullUrl = currentTarget.startsWith("http")
+      ? currentTarget
+      : `${env.baseUrl}${currentTarget.startsWith("/") ? "" : "/"}${currentTarget}`;
+
+    const req = {
+      method,
+      url: fullUrl,
+      headers: {
+        "User-Agent": "CyberBLADE-Browser/2.0 (Security Sandbox)",
+        Accept: "text/html,application/xhtml+xml,application/json,*/*",
+        ...(curCookies && Object.keys(curCookies).length > 0
+          ? { Cookie: Object.entries(curCookies).map(([k, v]) => `${k}=${v}`).join("; ") }
+          : {}),
+        ...(body ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
+      },
+      body,
+    };
+
+    let res: DispatchResult;
+    if (attemptId) {
+      try {
+        res = await dispatchWebAppRequestAction(attemptId, req, curCookies, curStorage, curDatabase);
+      } catch {
+        res = dispatchHttpRequest({
+          env,
+          request: req,
+          currentCookies: curCookies,
+          currentStorage: curStorage,
+          currentDatabase: curDatabase,
+        });
+      }
+    } else {
+      res = dispatchHttpRequest({
+        env,
+        request: req,
+        currentCookies: curCookies,
+        currentStorage: curStorage,
+        currentDatabase: curDatabase,
+      });
+    }
+
+    curCookies = res.updatedCookies;
+    curStorage = res.updatedStorage;
+    curDatabase = res.updatedDatabase;
+    newExchanges.push(res.exchange);
+
+    if (
+      (res.exchange.response.status === 301 ||
+        res.exchange.response.status === 302 ||
+        res.exchange.response.status === 303 ||
+        res.exchange.response.status === 307) &&
+      res.exchange.response.headers.Location
+    ) {
+      currentTarget = res.exchange.response.headers.Location;
+      method = "GET";
+      body = undefined;
+      continue;
+    }
+
+    finalUrl = fullUrl;
+    finalHtml = res.exchange.response.body;
+    break;
+  }
+
+  return {
+    finalUrl,
+    finalHtml,
+    updatedCookies: curCookies,
+    updatedStorage: curStorage,
+    updatedDatabase: curDatabase,
+    exchanges: newExchanges,
+  };
+}
+
+export function WebAppLab({ env, attemptId }: Props) {
+  const initial = useMemo(
+    () =>
+      executeRequestLoopSync(
+        env,
+        env.initialUrl,
+        "GET",
+        undefined,
+        env.initialCookies ?? {},
+        env.initialStorage ?? {},
+        env.database,
+      ),
+    [env],
   );
 
   const [currentUrl, setCurrentUrl] = useState(initial.finalUrl);
@@ -110,8 +211,8 @@ export function WebAppLab({ env }: Props) {
   const [exchanges, setExchanges] = useState<HttpExchange[]>(initial.exchanges);
 
   const handleNavigate = useCallback(
-    (target: string, method: "GET" | "POST" = "GET", body?: string) => {
-      const outcome = executeRequestLoop(
+    async (target: string, method: "GET" | "POST" = "GET", body?: string) => {
+      const outcome = await executeRequestLoop(
         env,
         target,
         method,
@@ -119,6 +220,7 @@ export function WebAppLab({ env }: Props) {
         cookies,
         storage,
         database,
+        attemptId,
       );
 
       setCurrentUrl(outcome.finalUrl);
@@ -128,7 +230,7 @@ export function WebAppLab({ env }: Props) {
       setDatabase(outcome.updatedDatabase);
       setExchanges((prev) => [...prev, ...outcome.exchanges]);
     },
-    [env, cookies, storage, database],
+    [env, cookies, storage, database, attemptId],
   );
 
   const handleUpdateCookie = (name: string, value: string) => {

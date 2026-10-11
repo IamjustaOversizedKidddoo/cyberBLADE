@@ -67,7 +67,7 @@ export function LabWorkspace({
       ) : env.kind === "packet" ? (
         <PacketLab capture={env.capture} />
       ) : env.kind === "webapp" ? (
-        <WebAppLab env={env.app} />
+        <WebAppLab env={env.app} attemptId={attemptId} />
       ) : (
         <SiemLab env={env.siem} />
       )}
