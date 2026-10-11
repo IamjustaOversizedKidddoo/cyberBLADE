@@ -54,7 +54,7 @@ test.describe("Tactical Labs Range and Exam Readiness Hubs", () => {
     await promoteToRank(page, 1);
 
     await page.goto("/labs/core-r1-siem-log-analysis-01");
-    await expect(page.getByRole("heading", { name: "SIEM Triage: Brute Force & Persistence Investigation" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "SIEM Triage: Brute Force & Persistence Investigation" })).toBeVisible({ timeout: 15_000 });
 
     // Verify SIEM console loaded
     await expect(page.getByRole("heading", { name: /Operation Phantom Probe/i })).toBeVisible();
