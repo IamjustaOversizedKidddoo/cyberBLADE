@@ -67,10 +67,25 @@ export async function tryCompleteLesson(ctx: Ctx, userId: string, lessonId: stri
   return true;
 }
 
+/** Strips solution flags and secrets from webapp environment configurations before shipping to client. */
+export function sanitizeEnvForClient(env: LabEnv): LabEnv {
+  if (env.kind !== "webapp") return env;
+  const safeConfig = { ...env.app.config };
+  delete safeConfig.flags;
+  delete safeConfig.adminToken;
+  return {
+    kind: "webapp",
+    app: {
+      ...env.app,
+      config: safeConfig,
+    },
+  };
+}
+
 export function toSession(lab: LoadedLab, attempt: LabAttempt, env: LabEnv): LabSession {
   return {
     attemptId: attempt.id,
-    env,
+    env: sanitizeEnvForClient(env),
     objectives: lab.objectives.map((o) => ({ id: o.id, prompt: o.prompt, solved: attempt.objectivesSolved.includes(o.id) })),
     completed: attempt.completedAt !== null,
   };
@@ -107,6 +122,7 @@ export async function checkAttemptAnswer(
   const found = await ctx.repo.getAttempt(attemptId);
   if (!found || found.userId !== userId || found.mode !== mode) throw new Error("not found");
   const lab = await ctx.content.loadLab(found.labId);
+  await requireRankOpen(ctx, userId, lab.rank);
   const { answers } = generateLab(lab, found.seed, ctx.content.generators);
   const correct = checkObjective(lab, answers, objectiveId, answer);
   const attempt = correct ? await ctx.repo.addSolvedObjective(attemptId, objectiveId) : found;

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ChallengeTimer } from "@/components/challenge/ChallengeTimer";
 import { HandlerDrawer } from "@/components/handler/HandlerDrawer";
 import { LabWorkspace } from "@/components/labs/LabWorkspace";
@@ -13,6 +13,7 @@ import { SystemLabel } from "@/components/art/SystemLabel";
 import { TerminalPanel } from "@/components/theme/TerminalPanel";
 import { renderMdx } from "@/lib/content/mdx";
 import { requireOperator } from "@/lib/identity/session";
+import { canAccessRank } from "@/lib/progress/access";
 import {
   findChallengeLab,
   getChallengeSession,
@@ -42,6 +43,7 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
   const rank = Number(raw);
 
   const operator = await requireOperator();
+  if (!canAccessRank(operator.rank, rank)) redirect(`/learn/core?locked=${rank}`);
   const ctx = getCtx();
   let lab;
   try {
@@ -189,6 +191,7 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
             objectives={session.objectives}
             onSubmit={submitChallengeObjectiveAction.bind(null, session.attemptId)}
             doneMessage={`Rank ${rank + 1} · ${next} unlocked`}
+            attemptId={session.attemptId}
           />
 
           {/* Abandon */}

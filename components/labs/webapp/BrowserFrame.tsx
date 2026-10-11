@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
   currentUrl: string;
@@ -9,6 +9,7 @@ type Props = {
 };
 
 export function BrowserFrame({ currentUrl, htmlContent, onNavigate }: Props) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const [prevUrl, setPrevUrl] = useState(currentUrl);
   const [addressInput, setAddressInput] = useState(currentUrl);
   if (prevUrl !== currentUrl) {
@@ -20,8 +21,15 @@ export function BrowserFrame({ currentUrl, htmlContent, onNavigate }: Props) {
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
       if (!event.data || typeof event.data !== "object") return;
+      // Confirm the message originated strictly from our sandboxed iframe's window
+      if (iframeRef.current && event.source !== iframeRef.current.contentWindow) return;
       if (event.data.type === "CYBER_NAVIGATE") {
-        onNavigate(event.data.url, event.data.method || "GET", event.data.body);
+        const url = event.data.url;
+        if (typeof url !== "string") return;
+        const normalized = url.trim().toLowerCase();
+        // Disallow dangerous URI schemes
+        if (normalized.startsWith("javascript:") || normalized.startsWith("data:") || normalized.startsWith("vbscript:")) return;
+        onNavigate(url, event.data.method || "GET", event.data.body);
       }
     }
     window.addEventListener("message", handleMessage);
@@ -112,6 +120,7 @@ export function BrowserFrame({ currentUrl, htmlContent, onNavigate }: Props) {
       {/* Sandboxed Browser Viewport */}
       <div className="flex-1 relative bg-void">
         <iframe
+          ref={iframeRef}
           srcDoc={injectedHtml}
           title="Sandboxed WebApp Target"
           sandbox="allow-scripts allow-forms"
