@@ -37,4 +37,10 @@ export class FileOperatorStore implements OperatorStore {
       if (op) op.rank = rank;
     });
   }
+
+  async delete(id: string): Promise<void> {
+    await this.store.update((d) => {
+      delete d.operators[id];
+    });
+  }
 }
