@@ -106,7 +106,7 @@ export async function promoteToRank(page: Page, targetRank: number): Promise<voi
   ];
 
   let confirmed = false;
-  for (let attempt = 0; attempt < 40; attempt++) {
+  for (let attempt = 0; attempt < 100; attempt++) {
     for (const opFile of candidates) {
       try {
         const updated = await withFileLock(opFile, async () => {
