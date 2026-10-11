@@ -42,7 +42,13 @@ export function formatMode(node: Pick<Node, "kind" | "mode">): string {
 }
 
 function split(path: string): string[] {
-  return path.split("/").filter(Boolean);
+  const parts = path.split("/").filter(Boolean);
+  for (const part of parts) {
+    if (part === "__proto__" || part === "constructor" || part === "prototype") {
+      throw new VfsError("EACCES", path);
+    }
+  }
+  return parts;
 }
 
 export class Vfs {

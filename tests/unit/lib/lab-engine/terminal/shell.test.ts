@@ -100,3 +100,46 @@ describe("stderr redirects and /dev/null", () => {
     expect(sh.exec("submit 1 x 2>/dev/null").code).toBe(2);
   });
 });
+
+describe("command chaining and safety budgets", () => {
+  test("sequential execution with semicolon", () => {
+    const s = sh();
+    expect(s.exec("echo hello; echo world")).toEqual({ stdout: "hello\nworld\n", stderr: "", code: 0 });
+  });
+
+  test("conditional execution with && halts on failure", () => {
+    const s = sh();
+    expect(s.exec("echo first && echo second")).toEqual({ stdout: "first\nsecond\n", stderr: "", code: 0 });
+    const failed = s.exec("cat nofile && echo unreachable");
+    expect(failed.stderr).toContain("No such file or directory");
+    expect(failed.stdout).toBe("");
+    expect(failed.code).not.toBe(0);
+  });
+
+  test("conditional execution with || runs fallback on failure", () => {
+    const s = sh();
+    expect(s.exec("echo first || echo unreachable")).toEqual({ stdout: "first\n", stderr: "", code: 0 });
+    const fallback = s.exec("cat nofile || echo fallback");
+    expect(fallback.stderr).toContain("No such file or directory");
+    expect(fallback.stdout).toBe("fallback\n");
+    expect(fallback.code).toBe(0);
+  });
+
+  test("rejects excessively long lines", () => {
+    const s = sh();
+    const longLine = "echo " + "a".repeat(5000);
+    expect(s.exec(longLine)).toEqual({
+      stdout: "",
+      stderr: "bash: line too long (maximum 4096 characters)\n",
+      code: 2,
+    });
+  });
+
+  test("prevents prototype pollution via VFS", () => {
+    const s = sh();
+    const res = s.exec("touch __proto__");
+    expect(res.stderr).toContain("Permission denied");
+    expect(res.code).not.toBe(0);
+  });
+});
+

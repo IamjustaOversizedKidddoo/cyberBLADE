@@ -1,7 +1,7 @@
 import { COMMANDS, type CmdResult } from "./commands";
 import { errorText } from "./commands/util";
 import { readAccounts } from "./identity";
-import { expandGlobs, parseLine } from "./parser";
+import { expandGlobs, parseLine, type Pipeline } from "./parser";
 import { ProcessTable } from "./processes";
 import { procTree } from "./procfs";
 import type { World } from "./types";
@@ -49,117 +49,160 @@ export function createShell(world: World): Shell {
   };
 
   function exec(line: string): CmdResult {
+    if (line.length > 4096) {
+      return { stdout: "", stderr: "bash: line too long (maximum 4096 characters)\n", code: 2 };
+    }
     if (line.trim()) history.push(line.trim());
     const parsed = parseLine(line, env);
     if ("error" in parsed) return { stdout: "", stderr: `bash: ${parsed.error}\n`, code: 2 };
 
-    let stdin = "";
-    let stderr = "";
-    let last: CmdResult = { stdout: "", stderr: "", code: 0 };
-    parsed.commands.forEach((command, index) => {
-      const argv = expandGlobs(command.argv, cwd, vfs, home, { user, literal: command.literal });
-      const redirects = command.redirects ?? [];
+    function runPipeline(pipeline: Pipeline): CmdResult {
+      let stdin = "";
+      let stderr = "";
+      let last: CmdResult = { stdout: "", stderr: "", code: 0 };
+      pipeline.commands.forEach((command, index) => {
+        const argv = expandGlobs(command.argv, cwd, vfs, home, { user, literal: command.literal });
+        const redirects = command.redirects ?? [];
 
-      // Like bash: work out where stdout and stderr go, in the order written, and open (create or
-      // truncate) every target file before the command runs.
-      let out: Sink = { kind: "default" };
-      let err: Sink = { kind: "default" };
-      for (const r of redirects) {
-        if ("toStdout" in r) {
-          err = out;
-          continue;
-        }
-        const path = resolvePath(cwd, r.path, home);
-        const sink: Sink = path === "/dev/null" ? { kind: "null" } : { kind: "file", path, shown: r.path };
-        if (sink.kind === "file") {
-          try {
-            vfs.write(path, "", user, r.op === ">>");
-          } catch (e) {
-            last = { stdout: "", stderr: `bash: ${r.path}: ${errorText(e)}\n`, code: 1 };
-            stderr += last.stderr;
-            stdin = "";
-            return;
+        // Like bash: work out where stdout and stderr go, in the order written, and open (create or
+        // truncate) every target file before the command runs.
+        let out: Sink = { kind: "default" };
+        let err: Sink = { kind: "default" };
+        for (const r of redirects) {
+          if ("toStdout" in r) {
+            err = out;
+            continue;
           }
-        }
-        if (r.fd === 1) out = sink;
-        else err = sink;
-      }
-
-      // Own keys only: "toString" or "constructor" must not resolve to Object.prototype members.
-      const isTty = index === parsed.commands.length - 1 && out.kind === "default";
-      const alone = parsed.commands.length === 1 && redirects.length === 0;
-
-      const dispatch = (targetUser: string, targetArgv: string[], targetStdin = stdin): CmdResult => {
-        const cmdName = targetArgv[0];
-        let cmdImpl = Object.hasOwn(COMMANDS, cmdName) ? COMMANDS[cmdName] : undefined;
-        if (!cmdImpl) {
-          const lower = cmdName.toLowerCase();
-          for (const [k, v] of Object.entries(COMMANDS)) {
-            if (k.toLowerCase() === lower) {
-              cmdImpl = v;
-              break;
+          const path = resolvePath(cwd, r.path, home);
+          const sink: Sink = path === "/dev/null" ? { kind: "null" } : { kind: "file", path, shown: r.path };
+          if (sink.kind === "file") {
+            try {
+              vfs.write(path, "", user, r.op === ">>");
+            } catch (e) {
+              last = { stdout: "", stderr: `bash: ${r.path}: ${errorText(e)}\n`, code: 1 };
+              stderr += last.stderr;
+              stdin = "";
+              return;
             }
           }
+          if (r.fd === 1) out = sink;
+          else err = sink;
         }
-        if (!cmdImpl) return { stdout: "", stderr: `${targetArgv[0]}: command not found\n`, code: 127 };
-        const cmdEnv = targetUser === user ? env : { ...env, USER: targetUser, HOME: targetUser === "root" ? "/root" : home };
-        return cmdImpl.run({
-          argv: targetArgv,
-          stdin: targetStdin,
-          vfs,
-          cwd,
-          user: targetUser,
-          home: targetUser === "root" ? "/root" : home,
-          hostname,
-          env: cmdEnv,
-          history,
-          isTty,
-          alone,
-          network: world.network,
-          umask: vfs.umask,
-          setUmask: (n) => (vfs.umask = n),
-          procs,
-          self: procs.spawnCommand(targetArgv, targetUser),
-          services: world.services,
-          registry: world.registry,
-          eventLogs: world.eventLogs,
-          scheduledTasks: world.scheduledTasks,
-          runAs: (u, a) => dispatch(u, a, targetStdin),
-          setCwd,
-        });
-      };
 
-      const ran = dispatch(user, argv, stdin);
+        // Own keys only: "toString" or "constructor" must not resolve to Object.prototype members.
+        const isTty = index === pipeline.commands.length - 1 && out.kind === "default";
+        const alone = pipeline.commands.length === 1 && redirects.length === 0;
 
-      // Errors are written first: tools report a bad operand before (or instead of) its output.
-      let toPipe = "";
-      let toScreen = "";
-      const send = (text: string, sink: Sink): string | null => {
-        if (!text || sink.kind === "null") return null;
-        if (sink.kind === "default") return text;
-        try {
-          vfs.write(sink.path, text, user, true);
-        } catch (e) {
-          toScreen += `bash: ${sink.shown}: ${errorText(e)}\n`;
+        const dispatch = (targetUser: string, targetArgv: string[], targetStdin = stdin): CmdResult => {
+          const cmdName = targetArgv[0];
+          let cmdImpl = Object.hasOwn(COMMANDS, cmdName) ? COMMANDS[cmdName] : undefined;
+          if (!cmdImpl) {
+            const lower = cmdName.toLowerCase();
+            for (const [k, v] of Object.entries(COMMANDS)) {
+              if (k.toLowerCase() === lower) {
+                cmdImpl = v;
+                break;
+              }
+            }
+          }
+          if (!cmdImpl) return { stdout: "", stderr: `${targetArgv[0]}: command not found\n`, code: 127 };
+          const cmdEnv = targetUser === user ? env : { ...env, USER: targetUser, HOME: targetUser === "root" ? "/root" : home };
+          return cmdImpl.run({
+            argv: targetArgv,
+            stdin: targetStdin,
+            vfs,
+            cwd,
+            user: targetUser,
+            home: targetUser === "root" ? "/root" : home,
+            hostname,
+            env: cmdEnv,
+            history,
+            isTty,
+            alone,
+            network: world.network,
+            umask: vfs.umask,
+            setUmask: (n) => (vfs.umask = n),
+            procs,
+            self: procs.spawnCommand(targetArgv, targetUser),
+            services: world.services,
+            registry: world.registry,
+            eventLogs: world.eventLogs,
+            scheduledTasks: world.scheduledTasks,
+            runAs: (u, a) => dispatch(u, a, targetStdin),
+            setCwd,
+          });
+        };
+
+        const ran = dispatch(user, argv, stdin);
+
+        // Errors are written first: tools report a bad operand before (or instead of) its output.
+        let toPipe = "";
+        let toScreen = "";
+        const send = (text: string, sink: Sink): string | null => {
+          if (!text || sink.kind === "null") return null;
+          if (sink.kind === "default") return text;
+          try {
+            vfs.write(sink.path, text, user, true);
+          } catch (e) {
+            toScreen += `bash: ${sink.shown}: ${errorText(e)}\n`;
+          }
+          return null;
+        };
+        const errText = send(ran.stderr, err);
+        if (errText !== null) {
+          // Default stderr goes to the screen — unless 2>&1 pointed it at a default stdout (the pipe).
+          if (err === out) toPipe += errText;
+          else toScreen += errText;
         }
-        return null;
-      };
-      const errText = send(ran.stderr, err);
-      if (errText !== null) {
-        // Default stderr goes to the screen — unless 2>&1 pointed it at a default stdout (the pipe).
-        if (err === out) toPipe += errText;
-        else toScreen += errText;
+        const outText = send(ran.stdout, out);
+        if (outText !== null) toPipe += outText;
+
+        last = { ...ran, stdout: toPipe, stderr: toScreen };
+        stderr += last.stderr;
+        stdin = last.stdout;
+      });
+
+      const res: CmdResult = { stdout: last.stdout, stderr, code: last.code };
+      if (last.clear) res.clear = true;
+      if (last.submit) res.submit = last.submit;
+      return res;
+    }
+
+    let curPipeline: Pipeline | undefined = parsed;
+    let accumulatedStdout = "";
+    let accumulatedStderr = "";
+    let lastResult: CmdResult = { stdout: "", stderr: "", code: 0 };
+    let chainSteps = 0;
+    const MAX_CHAIN_STEPS = 64;
+
+    while (curPipeline) {
+      chainSteps++;
+      if (chainSteps > MAX_CHAIN_STEPS) {
+        accumulatedStderr += "bash: maximum command chain limit reached\n";
+        lastResult = { stdout: "", stderr: accumulatedStderr, code: 2 };
+        break;
       }
-      const outText = send(ran.stdout, out);
-      if (outText !== null) toPipe += outText;
 
-      last = { ...ran, stdout: toPipe, stderr: toScreen };
-      stderr += last.stderr;
-      stdin = last.stdout;
-    });
-    const result: CmdResult = { stdout: last.stdout, stderr, code: last.code };
-    if (last.clear) result.clear = true;
-    if (last.submit) result.submit = last.submit;
+      const res = runPipeline(curPipeline);
+      accumulatedStdout += res.stdout;
+      accumulatedStderr += res.stderr;
+      lastResult = res;
+
+      if (!curPipeline.chain) break;
+      const op = curPipeline.chain.op;
+      if (op === "&&" && res.code !== 0) break;
+      if (op === "||" && res.code === 0) break;
+      curPipeline = curPipeline.chain.pipeline;
+    }
+
+    const MAX_OUTPUT = 100_000;
+    if (accumulatedStdout.length > MAX_OUTPUT) {
+      accumulatedStdout = accumulatedStdout.slice(0, MAX_OUTPUT) + "\n[output truncated: exceeded maximum buffer size of 100KB]\n";
+    }
+
+    const result: CmdResult = { stdout: accumulatedStdout, stderr: accumulatedStderr, code: lastResult.code };
+    if (lastResult.clear) result.clear = true;
+    if (lastResult.submit) result.submit = lastResult.submit;
     return result;
   }
 

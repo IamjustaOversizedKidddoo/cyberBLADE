@@ -9,13 +9,17 @@ export type ParsedCommand = {
   /** Indexes of args whose wildcards were quoted, so they must not be glob-expanded. */
   literal?: number[];
 };
-export type Pipeline = { commands: ParsedCommand[] };
+export type ChainOp = ";" | "&&" | "||";
+export type Pipeline = {
+  commands: ParsedCommand[];
+  chain?: { op: ChainOp; pipeline: Pipeline };
+};
 export type ParseError = { error: string };
 
-const UNSUPPORTED = "syntax error: ';' and '&&' are not supported in this lab shell";
-
 type RedirectOp = ">" | ">>" | "2>" | "2>>" | "2>&1";
-type Token = { kind: "word"; value: string; quotedWildcard: boolean } | { kind: "op"; value: "|" | RedirectOp };
+type Token =
+  | { kind: "word"; value: string; quotedWildcard: boolean }
+  | { kind: "op"; value: "|" | RedirectOp | ChainOp };
 
 function isNameChar(c: string | undefined, first: boolean): boolean {
   return !!c && (first ? /[A-Za-z_]/.test(c) : /[A-Za-z0-9_]/.test(c));
@@ -79,6 +83,9 @@ function tokenize(line: string, env: Record<string, string>): Token[] | ParseErr
       if (c === ">" && line[i + 1] === ">") {
         tokens.push({ kind: "op", value: ">>" });
         i += 2;
+      } else if (c === "|" && line[i + 1] === "|") {
+        tokens.push({ kind: "op", value: "||" });
+        i += 2;
       } else {
         tokens.push({ kind: "op", value: c });
         i++;
@@ -94,7 +101,14 @@ function tokenize(line: string, env: Record<string, string>): Token[] | ParseErr
         inWord = true;
         i++;
       } else {
-        return { error: UNSUPPORTED };
+        flush();
+        if (c === "&") {
+          tokens.push({ kind: "op", value: "&&" });
+          i += 2;
+        } else {
+          tokens.push({ kind: "op", value: ";" });
+          i++;
+        }
       }
     } else if (c === "\\") {
       inWord = true;
@@ -168,13 +182,10 @@ function tokenize(line: string, env: Record<string, string>): Token[] | ParseErr
   return tokens;
 }
 
-export function parseLine(line: string, env: Record<string, string>): Pipeline | ParseError {
-  const tokens = tokenize(line, env);
-  if ("error" in tokens) return tokens;
-  if (tokens.length === 0) return { commands: [] };
-
+function parsePipelineTokens(tokens: Token[]): Pipeline | ParseError {
   const commands: ParsedCommand[] = [];
   let current: ParsedCommand = { argv: [] };
+
   for (let i = 0; i < tokens.length; i++) {
     const t = tokens[i];
     if (t.kind === "word") {
@@ -184,6 +195,22 @@ export function parseLine(line: string, env: Record<string, string>): Pipeline |
       if (current.argv.length === 0) return { error: "syntax error near unexpected token `|'" };
       commands.push(current);
       current = { argv: [] };
+    } else if (t.value === ";" || t.value === "&&" || t.value === "||") {
+      if (current.argv.length === 0) {
+        return { error: `syntax error near unexpected token \`${t.value}'` };
+      }
+      commands.push(current);
+      const remaining = tokens.slice(i + 1);
+      if (remaining.length === 0) {
+        if (t.value === ";") return { commands };
+        return { error: "syntax error near unexpected token `newline'" };
+      }
+      if (t.value === ";" && remaining.every((tok) => tok.kind === "op" && tok.value === ";")) {
+        return { commands };
+      }
+      const next = parsePipelineTokens(remaining);
+      if ("error" in next) return next;
+      return { commands, chain: { op: t.value, pipeline: next } };
     } else if (t.value === "2>&1") {
       (current.redirects ??= []).push({ fd: 2, toStdout: true });
     } else {
@@ -197,9 +224,17 @@ export function parseLine(line: string, env: Record<string, string>): Pipeline |
       i++;
     }
   }
-  if (current.argv.length === 0) return { error: "syntax error near unexpected token `|'" };
-  commands.push(current);
+
+  if (current.argv.length === 0 && commands.length > 0) return { error: "syntax error near unexpected token `|'" };
+  if (current.argv.length > 0) commands.push(current);
   return { commands };
+}
+
+export function parseLine(line: string, env: Record<string, string>): Pipeline | ParseError {
+  const tokens = tokenize(line, env);
+  if ("error" in tokens) return tokens;
+  if (tokens.length === 0) return { commands: [] };
+  return parsePipelineTokens(tokens);
 }
 
 function globToRegExp(pattern: string): RegExp {
