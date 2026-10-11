@@ -19,33 +19,85 @@ const SUGGESTED_CHIPS = [
   { label: "Hint", text: "hint" },
 ];
 
+function getInitialDefaultMessage(isChallenge: boolean): HandlerMessage {
+  return {
+    role: "assistant",
+    content: isChallenge
+      ? "[COMM LINK SEVERED] Handler assistance is offline during active rank challenges. Rely on your own operational methodology."
+      : `Operational Comms established. I am The Handler.\nAsk me anything regarding this module, or use quick commands: \`what is X?\`, \`why?\`, \`simplify\`, \`diagram\`, or \`hint\`.`,
+    timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+  };
+}
+
+function loadSavedMessages(storageKey: string, isChallenge: boolean): HandlerMessage[] {
+  if (typeof window !== "undefined") {
+    try {
+      const saved = window.sessionStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved) as HandlerMessage[];
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {
+      // Ignore sessionStorage read errors
+    }
+  }
+  return [getInitialDefaultMessage(isChallenge)];
+}
+
 export function HandlerDrawer({ context, operatorHandle = "OPERATOR", defaultOpen = false }: Props) {
   const [open, setOpen] = useState(defaultOpen);
-  const [messages, setMessages] = useState<HandlerMessage[]>(() => [
-    {
-      role: "assistant",
-      content: context.isChallenge
-        ? "[COMM LINK SEVERED] Handler assistance is offline during active rank challenges. Rely on your own operational methodology."
-        : `Operational Comms established. I am The Handler.\nAsk me anything regarding this module, or use quick commands: \`what is X?\`, \`why?\`, \`simplify\`, \`diagram\`, or \`hint\`.`,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    },
-  ]);
+  const scopeId = context.kind === "lesson" ? context.lessonId ?? "lesson" : context.labId ?? "lab";
+  const storageKey = `cb_handler_thread_${scopeId}`;
+
+  const [messages, setMessages] = useState<HandlerMessage[]>(() =>
+    loadSavedMessages(storageKey, Boolean(context.isChallenge)),
+  );
+  const [prevScopeId, setPrevScopeId] = useState(scopeId);
   const [input, setInput] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
+  const [statusMode, setStatusMode] = useState<"online" | "offline" | "quota_reached">(
+    context.isChallenge ? "offline" : "online",
+  );
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  // Sync conversation when switching between different lessons or labs
+  if (scopeId !== prevScopeId) {
+    setPrevScopeId(scopeId);
+    setMessages(loadSavedMessages(storageKey, Boolean(context.isChallenge)));
+  }
+
+  // Save conversation updates to sessionStorage
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.sessionStorage.setItem(storageKey, JSON.stringify(messages));
+    } catch {
+      // Ignore quota errors
+    }
+  }, [messages, storageKey]);
 
   // Auto-scroll message list
   useEffect(() => {
     if (open && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, open]);
+  }, [messages, open, isPending]);
 
-  // Focus input when opened
+  // Keyboard accessibility & focus management
   useEffect(() => {
     if (open) {
+      previousActiveElement.current = document.activeElement as HTMLElement | null;
       setTimeout(() => inputRef.current?.focus(), 150);
+    } else if (previousActiveElement.current) {
+      // Return focus to trigger button or previous element when closed
+      triggerRef.current?.focus();
     }
   }, [open]);
 
@@ -73,14 +125,23 @@ export function HandlerDrawer({ context, operatorHandle = "OPERATOR", defaultOpe
 
       setMessages((prev) => [...prev, userMsg]);
       setInput("");
+      setLastFailedMessage(null);
 
       startTransition(async () => {
         try {
           const res = await askHandlerAction({
             context,
-            history: messages.slice(-10),
+            history: messages.slice(-8),
             message: trimmed,
           });
+
+          if (res.quotaExceeded) {
+            setStatusMode("quota_reached");
+          } else if (res.isOfflineFallback || res.providerUsed === "heuristic") {
+            setStatusMode("offline");
+          } else {
+            setStatusMode("online");
+          }
 
           setMessages((prev) => [
             ...prev,
@@ -91,11 +152,13 @@ export function HandlerDrawer({ context, operatorHandle = "OPERATOR", defaultOpe
             },
           ]);
         } catch {
+          setLastFailedMessage(trimmed);
           setMessages((prev) => [
             ...prev,
             {
               role: "assistant",
-              content: "[TRANSMISSION ERROR] Connection to Handler subroutines timed out. Try transmitting again.",
+              content:
+                "[TRANSMISSION ERROR] Connection to Handler subroutines timed out or was throttled. You can retry transmission below.",
               timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             },
           ]);
@@ -109,6 +172,7 @@ export function HandlerDrawer({ context, operatorHandle = "OPERATOR", defaultOpe
     <>
       {/* Floating Tactical Trigger Button */}
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
@@ -151,7 +215,13 @@ export function HandlerDrawer({ context, operatorHandle = "OPERATOR", defaultOpe
             />
             <span className="text-cyan">THE HANDLER</span>
             <span className="text-muted text-xs font-ui">
-              {context.isChallenge ? "[OFFLINE // CHALLENGE]" : "[ONLINE]"}
+              {context.isChallenge
+                ? "[OFFLINE // CHALLENGE]"
+                : statusMode === "quota_reached"
+                  ? "[DAILY QUOTA REACHED]"
+                  : statusMode === "offline"
+                    ? "[OFFLINE // HEURISTIC]"
+                    : "[ONLINE]"}
             </span>
           </div>
           <button
@@ -189,8 +259,13 @@ export function HandlerDrawer({ context, operatorHandle = "OPERATOR", defaultOpe
           </div>
         )}
 
-        {/* Message Thread */}
-        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4 font-mono text-sm">
+        {/* Message Thread with Accessibility region */}
+        <div
+          ref={scrollRef}
+          aria-live="polite"
+          aria-atomic="false"
+          className="flex-1 space-y-4 overflow-y-auto p-4 font-mono text-sm"
+        >
           {messages.map((m, idx) => (
             <div
               key={idx}
@@ -212,7 +287,7 @@ export function HandlerDrawer({ context, operatorHandle = "OPERATOR", defaultOpe
                 )}
               </div>
               <div
-                className={`inline-block max-w-[92%] rounded-none border p-3 text-left whitespace-pre-wrap leading-relaxed ${
+                className={`inline-block max-w-[92%] rounded-none border p-3 text-left whitespace-pre-wrap break-words leading-relaxed ${
                   m.role === "user"
                     ? "border-purple/50 bg-purple/10 text-ink"
                     : "border-line bg-void text-ink"
@@ -222,6 +297,20 @@ export function HandlerDrawer({ context, operatorHandle = "OPERATOR", defaultOpe
               </div>
             </div>
           ))}
+
+          {/* Retry Action Pill if last transmission failed */}
+          {lastFailedMessage && !isPending && (
+            <div className="p-2 border border-pink/40 bg-pink/10 flex items-center justify-between text-xs font-ui text-pink">
+              <span>Transmission incomplete</span>
+              <button
+                type="button"
+                onClick={() => sendMessage(lastFailedMessage)}
+                className="border border-pink bg-pink/20 px-2.5 py-0.5 tracking-wider hover:bg-pink hover:text-void"
+              >
+                [RETRY TRANSMISSION]
+              </button>
+            </div>
+          )}
 
           {isPending && (
             <div className="space-y-1 text-left">
@@ -241,10 +330,16 @@ export function HandlerDrawer({ context, operatorHandle = "OPERATOR", defaultOpe
           }}
           className="border-t border-line bg-console-deep p-3"
         >
+          {input.length > 1500 && (
+            <div className="text-right text-[10px] font-ui text-muted mb-1">
+              {input.length}/2000 characters
+            </div>
+          )}
           <div className="flex gap-2">
             <input
               ref={inputRef}
               type="text"
+              maxLength={2000}
               value={input}
               disabled={isPending || context.isChallenge}
               onChange={(e) => setInput(e.target.value)}
