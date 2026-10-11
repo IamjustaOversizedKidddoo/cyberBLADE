@@ -27,6 +27,7 @@ export async function requireOperator(): Promise<Operator> {
 export async function setOperatorCookie(id: string): Promise<void> {
   (await cookies()).set(OPERATOR_COOKIE, id, {
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: ONE_YEAR_SECONDS,

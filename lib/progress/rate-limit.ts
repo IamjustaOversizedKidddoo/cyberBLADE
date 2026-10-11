@@ -13,16 +13,28 @@ const records = new Map<string, SubmissionRecord>();
 const WINDOW_MS = 10_000;
 const MAX_PER_WINDOW = 10;
 
+const MAX_ENTRIES = 10_000;
+
 /**
- * Checks whether the given key has exceeded the submission rate limit.
+ * Checks whether the given key has exceeded the rate limit.
  * Returns true if allowed, false if throttled.
  */
-export function checkSubmissionRateLimit(
+export function checkRateLimit(
   key: string,
   maxPerWindow = MAX_PER_WINDOW,
   windowMs = WINDOW_MS,
   now = Date.now(),
 ): { allowed: boolean; remaining: number; retryAfterMs: number } {
+  // Prevent unbounded memory growth under adversarial key generation
+  if (records.size > MAX_ENTRIES) {
+    const oldestAllowed = now - 60_000;
+    for (const [k, v] of records.entries()) {
+      if (!v.timestamps.some((t) => t > oldestAllowed)) {
+        records.delete(k);
+      }
+    }
+  }
+
   let rec = records.get(key);
   if (!rec) {
     rec = { timestamps: [] };
@@ -47,9 +59,10 @@ export function checkSubmissionRateLimit(
   return {
     allowed: true,
     remaining: maxPerWindow - rec.timestamps.length,
-    retryAfterMs: 0,
   };
 }
+
+export const checkSubmissionRateLimit = checkRateLimit;
 
 /** Resets rate limits (primarily for testing). */
 export function resetSubmissionRateLimits(): void {

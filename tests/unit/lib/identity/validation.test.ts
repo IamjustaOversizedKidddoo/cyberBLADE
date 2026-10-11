@@ -1,4 +1,4 @@
-import { HANDLE_ERROR, handleSchema, parseStartForm } from "@/lib/identity/validation";
+import { HANDLE_ERROR, RESERVED_HANDLE_ERROR, handleSchema, parseStartForm } from "@/lib/identity/validation";
 
 test("trims and lowercases the handle", () => {
   expect(handleSchema.parse("  Ghost_01 ")).toBe("ghost_01");
@@ -8,6 +8,12 @@ test.each(["<script>", "ab", "a".repeat(21), "has space", "dash-name", ""])("rej
   const result = handleSchema.safeParse(input);
   expect(result.success).toBe(false);
   expect(result.error?.issues[0]?.message).toBe(HANDLE_ERROR);
+});
+
+test.each(["admin", "root", "system", "cyberblade", "handler", "staff", "moderator", "support"])("rejects reserved handle %s", (handle) => {
+  const result = handleSchema.safeParse(handle);
+  expect(result.success).toBe(false);
+  expect(result.error?.issues[0]?.message).toBe(RESERVED_HANDLE_ERROR);
 });
 
 test("accepts 3 and 20 character handles", () => {
