@@ -29,7 +29,7 @@ describe("generator property tests across all 20 generators", () => {
           const answerKeys = Object.keys(out.answers);
           expect(answerKeys.length).toBeGreaterThan(0);
 
-          for (const [k, val] of Object.entries(out.answers)) {
+          for (const [, val] of Object.entries(out.answers)) {
             expect(typeof val).toBe("string");
             expect(val.trim().length).toBeGreaterThan(0);
 
