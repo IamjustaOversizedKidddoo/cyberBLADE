@@ -1,11 +1,13 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 import { canAccessRank } from "@/lib/progress/access";
 import { generateLab } from "@/lib/lab-engine/checks";
 import { askHandler, requestProgressiveHint } from "@/lib/handler/service";
+import { checkRateLimit } from "@/lib/progress/rate-limit";
 import type { HandlerContext, HandlerMessage, HandlerResponse } from "@/lib/handler/types";
 
 const messageSchema = z.object({
@@ -43,7 +45,6 @@ const askHandlerSchema = z.object({
   history: z.array(messageSchema).max(20).default([]),
   message: z.string().min(1).max(2000),
 });
-
 export async function askHandlerAction(rawInput: {
   context: HandlerContext;
   history?: HandlerMessage[];
@@ -51,6 +52,19 @@ export async function askHandlerAction(rawInput: {
 }): Promise<HandlerResponse> {
   const parsed = askHandlerSchema.parse(rawInput);
   const operator = await requireOperator();
+
+  // Enforce IP-level rate limiting across all identities (30 requests/min per IP)
+  const headersList = await headers();
+  const forwardedFor = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+  const ipCheck = checkRateLimit(`handler:ip:${forwardedFor}`, 30, 60_000);
+  if (!ipCheck.allowed) {
+    return {
+      reply: `[TRANSMISSION THROTTLED] Network request velocity limit reached. Please wait ${Math.ceil(ipCheck.retryAfterMs / 1000)}s before transmitting again.`,
+      commandRecognized: false,
+      blocked: true,
+      providerUsed: "heuristic",
+    };
+  }
 
   // Validate rank access if rank is specified
   if (parsed.context.rank !== undefined && !canAccessRank(operator.rank, parsed.context.rank)) {
