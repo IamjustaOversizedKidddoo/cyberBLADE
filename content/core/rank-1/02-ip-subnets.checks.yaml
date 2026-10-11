@@ -6,7 +6,7 @@ questions:
     options:
       - text: "14"
         correct: true
-        explanation: "Correct. A /28 subnet has 32 - 28 = 4 host bits. 2^4 = 16 total addresses minus 2 (network and broadcast) = 14 usable hosts."
+        explanation: "Correct. A /28 subnet has 32 - 28 = 4 host bits. 2^4 = 16 total addresses minus 2 (network and broadcast) = 14 usable hosts. (Note: Under RFC 3021, /31 point-to-point subnets are an exception with 2 usable addresses, while /32 is a single host route)."
       - text: "16"
         correct: false
         explanation: "16 is the total number of addresses, but network and broadcast addresses cannot be assigned to hosts."
