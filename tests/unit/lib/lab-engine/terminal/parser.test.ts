@@ -50,11 +50,40 @@ describe("parseLine", () => {
     [`echo 'oops`, "syntax error: unexpected end of file"],
     ["| grep x", "syntax error near unexpected token `|'"],
     ["ls |", "syntax error near unexpected token `|'"],
-    ["echo hi >", "syntax error near unexpected token `newline'"],
-    ["cd x && ls", "syntax error: ';' and '&&' are not supported in this lab shell"],
-    ["cd x; ls", "syntax error: ';' and '&&' are not supported in this lab shell"],
+    ["cd x &&", "syntax error near unexpected token `newline'"],
+    ["&& ls", "syntax error near unexpected token `&&'"],
+    ["; ls", "syntax error near unexpected token `;'"],
+    ["|| ls", "syntax error near unexpected token `||'"],
   ])("%s → error", (line, error) => {
     expect(parseLine(line, {})).toEqual({ error });
+  });
+
+  test("parses chained pipelines with ;, &&, and ||", () => {
+    expect(parseLine("echo 1; echo 2", {})).toEqual({
+      commands: [{ argv: ["echo", "1"] }],
+      chain: {
+        op: ";",
+        pipeline: {
+          commands: [{ argv: ["echo", "2"] }],
+        },
+      },
+    });
+
+    expect(parseLine("echo 1 && echo 2 || echo 3", {})).toEqual({
+      commands: [{ argv: ["echo", "1"] }],
+      chain: {
+        op: "&&",
+        pipeline: {
+          commands: [{ argv: ["echo", "2"] }],
+          chain: {
+            op: "||",
+            pipeline: {
+              commands: [{ argv: ["echo", "3"] }],
+            },
+          },
+        },
+      },
+    });
   });
 });
 
