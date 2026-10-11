@@ -47,7 +47,7 @@ describe("Part A: Anti-Cheat & Integrity Hardening", () => {
       briefingText: "briefing",
       dataset: { generator: "sqli_lab", params: {} },
       objectives: [
-        { id: "o1", prompt: "bypass login", check: { kind: "flag", answer_from: "generator.flag_auth" } },
+        { id: "o1", prompt: "bypass login", check: { kind: "flag", answer_from: "generator.flag_auth", case_sensitive: true } },
       ],
       hints: {},
       xp: 100,

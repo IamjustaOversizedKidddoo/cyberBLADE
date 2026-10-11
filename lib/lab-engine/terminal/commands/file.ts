@@ -16,6 +16,10 @@ export const file: Command = {
       const fullPath = resolvePath(ctx.cwd, f, ctx.home);
       try {
         const node = ctx.vfs.stat(fullPath);
+        if (!node) {
+          stdout += `${f}: cannot open (No such file or directory)\n`;
+          continue;
+        }
         if (node.kind === "dir") {
           stdout += `${f}: directory\n`;
         } else {
