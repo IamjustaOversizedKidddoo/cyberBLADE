@@ -7,6 +7,7 @@ import { followTcpStream, type TcpStream } from "@/lib/lab-engine/packet/stream"
 import { PacketTable } from "./PacketTable";
 import { PacketDetails } from "./PacketDetails";
 import { StreamView } from "./StreamView";
+import { Kbd } from "@/components/ui/Kbd";
 
 type Props = {
   capture: Capture;
@@ -24,7 +25,6 @@ export function PacketLab({ capture }: Props) {
     const res = compileFilter(filterText);
     if (!res.ok) {
       setFilterError(res.error);
-      // Keeps the last good list of filtered packets
       return;
     }
 
@@ -57,56 +57,74 @@ export function PacketLab({ capture }: Props) {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Filter Bar */}
-      <div className="space-y-1">
+    <div className="space-y-3.5">
+      {/* Filter Bar with Tactical Chrome */}
+      <div className="space-y-1.5">
         <div className="flex gap-2">
-          <input
-            type="text"
-            value={filterInput}
-            onChange={(e) => {
-              setFilterInput(e.target.value);
-              if (filterError) setFilterError(null);
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Apply a display filter…"
-            className={`flex-1 border bg-console px-3 py-2 font-mono text-sm text-ink placeholder-muted/60 ${
-              filterError
-                ? "border-pink focus:border-pink"
-                : "border-line focus:border-cyan"
-            }`}
-          />
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={filterInput}
+              onChange={(e) => {
+                setFilterInput(e.target.value);
+                if (filterError) setFilterError(null);
+              }}
+              onKeyDown={handleKeyDown}
+              placeholder="Apply a display filter (e.g. tcp.flags.syn == 1, ip.addr == 192.168.1.1)…"
+              className={`w-full rounded-xs border bg-console px-3.5 py-2 font-mono text-xs text-ink placeholder:text-muted/50 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan ${
+                filterError
+                  ? "border-danger focus-visible:ring-danger"
+                  : "border-line focus:border-cyan"
+              }`}
+            />
+            <div className="absolute right-2.5 top-2 hidden sm:flex items-center gap-1">
+              <span className="text-[10px] font-ui text-muted/60">Press</span>
+              <Kbd>Enter</Kbd>
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => applyFilter(filterInput)}
-            className="border border-line bg-console-raised px-4 py-2 font-mono text-sm text-ink hover:border-ink hover:text-white"
+            className="rounded-xs border border-cyan/60 bg-cyan/15 px-4 py-2 font-ui text-xs font-semibold text-cyan hover:bg-cyan hover:text-void transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
           >
             Apply
           </button>
         </div>
         {filterError && (
-          <div role="alert" className="font-mono text-xs text-pink">
+          <div role="alert" className="font-mono text-xs text-danger px-1">
             {filterError}
           </div>
         )}
       </div>
 
-      {/* Status Bar */}
-      <div className="flex items-center justify-between font-mono text-xs text-muted">
-        <span>
-          Displayed: {filteredPackets.length} of {capture.packets.length} packets
-        </span>
-        {activeFilterText && <span>Filter: &quot;{activeFilterText}&quot;</span>}
+      {/* Protocol Legend & Status Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line/60 pb-2 font-mono text-xs text-muted">
+        <div className="flex items-center gap-3">
+          <span>
+            Displayed: <strong className="text-ink">{filteredPackets.length}</strong> of {capture.packets.length} packets
+          </span>
+          {activeFilterText && (
+            <span className="text-cyan font-semibold">Filter: &quot;{activeFilterText}&quot;</span>
+          )}
+        </div>
+
+        {/* Protocol Legend */}
+        <div className="flex flex-wrap items-center gap-2 font-ui text-[10px]">
+          <span className="text-muted/60 uppercase">Protocols:</span>
+          <span className="border border-sky-400/40 bg-sky-400/10 px-1.5 py-0.2 rounded-xs text-sky-400">TCP</span>
+          <span className="border border-success/40 bg-success/10 px-1.5 py-0.2 rounded-xs text-success">HTTP</span>
+          <span className="border border-warning/40 bg-warning/10 px-1.5 py-0.2 rounded-xs text-warning">DNS</span>
+          <span className="border border-purple/40 bg-purple/10 px-1.5 py-0.2 rounded-xs text-purple">ARP</span>
+          <span className="border border-cyan/40 bg-cyan/10 px-1.5 py-0.2 rounded-xs text-cyan">TLS</span>
+        </div>
       </div>
 
       {/* Packet Table */}
-      <div className="max-h-[360px] overflow-auto border border-line">
-        <PacketTable
-          packets={filteredPackets}
-          selectedPacket={selectedPacket}
-          onSelect={setSelectedPacket}
-        />
-      </div>
+      <PacketTable
+        packets={filteredPackets}
+        selectedPacket={selectedPacket}
+        onSelect={setSelectedPacket}
+      />
 
       {/* Packet Details */}
       <PacketDetails packet={selectedPacket} onFollowStream={handleFollowStream} />

@@ -10,9 +10,27 @@ type Props = {
   onSelect: (packet: Packet) => void;
 };
 
+function protocolStyle(proto: string): string {
+  switch (proto.toUpperCase()) {
+    case "HTTP":
+      return "text-success font-bold";
+    case "TCP":
+      return "text-sky-400 font-semibold";
+    case "DNS":
+      return "text-warning font-semibold";
+    case "ARP":
+      return "text-purple font-semibold";
+    case "ICMP":
+      return "text-danger font-semibold";
+    case "TLS":
+    case "SSL":
+      return "text-cyan font-bold";
+    default:
+      return "text-ink font-medium";
+  }
+}
+
 export function PacketTable({ packets, selectedPacket, onSelect }: Props) {
-  // No scroll-into-view effect: it would also scroll the page past the briefing on load and on
-  // every filter. Arrow keys move focus, and focusing a row already brings it into view.
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
@@ -38,9 +56,9 @@ export function PacketTable({ packets, selectedPacket, onSelect }: Props) {
   const getDestination = (p: Packet): string => p.ip?.dst ?? p.arp?.targetIp ?? p.eth.dst;
 
   return (
-    <div className="w-full overflow-x-auto border border-line bg-console">
+    <div className="w-full overflow-x-auto rounded-sm border border-line bg-console max-h-[380px] shadow-inner focus-within:ring-1 focus-within:ring-cyan">
       <table className="w-full text-left font-mono text-xs text-muted" role="table">
-        <thead className="border-b border-line bg-console-raised text-ink select-none sticky top-0">
+        <thead className="border-b border-line bg-surface-raised text-ink select-none sticky top-0 z-10">
           <tr>
             <th className="px-3 py-2 w-14">No.</th>
             <th className="px-3 py-2 w-28">Time</th>
@@ -67,17 +85,17 @@ export function PacketTable({ packets, selectedPacket, onSelect }: Props) {
                 onKeyDown={(e) => handleKeyDown(e, idx)}
                 className={`cursor-pointer transition-colors ${
                   isSelected
-                    ? "bg-cyan/20 text-cyan font-semibold"
-                    : "hover:bg-line/40 hover:text-ink text-muted"
+                    ? "bg-cyan/20 text-cyan font-semibold border-l-2 border-l-cyan"
+                    : "hover:bg-surface-hover hover:text-ink text-muted"
                 }`}
               >
-                <td className="px-3 py-1.5">{p.no}</td>
-                <td className="px-3 py-1.5 whitespace-nowrap">{p.time.toFixed(6)}</td>
-                <td className="px-3 py-1.5 whitespace-nowrap">{getSource(p)}</td>
-                <td className="px-3 py-1.5 whitespace-nowrap">{getDestination(p)}</td>
-                <td className="px-3 py-1.5 font-bold">{proto}</td>
-                <td className="px-3 py-1.5">{p.length}</td>
-                <td className="px-3 py-1.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-md">
+                <td className="px-3 py-1.5 font-mono">{p.no}</td>
+                <td className="px-3 py-1.5 whitespace-nowrap font-mono">{p.time.toFixed(6)}</td>
+                <td className="px-3 py-1.5 whitespace-nowrap font-mono">{getSource(p)}</td>
+                <td className="px-3 py-1.5 whitespace-nowrap font-mono">{getDestination(p)}</td>
+                <td className={`px-3 py-1.5 ${protocolStyle(proto)}`}>{proto}</td>
+                <td className="px-3 py-1.5 font-mono">{p.length}</td>
+                <td className="px-3 py-1.5 whitespace-nowrap overflow-hidden text-ellipsis max-w-md font-mono">
                   {infoOf(p)}
                 </td>
               </tr>

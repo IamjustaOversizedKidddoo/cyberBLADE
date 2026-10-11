@@ -1,23 +1,9 @@
 "use client";
 
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, useEffect } from "react";
 import type { SiemEnv, SiemSeverity } from "@/lib/lab-engine/siem/types";
-
-function severityBadge(sev: SiemSeverity) {
-  switch (sev) {
-    case "CRITICAL":
-      return "border-pink bg-pink/20 text-pink";
-    case "HIGH":
-      return "border-orange-500 bg-orange-500/20 text-orange-400";
-    case "MEDIUM":
-      return "border-yellow-400 bg-yellow-400/20 text-yellow-300";
-    case "LOW":
-      return "border-cyan bg-cyan/20 text-cyan";
-    case "INFO":
-    default:
-      return "border-line bg-void text-muted";
-  }
-}
+import { SeverityBadge } from "@/components/ui/Badge";
+import { Kbd } from "@/components/ui/Kbd";
 
 export function SiemLab({ env }: { env: SiemEnv }) {
   const searchInputId = useId();
@@ -25,6 +11,21 @@ export function SiemLab({ env }: { env: SiemEnv }) {
   const [sevFilter, setSevFilter] = useState<SiemSeverity | "ALL">("ALL");
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [copiedRaw, setCopiedRaw] = useState(false);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (
+        e.key === "/" &&
+        document.activeElement?.tagName !== "INPUT" &&
+        document.activeElement?.tagName !== "TEXTAREA"
+      ) {
+        e.preventDefault();
+        document.getElementById(searchInputId)?.focus();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [searchInputId]);
 
   // Compute severity counts
   const counts = useMemo(() => {
@@ -110,8 +111,11 @@ export function SiemLab({ env }: { env: SiemEnv }) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search events, IPs, usernames, EventIDs, or messages..."
-              className="w-full border border-line bg-console-deep py-1.5 pl-8 pr-3 text-ink placeholder:text-muted/60 focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+              className="w-full border border-line bg-console-deep py-1.5 pl-8 pr-12 text-ink placeholder:text-muted/60 focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
             />
+            <div className="absolute right-2.5 top-2 pointer-events-none hidden sm:flex items-center">
+              <Kbd>/</Kbd>
+            </div>
           </div>
           {search && (
             <button
@@ -199,9 +203,7 @@ export function SiemLab({ env }: { env: SiemEnv }) {
                         {evt.timestamp}
                       </td>
                       <td className="p-2.5 whitespace-nowrap">
-                        <span className={`inline-block border px-1.5 py-0.2 font-ui text-[9px] font-bold tracking-wider ${severityBadge(evt.severity)}`}>
-                          {evt.severity}
-                        </span>
+                        <SeverityBadge severity={evt.severity} />
                       </td>
                       <td className="p-2.5 whitespace-nowrap font-bold text-ink">
                         {evt.eventId}
@@ -234,9 +236,7 @@ export function SiemLab({ env }: { env: SiemEnv }) {
                 <span className="font-ui text-xs font-bold text-cyan tracking-wider uppercase">
                   EVENT DETAILS // {selectedEvent.id}
                 </span>
-                <span className={`border px-2 py-0.5 font-ui text-[10px] font-bold ${severityBadge(selectedEvent.severity)}`}>
-                  {selectedEvent.severity}
-                </span>
+                <SeverityBadge severity={selectedEvent.severity} />
               </div>
 
               {/* Parsed Fields */}
