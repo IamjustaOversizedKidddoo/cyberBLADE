@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 import { canAccessRank } from "@/lib/progress/access";
+import { generateLab } from "@/lib/lab-engine/checks";
 import { askHandler, requestProgressiveHint } from "@/lib/handler/service";
 import type { HandlerContext, HandlerMessage, HandlerResponse } from "@/lib/handler/types";
 
@@ -33,6 +34,9 @@ const askHandlerSchema = z.object({
       )
       .optional(),
     hints: z.record(z.string(), z.array(z.string())).optional(),
+    activeObjectiveId: z.string().optional(),
+    activeTier: z.number().int().min(1).max(3).optional(),
+    unlockedHintText: z.string().optional(),
     recentCommands: z.array(z.string()).optional(),
     isChallenge: z.boolean().optional(),
   }),
@@ -53,10 +57,10 @@ export async function askHandlerAction(rawInput: {
     throw new Error(`Access denied for rank ${parsed.context.rank}`);
   }
 
-  // Authoritative server-side challenge lockout: check if operator has an active challenge session
+  // Authoritative server-side challenge lockout: check if operator has an active challenge session across all ranks (0 to 5)
   const ctx = getCtx();
   let hasActiveChallenge = false;
-  for (let r = 0; r <= 2; r++) {
+  for (let r = 0; r <= 5; r++) {
     const active = await ctx.repo.getActiveChallenge(operator.id, r);
     if (active) {
       hasActiveChallenge = true;
@@ -67,10 +71,51 @@ export async function askHandlerAction(rawInput: {
     parsed.context.isChallenge = true;
   }
 
+  // Derive known answers and server-side tier context if in practice lab
+  let knownAnswers: string[] = [];
+  if (!parsed.context.isChallenge && parsed.context.kind === "lab" && parsed.context.labId) {
+    try {
+      const lab = await ctx.content.loadLab(parsed.context.labId);
+      if (lab.challenge) {
+        parsed.context.isChallenge = true;
+      } else {
+        const attempt = await ctx.repo.findOrCreateAttempt(operator.id, lab.id, "practice", () => ({
+          userId: operator.id,
+          labId: lab.id,
+          seed: "handler_seed",
+          mode: "practice",
+          objectivesSolved: [],
+          hintsUsed: 0,
+          startedAt: ctx.now().toISOString(),
+          expiresAt: null,
+          completedAt: null,
+          failedAt: null,
+        }));
+
+        if (attempt) {
+          const { answers } = generateLab(lab, attempt.seed, ctx.content.generators);
+          knownAnswers = Object.values(answers);
+          parsed.context.activeTier = Math.min(attempt.hintsUsed + 1, 3);
+
+          // If learner has unlocked hints, pass only the unlocked clue for active objective
+          if (parsed.context.activeObjectiveId && lab.hints[parsed.context.activeObjectiveId]) {
+            const hintsList = lab.hints[parsed.context.activeObjectiveId];
+            const targetIdx = Math.min(attempt.hintsUsed, hintsList.length - 1);
+            parsed.context.unlockedHintText = hintsList[targetIdx];
+          }
+        }
+      }
+    } catch {
+      // Continue safely if lab loading errors
+    }
+  }
+
   return askHandler({
     context: parsed.context,
     history: parsed.history,
     message: parsed.message,
+    knownAnswers,
+    userId: operator.id,
   });
 }
 
