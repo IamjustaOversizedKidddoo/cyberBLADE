@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { loadLab } from "@/lib/lab-engine/labs";
 import { dataPath } from "@/lib/storage/json-store";
+import { dir } from "@/lib/lab-engine/terminal/build";
 import { Vfs, VfsError } from "@/lib/lab-engine/terminal/vfs";
 
 describe("Security Part E: Input Validation & Injection Hardening", () => {
@@ -36,15 +37,15 @@ describe("Security Part E: Input Validation & Injection Hardening", () => {
     it.each(["__proto__", "constructor", "prototype"])(
       "Vfs rejects navigation or write to special property '%s'",
       (specialProp) => {
-        const vfs = new Vfs();
+        const vfs = new Vfs(dir({}));
         expect(() => vfs.stat(`/${specialProp}`)).toThrow(VfsError);
         expect(() => vfs.write(`/${specialProp}`, "malicious", "root", false)).toThrow(VfsError);
-        expect(() => vfs.mkdir(`/${specialProp}`, "root")).toThrow(VfsError);
+        expect(() => vfs.mkdir(`/${specialProp}`, "root", false)).toThrow(VfsError);
       }
     );
 
     it("verifies Object.prototype is unpolluted after malicious paths", () => {
-      const vfs = new Vfs();
+      const vfs = new Vfs(dir({}));
       try {
         vfs.write("/__proto__/polluted", "polluted", "root", false);
       } catch {

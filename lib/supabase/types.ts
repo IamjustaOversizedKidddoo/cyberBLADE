@@ -159,6 +159,99 @@ export interface Database {
         };
         Relationships: [];
       };
+      audit_events: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          event_type: string;
+          severity: string;
+          metadata: Json;
+          ip_hash: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          event_type: string;
+          severity?: string;
+          metadata?: Json;
+          ip_hash?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          event_type?: string;
+          severity?: string;
+          metadata?: Json;
+          ip_hash?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      handler_usage: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          prompt_tokens: number;
+          completion_tokens: number;
+          total_tokens: number;
+          estimated_cost_usd: number;
+          request_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          date: string;
+          prompt_tokens?: number;
+          completion_tokens?: number;
+          total_tokens?: number;
+          estimated_cost_usd?: number;
+          request_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          date?: string;
+          prompt_tokens?: number;
+          completion_tokens?: number;
+          total_tokens?: number;
+          estimated_cost_usd?: number;
+          request_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      attempt_lockouts: {
+        Row: {
+          id: string;
+          user_id: string;
+          challenge_id: string;
+          locked_until: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          challenge_id: string;
+          locked_until: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          challenge_id?: string;
+          locked_until?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

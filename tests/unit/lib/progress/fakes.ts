@@ -23,6 +23,9 @@ export class MemoryOperatorStore implements OperatorStore {
     const op = this.operators.get(id);
     if (op) op.rank = rank;
   }
+  async delete(id: string): Promise<void> {
+    this.operators.delete(id);
+  }
 }
 
 const lesson = (id: string, order: number, lab?: string): Lesson => ({
