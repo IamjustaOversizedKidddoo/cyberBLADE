@@ -56,3 +56,11 @@ test("dataPath uses NEON_DATA_DIR, defaulting to .data", () => {
   expect(dataPath("x.json")).toBe(path.join("custom", "x.json"));
   if (prev === undefined) delete process.env.NEON_DATA_DIR; else process.env.NEON_DATA_DIR = prev;
 });
+
+test("dataPath rejects path traversal and invalid filenames", () => {
+  expect(() => dataPath("../escape.json")).toThrow(/path traversal/);
+  expect(() => dataPath("../../etc/passwd")).toThrow(/path traversal/);
+  expect(() => dataPath("sub/file.json")).toThrow(/path traversal/);
+  expect(() => dataPath("sub\\file.json")).toThrow(/path traversal/);
+  expect(() => dataPath("")).toThrow(/non-empty string/);
+});

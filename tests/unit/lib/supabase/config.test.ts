@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { getSupabaseEnv, isSupabaseConfigured } from "@/lib/supabase/config";
+import { assertSafeStorageMode, getSupabaseEnv, isSupabaseConfigured } from "@/lib/supabase/config";
 
 describe("Supabase config", () => {
   const origEnv = { ...process.env };
@@ -42,5 +42,43 @@ describe("Supabase config", () => {
     expect(env.url).toBe("https://example.supabase.co");
     expect(env.anonKey).toBe("anon-token-123");
     expect(env.serviceRoleKey).toBe("service-role-456");
+  });
+
+  describe("assertSafeStorageMode", () => {
+    it("refuses to run local-first file store in production", () => {
+      process.env.NODE_ENV = "production";
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+      delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      expect(() => {
+        assertSafeStorageMode();
+      }).toThrow(/PRODUCTION SECURITY VIOLATION/);
+    });
+
+    it("throws when partial Supabase configuration is provided", () => {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+      delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      expect(() => {
+        assertSafeStorageMode();
+      }).toThrow(/Partial Supabase configuration/);
+    });
+
+    it("passes when fully configured in production", () => {
+      process.env.NODE_ENV = "production";
+      process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-token-123";
+
+      expect(() => assertSafeStorageMode()).not.toThrow();
+    });
+
+    it("passes in test/dev when Supabase is unconfigured", () => {
+      process.env.NODE_ENV = "test";
+      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+      delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      expect(() => assertSafeStorageMode()).not.toThrow();
+    });
   });
 });
