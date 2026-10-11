@@ -14,8 +14,11 @@ export default defineConfig({
     command: `npm run build && npm run start -- -p ${E2E_PORT}`,
     port: E2E_PORT,
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-    env: { NEON_DATA_DIR: ".data-e2e", NEON_SHOW_DRAFTS: "true" },
+    env: {
+      NEON_DATA_DIR: ".data-e2e",
+      NEON_SHOW_DRAFTS: "true",
+      CYBERBLADE_ALLOW_LOCAL_E2E: "true",
+    },
   },
   projects: [
     { name: "chromium-desktop", use: { ...devices["Desktop Chrome"] } },

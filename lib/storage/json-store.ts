@@ -24,8 +24,8 @@ export function dataPath(name: string): string {
     throw new Error(`Invalid storage file name '${name}': path traversal characters are rejected`);
   }
   const baseDir = process.env.NEON_DATA_DIR ?? ".data";
-  const resolved = path.resolve(baseDir, name);
-  const resolvedBase = path.resolve(baseDir);
+  const resolved = path.resolve(/* turbopackIgnore: true */ baseDir, name);
+  const resolvedBase = path.resolve(/* turbopackIgnore: true */ baseDir);
   if (!resolved.startsWith(resolvedBase)) {
     throw new Error(`Path traversal attempt detected for file: ${name}`);
   }

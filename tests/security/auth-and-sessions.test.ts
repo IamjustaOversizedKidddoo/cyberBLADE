@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { safeNextPath } from "@/lib/identity/routes";
 import { handleSchema, isReservedHandle, RESERVED_HANDLE_ERROR } from "@/lib/identity/validation";
 import { checkRateLimit, resetSubmissionRateLimits } from "@/lib/progress/rate-limit";
@@ -29,7 +29,7 @@ describe("Security Part C: Authentication, Sessions & Open Redirect Defense", ()
     ];
 
     it.each(maliciousPaths)("sanitizes hostile redirect target %j to /dashboard", (hostile) => {
-      expect(safeNextPath(hostile as any)).toBe("/dashboard");
+      expect(safeNextPath(hostile as unknown as string)).toBe("/dashboard");
     });
 
     it("preserves valid same-origin relative paths with query parameters and anchors", () => {

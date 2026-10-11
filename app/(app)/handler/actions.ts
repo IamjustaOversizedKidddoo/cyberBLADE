@@ -53,10 +53,12 @@ export async function askHandlerAction(rawInput: {
   const parsed = askHandlerSchema.parse(rawInput);
   const operator = await requireOperator();
 
-  // Enforce IP-level rate limiting across all identities (30 requests/min per IP)
+  // Enforce IP-level rate limiting across all identities (30 requests/min per IP, relaxed in test harness)
   const headersList = await headers();
   const forwardedFor = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
-  const ipCheck = checkRateLimit(`handler:ip:${forwardedFor}`, 30, 60_000);
+  const isTest = process.env.NODE_ENV === "test" || process.env.CYBERBLADE_ALLOW_LOCAL_E2E === "true";
+  const ipLimit = isTest ? 1000 : 30;
+  const ipCheck = checkRateLimit(`handler:ip:${forwardedFor}`, ipLimit, 60_000);
   if (!ipCheck.allowed) {
     return {
       reply: `[TRANSMISSION THROTTLED] Network request velocity limit reached. Please wait ${Math.ceil(ipCheck.retryAfterMs / 1000)}s before transmitting again.`,

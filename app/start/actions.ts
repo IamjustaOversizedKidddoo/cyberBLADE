@@ -14,8 +14,10 @@ export async function startOperator(_prev: StartState, formData: FormData): Prom
   const headersList = await headers();
   const forwardedFor = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
 
-  // Throttling: Max 10 account registrations per minute per IP
-  const rateLimit = checkRateLimit(`account:create:ip:${forwardedFor}`, 10, 60_000);
+  // Throttling: Max 10 account registrations per minute per IP (relaxed in test harness)
+  const isTest = process.env.NODE_ENV === "test" || process.env.CYBERBLADE_ALLOW_LOCAL_E2E === "true";
+  const limit = isTest ? 1000 : 10;
+  const rateLimit = checkRateLimit(`account:create:ip:${forwardedFor}`, limit, 60_000);
   if (!rateLimit.allowed) {
     return {
       errors: { handle: "Registration velocity limit reached. Please wait a minute before creating an operator." },
