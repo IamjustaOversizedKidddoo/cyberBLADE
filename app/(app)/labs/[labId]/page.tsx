@@ -76,7 +76,6 @@ export default async function LabPage(props: PageProps<"/labs/[labId]">) {
           labTitle: lab.title,
           rank: lab.rank,
           objectives: session.objectives,
-          hints: lab.hints,
         }}
         operatorHandle={operator.handle}
       />
