@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CORE, TRACKS, type TrackGroup } from "@/lib/catalog/tracks";
 import { SystemLabel } from "@/components/art/SystemLabel";
 import { HalftoneField } from "@/components/art/HalftoneField";
+import { IconLock } from "@/components/ui/icons";
 
 const SOON_GROUPS: TrackGroup[] = ["Defend", "Attack", "Build", "Emerging", "Governance", "Leadership"];
 
@@ -81,12 +82,12 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                       {RANK_CODENAME[r.rank] ?? `RANK_${r.rank}`}
                     </SystemLabel>
                     <span
-                      className={`border px-2 py-0.5 font-ui text-xs tracking-widest ${
+                      className={`inline-flex items-center gap-1.5 rounded-xs border px-2.5 py-0.5 font-ui text-xs tracking-wider uppercase font-semibold ${
                         isCurrent
-                          ? "border-cyan text-cyan"
+                          ? "border-cyan/50 bg-cyan/10 text-cyan shadow-[0_0_10px_rgba(15,190,255,0.2)]"
                           : isCleared
-                          ? "border-purple text-purple"
-                          : "border-line text-muted/40"
+                          ? "border-purple/50 bg-purple/10 text-purple"
+                          : "border-line/60 bg-surface text-muted/60"
                       }`}
                     >
                       {state === "cleared" ? "CLEARED" : state === "current" ? "ACTIVE" : "LOCKED"}
@@ -118,8 +119,9 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                     </Link>
                   )}
                   {state === "locked" && (
-                    <span className="font-ui text-xs text-muted/30 tracking-widest">
-                      ▒▒▒ CLASSIFIED
+                    <span className="font-ui text-xs text-muted/50 tracking-wider flex items-center gap-1.5">
+                      <IconLock className="h-3.5 w-3.5" />
+                      <span>Unlock at Rank {r.rank - 1} Capstone</span>
                     </span>
                   )}
                 </div>
