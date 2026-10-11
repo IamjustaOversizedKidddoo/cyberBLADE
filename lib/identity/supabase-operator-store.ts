@@ -76,4 +76,16 @@ export class SupabaseOperatorStore implements OperatorStore {
       throw new Error(`Failed to update operator rank in Supabase: ${error.message}`);
     }
   }
+
+  async delete(id: string): Promise<void> {
+    const supabase = await createServerSupabaseClient();
+    const admin = createAdminClient();
+    const client = admin ?? supabase;
+    if (!client) throw new Error("Supabase client is not available.");
+
+    const { error } = await client.from("operators").delete().eq("id", id);
+    if (error) {
+      throw new Error(`Failed to delete operator in Supabase: ${error.message}`);
+    }
+  }
 }
