@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { IconShield, IconRotateCcw } from "@/components/ui/icons";
 
 type Props = {
   currentUrl: string;
@@ -79,40 +80,52 @@ export function BrowserFrame({ currentUrl, htmlContent, onNavigate }: Props) {
   `;
 
   return (
-    <div className="border border-line bg-console flex flex-col h-[520px]">
-      {/* Browser Chrome Header */}
-      <div className="bg-void/80 border-b border-line px-3 py-2 flex items-center gap-2">
-        <div className="flex gap-1.5 items-center mr-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-pink/80" />
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
-          <span className="h-2.5 w-2.5 rounded-full bg-cyan/80" />
+    <div className="rounded-sm border border-line bg-console flex flex-col h-[520px] shadow-2xl overflow-hidden">
+      {/* Browser Chrome Header with persistent SIMULATED TARGET indicator */}
+      <div className="bg-surface border-b border-line px-3.5 py-2.5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1.5 items-center">
+            <span className="h-2.5 w-2.5 rounded-full bg-danger/80" />
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
+            <span className="h-2.5 w-2.5 rounded-full bg-success/80" />
+          </div>
+
+          {/* Persistent Simulated Target Badge */}
+          <div className="flex items-center gap-1.5 border border-amber-500/50 bg-amber-500/15 px-2 py-0.5 rounded-xs font-ui text-[10px] font-bold text-amber-400 tracking-wider">
+            <IconShield className="h-3 w-3" />
+            <span>SIMULATED TARGET // SANDBOX</span>
+          </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => onNavigate(currentUrl)}
-          className="px-2 py-0.5 text-xs font-mono text-muted hover:text-cyan border border-line/60 bg-console transition-colors"
-          title="Reload target page"
-        >
-          ⟳
-        </button>
+        {/* URL Bar */}
+        <form onSubmit={handleAddressSubmit} className="flex-1 max-w-lg flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => onNavigate(currentUrl)}
+            className="p-1.5 rounded-xs text-muted hover:text-cyan hover:bg-surface-raised border border-line/60 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+            title="Reload target page"
+            aria-label="Reload target page"
+          >
+            <IconRotateCcw className="h-3.5 w-3.5" />
+          </button>
 
-        <form onSubmit={handleAddressSubmit} className="flex-1 flex gap-1 items-center">
-          <div className="flex-1 flex items-center bg-console border border-line px-2 py-0.5">
-            <span className="text-[10px] font-mono text-muted mr-1.5 select-none">🔒 HTTP</span>
+          <div className="flex-1 flex items-center rounded-xs bg-surface-subtle border border-line px-2.5 py-1 focus-within:border-cyan focus-within:ring-1 focus-within:ring-cyan">
+            <span className="text-[10px] font-mono text-muted/60 mr-1.5 select-none">HTTP</span>
             <input
               type="text"
               value={addressInput}
               onChange={(e) => setAddressInput(e.target.value)}
               className="w-full bg-transparent font-mono text-xs text-ink outline-none"
               placeholder="http://target.internal/..."
+              aria-label="Target URL"
             />
           </div>
+
           <button
             type="submit"
-            className="px-2.5 py-0.5 font-mono text-xs text-cyan border border-cyan/40 bg-cyan/10 hover:bg-cyan/20 transition-colors uppercase tracking-wider"
+            className="px-3 py-1 font-ui text-xs font-semibold text-cyan border border-cyan/50 bg-cyan/15 rounded-xs hover:bg-cyan hover:text-void transition-colors uppercase tracking-wider focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
           >
-            GO
+            NAVIGATE
           </button>
         </form>
       </div>
