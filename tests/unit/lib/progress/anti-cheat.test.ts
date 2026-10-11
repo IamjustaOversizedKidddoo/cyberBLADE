@@ -30,8 +30,8 @@ describe("Part A: Anti-Cheat & Integrity Hardening", () => {
     if (sanitized.kind === "webapp") {
       expect(sanitized.app.config).not.toHaveProperty("flags");
       expect(sanitized.app.config).not.toHaveProperty("adminToken");
-      expect((sanitized.app.config as any).flags).toBeUndefined();
-      expect((sanitized.app.config as any).adminToken).toBeUndefined();
+      expect((sanitized.app.config as Record<string, unknown>).flags).toBeUndefined();
+      expect((sanitized.app.config as Record<string, unknown>).adminToken).toBeUndefined();
     }
   });
 
