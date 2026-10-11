@@ -27,6 +27,11 @@ const answers = { flag: "NEON{abc}", user: "Alice" };
 test.each([
   ["  NEON{abc}\n", true],
   ["NEON{abc}", true],
+  ['"NEON{abc}"', true],
+  ["'NEON{abc}'", true],
+  ["`NEON{abc}`", true],
+  ["NEON{abc}.", true],
+  ["NEON{abc};", true],
   ["neon{abc}", false],
   ["NEON{abd}", false],
   ["", false],
