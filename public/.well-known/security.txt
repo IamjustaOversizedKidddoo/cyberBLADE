@@ -1,0 +1,6 @@
+Contact: mailto:security@cyberblade.local
+Expires: 2027-10-11T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://cyberblade.local/.well-known/security.txt
+Policy: https://cyberblade.local/SECURITY.md
+Acknowledgments: https://cyberblade.local/credits
