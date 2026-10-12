@@ -6,8 +6,25 @@ import { fontVariables } from "@/lib/theme/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://cyberblade.dev"),
   title: { default: BRAND.name, template: `%s · ${BRAND.name}` },
   description: BRAND.tagline,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: BRAND.name,
+    description: BRAND.tagline,
+    url: "/",
+    siteName: BRAND.name,
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: BRAND.name,
+    description: BRAND.tagline,
+  },
 };
 
 export const viewport: Viewport = { themeColor: "#000000" };

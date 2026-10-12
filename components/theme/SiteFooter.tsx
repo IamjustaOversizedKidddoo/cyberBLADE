@@ -3,6 +3,7 @@ import { BladeMark } from "@/components/art/BladeMark";
 import { BlinkCursor } from "@/components/theme/BlinkCursor";
 import { SystemLabel } from "@/components/art/SystemLabel";
 import { BRAND } from "@/lib/brand";
+import { AudioToggle } from "@/components/theme/AudioToggle";
 
 const BUILD_ID = "REV 2.6 / BUILD 2026-10-09";
 const CLEARANCE = "PUBLIC // UNCLASSIFIED";
@@ -25,18 +26,21 @@ export function SiteFooter() {
             {BRAND.name}
             <BlinkCursor />
           </Link>
-          <p className="mt-3 max-w-[38ch] text-sm leading-relaxed text-muted">
+          <p className="mt-3 max-w-[38ch] text-sm leading-relaxed text-secondary">
             {BRAND.fullName}. Practical cybersecurity training from zero to job-ready.
           </p>
-          <p className="mt-5 font-mono text-xs tracking-widest text-muted/60">
-            [&nbsp;{CLEARANCE}&nbsp;]
-          </p>
+          <div className="mt-4 flex items-center gap-3">
+            <span className="font-mono text-xs tracking-widest text-muted">
+              [&nbsp;{CLEARANCE}&nbsp;]
+            </span>
+            <AudioToggle />
+          </div>
         </div>
 
         {/* Platform links */}
         <div className="col-span-2 bg-void px-6 py-8 md:col-span-2">
           <SystemLabel className="mb-4 block text-cyan">PLATFORM</SystemLabel>
-          <ul className="space-y-2 text-sm text-muted">
+          <ul className="space-y-2 text-sm text-secondary">
             <li><Link href="/learn/core" className="hover:text-cyan transition-colors">Course map</Link></li>
             <li><Link href="/dashboard" className="hover:text-cyan transition-colors">Dashboard</Link></li>
             <li><Link href="/labs" className="hover:text-cyan transition-colors">Labs Range</Link></li>
@@ -48,22 +52,28 @@ export function SiteFooter() {
         {/* Tracks */}
         <div className="col-span-2 bg-void px-6 py-8 md:col-span-2">
           <SystemLabel className="mb-4 block text-cyan">TRACKS</SystemLabel>
-          <ul className="space-y-2 text-sm text-muted">
+          <ul className="space-y-2 text-sm text-secondary">
             <li>SOC Analyst</li>
             <li>Penetration Tester</li>
             <li>Cloud Security</li>
-            <li><span className="text-muted/50">Purple Team ↗</span></li>
+            <li><span className="text-muted">Purple Team ↗</span></li>
           </ul>
         </div>
 
         {/* Legal / credits */}
         <div className="col-span-2 bg-void px-6 py-8 md:col-span-2">
-          <SystemLabel className="mb-4 block text-cyan">LEGAL</SystemLabel>
-          <ul className="space-y-2 text-sm text-muted">
+          <SystemLabel className="mb-4 block text-cyan">LEGAL & SEC</SystemLabel>
+          <ul className="space-y-2 text-sm text-secondary">
             <li><Link href="/legal/ethical-use" className="hover:text-cyan transition-colors">Ethical use</Link></li>
+            <li><Link href="/accessibility" className="hover:text-cyan transition-colors">Accessibility</Link></li>
             <li><Link href="/credits" className="hover:text-cyan transition-colors">Credits</Link></li>
             <li>
-              <a href="https://hackedfont.com" className="hover:text-cyan transition-colors" target="_blank" rel="noreferrer">
+              <a href="/.well-known/security.txt" className="hover:text-cyan transition-colors">
+                Security disclosure
+              </a>
+            </li>
+            <li>
+              <a href="https://hackedfont.com" className="hover:text-cyan transition-colors text-xs" target="_blank" rel="noreferrer">
                 Hacked font by David Libeau
               </a>
             </li>
@@ -73,10 +83,10 @@ export function SiteFooter() {
         {/* System telemetry cell */}
         <div className="col-span-2 hidden bg-void px-6 py-8 md:col-span-2 md:block">
           <SystemLabel className="mb-4 block text-cyan">SYSTEM</SystemLabel>
-          <ul className="space-y-1.5 font-mono text-xs tracking-wider text-muted/60">
+          <ul className="space-y-1.5 font-mono text-xs tracking-wider text-muted">
             <li>STATUS: ONLINE</li>
             <li>NODE: PUBLIC-01</li>
-            <li className="pt-1 text-muted/30">{BUILD_ID}</li>
+            <li className="pt-1 text-muted">{BUILD_ID}</li>
           </ul>
         </div>
       </div>
@@ -84,10 +94,10 @@ export function SiteFooter() {
       {/* Bottom strip */}
       <div aria-hidden="true" className="h-px w-full bg-line" />
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-4">
-        <SystemLabel className="text-muted/40">
+        <SystemLabel className="text-muted">
           © 2026 {BRAND.name} · {BRAND.fullName}
         </SystemLabel>
-        <SystemLabel className="text-muted/30 hidden sm:inline">
+        <SystemLabel className="text-muted hidden sm:inline">
           {BUILD_ID}
         </SystemLabel>
       </div>
