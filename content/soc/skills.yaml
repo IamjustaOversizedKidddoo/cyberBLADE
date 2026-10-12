@@ -4,10 +4,26 @@ skills:
     title: "SOC Operations & Alert Handling"
     category: operations
     description: "Triage incoming alert queues, separate true attacks from ambient noise, prioritize by severity, and make defensible disposition decisions."
+  - id: soc_false_positive_id
+    title: "False-Positive Identification & Filtering"
+    category: operations
+    description: "Identify benign noise, authorized maintenance windows, scanning bursts, and over-sensitive detection rules to prevent alert fatigue."
   - id: soc_phishing_analysis
     title: "Phishing & Email Analysis"
     category: email
     description: "Analyze email headers, sender reputation, credential harvesting links, and suspicious attachments."
+  - id: soc_credential_attacks
+    title: "Credential Attack Recognition"
+    category: identity
+    description: "Recognize password spraying, brute force dictionaries, MFA fatigue push bombing, and impossible-travel sign-in anomalies."
+  - id: soc_endpoint_triage
+    title: "Endpoint & Process Triage"
+    category: endpoint
+    description: "Inspect process trees, script interpreter spawns, persistence mechanisms (Run keys, services, tasks), and living-off-the-land behavior."
+  - id: soc_network_indicators
+    title: "Network Indicators & Flow Analysis"
+    category: network
+    description: "Identify command-and-control beaconing intervals, abnormal DNS queries, tunneling signatures, and unusual egress volume."
   - id: soc_network_traffic
     title: "Network Traffic Analysis"
     category: network
@@ -16,6 +32,26 @@ skills:
     title: "Network Security Monitoring"
     category: network
     description: "Interpret IDS/IPS/Zeek alerts, identify signature matches, and validate against raw flow logs."
+  - id: soc_web_attacks
+    title: "Web Application Attack Analysis"
+    category: application
+    description: "Analyze web server and WAF telemetry to differentiate blocked automated scanner probes from successful SQLi, traversal, and webshell exploits."
+  - id: soc_web_log_analysis
+    title: "Web & Application Log Analysis"
+    category: application
+    description: "Inspect WAF and HTTP server access logs for SQL injection, traversal, webshell interactions, and scanner traffic."
+  - id: soc_data_exfiltration
+    title: "Data Exfiltration Detection"
+    category: exfiltration
+    description: "Recognize data staging archives, unauthorized external cloud storage syncs, DNS exfiltration tunnels, and large bulk egress transfers."
+  - id: soc_insider_policy
+    title: "Insider Threat & Policy Violations"
+    category: operations
+    description: "Detect unauthorized removable media usage, mass data exports by departing employees, off-hours access, and privilege misuse."
+  - id: soc_cloud_identity
+    title: "Cloud & IAM Anomaly Detection"
+    category: cloud
+    description: "Detect unauthorized cloud role delegation, administrator policy attachment, programmatic access key generation, and foreign ASN console logons."
   - id: soc_windows_logs
     title: "Windows Log Analysis"
     category: endpoint
@@ -24,10 +60,6 @@ skills:
     title: "Linux Log Analysis"
     category: endpoint
     description: "Analyze auth.log, syslog, scheduled cron jobs, sudo events, and suspicious daemon activity."
-  - id: soc_web_log_analysis
-    title: "Web & Application Log Analysis"
-    category: application
-    description: "Inspect WAF and HTTP server access logs for SQL injection, traversal, webshell interactions, and scanner traffic."
   - id: soc_malware_triage
     title: "Malware Triage Concepts"
     category: malware
@@ -40,6 +72,18 @@ skills:
     title: "SIEM Querying & Event Correlation"
     category: siem
     description: "Construct queries to filter, aggregate, and timeline multi-source telemetry across hosts and network devices."
+  - id: soc_scope_assessment
+    title: "Scope & Impact Assessment"
+    category: operations
+    description: "Determine the blast radius of security incidents, compromised account privileges, and potential lateral movement across internal zones."
+  - id: soc_escalation_handoff
+    title: "Escalation Decisions & Handoff"
+    category: operations
+    description: "Make defensible Tier-2 escalation decisions, provide containment recommendations, and communicate actionable investigation summaries."
+  - id: soc_documentation
+    title: "Forensic Case Documentation"
+    category: operations
+    description: "Record thorough, evidence-grounded case notes referencing specific log timestamps, hostnames, usernames, and IOC artifacts."
   - id: soc_incident_response
     title: "Incident Response Lifecycle"
     category: operations
