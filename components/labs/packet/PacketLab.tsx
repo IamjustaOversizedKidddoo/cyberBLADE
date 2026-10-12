@@ -110,7 +110,7 @@ export function PacketLab({ capture }: Props) {
 
         {/* Protocol Legend */}
         <div className="flex flex-wrap items-center gap-2 font-ui text-[10px]">
-          <span className="text-muted/60 uppercase">Protocols:</span>
+          <span className="text-secondary font-semibold uppercase">Protocols:</span>
           <span className="border border-sky-400/40 bg-sky-400/10 px-1.5 py-0.2 rounded-xs text-sky-400">TCP</span>
           <span className="border border-success/40 bg-success/10 px-1.5 py-0.2 rounded-xs text-success">HTTP</span>
           <span className="border border-warning/40 bg-warning/10 px-1.5 py-0.2 rounded-xs text-warning">DNS</span>
