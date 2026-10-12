@@ -123,7 +123,12 @@ export function CertReadinessSection({ readiness }: { readiness: CertReadiness[]
                     <span className="text-[10px] font-mono text-muted/60">Press Esc to close</span>
                   </div>
 
-                  <div className="overflow-x-auto rounded-xs border border-line/60">
+                  <div
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Objective audit breakdown table"
+                    className="overflow-x-auto rounded-xs border border-line/60 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+                  >
                     <table className="w-full text-left font-mono text-xs text-muted">
                       <thead className="bg-void/80 border-b border-line/60 text-[10px] text-ink uppercase">
                         <tr>

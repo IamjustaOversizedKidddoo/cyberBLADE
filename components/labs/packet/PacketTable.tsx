@@ -56,8 +56,13 @@ export function PacketTable({ packets, selectedPacket, onSelect }: Props) {
   const getDestination = (p: Packet): string => p.ip?.dst ?? p.arp?.targetIp ?? p.eth.dst;
 
   return (
-    <div className="w-full overflow-x-auto rounded-sm border border-line bg-console max-h-[380px] shadow-inner focus-within:ring-1 focus-within:ring-cyan">
-      <table className="w-full text-left font-mono text-xs text-muted" role="table">
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label="Packet capture list"
+      className="w-full overflow-x-auto rounded-sm border border-line bg-console max-h-[380px] shadow-inner focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+    >
+      <table className="w-full text-left font-mono text-xs text-muted">
         <thead className="border-b border-line bg-surface-raised text-ink select-none sticky top-0 z-10">
           <tr>
             <th className="px-3 py-2 w-14">No.</th>
@@ -79,8 +84,9 @@ export function PacketTable({ packets, selectedPacket, onSelect }: Props) {
                 ref={(el) => {
                   rowRefs.current[idx] = el;
                 }}
-                role="button"
+                aria-selected={isSelected}
                 tabIndex={0}
+                aria-label={`Packet ${p.no}, ${proto}, from ${getSource(p)} to ${getDestination(p)}`}
                 onClick={() => onSelect(p)}
                 onKeyDown={(e) => handleKeyDown(e, idx)}
                 className={`cursor-pointer transition-colors ${

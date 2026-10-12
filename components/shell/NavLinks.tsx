@@ -34,7 +34,7 @@ export function NavLinks({ mobile = false }: { mobile?: boolean }) {
               key={item.href}
               href={item.href}
               data-active={active ? "true" : undefined}
-              className={`px-1 py-1 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan ${
+              className={`flex items-center justify-center min-h-[44px] px-2 py-1 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan ${
                 active
                   ? "text-cyan font-bold border-b-2 border-cyan -mb-px"
                   : "hover:text-cyan text-muted"

@@ -241,6 +241,8 @@ export function WebAppLab({ env, attemptId }: Props) {
     setExchanges([]);
   };
 
+  const [mobilePane, setMobilePane] = useState<"browser" | "inspector">("browser");
+
   return (
     <div className="space-y-4">
       {/* Target Status Bar */}
@@ -256,10 +258,36 @@ export function WebAppLab({ env, attemptId }: Props) {
         </div>
       </div>
 
-      {/* Side-by-side or stacked Dual-Engine Layout */}
+      {/* Mobile Sub-Pane Selector */}
+      <div className="lg:hidden grid grid-cols-2 rounded-xs border border-line bg-surface p-1 text-xs font-ui">
+        <button
+          type="button"
+          onClick={() => setMobilePane("browser")}
+          className={`min-h-[44px] rounded-xs font-bold tracking-wider transition-colors ${
+            mobilePane === "browser"
+              ? "bg-cyan/20 text-cyan border border-cyan/40"
+              : "text-muted hover:text-ink"
+          }`}
+        >
+          [1] BROWSER VIEW
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobilePane("inspector")}
+          className={`min-h-[44px] rounded-xs font-bold tracking-wider transition-colors ${
+            mobilePane === "inspector"
+              ? "bg-cyan/20 text-cyan border border-cyan/40"
+              : "text-muted hover:text-ink"
+          }`}
+        >
+          [2] HTTP INSPECTOR ({exchanges.length})
+        </button>
+      </div>
+
+      {/* Side-by-side on desktop or segmented on mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Left: Sandboxed Browser Chrome */}
-        <div>
+        <div className={mobilePane === "browser" ? "block" : "hidden lg:block"}>
           <div className="font-mono text-[11px] text-muted uppercase tracking-wider mb-1.5 flex items-center justify-between">
             <span>[1] IN-BROWSER SIMULATION</span>
             <span className="text-muted/60">SANDBOX_ACTIVE</span>
@@ -272,7 +300,7 @@ export function WebAppLab({ env, attemptId }: Props) {
         </div>
 
         {/* Right: HTTP Inspector & Cookie Jar */}
-        <div>
+        <div className={mobilePane === "inspector" ? "block" : "hidden lg:block"}>
           <div className="font-mono text-[11px] text-muted uppercase tracking-wider mb-1.5 flex items-center justify-between">
             <span>[2] NETWORK TELEMETRY &amp; PROXY</span>
             <span className="text-muted/60">BURP_INSPECTOR</span>
