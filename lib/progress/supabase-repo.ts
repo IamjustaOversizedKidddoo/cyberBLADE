@@ -983,9 +983,33 @@ export class SupabaseProgressRepo implements ProgressRepo {
     }));
   }
 
+  async listUsedSeeds(userId: string, familyId: string): Promise<string[]> {
+    const client = await this.getClient();
+    const { data, error } = await client
+      .from("soc_used_seeds" as any)
+      .select("seed")
+      .eq("user_id", userId)
+      .eq("family_id", familyId);
+    if (error || !data) return [];
+    return (data as any[]).map((d) => d.seed);
+  }
+
+  async recordUsedSeed(userId: string, familyId: string, seed: string): Promise<void> {
+    const client = await this.getClient();
+    await client
+      .from("soc_used_seeds" as any)
+      .insert({
+        id: randomUUID(),
+        user_id: userId,
+        family_id: familyId,
+        seed,
+      } as any);
+  }
+
   async deleteUserData(userId: string): Promise<void> {
     const client = await this.getClient();
     await client.from("soc_attempts").delete().eq("user_id", userId);
+    await client.from("soc_used_seeds" as any).delete().eq("user_id", userId);
     await client.from("exam_reports").delete().eq("user_id", userId);
     await client.from("review_items").delete().eq("user_id", userId);
   }

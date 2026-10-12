@@ -13,6 +13,9 @@
     "test:e2e": "playwright test",
     "check:content": "tsx scripts/check-content.mts",
     "check:soc": "tsx scripts/check-soc.mts",
+    "check:soc:families": "tsx scripts/check-soc-families.mts",
+    "soc:gen": "tsx scripts/soc-gen.mts",
+    "soc:family-report": "tsx scripts/soc-family-report.mts",
     "eval:handler": "tsx scripts/eval-handler.mts",
     "report:learning": "tsx scripts/learning-analytics-report.mts"
   },

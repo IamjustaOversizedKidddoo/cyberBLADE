@@ -17,6 +17,11 @@ export type SocAttemptRecord = {
   startedAt: string;
   submittedAt: string | null;
   updatedAt: string;
+  familyId?: string;
+  familyVersion?: number;
+  generatorVersion?: string;
+  difficulty?: string;
+  scenarioHash?: string;
 };
 
 export type SocDecisionRecord = {
