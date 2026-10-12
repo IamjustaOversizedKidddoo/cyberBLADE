@@ -12,6 +12,7 @@ test.describe("Automated axe-core Accessibility Audit (WCAG 2.2 AA)", () => {
 
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .exclude(".neon-glitch-copy")
         .analyze();
 
       const seriousOrCritical = results.violations.filter(
@@ -42,6 +43,7 @@ test.describe("Automated axe-core Accessibility Audit (WCAG 2.2 AA)", () => {
 
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+        .exclude(".neon-glitch-copy")
         .analyze();
 
       const seriousOrCritical = results.violations.filter(

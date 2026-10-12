@@ -34,8 +34,21 @@ export function SmoothScroll() {
       if (r.bottom < 0 || r.top > window.innerHeight) lenis.scrollTo(el, { offset: -window.innerHeight / 3, immediate: true });
     };
     document.addEventListener("focusin", onFocus);
+    const onKeyDown = (e: KeyboardEvent) => {
+      const active = document.activeElement;
+      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || (active as HTMLElement).isContentEditable)) {
+        return;
+      }
+      if (e.key === "Home") {
+        lenis.scrollTo(0, { immediate: true });
+      } else if (e.key === "End") {
+        lenis.scrollTo("bottom", { immediate: true });
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("focusin", onFocus);
+      window.removeEventListener("keydown", onKeyDown);
       gsap.ticker.remove(tick);
       lenis.destroy();
     };
