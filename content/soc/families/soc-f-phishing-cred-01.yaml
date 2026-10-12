@@ -1,0 +1,575 @@
+metadata:
+  id: "soc-f-phishing-cred-01"
+  version: 1
+  title: "L1: Phishing to Credential Compromise & Session Hijacking"
+  level: "L1"
+  skillsTested:
+    - "soc_alert_triage"
+    - "soc_phishing_analysis"
+    - "soc_credential_attacks"
+    - "soc_siem_correlation"
+    - "soc_escalation_handoff"
+    - "soc_documentation"
+  estimatedMinutes:
+    min: 25
+    max: 45
+  difficultyRange:
+    - "beginner"
+    - "intermediate"
+    - "advanced"
+  author: "CyberBLADE SOC Curriculum Engineering"
+  reviewStatus: "draft"
+  reviewerNotes: "Initial draft modeling credential harvesting via lookalike domain, MFA session hijacking, and benign twins."
+
+environmentTemplate:
+  organizationArchetypes:
+    - "org_apex_dynamics"
+    - "org_meridian_fintech"
+    - "org_helios_energy"
+    - "org_nexus_saas"
+  assetDistribution:
+    workstations:
+      min: 4
+      max: 7
+    servers:
+      min: 2
+      max: 4
+    domainControllers:
+      min: 1
+      max: 1
+    mailGateways:
+      min: 1
+      max: 1
+  userDistribution:
+    totalUsers:
+      min: 6
+      max: 10
+    departments:
+      - "Finance"
+      - "Engineering"
+      - "IT Operations"
+      - "Human Resources"
+      - "Marketing"
+
+incidentTemplates:
+  - id: "inc-spearphish-harvest"
+    titleTemplate: "Spear-Phishing Credential Harvester targeting {victimUser}"
+    category: "Phishing & Initial Access"
+    rootCauseTemplate: "Targeted spear-phishing email delivered to {victimUserEmail} containing link to fake portal at {phishingDomain}, followed by unauthorized IdP login from {attackerIp}."
+    mitreTags:
+      - "T1566.002" # Phishing: Spearphishing Link
+      - "T1078.004" # Valid Accounts: Cloud/Internal Accounts
+    stages:
+      - stageId: "stage-phish-delivery"
+        name: "Inbound Spear-Phishing Delivery"
+        phase: "initial_access"
+        timingOffsetMinutes:
+          min: -60
+          max: -20
+        jitterMinutes: 2
+        telemetryGap:
+          probability: 0.10
+          hideAlert: false
+          hideRawEvents: false
+          reason: "Email gateway message trace remains visible even under partial filter bypass"
+        eventTemplates:
+          - source: "EmailGateway"
+            action: "email_delivered"
+            messageTemplate: "MTA[gateway]: Message from <billing-update@{phishingDomain}> to <{victimUserEmail}> [SPF:FAIL, DKIM:NONE, DMARC:FAIL]: verdict=delivered subject='Urgent: Revised Vendor Remittance Invoice'"
+            fieldsTemplate:
+              sender: "billing-update@{phishingDomain}"
+              recipient: "{victimUserEmail}"
+              subject: "Urgent: Revised Vendor Remittance Invoice"
+              spf_result: "fail"
+              dkim_result: "none"
+              dmarc_verdict: "fail"
+              extracted_urls: "https://{phishingDomain}/auth/login"
+        alertTemplates:
+          - ruleName: "Email Gateway: Suspicious Inbound URL from Newly Registered Domain"
+            source: "Email Gateway"
+            severity: "HIGH"
+            summaryTemplate: "Suspicious inbound email delivered to user '{victimUser}' with external link '{phishingDomain}'"
+            relatedUserBinding: "victimUser"
+            relatedAssetBinding: "victimAsset"
+            iocs:
+              - type: "domain"
+                valueTemplate: "{phishingDomain}"
+              - type: "email"
+                valueTemplate: "billing-update@{phishingDomain}"
+            rawFieldsTemplate:
+              sender: "billing-update@{phishingDomain}"
+              recipient: "{victimUserEmail}"
+              spf_result: "fail"
+              extracted_urls: "https://{phishingDomain}/auth/login"
+          - ruleName: "EDR: Browser Process Spawned Authentication Prompt Link"
+            source: "EDR"
+            severity: "HIGH"
+            summaryTemplate: "Browser process navigated to suspicious credential harvesting link hosted on external domain '{phishingDomain}'"
+            relatedUserBinding: "victimUser"
+            relatedAssetBinding: "victimAsset"
+            iocs:
+              - type: "domain"
+                valueTemplate: "{phishingDomain}"
+            rawFieldsTemplate:
+              process_name: "msedge.exe"
+              navigated_url: "https://{phishingDomain}/auth/login"
+              user: "{victimUser}"
+              status: "connected"
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "HIGH"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-phish-delivery"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed phishing delivery targeting {victimUser}. Sender domain {phishingDomain} failed SPF/DMARC and hosted credential harvester."
+
+      - stageId: "stage-unauthorized-idp-login"
+        name: "Unauthorized Cloud IdP Login"
+        phase: "credential_access"
+        timingOffsetMinutes:
+          min: -15
+          max: 20
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "Authentication"
+            action: "login_success"
+            messageTemplate: "IdP[auth-service]: event=login_success user='{victimUserEmail}' ip={attackerIp} city='Frankfurt' country='DE' mfa=none status=SUCCESS"
+            fieldsTemplate:
+              user: "{victimUserEmail}"
+              source_ip: "{attackerIp}"
+              location_city: "Frankfurt"
+              status: "success"
+        alertTemplates:
+          - ruleName: "Identity: Cloud Management Console Logon from Novel ASN"
+            source: "Authentication"
+            severity: "MEDIUM"
+            summaryTemplate: "Single sign-on console login for user '{victimUser}' authenticated from novel foreign address {attackerIp} without verification challenge"
+            relatedUserBinding: "victimUser"
+            relatedAssetBinding: "victimAsset"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              user: "{victimUserEmail}"
+              source_ip: "{attackerIp}"
+              location_city: "Frankfurt"
+              mfa_prompt: "bypassed"
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-unauthorized-idp-login"
+          acceptableAlternatives: []
+          debriefTemplate: "Critical account compromise. Stolen credentials were used to authenticate as {victimUser} from untrusted IP {attackerIp}."
+
+  - id: "inc-quishing-mfa-bypass"
+    titleTemplate: "Phishing Session Token Hijacking targeting {victimUser}"
+    category: "Phishing & Initial Access"
+    rootCauseTemplate: "Phishing email delivering adversary-in-the-middle proxy link at {phishingDomain} allowed attacker at {attackerIp} to hijack active session."
+    mitreTags:
+      - "T1566.002" # Phishing: Spearphishing Link
+      - "T1539" # Steal Web Session Cookie
+    stages:
+      - stageId: "stage-aitm-proxy-delivery"
+        name: "Inbound Session Harvester Delivery"
+        phase: "initial_access"
+        timingOffsetMinutes:
+          min: 30
+          max: 80
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "EmailGateway"
+            action: "email_delivered"
+            messageTemplate: "MTA[gateway]: Message from <security-notice@{phishingDomain}> to <{victimUserEmail}> [SPF:FAIL, DKIM:NONE, DMARC:FAIL]: verdict=delivered subject='Action Required: Confirm Identity Enrollment'"
+            fieldsTemplate:
+              sender: "security-notice@{phishingDomain}"
+              recipient: "{victimUserEmail}"
+              subject: "Action Required: Confirm Identity Enrollment"
+              spf_result: "fail"
+              extracted_urls: "https://{phishingDomain}/session/verify"
+        alertTemplates:
+          - ruleName: "Email Gateway: Suspicious Inbound URL from Newly Registered Domain"
+            source: "Email Gateway"
+            severity: "HIGH"
+            summaryTemplate: "Suspicious inbound email delivered to user '{victimUser}' with external link '{phishingDomain}'"
+            relatedUserBinding: "victimUser"
+            relatedAssetBinding: "victimAsset"
+            iocs:
+              - type: "domain"
+                valueTemplate: "{phishingDomain}"
+            rawFieldsTemplate:
+              sender: "security-notice@{phishingDomain}"
+              recipient: "{victimUserEmail}"
+              extracted_urls: "https://{phishingDomain}/session/verify"
+          - ruleName: "Identity: Cloud Management Console Logon from Novel ASN"
+            source: "Authentication"
+            severity: "MEDIUM"
+            summaryTemplate: "Single sign-on console login for user '{victimUser}' authenticated from novel foreign address {attackerIp} without verification challenge"
+            relatedUserBinding: "victimUser"
+            relatedAssetBinding: "victimAsset"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              user: "{victimUserEmail}"
+              source_ip: "{attackerIp}"
+              session_reuse: true
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-aitm-proxy-delivery"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed adversary-in-the-middle session token theft against {victimUser} leading to unauthorized cloud session."
+
+benignTemplates:
+  - id: "benign-marketing-newsletter"
+    name: "Corporate Marketing Industry Newsletter"
+    category: "External Communications"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "business_hours"
+    actorRole: "standard_user"
+    eventTemplates:
+      - source: "EmailGateway"
+        action: "email_delivered"
+        messageTemplate: "MTA[gateway]: Message from <newsletter@industry-brief.example> to <{username}@{orgDomain}> [SPF:PASS, DKIM:PASS, DMARC:PASS]: verdict=delivered subject='Weekly Automation Insights'"
+        fieldsTemplate:
+          sender: "newsletter@industry-brief.example"
+          recipient: "{username}@{orgDomain}"
+          spf_result: "pass"
+          extracted_urls: "https://industry-brief.example/articles/402"
+    alertTemplates:
+      - ruleName: "Email Gateway: Suspicious Inbound URL from Newly Registered Domain"
+        source: "Email Gateway"
+        severity: "HIGH"
+        summaryTemplate: "External marketing newsletter delivered to employee '{username}' with tracking link on domain 'industry-brief.example'"
+        rawFieldsTemplate:
+          sender: "newsletter@industry-brief.example"
+          recipient: "{username}@{orgDomain}"
+          spf_result: "pass"
+          extracted_urls: "https://industry-brief.example/articles/402"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-marketing-newsletter"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate external newsletter with valid SPF/DKIM authentication. Filter raised HIGH on marketing tracking URL."
+
+  - id: "benign-vendor-remittance-notice"
+    name: "Authenticated Vendor Remittance Invoice"
+    category: "Finance Communications"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "business_hours"
+    actorRole: "standard_user"
+    eventTemplates:
+      - source: "EmailGateway"
+        action: "email_delivered"
+        messageTemplate: "MTA[gateway]: Message from <remittance@partner.corp.internal> to <{username}@{orgDomain}> [SPF:PASS, DKIM:PASS, DMARC:PASS]: verdict=delivered subject='Vendor Monthly Invoice 402'"
+        fieldsTemplate:
+          sender: "remittance@partner.corp.internal"
+          recipient: "{username}@{orgDomain}"
+          spf_result: "pass"
+    alertTemplates:
+      - ruleName: "Email Gateway: Inbound Message with Unverified Sender Authentication"
+        source: "Email Gateway"
+        severity: "LOW"
+        summaryTemplate: "Vendor billing remittance notice delivered to corporate finance user '{username}' from partner domain 'partner.corp.internal'"
+        rawFieldsTemplate:
+          sender: "remittance@partner.corp.internal"
+          recipient: "{username}@{orgDomain}"
+          spf_result: "pass"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vendor-remittance-notice"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate vendor invoice from authenticated internal partner domain. Fully benign."
+
+  - id: "benign-vpn-traveler"
+    name: "Remote VPN Connection from Roaming IP"
+    category: "Remote Access"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "business_hours"
+    actorRole: "roaming_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "vpn_login"
+        messageTemplate: "VPN tunnel authenticated for '{username}' from roaming IP {roamingIp}"
+        fieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          status: "connected"
+    alertTemplates:
+      - ruleName: "Firewall: New Geographic VPN Tunnel Established"
+        source: "Firewall"
+        severity: "LOW"
+        summaryTemplate: "Authenticated remote VPN tunnel session established for corporate employee '{username}' from roaming address {roamingIp}"
+        rawFieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          mfa_verified: true
+          status: "connected"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vpn-traveler"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate corporate VPN access by authenticated employee with multi-factor verification."
+
+  - id: "benign-vuln-scanner"
+    name: "Authorized Weekly Perimeter Vulnerability Scan"
+    category: "Vulnerability Scanning"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "batch_window_nightly"
+    actorRole: "security_scanner"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "port_scan"
+        messageTemplate: "TCP port sweep detected from scanner IP {scannerIp}"
+        fieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Network IDS: Rapid Port Sweep Probe"
+        source: "Network IDS"
+        severity: "HIGH"
+        summaryTemplate: "Rapid port sweep probe from authorized internal vulnerability scanner address {scannerIp} on host '{hostname}'"
+        rawFieldsTemplate:
+          source_ip: "{scannerIp}"
+          authorized_scanner: true
+          status: "scheduled_audit"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "MEDIUM"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vuln-scanner"
+      acceptableAlternatives: []
+      debriefTemplate: "Authorized vulnerability scanning from known scanner IP {scannerIp}. Baseline approved activity."
+
+  - id: "benign-backup-job"
+    name: "Nightly Automated Snapshot & Backup"
+    category: "Scheduled Jobs"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_nightly"
+    actorRole: "service_account"
+    eventTemplates:
+      - source: "Authentication"
+        action: "service_logon"
+        messageTemplate: "Service account 'svc-backup' authenticated successfully via Kerberos"
+        fieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Authentication: High-Volume Service Data Replication"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Scheduled database snapshot stream handled by service account 'svc-backup' on host '{hostname}'"
+        rawFieldsTemplate:
+          user: "svc-backup"
+          operation: "scheduled_backup"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-backup-job"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate automated snapshot and backup initiated by approved service principal 'svc-backup'."
+
+  - id: "benign-pwd-reset"
+    name: "Self-Service Credential Reset"
+    category: "Identity Management"
+    frequencyRange:
+      min: 2
+      max: 5
+    timePattern: "business_hours"
+    actorRole: "standard_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "password_change"
+        messageTemplate: "Self-service password change succeeded for user '{username}'"
+        fieldsTemplate:
+          user: "{username}"
+    alertTemplates:
+      - ruleName: "Authentication: Multiple Failed Logons Followed by Password Change"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Self-service password update followed by transient authentication retries from corporate host '{hostname}'"
+        rawFieldsTemplate:
+          user: "{username}"
+          status: "synchronized"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-pwd-reset"
+      acceptableAlternatives: []
+      debriefTemplate: "Routine self-service password update followed by transient logon sync delays."
+
+  - id: "benign-sensor-flapping"
+    name: "Duplicate Sensor Trigger on Benign Keep-Alive"
+    category: "Telemetry Flapping"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "anytime"
+    actorRole: "sensor_glitch"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "protocol_anomaly"
+        messageTemplate: "Malformed HTTP keepalive header on legacy telemetry connection"
+        fieldsTemplate:
+          protocol: "HTTP/1.1"
+    alertTemplates:
+      - ruleName: "Network IDS: Protocol Header Parsing Anomaly"
+        source: "Network IDS"
+        severity: "LOW"
+        summaryTemplate: "Repetitive protocol anomaly sensor trigger observed on internal keep-alive session from '{hostname}'"
+        rawFieldsTemplate:
+          duplicate_count: 8
+          protocol: "HTTP/1.1"
+    groundTruth:
+      kind: "duplicate"
+      correctDisposition: "duplicate"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-sensor-flapping"
+      acceptableAlternatives: []
+      debriefTemplate: "Known flapping sensor alert caused by benign legacy keep-alive traffic."
+
+twinTemplates:
+  - id: "twin-email-delivery"
+    name: "Inbound Email Authentication Twin Pair"
+    description: "Contrasts malicious lookalike domain delivery failing SPF/DMARC vs legitimate marketing newsletter with verified SPF/DKIM"
+    toolOrTechnique: "Email Gateway Delivery"
+    maliciousStageRef: "stage-phish-delivery"
+    benignTemplateRef: "benign-marketing-newsletter"
+    distinguishingEvidence: "Inspection of message authentication headers: malicious email originates from lookalike domain failing SPF and DMARC; benign newsletter passes SPF, DKIM, and DMARC verification."
+    acceptableAlternatives: []
+
+  - id: "twin-remote-signon"
+    name: "Remote Ingress Sign-on Twin Pair"
+    description: "Contrasts unauthorized cloud console sign-on from foreign ASN vs legitimate roaming VPN session with verified MFA"
+    toolOrTechnique: "Remote Ingress Authentication"
+    maliciousStageRef: "stage-unauthorized-idp-login"
+    benignTemplateRef: "benign-vpn-traveler"
+    distinguishingEvidence: "Authentication logs show malicious sign-on from untrusted foreign IP bypassing MFA following phishing click; benign is corporate VPN with verified push MFA."
+    acceptableAlternatives: []
+
+variationAxes:
+  incidentCount:
+    min: 1
+    max: 2
+  noiseRatio:
+    min: 0.65
+    max: 0.85
+  ambiguityCount:
+    min: 1
+    max: 3
+  telemetryGapCount:
+    min: 0
+    max: 2
+  targetAlertCount:
+    min: 30
+    max: 65
+  difficultyProfiles:
+    beginner:
+      incidentCount: 1
+      noiseRatio: 0.65
+      ambiguityCount: 1
+      telemetryGapCount: 0
+      targetAlertCount: 30
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    intermediate:
+      incidentCount: 2
+      noiseRatio: 0.75
+      ambiguityCount: 2
+      telemetryGapCount: 1
+      targetAlertCount: 45
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    advanced:
+      incidentCount: 2
+      noiseRatio: 0.82
+      ambiguityCount: 3
+      telemetryGapCount: 2
+      targetAlertCount: 65
+      expectedScoreCeilingNaive: 50
+      expectedMinScoreReference: 80
+
+debriefTemplates:
+  overallBriefingTemplate: |
+    Welcome to your Tier-1 SOC shift at {orgName}.
+    A queue of {alertCount} incoming alerts has arrived across Email Gateway, Authentication, and Network sensors.
+    Your mission:
+    1. Analyze incoming email alerts and differentiate malicious credential harvesters from legitimate newsletters.
+    2. Correlate email delivery with downstream cloud authentication anomalies to detect account compromises.
+    3. Escalate verified credential thefts to Tier 2 and close benign background noise with defensible rationales.
+  generalGuidanceTemplate: |
+    Shift debrief for {orgName}:
+    In this shift, you investigated {alertCount} alerts covering {incidentCount} security incident(s) alongside operational noise.
+    Key takeaways:
+    - Always inspect sender authentication headers (SPF, DKIM, DMARC) before deciding email dispositions.
+    - An inbound phishing email is significantly more dangerous if followed by an unexpected login from a foreign IP.
+    - Avoid assuming all high-severity gateway alerts are malicious; marketing tracking URLs frequently trigger false alarms.
+
+hooks:
+  enrichmentHooks:
+    - id: "hook-whois-domain"
+      provider: "whois"
+      dataPoints:
+        - "creation_date"
+        - "registrar"
+    - id: "hook-ip-reputation"
+      provider: "reputation"
+      dataPoints:
+        - "abuse_confidence_score"
+        - "asn"
+  queryDatasetHooks:
+    - datasetName: "siem_telemetry_flow"
+      extraEventGenerators:
+        - "generate_dns_flows"
+        - "generate_firewall_denies"
+  evidenceViewHooks:
+    - id: "hook-auth-timeline"
+      viewType: "timeline"
+  reportRubricHooks:
+    - sectionId: "executive_summary"
+      criteria:
+        - "Identified phishing domain and affected recipient"
+        - "Established authentication timeline"
