@@ -241,5 +241,59 @@ describe("SOC Security Suite: Adversarial & Anti-Cheat Controls", () => {
         expect((alert as unknown as Record<string, unknown>).debrief).toBeUndefined();
       }
     });
+
+    it("guarantees generated family variants never leak seeds, internal templates, or ground truth", async () => {
+      const ctx = createMockCtx();
+      const session = await startSocSession(ctx, userA, "soc-f-mixed-signal-01");
+      const clientView = session.scenario;
+      const serialized = JSON.stringify(clientView);
+
+      // The attempt projection sent to client must NOT have the seed
+      expect((session.attempt as unknown as Record<string, unknown>).seed).toBeUndefined();
+
+      // Deny-list scan over entire client-view JSON payload
+      const forbiddenGeneratorTokens = [
+        "groundTruth",
+        "correctDisposition",
+        "correctSeverity",
+        "correctEscalation",
+        "acceptableAlternatives",
+        "rootCause",
+        "incidentTemplates",
+        "benignTemplates",
+        "twinTemplates",
+        "temp-inc",
+        "temp-evt",
+        "temp-alt",
+        "true_positive",
+        "benign_true_positive",
+      ];
+
+      for (const token of forbiddenGeneratorTokens) {
+        expect(serialized).not.toContain(`"${token}"`);
+      }
+
+      // Retrieve attempt row directly from server-side repo
+      const serverAttempt = await ctx.repo.getSocAttempt(session.attempt.id);
+      expect(serverAttempt?.seed).toBeDefined();
+
+      // Verify that the seed itself does not appear anywhere in clientView payload
+      expect(serialized).not.toContain(serverAttempt!.seed);
+    });
+
+    it("verifies migration SQL enforces seed column revocation and RLS on used seeds", async () => {
+      const fsModule = await import("node:fs/promises");
+      const migrationSql = await fsModule.readFile(
+        "supabase/migrations/20261013000000_phase_3_soc_scenario_generation.sql",
+        "utf8",
+      );
+
+      // Must explicitly revoke SELECT on seed from authenticated role
+      expect(migrationSql).toContain("REVOKE SELECT (seed) ON public.soc_attempts FROM authenticated;");
+
+      // Must enable RLS on soc_used_seeds
+      expect(migrationSql).toContain("ALTER TABLE public.soc_used_seeds ENABLE ROW LEVEL SECURITY;");
+      expect(migrationSql).toContain("CREATE POLICY \"Operators manage own soc used seeds\"");
+    });
   });
 });
