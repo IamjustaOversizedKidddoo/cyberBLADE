@@ -1,6 +1,17 @@
 import { randomUUID } from "node:crypto";
 import type { JsonStore } from "@/lib/storage/json-store";
-import type { AttemptMode, LabAttempt, LessonProgress, ProgressData, RankChallenge, XpEvent } from "./types";
+import type {
+  AttemptMode,
+  LabAttempt,
+  LessonProgress,
+  ProgressData,
+  RankChallenge,
+  XpEvent,
+  ReviewItemRecord,
+  ReviewEventRecord,
+  LearningEventRecord,
+  ExamReportRecord,
+} from "./types";
 
 /**
  * Progress storage. Every mutation is a single atomic operation (no read-then-write in callers),
@@ -46,6 +57,13 @@ export interface ProgressRepo {
     now: Date;
   }): Promise<LabAttempt>;
   updateChallenge(id: string, patch: Partial<Pick<RankChallenge, "status" | "finishedAt">>): Promise<RankChallenge>;
+
+  listReviewItems(userId: string): Promise<ReviewItemRecord[]>;
+  saveReviewItem(item: Omit<ReviewItemRecord, "id"> & { id?: string }): Promise<ReviewItemRecord>;
+  logReviewEvent(event: Omit<ReviewEventRecord, "id">): Promise<ReviewEventRecord>;
+  logLearningEvent(event: Omit<LearningEventRecord, "id">): Promise<LearningEventRecord>;
+  saveExamReport(report: Omit<ExamReportRecord, "id">): Promise<ExamReportRecord>;
+  listExamReports(userId: string): Promise<ExamReportRecord[]>;
 }
 
 function latestAttempt(d: ProgressData, userId: string, labId: string, mode: AttemptMode): LabAttempt | null {
@@ -247,5 +265,53 @@ export class StoreProgressRepo implements ProgressRepo {
       Object.assign(c, patch);
     });
     return d.challenges[id];
+  }
+
+  async listReviewItems(userId: string): Promise<ReviewItemRecord[]> {
+    const data = await this.store.read();
+    return Object.values(data.reviewItems ?? {}).filter((i) => i.userId === userId);
+  }
+
+  async saveReviewItem(item: Omit<ReviewItemRecord, "id"> & { id?: string }): Promise<ReviewItemRecord> {
+    const id = item.id ?? randomUUID();
+    const record: ReviewItemRecord = { ...item, id };
+    await this.store.update((d) => {
+      d.reviewItems ??= {};
+      const key = `${item.userId}:${item.cardId}`;
+      d.reviewItems[key] = record;
+    });
+    return record;
+  }
+
+  async logReviewEvent(event: Omit<ReviewEventRecord, "id">): Promise<ReviewEventRecord> {
+    const record: ReviewEventRecord = { ...event, id: randomUUID() };
+    await this.store.update((d) => {
+      d.reviewEvents ??= {};
+      d.reviewEvents[record.id] = record;
+    });
+    return record;
+  }
+
+  async logLearningEvent(event: Omit<LearningEventRecord, "id">): Promise<LearningEventRecord> {
+    const record: LearningEventRecord = { ...event, id: randomUUID() };
+    await this.store.update((d) => {
+      d.learningEvents ??= {};
+      d.learningEvents[record.id] = record;
+    });
+    return record;
+  }
+
+  async saveExamReport(report: Omit<ExamReportRecord, "id">): Promise<ExamReportRecord> {
+    const record: ExamReportRecord = { ...report, id: randomUUID() };
+    await this.store.update((d) => {
+      d.examReports ??= {};
+      d.examReports[record.id] = record;
+    });
+    return record;
+  }
+
+  async listExamReports(userId: string): Promise<ExamReportRecord[]> {
+    const data = await this.store.read();
+    return Object.values(data.examReports ?? {}).filter((r) => r.userId === userId);
   }
 }

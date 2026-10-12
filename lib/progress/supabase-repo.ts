@@ -10,6 +10,10 @@ import type {
   LessonProgress,
   RankChallenge,
   XpEvent,
+  ReviewItemRecord,
+  ReviewEventRecord,
+  LearningEventRecord,
+  ExamReportRecord,
 } from "./types";
 
 export class SupabaseProgressRepo implements ProgressRepo {
@@ -549,5 +553,128 @@ export class SupabaseProgressRepo implements ProgressRepo {
       status: data.status,
       finishedAt: data.finished_at,
     };
+  }
+
+  async listReviewItems(userId: string): Promise<ReviewItemRecord[]> {
+    const client = await this.getClient();
+    const { data, error } = await (client as any)
+      .from("review_items")
+      .select("*")
+      .eq("user_id", userId);
+    if (error || !data) return [];
+    return data.map((d: any) => ({
+      id: d.id,
+      userId: d.user_id,
+      cardId: d.card_id,
+      lessonId: d.lesson_id,
+      easeFactor: Number(d.ease_factor),
+      intervalDays: Number(d.interval_days),
+      repetitions: Number(d.repetitions),
+      lapses: Number(d.lapses),
+      dueAt: d.due_at,
+      lastReviewedAt: d.last_reviewed_at,
+      createdAt: d.created_at,
+      updatedAt: d.updated_at,
+    }));
+  }
+
+  async saveReviewItem(item: Omit<ReviewItemRecord, "id"> & { id?: string }): Promise<ReviewItemRecord> {
+    const client = await this.getClient();
+    const record = {
+      ...(item.id ? { id: item.id } : {}),
+      user_id: item.userId,
+      card_id: item.cardId,
+      lesson_id: item.lessonId,
+      ease_factor: item.easeFactor,
+      interval_days: item.intervalDays,
+      repetitions: item.repetitions,
+      lapses: item.lapses,
+      due_at: item.dueAt,
+      last_reviewed_at: item.lastReviewedAt,
+      updated_at: new Date().toISOString(),
+    };
+    const { data, error } = await (client as any)
+      .from("review_items")
+      .upsert(record, { onConflict: "user_id,card_id" })
+      .select("*")
+      .single();
+    if (error || !data) {
+      return { ...item, id: item.id ?? randomUUID() } as ReviewItemRecord;
+    }
+    return {
+      id: data.id,
+      userId: data.user_id,
+      cardId: data.card_id,
+      lessonId: data.lesson_id,
+      easeFactor: Number(data.ease_factor),
+      intervalDays: Number(data.interval_days),
+      repetitions: Number(data.repetitions),
+      lapses: Number(data.lapses),
+      dueAt: data.due_at,
+      lastReviewedAt: data.last_reviewed_at,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  async logReviewEvent(event: Omit<ReviewEventRecord, "id">): Promise<ReviewEventRecord> {
+    const client = await this.getClient();
+    const id = randomUUID();
+    await (client as any).from("review_events").insert({
+      id,
+      user_id: event.userId,
+      card_id: event.cardId,
+      grade: event.grade,
+      reviewed_at: event.reviewedAt,
+    });
+    return { ...event, id };
+  }
+
+  async logLearningEvent(event: Omit<LearningEventRecord, "id">): Promise<LearningEventRecord> {
+    const client = await this.getClient();
+    const id = randomUUID();
+    await (client as any).from("learning_events").insert({
+      id,
+      user_id: event.userId,
+      event_type: event.eventType,
+      metadata: event.metadata,
+      created_at: event.createdAt,
+    });
+    return { ...event, id };
+  }
+
+  async saveExamReport(report: Omit<ExamReportRecord, "id">): Promise<ExamReportRecord> {
+    const client = await this.getClient();
+    const id = randomUUID();
+    await (client as any).from("exam_reports").insert({
+      id,
+      user_id: report.userId,
+      exam_type: report.examType,
+      score: report.score,
+      max_score: report.maxScore,
+      passed: report.passed,
+      notes: report.notes ?? null,
+      reported_at: report.reportedAt,
+    });
+    return { ...report, id };
+  }
+
+  async listExamReports(userId: string): Promise<ExamReportRecord[]> {
+    const client = await this.getClient();
+    const { data, error } = await (client as any)
+      .from("exam_reports")
+      .select("*")
+      .eq("user_id", userId);
+    if (error || !data) return [];
+    return data.map((d: any) => ({
+      id: d.id,
+      userId: d.user_id,
+      examType: d.exam_type,
+      score: d.score,
+      maxScore: d.max_score,
+      passed: d.passed,
+      notes: d.notes,
+      reportedAt: d.reported_at,
+    }));
   }
 }
