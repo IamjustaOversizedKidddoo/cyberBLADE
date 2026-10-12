@@ -282,13 +282,13 @@ export const ReferenceSolver: SocSolver = {
 
       // 6. External SSH/Auth Brute Force with Success vs Failures & MFA
       if (rule.includes("brute force") || rule.includes("dictionary attack") || summary.includes("multiple failed logons") || summary.includes("failed logons") || rule.includes("authentication:") || rule.includes("identity:")) {
-        if (summary.includes("fatigue") || summary.includes("push prompt") || summary.includes("novel asn") || summary.includes("impossible travel")) {
+        if (rule.includes("novel asn") || summary.includes("novel foreign") || summary.includes("novel asn") || summary.includes("fatigue") || summary.includes("push prompt") || summary.includes("impossible travel")) {
           decisions[alert.id] = {
             alertId: alert.id,
             disposition: "true_positive",
             severity: "HIGH",
             escalate: true,
-            rationale: "Confirmed identity anomaly: MFA fatigue or impossible travel sign-in breach.",
+            rationale: "Confirmed identity anomaly: MFA fatigue, impossible travel, or novel foreign ingress breach.",
           };
         } else if (raw.includes("burst_detected") || raw.includes("status: accepted") || raw.includes("status\": \"accepted\"") || summary.includes("followed by root session") || summary.includes("culminating in successful logon") || summary.includes("followed by success")) {
           decisions[alert.id] = {
