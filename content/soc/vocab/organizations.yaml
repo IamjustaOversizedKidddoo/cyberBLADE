@@ -77,3 +77,81 @@ organizations:
         name: "Clinical Record Repositories"
         cidr: "10.90.0.0/16"
         description: "Encrypted patient records and billing engines"
+
+  - id: org_meridian_fintech
+    name: "Meridian Financial Technologies"
+    sector: "Digital Banking & Payments"
+    domain: "meridian.corp.internal"
+    workingHours:
+      startUtc: 8
+      endUtc: 18
+    timeZone: "UTC-5"
+    zones:
+      - id: zone-workstations
+        name: "Analyst & Trading Workstations"
+        cidr: "10.100.0.0/16"
+        description: "Hardened financial analyst and compliance workstations"
+      - id: zone-dmz
+        name: "Banking Gateway DMZ"
+        cidr: "10.110.0.0/16"
+        description: "Public banking portals, API reverse proxies, and WAF"
+      - id: zone-core
+        name: "Identity & Vault Core"
+        cidr: "10.100.0.0/24"
+        description: "Zero-trust identity gateways, HSM, and key vault controllers"
+      - id: zone-databases
+        name: "Ledger & Core Transaction Store"
+        cidr: "10.120.0.0/16"
+        description: "PCI-DSS compliant immutable ledger and account databases"
+
+  - id: org_helios_energy
+    name: "Helios Grid Systems"
+    sector: "Renewable Utilities & Power"
+    domain: "helios.corp.internal"
+    workingHours:
+      startUtc: 7
+      endUtc: 17
+    timeZone: "UTC+1"
+    zones:
+      - id: zone-workstations
+        name: "Grid Engineering Workstations"
+        cidr: "10.130.0.0/16"
+        description: "Engineering terminals, SCADA engineering workstations, GIS stations"
+      - id: zone-dmz
+        name: "Customer Portal & API DMZ"
+        cidr: "10.140.0.0/16"
+        description: "Smart meter telemetry ingest gateways and customer billing portals"
+      - id: zone-core
+        name: "Utility Infrastructure Core"
+        cidr: "10.130.0.0/24"
+        description: "Domain controllers, central syslog aggregates, and PKI"
+      - id: zone-databases
+        name: "Meter & Grid Historian Datastores"
+        cidr: "10.150.0.0/16"
+        description: "Time-series historian telemetry and smart meter databases"
+
+  - id: org_nexus_saas
+    name: "Nexus Cloud Software"
+    sector: "Enterprise SaaS & Cloud Infrastructure"
+    domain: "nexus.corp.internal"
+    workingHours:
+      startUtc: 9
+      endUtc: 18
+    timeZone: "UTC-7"
+    zones:
+      - id: zone-workstations
+        name: "Developer & Product Workstations"
+        cidr: "10.160.0.0/16"
+        description: "Developer Mac/Linux/Windows endpoints and staging environments"
+      - id: zone-dmz
+        name: "SaaS Application DMZ"
+        cidr: "10.170.0.0/16"
+        description: "Ingress load balancers, CDN edge proxies, public API clusters"
+      - id: zone-core
+        name: "Cloud Identity & Orchestration Core"
+        cidr: "10.160.0.0/24"
+        description: "IdP SSO proxies, secrets management, and cluster control planes"
+      - id: zone-databases
+        name: "Multi-Tenant App Stores"
+        cidr: "10.180.0.0/16"
+        description: "Distributed document datastores and tenant relational clusters"

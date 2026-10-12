@@ -59,3 +59,19 @@ assetArchetypes:
     zoneId: "zone-workstations"
     hostnamePrefix: "srv-share"
     tags: ["storage", "smb", "internal"]
+
+  - role: "Cloud Bastion & Identity Proxy"
+    osVariants:
+      - "Ubuntu 24.04 LTS"
+    criticalityDefault: "HIGH"
+    zoneId: "zone-dmz"
+    hostnamePrefix: "srv-bastion"
+    tags: ["bastion", "ssh", "identity", "perimeter"]
+
+  - role: "Internal Backup Repository"
+    osVariants:
+      - "Debian 12 Bookworm"
+    criticalityDefault: "HIGH"
+    zoneId: "zone-core"
+    hostnamePrefix: "srv-backup"
+    tags: ["backup", "storage", "infrastructure"]

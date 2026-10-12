@@ -162,27 +162,149 @@ export const ReferenceSolver: SocSolver = {
       const user = (alert.relatedUser || "").toLowerCase();
       const raw = JSON.stringify(alert.rawFields).toLowerCase();
 
-      // Phishing & Credential Harvest
-      if (rule.includes("phishing") || summary.includes("credential harvest") || raw.includes("invoice-secure.example")) {
-        decisions[alert.id] = {
-          alertId: alert.id,
-          disposition: "true_positive",
-          severity: "HIGH",
-          escalate: true,
-          rationale: "Inbound phishing email delivering external credential harvesting link to end user.",
-        };
-        continue;
-      }
-
-      // External SSH/Auth Brute Force with Success
-      if (rule.includes("brute force") || summary.includes("multiple failed logons")) {
-        if (raw.includes("success") || summary.includes("followed by success") || raw.includes("status: accepted")) {
+      // 1. Phishing & Email Gateway Analysis
+      if (rule.includes("phishing") || rule.includes("email gateway") || summary.includes("credential harvest") || summary.includes("phishing")) {
+        if (summary.includes("newsletter") || raw.includes("spf_result\": \"pass\"") || summary.includes("legitimate vendor")) {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "benign_true_positive",
+            severity: "LOW",
+            escalate: false,
+            rationale: "Legitimate corporate email with authenticated sender SPF/DKIM records.",
+          };
+        } else {
           decisions[alert.id] = {
             alertId: alert.id,
             disposition: "true_positive",
             severity: "HIGH",
             escalate: true,
-            rationale: "External brute force attack culminated in a successful authentication logon.",
+            rationale: "Inbound phishing email delivering external credential harvesting link to end user.",
+          };
+        }
+        continue;
+      }
+
+      // 2. Web Application Attacks (SQLi, Traversal, Web Shells)
+      if (rule.includes("waf") || rule.includes("sql injection") || rule.includes("path traversal") || summary.includes("web application") || summary.includes("sql injection") || summary.includes("webshell")) {
+        if (summary.includes("healthz") || summary.includes("health check") || rule.includes("health probe")) {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "benign_true_positive",
+            severity: "LOW",
+            escalate: false,
+            rationale: "Routine load balancer HTTP health check probe.",
+          };
+        } else if (raw.includes("403") || raw.includes("forbidden") || rule.includes("blocked") || summary.includes("blocked")) {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "false_positive",
+            severity: "LOW",
+            escalate: false,
+            rationale: "Automated internet scanner probe successfully blocked by WAF with HTTP 403 Forbidden.",
+          };
+        } else {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "true_positive",
+            severity: "CRITICAL",
+            escalate: true,
+            rationale: "Web application exploit succeeded with HTTP 200 response indicating active compromise.",
+          };
+        }
+        continue;
+      }
+
+      // 3. DNS Tunneling, C2 Beaconing & Outbound Exfiltration
+      if (rule.includes("dns subdomain") || rule.includes("c2") || rule.includes("beacon") || rule.includes("exfiltration") || summary.includes("dns tunneling") || summary.includes("c2 beaconing") || summary.includes("exfiltration")) {
+        if (summary.includes("cloud storage") || summary.includes("file sync") || summary.includes("dropbox") || summary.includes("onedrive")) {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "benign_true_positive",
+            severity: "LOW",
+            escalate: false,
+            rationale: "Authorized business cloud file synchronization traffic.",
+          };
+        } else {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "true_positive",
+            severity: "CRITICAL",
+            escalate: true,
+            rationale: "High-entropy DNS query tunneling or periodic C2 callback session to untrusted external infrastructure.",
+          };
+        }
+        continue;
+      }
+
+      // 4. Insider Threat, Removable Media & Policy Violations
+      if (rule.includes("removable media") || rule.includes("usb") || rule.includes("insider") || summary.includes("usb") || summary.includes("removable storage") || summary.includes("mass export") || summary.includes("bulk cloud upload")) {
+        if (summary.includes("approved") || summary.includes("it technician") || summary.includes("hardware diagnostics") || user.includes("itadmin")) {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "benign_true_positive",
+            severity: "LOW",
+            escalate: false,
+            rationale: "Authorized IT technician removable media diagnostics on registered endpoint.",
+          };
+        } else {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "true_positive",
+            severity: "HIGH",
+            escalate: true,
+            rationale: "Unauthorized removable media access or off-hours sensitive bulk data export in violation of data handling policy.",
+          };
+        }
+        continue;
+      }
+
+      // 5. Cloud IAM & Identity Anomalies
+      if (rule.includes("cloud audit") || rule.includes("iam") || rule.includes("access key") || summary.includes("iam") || summary.includes("access key") || summary.includes("novel asn")) {
+        if (summary.includes("terraform") || summary.includes("ci/cd") || summary.includes("rotation") || user.includes("terraform") || user.includes("service")) {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "benign_true_positive",
+            severity: "LOW",
+            escalate: false,
+            rationale: "Approved cloud infrastructure automation pipeline or scheduled key rotation.",
+          };
+        } else {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "true_positive",
+            severity: "CRITICAL",
+            escalate: true,
+            rationale: "Unauthorized cloud privilege escalation or programmatic API key creation from unverified origin.",
+          };
+        }
+        continue;
+      }
+
+      // 6. External SSH/Auth Brute Force with Success vs Failures & MFA
+      if (rule.includes("brute force") || rule.includes("dictionary attack") || summary.includes("multiple failed logons") || summary.includes("failed logons") || rule.includes("authentication:") || rule.includes("identity:")) {
+        if (summary.includes("fatigue") || summary.includes("push prompt") || summary.includes("novel asn") || summary.includes("impossible travel")) {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "true_positive",
+            severity: "HIGH",
+            escalate: true,
+            rationale: "Confirmed identity anomaly: MFA fatigue or impossible travel sign-in breach.",
+          };
+        } else if (raw.includes("burst_detected") || raw.includes("status: accepted") || raw.includes("status\": \"accepted\"") || summary.includes("followed by root session") || summary.includes("culminating in successful logon") || summary.includes("followed by success")) {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "true_positive",
+            severity: "CRITICAL",
+            escalate: true,
+            rationale: "External brute force attack targeting authentication services culminating in breach.",
+          };
+        } else if (summary.includes("password change") || summary.includes("self-service")) {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "false_positive",
+            severity: "LOW",
+            escalate: false,
+            rationale: "Routine user authentication retries following self-service password update.",
           };
         } else {
           decisions[alert.id] = {
@@ -196,8 +318,8 @@ export const ReferenceSolver: SocSolver = {
         continue;
       }
 
-      // LOLBin / Suspicious Process
-      if (rule.includes("certutil") || rule.includes("powershell") || summary.includes("living-off-the-land") || summary.includes("lolbin")) {
+      // 7. LOLBin / Suspicious Process
+      if (rule.includes("certutil") || rule.includes("powershell") || summary.includes("living-off-the-land") || summary.includes("lolbin") || summary.includes("script interpreter")) {
         // Disambiguate twin: CRL verify vs external binary download
         if (raw.includes("-urlcache") && (raw.includes("http") || raw.includes(".bin") || raw.includes(".exe"))) {
           decisions[alert.id] = {
@@ -215,7 +337,7 @@ export const ReferenceSolver: SocSolver = {
             escalate: false,
             rationale: "Routine PKI certificate revocation check performed by system utility.",
           };
-        } else if (raw.includes("-enc") || raw.includes("hidden")) {
+        } else if (raw.includes("-enc") || raw.includes("hidden") || summary.includes("encoded powershell")) {
           decisions[alert.id] = {
             alertId: alert.id,
             disposition: "true_positive",
@@ -235,7 +357,7 @@ export const ReferenceSolver: SocSolver = {
         continue;
       }
 
-      // Vulnerability Scanning
+      // 8. Vulnerability Scanning
       if (rule.includes("port sweep") || summary.includes("scanner") || raw.includes("10.10.0.85")) {
         decisions[alert.id] = {
           alertId: alert.id,
@@ -247,7 +369,7 @@ export const ReferenceSolver: SocSolver = {
         continue;
       }
 
-      // Scheduled Backups & Maintenance
+      // 9. Scheduled Backups & Maintenance
       if (user.includes("backup") || summary.includes("replication") || summary.includes("backup")) {
         decisions[alert.id] = {
           alertId: alert.id,
@@ -259,7 +381,7 @@ export const ReferenceSolver: SocSolver = {
         continue;
       }
 
-      // Central Patch Deployment
+      // 10. Central Patch Deployment
       if (summary.includes("patch") || summary.includes("package deployment") || summary.includes("installer")) {
         decisions[alert.id] = {
           alertId: alert.id,
@@ -271,7 +393,7 @@ export const ReferenceSolver: SocSolver = {
         continue;
       }
 
-      // Remote VPN Access
+      // 11. Remote VPN Access
       if (rule.includes("vpn") || summary.includes("vpn tunnel")) {
         decisions[alert.id] = {
           alertId: alert.id,
@@ -283,7 +405,7 @@ export const ReferenceSolver: SocSolver = {
         continue;
       }
 
-      // Flapping Sensor / Duplicates
+      // 12. Flapping Sensor / Duplicates
       if (rule.includes("sensor trigger") || summary.includes("repetitive protocol anomaly")) {
         decisions[alert.id] = {
           alertId: alert.id,
@@ -295,7 +417,7 @@ export const ReferenceSolver: SocSolver = {
         continue;
       }
 
-      // Self-service Password Reset
+      // 13. Self-service Password Reset
       if (summary.includes("password change") || summary.includes("self-service")) {
         decisions[alert.id] = {
           alertId: alert.id,

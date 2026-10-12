@@ -6,7 +6,7 @@ noiseArchetypes:
     actorType: "service_account"
     timePattern: "batch_window_nightly"
     sources: ["Authentication", "Firewall"]
-    summaryTemplate: "High-volume data replication stream initiated by service account '{username}'"
+    summaryTemplate: "High-volume data replication stream handled by service account '{username}'"
     disposition: "benign_true_positive"
     severity: "LOW"
     escalate: false
@@ -72,7 +72,51 @@ noiseArchetypes:
     actorType: "standard_user"
     timePattern: "business_hours"
     sources: ["Authentication"]
-    summaryTemplate: "Self-service password change followed by multiple logon retries from '{hostname}'"
+    summaryTemplate: "Self-service password change followed by transient logon retries from '{hostname}'"
     disposition: "false_positive"
+    severity: "LOW"
+    escalate: false
+
+  - id: noise_health_check_probe
+    category: "Web Infrastructure"
+    name: "Load Balancer Service Health Probe"
+    actorType: "service_utility"
+    timePattern: "anytime"
+    sources: ["Network IDS"]
+    summaryTemplate: "Frequent HTTP GET /healthz probe requests from load balancer against '{hostname}'"
+    disposition: "benign_true_positive"
+    severity: "LOW"
+    escalate: false
+
+  - id: noise_cloud_sync_client
+    category: "Cloud Synchronization"
+    name: "Enterprise Cloud Storage File Sync"
+    actorType: "standard_user"
+    timePattern: "business_hours"
+    sources: ["Firewall", "EDR"]
+    summaryTemplate: "Encrypted file synchronization session to corporate cloud storage by '{username}'"
+    disposition: "benign_true_positive"
+    severity: "LOW"
+    escalate: false
+
+  - id: noise_terraform_ci_deploy
+    category: "Cloud Automation"
+    name: "Continuous Integration Infrastructure Deployment"
+    actorType: "service_principal"
+    timePattern: "business_hours"
+    sources: ["Authentication"]
+    summaryTemplate: "Automated Terraform pipeline modified cloud staging resources for service '{username}'"
+    disposition: "benign_true_positive"
+    severity: "LOW"
+    escalate: false
+
+  - id: noise_authorized_usb_imaging
+    category: "Endpoint Operations"
+    name: "IT Technician Approved Removable Media Storage"
+    actorType: "it_technician"
+    timePattern: "business_hours"
+    sources: ["EDR"]
+    summaryTemplate: "Approved IT hardware diagnostics USB drive connected to host '{hostname}' by '{username}'"
+    disposition: "benign_true_positive"
     severity: "LOW"
     escalate: false
