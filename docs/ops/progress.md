@@ -14,8 +14,8 @@
 | **Stage 1** | **1B** | Feedback Quality (Rationales, Debriefs, Nudges) | ✅ Complete | Pending | Distractor rationales, near-misses, debriefs |
 | **Stage 1** | **1C** | Retrieval Practice & Spaced Review (SM-2, Daily Review) | ✅ Complete | Pending | Scheduler, flashcards, DB migrations |
 | **Stage 1** | **1D** | Pacing, Progress & Motivation (Next Action, Mastery, Streaks) | ✅ Complete | Pending | Streak grace, timezone fix, XP simulation |
-| **Stage 1** | **1E** | Readiness Accuracy & Analytics (Bugs, Decay, Telemetry) | ⏳ Next | — | Non-linear decay, exam self-report |
-| **Stage 1** | **1F** | Stage 1 Tests & Verification | ⬜ Pending | — | E2E, simulated learners, axe checks |
+| **Stage 1** | **1E** | Readiness Accuracy & Analytics (Bugs, Decay, Telemetry) | ✅ Complete | Pending | Non-linear decay, exam self-report |
+| **Stage 1** | **1F** | Stage 1 Tests & Verification | ⏳ Next | — | E2E, simulated learners, axe checks |
 | **Stage 2** | **2A** | Test Suite Health (Mutation, Flakiness, Hermetic E2E) | ⬜ Pending | — | Coverage per dir, artifact scan |
 | **Stage 2** | **2B** | CI/CD, Environments & Feature Flags | ⬜ Pending | — | GitHub Actions, typed config, Dockerfile |
 | **Stage 2** | **2C** | Observability, Backup, Resilience & Load Testing | ⬜ Pending | — | Redaction, restore rehearsal, load harness |
@@ -65,3 +65,10 @@
   | Average / Consistent | 35 min/day | 7 days | 25 days | 39 days | 4,720 XP |
   | Casual / Slower | 15 min/day | 19 days | 70 days | 110 days | 5,925 XP |
 - All tests passing.
+
+### Entry 5: Part 1E Completed (Readiness Accuracy, Memory Decay & Telemetry Report)
+- Upgraded `calculateReadinessSync` in `lib/readiness/calculator.ts` with recency decay: applies exponential decay `exp(-0.02 * (days - 14))` when inactive > 14 days, with property tests guaranteeing [0, 100] bounds.
+- Added explicit legal disclaimer banner `READINESS_DISCLAIMER` across all readiness readouts clarifying scores are activity estimates, not accredited exam guarantees.
+- Built privacy-preserving telemetry logger in `lib/analytics/learning-events.ts` strictly redacting PII, tokens, and IPs.
+- Created `ExamReportDialog` in `components/exam/ExamReportDialog.tsx` and `submitExamReportAction` in `app/(app)/exam/actions.ts` allowing voluntary real-world certification self-reporting.
+- Implemented `scripts/learning-analytics-report.mts` (`npm run report:learning`) producing aggregated curriculum, lab, SM-2, and exam statistics.

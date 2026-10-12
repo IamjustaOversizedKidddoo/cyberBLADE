@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { HeroBand } from "@/components/theme/HeroBand";
 import { CertReadinessSection } from "@/components/dashboard/CertReadinessSection";
+import { ExamReportDialog } from "@/components/exam/ExamReportDialog";
 import { Callout } from "@/components/ui/Callout";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { getLessons } from "@/lib/content/lessons";
@@ -15,9 +16,10 @@ export default async function ExamReadinessPage() {
   const operator = await requireOperator();
   const ctx = getCtx();
 
-  const [allLessons, progress] = await Promise.all([
+  const [allLessons, progress, reports] = await Promise.all([
     getLessons({ track: "core" }),
     ctx.repo.listLessonProgress(operator.id),
+    ctx.repo.listExamReports(operator.id),
   ]);
 
   const completedLessonIds = new Set(
@@ -99,6 +101,9 @@ export default async function ExamReadinessPage() {
         ) : (
           <CertReadinessSection readiness={readiness} />
         )}
+
+        {/* Real-World Exam Verification Self-Report Ledger */}
+        <ExamReportDialog reports={reports} />
 
         {/* Quick Links Back to Study */}
         <div className="rounded-xs border border-line/80 bg-console-deep p-6 flex flex-wrap items-center justify-between gap-4">

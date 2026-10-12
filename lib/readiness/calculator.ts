@@ -28,12 +28,17 @@ export function getCoverageMatrix(): Promise<Coverage> {
   return cachedCoverage;
 }
 
+export const READINESS_DISCLAIMER =
+  "Estimate based on your activity on CyberBLADE, not an official certification score guarantee.";
+
 export function calculateReadinessSync(input: {
   coverage: Coverage;
   completedLessonIds: Set<string>;
   lessons: Lesson[];
+  daysSinceLastActive?: number;
+  applyDecay?: boolean;
 }): CertReadiness[] {
-  const { coverage, completedLessonIds, lessons } = input;
+  const { coverage, completedLessonIds, lessons, daysSinceLastActive, applyDecay } = input;
 
   // Build a lookup: objectiveId -> lesson covering it (if any completed)
   const coveredBy = new Map<string, Lesson>();
@@ -67,7 +72,15 @@ export function calculateReadinessSync(input: {
       };
     });
 
-    const scorePercent = totalObjectives > 0 ? Math.round((completedCount / totalObjectives) * 100) : 0;
+    let scorePercent = totalObjectives > 0 ? Math.round((completedCount / totalObjectives) * 100) : 0;
+    let decayApplied = false;
+
+    if (applyDecay && daysSinceLastActive !== undefined && daysSinceLastActive > 14 && scorePercent > 0) {
+      const decayFactor = Math.exp(-0.02 * (daysSinceLastActive - 14));
+      scorePercent = Math.max(0, Math.min(95, Math.round(scorePercent * decayFactor)));
+      decayApplied = true;
+    }
+
     const band = scoreToBand(scorePercent);
 
     results.push({
@@ -79,6 +92,8 @@ export function calculateReadinessSync(input: {
       completedObjectives: completedCount,
       totalObjectives,
       objectives: objectiveDetails,
+      disclaimer: READINESS_DISCLAIMER,
+      decayApplied,
     });
   }
 
