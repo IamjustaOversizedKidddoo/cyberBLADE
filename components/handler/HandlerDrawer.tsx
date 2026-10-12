@@ -177,7 +177,7 @@ export function HandlerDrawer({ context, operatorHandle = "OPERATOR", defaultOpe
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
         aria-controls="handler-drawer"
-        className="fixed bottom-4 right-4 z-40 flex items-center gap-2 border border-cyan/60 bg-console-deep/95 px-3 py-2 font-ui text-xs tracking-wider text-cyan shadow-[0_0_15px_rgba(15,190,255,0.25)] backdrop-blur transition-all hover:border-cyan hover:bg-cyan hover:text-void sm:bottom-6 sm:right-6"
+        className="fixed bottom-4 right-4 z-50 flex items-center gap-2 border border-cyan/60 bg-console-deep/95 px-3 py-2 font-ui text-xs tracking-wider text-cyan shadow-[0_0_15px_rgba(15,190,255,0.25)] backdrop-blur transition-all hover:border-cyan hover:bg-cyan hover:text-void sm:bottom-6 sm:right-6"
       >
         <span
           className={`h-2 w-2 rounded-full ${

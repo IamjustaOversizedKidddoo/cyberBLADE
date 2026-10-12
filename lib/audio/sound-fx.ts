@@ -2,10 +2,14 @@ import { readReducedMotion } from "@/components/art/motion/reduced";
 
 let audioCtx: AudioContext | null = null;
 
+interface NavigatorWithSaveData extends Navigator {
+  connection?: { saveData?: boolean };
+}
+
 export function isAudioEnabled(): boolean {
   if (typeof window === "undefined") return false;
   if (readReducedMotion()) return false;
-  const nav = navigator as any;
+  const nav = navigator as NavigatorWithSaveData;
   if (nav?.connection?.saveData) return false;
   return localStorage.getItem("cyberblade_audio") === "true";
 }
@@ -18,7 +22,9 @@ export function setAudioEnabled(enabled: boolean): void {
 function getContext(): AudioContext | null {
   if (typeof window === "undefined" || !isAudioEnabled()) return null;
   if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (AudioContextClass) {
       audioCtx = new AudioContextClass();
     }

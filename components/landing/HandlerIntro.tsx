@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { IconShield, IconSearch, IconTerminal, IconCheck } from "@/components/ui/icons";
+import { IconCheck } from "@/components/ui/icons";
 
 export function HandlerIntro() {
   return (

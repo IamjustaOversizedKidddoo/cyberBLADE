@@ -19,7 +19,7 @@ export async function applyFilter(page: Page, filterText: string): Promise<void>
 
 /** Extracts structured packet row data from the visible packet table. */
 export async function rows(page: Page): Promise<PacketRowData[]> {
-  const trs = page.locator('table tbody tr[role="button"]');
+  const trs = page.locator("table tbody tr");
   const count = await trs.count();
   const result: PacketRowData[] = [];
   for (let i = 0; i < count; i++) {

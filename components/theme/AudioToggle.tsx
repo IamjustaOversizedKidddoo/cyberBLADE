@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { isAudioEnabled, setAudioEnabled, playKeyBlip } from "@/lib/audio/sound-fx";
 import { IconVolume2, IconVolumeX } from "@/components/ui/icons";
 
 export function AudioToggle({ className = "" }: { className?: string }) {
-  const [enabled, setEnabled] = useState(false);
-
-  useEffect(() => {
-    setEnabled(isAudioEnabled());
-  }, []);
+  const [enabled, setEnabled] = useState(() => isAudioEnabled());
 
   const toggle = () => {
     const next = !enabled;

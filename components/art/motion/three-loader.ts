@@ -7,9 +7,14 @@ export const loadThree = () => import("three");
  * The 3D blade runs only where it adds something and costs little: a wide desktop window (≥ 1024 px),
  * a mouse/trackpad, motion allowed, and WebGL2. Everyone else sees the drawn BladeMark.
  */
+interface NavigatorExtended extends Navigator {
+  connection?: { saveData?: boolean };
+  deviceMemory?: number;
+}
+
 export function canRunBlade(): boolean {
   if (typeof window === "undefined" || readReducedMotion()) return false;
-  const nav = navigator as any;
+  const nav = navigator as NavigatorExtended;
   if (nav?.connection?.saveData) return false;
   if (typeof nav?.deviceMemory === "number" && nav.deviceMemory < 4) return false;
   if (typeof nav?.hardwareConcurrency === "number" && nav.hardwareConcurrency <= 2) return false;

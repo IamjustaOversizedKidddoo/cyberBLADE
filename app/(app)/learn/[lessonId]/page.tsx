@@ -114,8 +114,8 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
       </HeroBand>
 
       {/* Main content grid: Article + Sticky Table of Contents */}
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 flex justify-center gap-12">
-        <article className="w-full max-w-[70ch] leading-relaxed">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 flex flex-col xl:flex-row xl:justify-center gap-8 xl:gap-12">
+        <article className="w-full min-w-0 max-w-[70ch] leading-relaxed">
           {body}
           <LessonNav lessons={siblings} currentId={lesson.id} />
         </article>
