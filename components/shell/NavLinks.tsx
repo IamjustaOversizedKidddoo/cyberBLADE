@@ -12,6 +12,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "[DASHBOARD]", exact: true },
   { href: "/learn/core", label: "[CURRICULUM]" },
+  { href: "/review", label: "[REVIEW]" },
   { href: "/labs", label: "[LABS]" },
   { href: "/exam", label: "[EXAM PREP]" },
 ];

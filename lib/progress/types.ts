@@ -36,11 +36,67 @@ export type RankChallenge = {
   finishedAt: string | null;
 };
 
+export type ReviewItemRecord = {
+  id: string;
+  userId: string;
+  cardId: string;
+  lessonId: string;
+  easeFactor: number;
+  intervalDays: number;
+  repetitions: number;
+  lapses: number;
+  dueAt: string;
+  lastReviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ReviewEventRecord = {
+  id: string;
+  userId: string;
+  cardId: string;
+  grade: number;
+  reviewedAt: string;
+};
+
+export type LearningEventRecord = {
+  id: string;
+  userId: string;
+  eventType: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type ExamReportRecord = {
+  id: string;
+  userId: string;
+  examType: string;
+  score: number;
+  maxScore: number;
+  passed: boolean;
+  notes?: string | null;
+  reportedAt: string;
+};
+
 export type ProgressData = {
   lessons: Record<string, LessonProgress>;
   attempts: Record<string, LabAttempt>;
   xp: Record<string, XpEvent>;
   challenges: Record<string, RankChallenge>;
+  reviewItems?: Record<string, ReviewItemRecord>;
+  reviewEvents?: Record<string, ReviewEventRecord>;
+  learningEvents?: Record<string, LearningEventRecord>;
+  examReports?: Record<string, ExamReportRecord>;
 };
 
-export const emptyProgress = (): ProgressData => ({ lessons: {}, attempts: {}, xp: {}, challenges: {} });
+export const emptyProgress = (): ProgressData => ({
+  lessons: {},
+  attempts: {},
+  xp: {},
+  challenges: {},
+  reviewItems: {},
+  reviewEvents: {},
+  learningEvents: {},
+  examReports: {},
+});
+
