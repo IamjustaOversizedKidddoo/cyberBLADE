@@ -232,9 +232,11 @@ All actions reside in server-only modules (`use server`) with strict Zod validat
 
 The engine intentionally exposes typed, unpopulated seams so future prompts integrate seamlessly without breaking database migrations or schemas:
 
-1. **Procedural Scenario Generator Seam:**
-   - Fields `seed?: string` and `variantOf?: string` in `SocScenarioMetadata`.
-   - `SocScenario.generatorConfig?: { module: string; params: Record<string, unknown> }`.
+1. **Procedural Scenario Generator Integration (Phase 3 Foundation):**
+   - Active generator subsystem implemented in `lib/lab-engine/soc/generator.ts` and `lib/lab-engine/soc/family-schema.ts`.
+   - Attempts pin `(familyId, familyVersion, generatorVersion, seed, difficulty)`.
+   - Pure PRNG sub-stream derivation (`environment`, `incidents`, `noise`, `timing`, `ids`, `text`) ensures sub-millisecond CPU generation with zero disk/network I/O.
+   - 7-layer validation toolchain (`lib/lab-engine/soc/family-validator.ts`) enforces structural validity, semantic consistency, Reference Solver proof ($\ge 75\%$), Naive Solver ceilings ($\le 70\%$), anti-tell invariance ($\le 72\%$), zero-leakage client views, and 1,000-seed distributional stability.
 2. **Enrichment Tools Seam:**
    - Hook `enrichmentSources?: SocEnrichmentSource[]` in `SocScenario`.
    - Server endpoint seam `requestEnrichmentAction(attemptId, type, indicator)`.
@@ -257,6 +259,10 @@ The engine intentionally exposes typed, unpopulated seams so future prompts inte
 | Threat Vector | Cheater Strategy | Defense & Mitigation |
 | :--- | :--- | :--- |
 | **Client-Side Ground Truth Inspection** | Inspect React DevTools, Redux/Zustand state, network response payloads, or DOM attributes for `groundTruth` answers. | `toClientView(scenario)` strips all `groundTruth`, incident linkages, and debrief text prior to serialization. Hard CI deny-list test scans client bundles and HTML hydration payloads. |
+| **Seed Prediction & Answer Derivation** | Extract the generation `seed` or family blueprint from client state to regenerate ground-truth answers locally. | Seeds are generated via server-side CSPRNG (`crypto.randomUUID()`), stored in `soc_attempts.seed`, and never transmitted to the browser. Database RLS explicitly revokes `seed` column access from the authenticated client role. |
+| **Answer Sharing Across Learners** | Learner A shares their alert dispositions and IOC lists with Learner B. | Procedural family generator samples distinct environments, IPs, domains, timestamps, and attack-chain branches per seed. High pairwise distance metric ($\ge 0.60$) guarantees no shared IOCs between distinct attempts. |
+| **Replay of Memorized Retake Variants** | Learner retakes a failed attempt hoping for the same alert sequence. | Engine queries `soc_used_seeds` table per `(user_id, family_id)` to enforce non-repeating seeds. Retakes receive a completely fresh, unrepeated scenario variant. |
+| **Tell-Tale Artifacts / Heuristic Cheating** | Learner builds or uses a trivial rule/script (e.g. "always escalate Critical", or "sort by description length") to score without analyzing logs. | Validation toolchain evaluates 5 adversarial Naive Solvers and decision-stump Tell Detectors across 1,000 seeds. Caps naive accuracy at $\le 70\%$ and guarantees a $\ge +15\%$ discretion margin for genuine analyst correlation. |
 | **Score Tampering via API** | Post synthetic high scores or modify results in transit. | Evaluation is 100% server-authoritative. The client sends decisions only; the server computes the score using private ground truth. |
 | **IDOR / Cross-User Tampering** | Pass another user's `attemptId` to view their decisions or submit their attempt. | Every database query checks `user_id = auth.uid()` via Supabase RLS and server session validation. Unguessable UUID v4 attempt IDs. |
 | **Post-Submission Modification** | Alter decisions after seeing the debrief or score. | State machine enforces `status === 'in_progress'`. All write endpoints reject mutations on `submitted` attempts. |
