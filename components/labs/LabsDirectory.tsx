@@ -162,7 +162,7 @@ export function LabsDirectory({
             className="w-full rounded-xs border border-line bg-console-deep px-4 py-2 text-xs font-mono text-ink placeholder:text-muted/60 focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
           />
           <div className="absolute right-3 top-2 hidden sm:flex items-center gap-1.5 pointer-events-none">
-            <span className="text-[10px] text-muted/60 font-ui">Press</span>
+            <span className="text-[10px] text-secondary font-ui">Press</span>
             <Kbd>/</Kbd>
           </div>
         </div>
@@ -201,7 +201,7 @@ export function LabsDirectory({
                     ? "border-purple/60 bg-console hover:border-purple"
                     : unlocked
                     ? "border-line bg-console hover:border-cyan"
-                    : "border-line/40 bg-void/50 opacity-60"
+                    : "border-line/60 bg-void/50"
                 }`}
               >
                 <div>
@@ -211,7 +211,7 @@ export function LabsDirectory({
                       {l.isChallenge ? "TIMED CHALLENGE" : l.type.toUpperCase()}
                     </span>
                     <div className="flex items-center gap-1.5 font-ui text-xs">
-                      <span className="text-muted/80">RANK_{l.rank}</span>
+                      <span className="text-secondary">RANK_{l.rank}</span>
                       <span className="text-line">·</span>
                       <span className="text-cyan font-mono">{l.xp} XP</span>
                     </div>
@@ -224,16 +224,16 @@ export function LabsDirectory({
 
                   {/* Linked Lesson */}
                   {l.linkedLessonTitle && (
-                    <p className="mt-1.5 font-ui text-xs text-muted truncate">
-                      Linked: <span className="text-ink/80">{l.linkedLessonTitle}</span>
+                    <p className="mt-1.5 font-ui text-xs text-secondary truncate">
+                      Linked: <span className="text-ink/90">{l.linkedLessonTitle}</span>
                     </p>
                   )}
 
                   {/* Metadata: Minutes & MITRE */}
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] font-mono text-muted/80">
+                  <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] font-mono text-secondary">
                     <span>⏱ {l.estimatedMinutes} min</span>
                     {l.mitre.length > 0 && (
-                      <span className="text-purple/90">
+                      <span className="text-purple">
                         ATT&amp;CK: {l.mitre.slice(0, 2).join(", ")}
                       </span>
                     )}
@@ -248,7 +248,7 @@ export function LabsDirectory({
                     ) : unlocked ? (
                       <span className="text-cyan">READY</span>
                     ) : (
-                      <span className="text-muted/60">🔒︎ LOCKED</span>
+                      <span className="text-secondary font-medium">🔒︎ LOCKED</span>
                     )}
                   </span>
 
@@ -260,7 +260,7 @@ export function LabsDirectory({
                       {l.solved ? "RETRY →" : "LAUNCH →"}
                     </Link>
                   ) : (
-                    <span className="font-ui text-[11px] text-muted/60">
+                    <span className="font-ui text-[11px] text-secondary">
                       Clear R{l.rank - 1} challenge
                     </span>
                   )}

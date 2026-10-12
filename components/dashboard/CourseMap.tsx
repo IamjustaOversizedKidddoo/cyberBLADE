@@ -45,7 +45,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
             CAMPAIGN // SHARED_CORE
           </h2>
           <div aria-hidden="true" className="flex-1 h-px bg-line" />
-          <SystemLabel className="text-muted/60">
+          <SystemLabel className="text-secondary">
             {currentRank === 0 ? `RANK_${currentRank} ACTIVE` : `RANK_${currentRank - 1} CLEARED`}
           </SystemLabel>
         </div>
@@ -66,7 +66,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                 {/* Giant rank numeral cell */}
                 <div
                   className={`flex items-center justify-center bg-void py-6 font-display text-5xl leading-none ${
-                    isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-line"
+                    isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-muted"
                   }`}
                   aria-hidden="true"
                 >
@@ -77,7 +77,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                 <div className="bg-void px-5 py-5">
                   <div className="flex flex-wrap items-center gap-3">
                     <SystemLabel
-                      className={isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-muted/40"}
+                      className={isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-secondary"}
                     >
                       {RANK_CODENAME[r.rank] ?? `RANK_${r.rank}`}
                     </SystemLabel>
@@ -87,13 +87,13 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                           ? "border-cyan/50 bg-cyan/10 text-cyan shadow-[0_0_10px_rgba(15,190,255,0.2)]"
                           : isCleared
                           ? "border-purple/50 bg-purple/10 text-purple"
-                          : "border-line/60 bg-surface text-muted/60"
+                          : "border-line/80 bg-surface text-secondary"
                       }`}
                     >
                       {state === "cleared" ? "CLEARED" : state === "current" ? "ACTIVE" : "LOCKED"}
                     </span>
                   </div>
-                  <h3 className={`mt-2 font-ui text-lg ${state === "locked" ? "text-muted/40" : "text-ink"}`}>
+                  <h3 className={`mt-2 font-ui text-lg ${state === "locked" ? "text-secondary" : "text-ink"}`}>
                     rank_{r.rank} · {r.name}
                   </h3>
                   <p className="mt-1 text-sm text-muted">{RANK_SUMMARY[r.rank]}</p>
@@ -119,7 +119,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                     </Link>
                   )}
                   {state === "locked" && (
-                    <span className="font-ui text-xs text-muted/50 tracking-wider flex items-center gap-1.5">
+                    <span className="font-ui text-xs text-secondary tracking-wider flex items-center gap-1.5">
                       <IconLock className="h-3.5 w-3.5" />
                       <span>Unlock at Rank {r.rank - 1} Capstone</span>
                     </span>
@@ -137,7 +137,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
             <span className="font-display text-3xl text-cyan leading-none">{xp.toLocaleString("en-US")}</span>
           </div>
           <div aria-hidden="true" className="hidden sm:block flex-1 h-px bg-line mx-2" />
-          <SystemLabel className="text-muted/60">
+          <SystemLabel className="text-secondary">
             {rankProgress.done}/{rankProgress.total} LESSONS COMPLETE
           </SystemLabel>
         </div>
@@ -150,7 +150,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
             JOB_TRACKS // UNLOCKS AFTER RANK_2
           </h2>
           <div aria-hidden="true" className="flex-1 h-px bg-line" />
-          <SystemLabel className="text-muted/60">{launch.length} OPEN</SystemLabel>
+          <SystemLabel className="text-secondary">{launch.length} OPEN</SystemLabel>
         </div>
 
         <ul className="mt-6 grid gap-px bg-line sm:grid-cols-2" aria-label="Open job tracks">
@@ -165,11 +165,11 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                 </div>
               )}
               <div className="relative">
-                <SystemLabel className="text-muted/60">
+                <SystemLabel className="text-secondary">
                   {`TRACK ${String(i + 1).padStart(2, "0")} // ${t.group.toUpperCase()}`}
                 </SystemLabel>
                 <p className="mt-2 font-ui text-lg text-ink">{t.title}</p>
-                <p className="mt-3 border-t border-line pt-3 font-ui text-xs tracking-wider text-muted/40">
+                <p className="mt-3 border-t border-line pt-3 font-ui text-xs tracking-wider text-secondary">
                   ▒ LOCKED — Complete shared core to unlock
                 </p>
               </div>
@@ -185,7 +185,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
             CLASSIFIED // UPCOMING_TRACKS
           </h2>
           <div aria-hidden="true" className="flex-1 h-px bg-line" />
-          <SystemLabel className="text-muted/60">{soon.length} REDACTED</SystemLabel>
+          <SystemLabel className="text-secondary">{soon.length} REDACTED</SystemLabel>
         </div>
 
         <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -195,16 +195,16 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
             return (
               <div key={group} className="border border-line p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="font-display text-muted/40 text-lg" aria-hidden="true">
+                  <span className="font-display text-muted text-lg" aria-hidden="true">
                     {GROUP_SIGIL[group]}
                   </span>
-                  <SystemLabel className="text-muted/60">{group.toUpperCase()}</SystemLabel>
+                  <SystemLabel className="text-secondary">{group.toUpperCase()}</SystemLabel>
                 </div>
                 <ul className="space-y-1.5">
                   {groupTracks.map((t) => (
                     <li key={t.id} className="flex items-center gap-2">
-                      <span aria-hidden="true" className="font-ui text-xs text-muted/30">▒▒</span>
-                      <span className="text-sm text-muted/50">{t.title}</span>
+                      <span aria-hidden="true" className="font-ui text-xs text-muted">▒▒</span>
+                      <span className="text-sm text-secondary">{t.title}</span>
                     </li>
                   ))}
                 </ul>

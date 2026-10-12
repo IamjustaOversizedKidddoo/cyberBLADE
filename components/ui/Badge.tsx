@@ -124,7 +124,7 @@ export function RankBadge({
     <span
       className={`inline-flex items-center gap-1.5 font-ui font-semibold tracking-wider rounded-xs border uppercase select-none ${sizeClass} ${colorClass} ${className}`}
     >
-      <span aria-hidden="true" className="font-mono text-[10px] opacity-75">
+      <span aria-hidden="true" className="font-mono text-[10px] font-bold">
         R{rank}
       </span>
       <span>{rankName(rank)}</span>

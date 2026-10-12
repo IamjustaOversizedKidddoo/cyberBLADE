@@ -7,7 +7,7 @@
   --color-muted: #9cb0c4;
   --color-line: rgb(255 255 255 / 0.16);
   --color-cyan: #0fbeff;
-  --color-purple: #c83cff;
+  --color-purple: #d864ff;
   --color-pink: #ff1065;
   /* Lab console surfaces: terminal panes, packet tables, detail panels. */
   --color-console: #05070a;
@@ -301,7 +301,7 @@
 .band-paper, .band-void, .band-cyan { background: var(--band-bg); color: var(--band-fg); }
 .band-paper .text-muted { color: #334155 !important; }
 .band-paper .text-pink { color: #be185d !important; }
-.band-paper .text-cyan { color: #0284c7 !important; }
+.band-paper .text-cyan { color: #0369a1 !important; }
 
 /* High contrast doubles as the dark-room mode: light bands turn dark (owner decision 2026-10-07). */
 [data-contrast="high"] .band-paper,
@@ -339,16 +339,16 @@
 /* Diagrams: a highlighted node, and scroll scenes stepping through nodes and their notes.
    Without a running scene (no data-step: reduced motion, phones, no JS) everything shows at full strength. */
 .diagram-node[data-active] > span:first-child { background: var(--color-cyan); border-color: var(--color-cyan); }
-[data-scene][data-step] .diagram-node,
+[data-scene][data-step] .diagram-node > span:first-child,
 [data-scene][data-step] [data-step-item] { opacity: 0.3; transition: opacity 0.25s ease; }
-[data-scene][data-step="0"] .diagram-node[data-index="0"],
-[data-scene][data-step="1"] .diagram-node[data-index="1"],
-[data-scene][data-step="2"] .diagram-node[data-index="2"],
-[data-scene][data-step="3"] .diagram-node[data-index="3"],
-[data-scene][data-step="4"] .diagram-node[data-index="4"],
-[data-scene][data-step="5"] .diagram-node[data-index="5"],
-[data-scene][data-step="6"] .diagram-node[data-index="6"],
-[data-scene][data-step="7"] .diagram-node[data-index="7"],
+[data-scene][data-step="0"] .diagram-node[data-index="0"] > span:first-child,
+[data-scene][data-step="1"] .diagram-node[data-index="1"] > span:first-child,
+[data-scene][data-step="2"] .diagram-node[data-index="2"] > span:first-child,
+[data-scene][data-step="3"] .diagram-node[data-index="3"] > span:first-child,
+[data-scene][data-step="4"] .diagram-node[data-index="4"] > span:first-child,
+[data-scene][data-step="5"] .diagram-node[data-index="5"] > span:first-child,
+[data-scene][data-step="6"] .diagram-node[data-index="6"] > span:first-child,
+[data-scene][data-step="7"] .diagram-node[data-index="7"] > span:first-child,
 [data-scene][data-step="0"] [data-step-item="0"],
 [data-scene][data-step="1"] [data-step-item="1"],
 [data-scene][data-step="2"] [data-step-item="2"],

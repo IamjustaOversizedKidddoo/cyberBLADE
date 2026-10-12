@@ -47,7 +47,7 @@ function LessonList({ lessons, progress, open }: { lessons: Lesson[]; progress: 
               <div
                 className={`h-8 w-8 rounded-xs flex items-center justify-center font-mono text-xs font-bold shrink-0 border ${
                   !open
-                    ? "border-line/40 bg-surface-subtle text-muted/40"
+                    ? "border-line/60 bg-surface-subtle text-secondary"
                     : isCompleted
                     ? "border-success/40 bg-success/15 text-success"
                     : status === "in_progress"
@@ -68,7 +68,7 @@ function LessonList({ lessons, progress, open }: { lessons: Lesson[]; progress: 
               <div className="min-w-0">
                 <span
                   className={`font-sans text-sm sm:text-base font-medium truncate block ${
-                    open ? "text-ink group-hover:text-cyan transition-colors" : "text-muted/60"
+                    open ? "text-ink group-hover:text-cyan transition-colors" : "text-secondary"
                   }`}
                 >
                   {l.title}
@@ -128,7 +128,7 @@ function LessonList({ lessons, progress, open }: { lessons: Lesson[]; progress: 
                 {content}
               </Link>
             ) : (
-              <div className="block rounded-sm border border-line/40 bg-surface-subtle/40 p-4 sm:px-5 opacity-60">
+              <div className="block rounded-sm border border-line/60 bg-surface-subtle p-4 sm:px-5">
                 {content}
               </div>
             )}
@@ -151,7 +151,7 @@ function ChallengeCard({ rank, summary }: { rank: number; summary: RankSummary }
           ? "border-cyan bg-cyan/5 shadow-[0_0_20px_rgba(15,190,255,0.15)]"
           : kind === "ready"
           ? "border-cyan/50 bg-surface-raised"
-          : "border-line/60 bg-surface-subtle opacity-70"
+          : "border-line/60 bg-surface-subtle"
       }`}
     >
       <div className="flex items-center justify-between gap-3 mb-2">
@@ -298,7 +298,7 @@ export default async function CoreMapPage(props: PageProps<"/learn/core">) {
                     />
                   </div>
                 ) : (
-                  <span className="font-ui text-xs text-muted/60 flex items-center gap-1.5 border border-line/40 px-2.5 py-1 rounded-xs">
+                  <span className="font-ui text-xs text-secondary flex items-center gap-1.5 border border-line/60 px-2.5 py-1 rounded-xs">
                     <IconLock className="h-3.5 w-3.5" />
                     <span>LOCKED</span>
                   </span>
