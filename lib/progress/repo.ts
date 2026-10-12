@@ -12,6 +12,11 @@ import type {
   LearningEventRecord,
   ExamReportRecord,
 } from "./types";
+import type {
+  SocAttemptRecord,
+  SocDecisionRecord,
+  SocCaseRecord,
+} from "@/lib/lab-engine/soc/types";
 
 /**
  * Progress storage. Every mutation is a single atomic operation (no read-then-write in callers),
@@ -64,6 +69,18 @@ export interface ProgressRepo {
   logLearningEvent(event: Omit<LearningEventRecord, "id">): Promise<LearningEventRecord>;
   saveExamReport(report: Omit<ExamReportRecord, "id">): Promise<ExamReportRecord>;
   listExamReports(userId: string): Promise<ExamReportRecord[]>;
+
+  getSocAttempt(id: string): Promise<SocAttemptRecord | null>;
+  findActiveSocAttempt(userId: string, scenarioId: string): Promise<SocAttemptRecord | null>;
+  createSocAttempt(attempt: Omit<SocAttemptRecord, "id">): Promise<SocAttemptRecord>;
+  updateSocAttempt(id: string, patch: Partial<Pick<SocAttemptRecord, "status" | "scoreSummary" | "submittedAt">>): Promise<SocAttemptRecord>;
+  saveSocDecision(decision: Omit<SocDecisionRecord, "id">): Promise<SocDecisionRecord>;
+  listSocDecisions(attemptId: string): Promise<SocDecisionRecord[]>;
+  saveSocCase(socCase: Omit<SocCaseRecord, "id" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string; updatedAt?: string }): Promise<SocCaseRecord>;
+  deleteSocCase(id: string): Promise<void>;
+  listSocCases(attemptId: string): Promise<SocCaseRecord[]>;
+  listSocAttempts(userId: string): Promise<SocAttemptRecord[]>;
+  deleteUserData(userId: string): Promise<void>;
 }
 
 function latestAttempt(d: ProgressData, userId: string, labId: string, mode: AttemptMode): LabAttempt | null {
@@ -313,5 +330,143 @@ export class StoreProgressRepo implements ProgressRepo {
   async listExamReports(userId: string): Promise<ExamReportRecord[]> {
     const data = await this.store.read();
     return Object.values(data.examReports ?? {}).filter((r) => r.userId === userId);
+  }
+
+  async getSocAttempt(id: string): Promise<SocAttemptRecord | null> {
+    const data = await this.store.read();
+    return data.socAttempts?.[id] ?? null;
+  }
+
+  async findActiveSocAttempt(userId: string, scenarioId: string): Promise<SocAttemptRecord | null> {
+    const data = await this.store.read();
+    const attempts = Object.values(data.socAttempts ?? {})
+      .filter((a) => a.userId === userId && a.scenarioId === scenarioId && a.status === "in_progress")
+      .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
+    return attempts[0] ?? null;
+  }
+
+  async createSocAttempt(attempt: Omit<SocAttemptRecord, "id">): Promise<SocAttemptRecord> {
+    const id = randomUUID();
+    const record: SocAttemptRecord = { ...attempt, id };
+    await this.store.update((d) => {
+      d.socAttempts ??= {};
+      d.socAttempts[id] = record;
+    });
+    return record;
+  }
+
+  async updateSocAttempt(
+    id: string,
+    patch: Partial<Pick<SocAttemptRecord, "status" | "scoreSummary" | "submittedAt">>,
+  ): Promise<SocAttemptRecord> {
+    let updated: SocAttemptRecord | null = null;
+    await this.store.update((d) => {
+      d.socAttempts ??= {};
+      const cur = d.socAttempts[id];
+      if (!cur) throw new Error("not found");
+      Object.assign(cur, patch, { updatedAt: new Date().toISOString() });
+      updated = cur;
+    });
+    return updated!;
+  }
+
+  async saveSocDecision(decision: Omit<SocDecisionRecord, "id">): Promise<SocDecisionRecord> {
+    const id = randomUUID();
+    const record: SocDecisionRecord = { ...decision, id };
+    await this.store.update((d) => {
+      d.socDecisions ??= {};
+      d.socDecisions[id] = record;
+    });
+    return record;
+  }
+
+  async listSocDecisions(attemptId: string): Promise<SocDecisionRecord[]> {
+    const data = await this.store.read();
+    return Object.values(data.socDecisions ?? {})
+      .filter((d) => d.attemptId === attemptId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }
+
+  async saveSocCase(socCase: Omit<SocCaseRecord, "id" | "createdAt" | "updatedAt"> & { id?: string; createdAt?: string; updatedAt?: string }): Promise<SocCaseRecord> {
+    const id = socCase.id ?? randomUUID();
+    const now = new Date().toISOString();
+    const record: SocCaseRecord = {
+      ...socCase,
+      id,
+      createdAt: (socCase as SocCaseRecord).createdAt ?? now,
+      updatedAt: now,
+    };
+    await this.store.update((d) => {
+      d.socCases ??= {};
+      d.socCases[id] = record;
+    });
+    return record;
+  }
+
+  async deleteSocCase(id: string): Promise<void> {
+    await this.store.update((d) => {
+      if (d.socCases) delete d.socCases[id];
+    });
+  }
+
+  async listSocCases(attemptId: string): Promise<SocCaseRecord[]> {
+    const data = await this.store.read();
+    return Object.values(data.socCases ?? {}).filter((c) => c.attemptId === attemptId);
+  }
+
+  async listSocAttempts(userId: string): Promise<SocAttemptRecord[]> {
+    const data = await this.store.read();
+    return Object.values(data.socAttempts ?? {}).filter((a) => a.userId === userId);
+  }
+
+  async deleteUserData(userId: string): Promise<void> {
+    await this.store.update((d) => {
+      for (const [k, v] of Object.entries(d.lessons)) {
+        if (v.userId === userId) delete d.lessons[k];
+      }
+      for (const [k, v] of Object.entries(d.attempts)) {
+        if (v.userId === userId) delete d.attempts[k];
+      }
+      for (const [k, v] of Object.entries(d.xp)) {
+        if (v.userId === userId) delete d.xp[k];
+      }
+      for (const [k, v] of Object.entries(d.challenges)) {
+        if (v.userId === userId) delete d.challenges[k];
+      }
+      if (d.reviewItems) {
+        for (const [k, v] of Object.entries(d.reviewItems)) {
+          if (v.userId === userId) delete d.reviewItems[k];
+        }
+      }
+      if (d.reviewEvents) {
+        for (const [k, v] of Object.entries(d.reviewEvents)) {
+          if (v.userId === userId) delete d.reviewEvents[k];
+        }
+      }
+      if (d.examReports) {
+        for (const [k, v] of Object.entries(d.examReports)) {
+          if (v.userId === userId) delete d.examReports[k];
+        }
+      }
+      const userSocAttemptIds = new Set<string>();
+      if (d.socAttempts) {
+        for (const [k, v] of Object.entries(d.socAttempts)) {
+          if (v.userId === userId) {
+            userSocAttemptIds.add(k);
+            delete d.socAttempts[k];
+          }
+        }
+      }
+      if (d.socDecisions) {
+        for (const [k, v] of Object.entries(d.socDecisions)) {
+          if (userSocAttemptIds.has(v.attemptId)) delete d.socDecisions[k];
+        }
+      }
+      if (d.socCases) {
+        for (const [k, v] of Object.entries(d.socCases)) {
+          if (userSocAttemptIds.has(v.attemptId)) delete d.socCases[k];
+        }
+      }
+    });
   }
 }

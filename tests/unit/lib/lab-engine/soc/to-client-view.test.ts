@@ -81,6 +81,7 @@ describe("toClientView Anti-Cheat & Zero-Knowledge Guarantee", () => {
               criticality: "LOW",
               owner: "user-test",
               zone: "zone-01",
+              tags: [],
             },
           ],
           users: [
