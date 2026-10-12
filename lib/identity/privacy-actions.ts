@@ -13,10 +13,11 @@ export async function exportUserDataAction() {
   const operator = await requireOperator();
   const ctx = getCtx();
 
-  const [lessons, attempts, xpEvents] = await Promise.all([
+  const [lessons, attempts, xpEvents, socAttempts] = await Promise.all([
     ctx.repo.listLessonProgress(operator.id),
     ctx.repo.listAttempts(operator.id),
     ctx.repo.listXpEvents(operator.id),
+    ctx.repo.listSocAttempts(operator.id),
   ]);
 
   return {
@@ -32,6 +33,7 @@ export async function exportUserDataAction() {
       lessons,
       attempts,
       xpEvents,
+      socAttempts,
     },
   };
 }
@@ -52,10 +54,13 @@ export async function deleteAccountAction() {
     metadata: { anonymized_id: operator.id },
   });
 
-  // 2. Cascade deletion in operator store
+  // 2. Cascade deletion in progress repository (covers SOC attempts/decisions/cases)
+  await ctx.repo.deleteUserData(operator.id);
+
+  // 3. Cascade deletion in operator store
   await ctx.operators.delete(operator.id);
 
-  // 3. Invalidate Supabase session if present
+  // 4. Invalidate Supabase session if present
   const supabase = await createServerSupabaseClient();
   if (supabase) {
     try {

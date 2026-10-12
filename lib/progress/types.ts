@@ -78,6 +78,12 @@ export type ExamReportRecord = {
   reportedAt: string;
 };
 
+import type {
+  SocAttemptRecord,
+  SocDecisionRecord,
+  SocCaseRecord,
+} from "@/lib/lab-engine/soc/types";
+
 export type ProgressData = {
   lessons: Record<string, LessonProgress>;
   attempts: Record<string, LabAttempt>;
@@ -87,6 +93,9 @@ export type ProgressData = {
   reviewEvents?: Record<string, ReviewEventRecord>;
   learningEvents?: Record<string, LearningEventRecord>;
   examReports?: Record<string, ExamReportRecord>;
+  socAttempts?: Record<string, SocAttemptRecord>;
+  socDecisions?: Record<string, SocDecisionRecord>;
+  socCases?: Record<string, SocCaseRecord>;
 };
 
 export const emptyProgress = (): ProgressData => ({
@@ -98,5 +107,8 @@ export const emptyProgress = (): ProgressData => ({
   reviewEvents: {},
   learningEvents: {},
   examReports: {},
+  socAttempts: {},
+  socDecisions: {},
+  socCases: {},
 });
 

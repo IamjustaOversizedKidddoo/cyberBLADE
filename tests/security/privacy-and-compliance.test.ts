@@ -129,5 +129,33 @@ describe("Security Part H: Privacy & Compliance Foundations (User Rights & Audit
 
       expect(await operatorStore.get(op.id)).toBeNull();
     });
+
+    it("includes SOC workspace attempts in data export and purges on account deletion", async () => {
+      const op = await operatorStore.create({
+        id: "learner-soc-privacy-test",
+        handle: "soc_privacy_user",
+        ethicsAcceptedAt: "2026-10-10T10:00:00Z",
+      });
+
+      await repo.createSocAttempt({
+        userId: op.id,
+        scenarioId: "soc-l1-noisy-shift",
+        seed: "seed-soc-123",
+        status: "submitted",
+        scoreSummary: null,
+        startedAt: "2026-10-12T10:00:00Z",
+        submittedAt: "2026-10-12T10:30:00Z",
+        updatedAt: "2026-10-12T10:30:00Z",
+      });
+
+      let socAttempts = await repo.listSocAttempts(op.id);
+      expect(socAttempts).toHaveLength(1);
+
+      // Purge all user data via deleteUserData
+      await repo.deleteUserData(op.id);
+      socAttempts = await repo.listSocAttempts(op.id);
+      expect(socAttempts).toHaveLength(0);
+    });
   });
 });
+

@@ -15,6 +15,12 @@ import type {
   LearningEventRecord,
   ExamReportRecord,
 } from "./types";
+import type {
+  SocAttemptRecord,
+  SocDecisionRecord,
+  SocCaseRecord,
+  SocEvaluationResult,
+} from "@/lib/lab-engine/soc/types";
 
 export class SupabaseProgressRepo implements ProgressRepo {
   private async getClient() {
@@ -557,12 +563,12 @@ export class SupabaseProgressRepo implements ProgressRepo {
 
   async listReviewItems(userId: string): Promise<ReviewItemRecord[]> {
     const client = await this.getClient();
-    const { data, error } = await (client as any)
+    const { data, error } = await client
       .from("review_items")
       .select("*")
       .eq("user_id", userId);
     if (error || !data) return [];
-    return data.map((d: any) => ({
+    return data.map((d) => ({
       id: d.id,
       userId: d.user_id,
       cardId: d.card_id,
@@ -593,7 +599,7 @@ export class SupabaseProgressRepo implements ProgressRepo {
       last_reviewed_at: item.lastReviewedAt,
       updated_at: new Date().toISOString(),
     };
-    const { data, error } = await (client as any)
+    const { data, error } = await client
       .from("review_items")
       .upsert(record, { onConflict: "user_id,card_id" })
       .select("*")
@@ -620,7 +626,7 @@ export class SupabaseProgressRepo implements ProgressRepo {
   async logReviewEvent(event: Omit<ReviewEventRecord, "id">): Promise<ReviewEventRecord> {
     const client = await this.getClient();
     const id = randomUUID();
-    await (client as any).from("review_events").insert({
+    await client.from("review_events").insert({
       id,
       user_id: event.userId,
       card_id: event.cardId,
@@ -633,11 +639,11 @@ export class SupabaseProgressRepo implements ProgressRepo {
   async logLearningEvent(event: Omit<LearningEventRecord, "id">): Promise<LearningEventRecord> {
     const client = await this.getClient();
     const id = randomUUID();
-    await (client as any).from("learning_events").insert({
+    await client.from("learning_events").insert({
       id,
       user_id: event.userId,
       event_type: event.eventType,
-      metadata: event.metadata,
+      metadata: event.metadata as Database["public"]["Tables"]["learning_events"]["Insert"]["metadata"],
       created_at: event.createdAt,
     });
     return { ...event, id };
@@ -646,7 +652,7 @@ export class SupabaseProgressRepo implements ProgressRepo {
   async saveExamReport(report: Omit<ExamReportRecord, "id">): Promise<ExamReportRecord> {
     const client = await this.getClient();
     const id = randomUUID();
-    await (client as any).from("exam_reports").insert({
+    await client.from("exam_reports").insert({
       id,
       user_id: report.userId,
       exam_type: report.examType,
@@ -661,12 +667,12 @@ export class SupabaseProgressRepo implements ProgressRepo {
 
   async listExamReports(userId: string): Promise<ExamReportRecord[]> {
     const client = await this.getClient();
-    const { data, error } = await (client as any)
+    const { data, error } = await client
       .from("exam_reports")
       .select("*")
       .eq("user_id", userId);
     if (error || !data) return [];
-    return data.map((d: any) => ({
+    return data.map((d) => ({
       id: d.id,
       userId: d.user_id,
       examType: d.exam_type,
@@ -676,5 +682,311 @@ export class SupabaseProgressRepo implements ProgressRepo {
       notes: d.notes,
       reportedAt: d.reported_at,
     }));
+  }
+
+  // ---------------------------------------------------------------------------
+  // SOC Workspace
+  // ---------------------------------------------------------------------------
+  async getSocAttempt(id: string): Promise<SocAttemptRecord | null> {
+    const client = await this.getClient();
+    const { data, error } = await client
+      .from("soc_attempts")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error || !data) return null;
+    return {
+      id: data.id,
+      userId: data.user_id,
+      scenarioId: data.scenario_id,
+      seed: data.seed,
+      status: data.status,
+      scoreSummary: data.score_summary as SocEvaluationResult | null,
+      startedAt: data.started_at,
+      submittedAt: data.submitted_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  async findActiveSocAttempt(userId: string, scenarioId: string): Promise<SocAttemptRecord | null> {
+    const client = await this.getClient();
+    const { data, error } = await client
+      .from("soc_attempts")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("scenario_id", scenarioId)
+      .eq("status", "in_progress")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error || !data) return null;
+    return {
+      id: data.id,
+      userId: data.user_id,
+      scenarioId: data.scenario_id,
+      seed: data.seed,
+      status: data.status,
+      scoreSummary: data.score_summary as SocEvaluationResult | null,
+      startedAt: data.started_at,
+      submittedAt: data.submitted_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  async createSocAttempt(attempt: Omit<SocAttemptRecord, "id">): Promise<SocAttemptRecord> {
+    const client = await this.getClient();
+    const id = randomUUID();
+    const { data, error } = await client
+      .from("soc_attempts")
+      .insert({
+        id,
+        user_id: attempt.userId,
+        scenario_id: attempt.scenarioId,
+        seed: attempt.seed,
+        status: attempt.status,
+        score_summary: attempt.scoreSummary as Database["public"]["Tables"]["soc_attempts"]["Insert"]["score_summary"],
+        started_at: attempt.startedAt,
+        submitted_at: attempt.submittedAt,
+        updated_at: attempt.updatedAt,
+      })
+      .select("*")
+      .single();
+    if (error || !data) {
+      throw new Error(`Failed to create SOC attempt in Supabase: ${error?.message}`);
+    }
+    return {
+      id: data.id,
+      userId: data.user_id,
+      scenarioId: data.scenario_id,
+      seed: data.seed,
+      status: data.status,
+      scoreSummary: data.score_summary as SocEvaluationResult | null,
+      startedAt: data.started_at,
+      submittedAt: data.submitted_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  async updateSocAttempt(
+    id: string,
+    patch: Partial<Pick<SocAttemptRecord, "status" | "scoreSummary" | "submittedAt">>,
+  ): Promise<SocAttemptRecord> {
+    const client = await this.getClient();
+    const dbPatch: Database["public"]["Tables"]["soc_attempts"]["Update"] = {
+      updated_at: new Date().toISOString(),
+    };
+    if (patch.status !== undefined) dbPatch.status = patch.status;
+    if (patch.scoreSummary !== undefined) {
+      dbPatch.score_summary = patch.scoreSummary as Database["public"]["Tables"]["soc_attempts"]["Update"]["score_summary"];
+    }
+    if (patch.submittedAt !== undefined) dbPatch.submitted_at = patch.submittedAt;
+
+    const { data, error } = await client
+      .from("soc_attempts")
+      .update(dbPatch)
+      .eq("id", id)
+      .select("*")
+      .single();
+    if (error || !data) {
+      throw new Error(`Failed to update SOC attempt in Supabase: ${error?.message}`);
+    }
+    return {
+      id: data.id,
+      userId: data.user_id,
+      scenarioId: data.scenario_id,
+      seed: data.seed,
+      status: data.status,
+      scoreSummary: data.score_summary as SocEvaluationResult | null,
+      startedAt: data.started_at,
+      submittedAt: data.submitted_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  async saveSocDecision(decision: Omit<SocDecisionRecord, "id">): Promise<SocDecisionRecord> {
+    const client = await this.getClient();
+    const id = randomUUID();
+    const { data, error } = await client
+      .from("soc_decisions")
+      .insert({
+        id,
+        attempt_id: decision.attemptId,
+        alert_id: decision.alertId,
+        disposition: decision.disposition,
+        severity: decision.severity,
+        escalate: decision.escalate,
+        target_tier: decision.targetTier,
+        rationale: decision.rationale,
+        evidence_refs: decision.evidenceRefs,
+        created_at: decision.createdAt,
+      })
+      .select("*")
+      .single();
+    if (error || !data) {
+      throw new Error(`Failed to save SOC decision in Supabase: ${error?.message}`);
+    }
+    return {
+      id: data.id,
+      attemptId: data.attempt_id,
+      alertId: data.alert_id,
+      disposition: data.disposition as SocDecisionRecord["disposition"],
+      severity: data.severity as SocDecisionRecord["severity"],
+      escalate: data.escalate,
+      targetTier: data.target_tier as SocDecisionRecord["targetTier"],
+      rationale: data.rationale,
+      evidenceRefs: data.evidence_refs,
+      createdAt: data.created_at,
+    };
+  }
+
+  async listSocDecisions(attemptId: string): Promise<SocDecisionRecord[]> {
+    const client = await this.getClient();
+    const { data, error } = await client
+      .from("soc_decisions")
+      .select("*")
+      .eq("attempt_id", attemptId)
+      .order("created_at", { ascending: true });
+    if (error || !data) return [];
+    return data.map((d) => ({
+      id: d.id,
+      attemptId: d.attempt_id,
+      alertId: d.alert_id,
+      disposition: d.disposition as SocDecisionRecord["disposition"],
+      severity: d.severity as SocDecisionRecord["severity"],
+      escalate: d.escalate,
+      targetTier: d.target_tier as SocDecisionRecord["targetTier"],
+      rationale: d.rationale,
+      evidenceRefs: d.evidence_refs,
+      createdAt: d.created_at,
+    }));
+  }
+
+  async saveSocCase(
+    socCase: Omit<SocCaseRecord, "id" | "createdAt" | "updatedAt"> & {
+      id?: string;
+      createdAt?: string;
+      updatedAt?: string;
+    },
+  ): Promise<SocCaseRecord> {
+    const client = await this.getClient();
+    const id = socCase.id ?? randomUUID();
+    const now = new Date().toISOString();
+    const { data, error } = await client
+      .from("soc_cases")
+      .upsert(
+        {
+          id,
+          attempt_id: socCase.attemptId,
+          title: socCase.title,
+          severity: socCase.severity,
+          status: socCase.status,
+          notes: socCase.notes,
+          updated_at: now,
+        },
+        { onConflict: "id" },
+      )
+      .select("*")
+      .single();
+    if (error || !data) {
+      throw new Error(`Failed to save SOC case in Supabase: ${error?.message}`);
+    }
+
+    // Sync alerts
+    if (socCase.alertIds) {
+      // Remove alerts not in list
+      await client.from("soc_case_alerts").delete().eq("case_id", id);
+      if (socCase.alertIds.length > 0) {
+        await client.from("soc_case_alerts").insert(
+          socCase.alertIds.map((aid) => ({
+            id: randomUUID(),
+            case_id: id,
+            alert_id: aid,
+          })),
+        );
+      }
+    }
+
+    return {
+      id: data.id,
+      attemptId: data.attempt_id,
+      title: data.title,
+      severity: data.severity as SocCaseRecord["severity"],
+      status: data.status as SocCaseRecord["status"],
+      notes: data.notes,
+      alertIds: socCase.alertIds ?? [],
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  async deleteSocCase(id: string): Promise<void> {
+    const client = await this.getClient();
+    await client.from("soc_cases").delete().eq("id", id);
+  }
+
+  async listSocCases(attemptId: string): Promise<SocCaseRecord[]> {
+    const client = await this.getClient();
+    const { data: casesData, error: casesError } = await client
+      .from("soc_cases")
+      .select("*")
+      .eq("attempt_id", attemptId)
+      .order("created_at", { ascending: true });
+    if (casesError || !casesData) return [];
+
+    const caseIds = casesData.map((c) => c.id);
+    let alertsMap = new Map<string, string[]>();
+    if (caseIds.length > 0) {
+      const { data: alertsData } = await client
+        .from("soc_case_alerts")
+        .select("*")
+        .in("case_id", caseIds);
+      if (alertsData) {
+        for (const a of alertsData) {
+          const arr = alertsMap.get(a.case_id) ?? [];
+          arr.push(a.alert_id);
+          alertsMap.set(a.case_id, arr);
+        }
+      }
+    }
+
+    return casesData.map((c) => ({
+      id: c.id,
+      attemptId: c.attempt_id,
+      title: c.title,
+      severity: c.severity as SocCaseRecord["severity"],
+      status: c.status as SocCaseRecord["status"],
+      notes: c.notes,
+      alertIds: alertsMap.get(c.id) ?? [],
+      createdAt: c.created_at,
+      updatedAt: c.updated_at,
+    }));
+  }
+
+  async listSocAttempts(userId: string): Promise<SocAttemptRecord[]> {
+    const client = await this.getClient();
+    const { data, error } = await client
+      .from("soc_attempts")
+      .select("*")
+      .eq("user_id", userId)
+      .order("started_at", { ascending: false });
+    if (error || !data) return [];
+    return data.map((d) => ({
+      id: d.id,
+      userId: d.user_id,
+      scenarioId: d.scenario_id,
+      seed: d.seed,
+      status: d.status,
+      scoreSummary: d.score_summary as SocEvaluationResult | null,
+      startedAt: d.started_at,
+      submittedAt: d.submitted_at,
+      updatedAt: d.updated_at,
+    }));
+  }
+
+  async deleteUserData(userId: string): Promise<void> {
+    const client = await this.getClient();
+    await client.from("soc_attempts").delete().eq("user_id", userId);
+    await client.from("exam_reports").delete().eq("user_id", userId);
+    await client.from("review_items").delete().eq("user_id", userId);
   }
 }

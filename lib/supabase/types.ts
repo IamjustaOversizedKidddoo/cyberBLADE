@@ -252,6 +252,261 @@ export interface Database {
         };
         Relationships: [];
       };
+      review_items: {
+        Row: {
+          id: string;
+          user_id: string;
+          card_id: string;
+          lesson_id: string;
+          ease_factor: number;
+          interval_days: number;
+          repetitions: number;
+          lapses: number;
+          due_at: string;
+          last_reviewed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          card_id: string;
+          lesson_id: string;
+          ease_factor?: number;
+          interval_days?: number;
+          repetitions?: number;
+          lapses?: number;
+          due_at?: string;
+          last_reviewed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          card_id?: string;
+          lesson_id?: string;
+          ease_factor?: number;
+          interval_days?: number;
+          repetitions?: number;
+          lapses?: number;
+          due_at?: string;
+          last_reviewed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      review_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          card_id: string;
+          grade: number;
+          reviewed_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          card_id: string;
+          grade: number;
+          reviewed_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          card_id?: string;
+          grade?: number;
+          reviewed_at?: string;
+        };
+        Relationships: [];
+      };
+      learning_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          event_type: string;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          event_type: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          event_type?: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      exam_reports: {
+        Row: {
+          id: string;
+          user_id: string;
+          exam_type: string;
+          score: number;
+          max_score: number;
+          passed: boolean;
+          notes: string | null;
+          reported_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          exam_type: string;
+          score: number;
+          max_score: number;
+          passed: boolean;
+          notes?: string | null;
+          reported_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          exam_type?: string;
+          score?: number;
+          max_score?: number;
+          passed?: boolean;
+          notes?: string | null;
+          reported_at?: string;
+        };
+        Relationships: [];
+      };
+      soc_attempts: {
+        Row: {
+          id: string;
+          user_id: string;
+          scenario_id: string;
+          seed: string;
+          status: "in_progress" | "submitted" | "abandoned" | "expired";
+          score_summary: Json | null;
+          started_at: string;
+          submitted_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          scenario_id: string;
+          seed?: string;
+          status?: "in_progress" | "submitted" | "abandoned" | "expired";
+          score_summary?: Json | null;
+          started_at?: string;
+          submitted_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          scenario_id?: string;
+          seed?: string;
+          status?: "in_progress" | "submitted" | "abandoned" | "expired";
+          score_summary?: Json | null;
+          started_at?: string;
+          submitted_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      soc_decisions: {
+        Row: {
+          id: string;
+          attempt_id: string;
+          alert_id: string;
+          disposition: string;
+          severity: string;
+          escalate: boolean;
+          target_tier: string | null;
+          rationale: string;
+          evidence_refs: string[];
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          attempt_id: string;
+          alert_id: string;
+          disposition: string;
+          severity: string;
+          escalate?: boolean;
+          target_tier?: string | null;
+          rationale: string;
+          evidence_refs?: string[];
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          attempt_id?: string;
+          alert_id?: string;
+          disposition?: string;
+          severity?: string;
+          escalate?: boolean;
+          target_tier?: string | null;
+          rationale?: string;
+          evidence_refs?: string[];
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      soc_cases: {
+        Row: {
+          id: string;
+          attempt_id: string;
+          title: string;
+          severity: string;
+          status: string;
+          notes: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          attempt_id: string;
+          title: string;
+          severity?: string;
+          status?: string;
+          notes?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          attempt_id?: string;
+          title?: string;
+          severity?: string;
+          status?: string;
+          notes?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      soc_case_alerts: {
+        Row: {
+          id: string;
+          case_id: string;
+          alert_id: string;
+          added_at: string;
+        };
+        Insert: {
+          id?: string;
+          case_id: string;
+          alert_id: string;
+          added_at?: string;
+        };
+        Update: {
+          id?: string;
+          case_id?: string;
+          alert_id?: string;
+          added_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
