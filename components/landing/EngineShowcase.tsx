@@ -1,6 +1,5 @@
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { IconTerminal, IconSearch, IconFlame } from "@/components/ui/icons";
 
 const ENGINES = [
   {

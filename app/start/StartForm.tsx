@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { EthicalUseAgreement } from "@/components/legal/EthicalUseAgreement";
 import { HostedAuthSection } from "@/components/auth/HostedAuthSection";
 import { startOperator, type StartState } from "./actions";
@@ -9,18 +9,16 @@ const INITIAL: StartState = { errors: {}, handle: "" };
 
 export function StartForm({ next, isHosted }: { next: string; isHosted?: boolean }) {
   const [state, action, pending] = useActionState(startOperator, INITIAL);
-  const [draftHandle, setDraftHandle] = useState("");
-
-  useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem("cyberblade_draft_handle");
-      if (saved && !state.handle) {
-        setDraftHandle(saved);
+  const [draftHandle, setDraftHandle] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return sessionStorage.getItem("cyberblade_draft_handle") || "";
+      } catch {
+        return "";
       }
-    } catch {
-      // ignore
     }
-  }, [state.handle]);
+    return "";
+  });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -55,7 +53,7 @@ export function StartForm({ next, isHosted }: { next: string; isHosted?: boolean
 
         {/* Step 1: Handle input */}
         <div className="space-y-2">
-          <label htmlFor="handle" className="block text-ink font-ui font-semibold text-sm">
+          <label htmlFor="handle" className="block text-ink font-sans font-semibold text-sm">
             Choose your operator handle
           </label>
           <input

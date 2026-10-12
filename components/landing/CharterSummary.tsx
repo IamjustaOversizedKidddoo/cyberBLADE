@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Card, CardHeader, CardBody } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { IconShield } from "@/components/ui/icons";
 
 export function CharterSummary() {

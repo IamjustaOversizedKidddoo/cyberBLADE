@@ -40,8 +40,6 @@ export function LabWorkspace({
   const router = useRouter();
   const [solved, setSolved] = useState(() => new Set(objectives.filter((o) => o.solved).map((o) => o.id)));
   const [status, setStatus] = useState(objectives.every((o) => o.solved) ? doneMessage : "");
-  const [mobileTab, setMobileTab] = useState<"workspace" | "objectives">("workspace");
-
   const submit = useCallback(
     async (objectiveId: string, answer: string): Promise<SubmitResult> => {
       const r = await onSubmit(objectiveId, answer);
@@ -70,51 +68,24 @@ export function LabWorkspace({
         <span className="font-mono text-[10px] text-cyan uppercase font-semibold">MOBILE_READY</span>
       </div>
 
-      {/* Mobile Segmented View Selector (preserves state in both DOM branches) */}
-      <div
-        role="tablist"
-        aria-label="Lab Views"
-        className="md:hidden grid grid-cols-2 rounded-xs border border-line bg-surface p-1 text-xs font-ui"
-      >
-        <button
-          type="button"
-          role="tab"
-          id="tab-workspace"
-          aria-selected={mobileTab === "workspace"}
-          aria-controls="panel-workspace"
-          onClick={() => setMobileTab("workspace")}
-          className={`min-h-[44px] rounded-xs font-bold tracking-wider transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan ${
-            mobileTab === "workspace"
-              ? "bg-cyan/20 text-cyan border border-cyan/40 shadow-sm"
-              : "text-muted hover:text-ink"
-          }`}
+      {/* Mobile Quick Navigation between stacked Workspace and Objectives */}
+      <div className="md:hidden flex rounded-xs border border-line bg-surface p-1 gap-1 text-xs font-ui">
+        <a
+          href="#panel-workspace"
+          className="flex-1 text-center py-2 min-h-[44px] flex items-center justify-center rounded-xs font-bold tracking-wider text-cyan bg-cyan/15 border border-cyan/40"
         >
           WORKSPACE [{env.kind.toUpperCase()}]
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="tab-objectives"
-          aria-selected={mobileTab === "objectives"}
-          aria-controls="panel-objectives"
-          onClick={() => setMobileTab("objectives")}
-          className={`min-h-[44px] rounded-xs font-bold tracking-wider transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan ${
-            mobileTab === "objectives"
-              ? "bg-cyan/20 text-cyan border border-cyan/40 shadow-sm"
-              : "text-muted hover:text-ink"
-          }`}
+        </a>
+        <a
+          href="#panel-objectives"
+          className="flex-1 text-center py-2 min-h-[44px] flex items-center justify-center rounded-xs font-bold tracking-wider text-muted hover:text-ink"
         >
           OBJECTIVES ({solvedCount}/{objectives.length})
-        </button>
+        </a>
       </div>
 
-      {/* Workspace Panel (stays mounted at all times to prevent resetting engine state) */}
-      <div
-        id="panel-workspace"
-        role="tabpanel"
-        aria-labelledby="tab-workspace"
-        className={mobileTab === "workspace" ? "block" : "hidden md:block"}
-      >
+      {/* Workspace Panel */}
+      <div id="panel-workspace" className="space-y-4">
         {env.kind === "terminal" ? (
           <TerminalLab world={env.world} objectives={objectives} onSubmit={submit} />
         ) : env.kind === "packet" ? (
@@ -126,13 +97,8 @@ export function LabWorkspace({
         )}
       </div>
 
-      {/* Objectives Panel (stays mounted at all times) */}
-      <div
-        id="panel-objectives"
-        role="tabpanel"
-        aria-labelledby="tab-objectives"
-        className={mobileTab === "objectives" ? "block" : "hidden md:block"}
-      >
+      {/* Objectives Panel */}
+      <div id="panel-objectives" className="space-y-4">
         <ObjectivesPanel
           objectives={objectives}
           solved={solved}

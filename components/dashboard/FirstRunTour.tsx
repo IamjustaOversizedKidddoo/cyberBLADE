@@ -10,16 +10,19 @@ export function FirstRunTour() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    try {
-      const dismissed = localStorage.getItem(STORAGE_KEY);
-      if (!dismissed) {
-        setIsOpen(true);
+    const timer = setTimeout(() => {
+      setMounted(true);
+      try {
+        const dismissed = localStorage.getItem(STORAGE_KEY);
+        if (!dismissed) {
+          setIsOpen(true);
+        }
+      } catch {
+        // LocalStorage unavailable
+        setIsOpen(false);
       }
-    } catch {
-      // LocalStorage unavailable
-      setIsOpen(false);
-    }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const dismiss = () => {

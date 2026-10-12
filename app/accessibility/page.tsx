@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { TerminalPanel } from "@/components/theme/TerminalPanel";
 import { Card, CardHeader, CardBody } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 
 export const metadata: Metadata = {
   title: "Accessibility Statement",
