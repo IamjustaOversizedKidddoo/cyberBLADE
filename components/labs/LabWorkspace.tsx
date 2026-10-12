@@ -26,6 +26,7 @@ type Props = {
   doneMessage?: string;
   continueTo?: { href: string; label: string } | null;
   attemptId?: string;
+  labId?: string;
 };
 
 /** Terminal, packet viewer, webapp or SIEM + objectives. Answers may come from either; this component owns what is solved. */
@@ -36,6 +37,7 @@ export function LabWorkspace({
   doneMessage = "Lab complete! XP added to your profile.",
   continueTo,
   attemptId,
+  labId,
 }: Props) {
   const router = useRouter();
   const [solved, setSolved] = useState(() => new Set(objectives.filter((o) => o.solved).map((o) => o.id)));
@@ -106,6 +108,7 @@ export function LabWorkspace({
           status={status}
           continueTo={continueTo}
           attemptId={attemptId}
+          labId={labId}
         />
       </div>
     </div>

@@ -6,6 +6,7 @@ const optionSchema = z.object({
   text: z.string().min(1),
   correct: z.boolean(),
   explanation: z.string().min(1, "every option needs an explanation"),
+  rationale: z.string().optional(),
 });
 
 const questionSchema = z
@@ -62,15 +63,26 @@ export function gradeCheck(
   questionId: string,
   shownIndex: number,
   learnerId?: string,
-): { correct: boolean; explanations: string[] } {
+): {
+  correct: boolean;
+  explanations: string[];
+  rightAnswer: string;
+  rightWhy: string;
+  distractorWhy?: string;
+} {
   const question = set.questions.find((q) => q.id === questionId);
   if (!question) throw new Error(`unknown question ${questionId}`);
   if (!Number.isInteger(shownIndex) || shownIndex < 0 || shownIndex >= question.options.length) {
     throw new Error(`option ${shownIndex} out of range for ${questionId}`);
   }
   const order = orderFor(set, question, learnerId);
+  const chosen = question.options[order[shownIndex]];
+  const correctOpt = question.options.find((o) => o.correct)!;
   return {
-    correct: question.options[order[shownIndex]].correct,
-    explanations: order.map((i) => question.options[i].explanation),
+    correct: chosen.correct,
+    explanations: order.map((i) => i === order[shownIndex] && chosen.rationale ? chosen.rationale : question.options[i].explanation),
+    rightAnswer: correctOpt.text,
+    rightWhy: correctOpt.rationale ?? correctOpt.explanation,
+    distractorWhy: !chosen.correct ? (chosen.rationale ?? chosen.explanation) : undefined,
   };
 }

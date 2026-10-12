@@ -56,12 +56,18 @@ describe("public view and grading", () => {
     expect(json).not.toContain("Because");
   });
 
-  test("grading returns correctness and every explanation", () => {
+  test("grading returns correctness, formative rationales and every explanation", () => {
     expect(gradeCheck(set, "q2", 0)).toEqual({
       correct: true,
       explanations: ["Because q2-right.", "Because q2-wrong.", "Because q2-other."],
+      rightAnswer: "q2-right",
+      rightWhy: "Because q2-right.",
+      distractorWhy: undefined,
     });
-    expect(gradeCheck(set, "q2", 1).correct).toBe(false);
+    const wrong = gradeCheck(set, "q2", 1);
+    expect(wrong.correct).toBe(false);
+    expect(wrong.distractorWhy).toBe("Because q2-wrong.");
+    expect(wrong.rightAnswer).toBe("q2-right");
   });
 
   test("unknown question or out-of-range option throws", () => {
@@ -96,6 +102,9 @@ describe("per-learner option order", () => {
     expect(gradeCheck(set, "q1", shownRight, "op-7")).toEqual({
       correct: true,
       explanations: order.map((i) => set.questions[0].options[i].explanation),
+      rightAnswer: "q1-right",
+      rightWhy: "Because q1-right.",
+      distractorWhy: undefined,
     });
     expect(gradeCheck(set, "q1", (shownRight + 1) % 3, "op-7").correct).toBe(false);
   });
