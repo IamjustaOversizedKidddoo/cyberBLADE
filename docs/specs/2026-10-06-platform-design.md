@@ -381,17 +381,22 @@ Content (lessons, labs) lives in the repo, not the DB; DB stores only IDs + prog
 
 Timelines are rough for a solo founder working with Claude Code; adjust after Phase 1.
 
+> **Phase 3 Redesign Note (2026-10-12):** Phase 3 has been redesigned around explicit practical SOC certification outcomes (SAL1, SAL2, BTL1, CDSA, CySA+). See the full specification at [`docs/specs/phase-3-soc-track.md`](file:///d:/CYBER-PLATFORM/docs/specs/phase-3-soc-track.md), benchmark analysis at [`docs/specs/phase-3-benchmark.md`](file:///d:/CYBER-PLATFORM/docs/specs/phase-3-benchmark.md), and open decisions at [`docs/specs/phase-3-open-questions.md`](file:///d:/CYBER-PLATFORM/docs/specs/phase-3-open-questions.md). The original Phase 3 plan is archived at [`docs/archive/2026-10-12-phase-3-original.md`](file:///d:/CYBER-PLATFORM/docs/archive/2026-10-12-phase-3-original.md).
+>
+> The redesign expands Phase 3 into two slices and reorders the public launch so that Paid Launch (Phase 4) ships immediately after SOC L1 (Slice 1) is ready, monetizing the platform earlier and funding Slice 2.
+
 | Phase | Goal | Deliverables | Done when |
 |---|---|---|---|
 | **0. Foundation** (wk 1–2) | Project skeleton | Repo, Next.js + Supabase + Tailwind theme, auth, layout, CLAUDE.md, CI | A user can sign up and see the themed dashboard |
 | **1. Learning engine + Rank 0** (wk 3–5) | One rank end-to-end | MDX lesson reader, Terminal Checks, progress/XP/ranks, `terminal` lab type, Rank 0 content + challenge | A new user completes Rank 0 fully in the browser |
 | **2. Core complete + Handler** (wk 6–10) | Full shared core | Ranks 1–2 content, `packet` + `siem` (basic) labs, Handler (hints + Q&A), achievements/streaks, exam readiness engine (§5.5) + core cert prep (Security+, Network+, ISC2 CC, A+ security parts) | Closed beta: 30–50 testers complete the core; feedback collected |
-| **3. SOC track** (wk 11–16) | First job track | Full SIEM console, `report` lab + AI grading, SOC content, SOC exam, certificate + verify page, coverage matrix | Beta testers pass the SOC exam; external reviewer sign-off |
-| **4. Public launch** (wk 17–18) | Revenue | Razorpay, pricing gates, landing page, legal pages, admin review queue | Public launch: core + SOC live, other tracks "Coming soon" |
-| **5. Pentest / VAPT track** (wk 19–28) | Second track | `webapp` lab type, Pentest/VAPT content, exam | Track live after reviewer sign-off |
-| **6. Cloud track** (wk 29–36) | Third track | `cloud` lab type + policy engine, Cloud content, Cloud exam | Track live |
+| **3A. SOC Track L1 — Slice 1** (wk 11–20) | First job track: Foundation | Full spec: `docs/specs/phase-3-soc-track.md`. Modules 1–8 (32 lessons, 16 labs), SOC Simulator MVP (alert queue, triage panel, SPL/KQL query parser, enrichment panel), 3 scenario families × 5 variants (15 unique investigations), deterministic report grader, SAL1-format mock exam, readiness gate v1, 50 SOC flashcards | 10+ beta testers complete L1; ≥3 practitioner reviewers sign off; readiness gate functional |
+| **4. Public & Paid Launch** (wk 21–23) | Revenue & Validation | Razorpay integration, pricing gates (Pro ₹499/mo or ₹3,999/yr, exam fee ₹2,999), landing page, legal/terms/refund pages, admin review queue | Public launch: Core + SOC L1 live as paid product; L2 marked "In Development" |
+| **3B. SOC Track L2 & CySA+ Layer — Slice 2** (wk 24–30) | Advanced SOC & Certification Breadth | Modules 9–14 (25 lessons, 14 labs), 6 L2 scenario families × 5 variants, AI-assisted reasoning report grading (calibrated to κ ≥ 0.7), SAL2/CDSA/BTL1 mock exam formats, CySA+ CS0-004 question bank (400 Qs + 20 PBQs), build-your-own-lab guides (Docker Elastic/Wazuh) | 30+ reports calibrated with practitioners; mock exams passing; readiness gate predicts cert pass |
+| **5. Pentest / VAPT track** (wk 31–40) | Second track | `webapp` lab type, Pentest/VAPT content, exam | Track live after reviewer sign-off |
+| **6. Cloud track** (wk 41–48) | Third track | `cloud` lab type + policy engine, Cloud content, Cloud exam | Track live |
 | **7. Cybersecurity (Purple Team) track** | Flagship track | Reuses SOC + Pentest lessons; adds vulnerability-intel, C2 traffic analysis, malware/forensics depth, security programming (needs a code-runner lab type), purple-team capstone + exam | Track live after reviewer sign-off |
-| **8. v2** | Scale | Real container labs, proctoring, more tracks (GRC, AI Security next), hiring partners | Ongoing |
+| **8. v2** | Scale | Real container labs (orchestrated Elastic/Wazuh), proctoring, more tracks (GRC, AI Security next), hiring partners | Ongoing |
 
 **Local-first (owner decision, 2026-10-06):** Phases 0–1 run as a local website only — no Supabase, auth or deployment. A cookie-based local "operator" identity and JSON files in `.data/` stand in, behind the same store interfaces. Supabase Auth (email + Google), Postgres and Vercel deployment are added as the first step of Phase 2, before the closed beta.
 
