@@ -167,7 +167,12 @@ export function SiemLab({ env }: { env: SiemEnv }) {
       {/* ── MAIN WORKSPACE: LOG TABLE + INSPECTOR DRAWER ─────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] min-h-[460px]">
         {/* LOG EVENT STREAM */}
-        <div className="overflow-x-auto max-h-[560px] overflow-y-auto border-r border-line">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="SIEM event stream table"
+          className="overflow-x-auto max-h-[560px] overflow-y-auto border-r border-line focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+        >
           {filteredEvents.length === 0 ? (
             <div className="p-8 text-center text-muted">
               <p className="text-base text-ink">No log events match query &quot;{search}&quot;</p>
@@ -192,8 +197,16 @@ export function SiemLab({ env }: { env: SiemEnv }) {
                   return (
                     <tr
                       key={evt.id}
+                      tabIndex={0}
+                      aria-selected={isSelected}
                       onClick={() => setSelectedEventId(evt.id)}
-                      className={`cursor-pointer transition-colors ${
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedEventId(evt.id);
+                        }
+                      }}
+                      className={`cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan ${
                         isSelected
                           ? "bg-cyan/15 text-ink font-semibold"
                           : "hover:bg-cyan/5 text-muted hover:text-ink"
