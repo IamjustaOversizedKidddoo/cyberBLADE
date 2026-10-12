@@ -125,7 +125,7 @@ export function BrowserFrame({ currentUrl, htmlContent, onNavigate }: Props) {
             type="submit"
             className="px-3 py-1 font-ui text-xs font-semibold text-cyan border border-cyan/50 bg-cyan/15 rounded-xs hover:bg-cyan hover:text-void transition-colors uppercase tracking-wider focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
           >
-            NAVIGATE
+            GO
           </button>
         </form>
       </div>

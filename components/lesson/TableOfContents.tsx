@@ -22,7 +22,6 @@ export function TableOfContents() {
       }
       return { id, text: el.textContent ?? "" };
     });
-    setHeadings(items);
 
     function onScroll() {
       const scrollPos = window.scrollY + 120;
@@ -35,9 +34,16 @@ export function TableOfContents() {
       }
     }
 
+    const frame = requestAnimationFrame(() => {
+      setHeadings(items);
+      onScroll();
+    });
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   if (headings.length < 2) return null;

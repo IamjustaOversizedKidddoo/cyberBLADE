@@ -70,7 +70,7 @@ export function PacketLab({ capture }: Props) {
                 if (filterError) setFilterError(null);
               }}
               onKeyDown={handleKeyDown}
-              placeholder="Apply a display filter (e.g. tcp.flags.syn == 1, ip.addr == 192.168.1.1)…"
+              placeholder="Apply a display filter…"
               className={`w-full rounded-xs border bg-console px-3.5 py-2 font-mono text-xs text-ink placeholder:text-muted/50 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan ${
                 filterError
                   ? "border-danger focus-visible:ring-danger"

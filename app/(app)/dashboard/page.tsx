@@ -67,7 +67,7 @@ export default async function DashboardPage() {
   const isBrandNew = completedLessons.length === 0 && operator.rank === 0;
 
   return (
-    <main className="min-h-screen bg-canvas text-ink">
+    <main className="min-h-screen bg-canvas text-ink overflow-x-clip">
       {/* ── OPERATOR DOSSIER HERO ─────────────────────────────────────────── */}
       <PosterSection
         tone="void"
@@ -76,7 +76,7 @@ export default async function DashboardPage() {
         className="neon-hero border-b border-line py-8 sm:py-12 bg-void"
       >
         <div className="col-span-full mx-auto w-full max-w-7xl">
-          <div className="rounded-sm border border-line bg-surface/90 p-6 sm:p-8 backdrop-blur-sm grid grid-cols-1 gap-6 sm:grid-cols-[1fr_auto] items-center">
+          <div className="rounded-sm border border-line bg-surface/90 p-4 sm:p-8 backdrop-blur-sm grid grid-cols-1 gap-6 sm:grid-cols-[1fr_auto] items-center">
             {/* Left: rank + handle */}
             <div>
               <p className="sr-only">{`> welcome, ${operator.handle}`}</p>
@@ -100,7 +100,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* Right: mission progress readout */}
-            <div className="flex flex-col justify-end min-w-[220px]">
+            <div className="flex flex-col justify-end min-w-0 sm:min-w-[220px]">
               <div className="rounded-xs border border-line bg-surface-subtle p-4 sm:p-5">
                 <SystemLabel className="text-muted mb-2.5 block">CURRICULUM PROGRESS</SystemLabel>
                 <ProgressBar

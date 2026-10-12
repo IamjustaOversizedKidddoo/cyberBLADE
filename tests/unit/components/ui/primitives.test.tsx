@@ -2,7 +2,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { Button } from "@/components/ui/Button";
-import { Badge, StatusBadge, RankBadge, SeverityBadge } from "@/components/ui/Badge";
+import { StatusBadge, RankBadge, SeverityBadge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Tabs, TabList, Tab, TabPanel } from "@/components/ui/Tabs";
 import { Card, CardHeader, CardBody, CardFooter } from "@/components/ui/Card";
@@ -94,6 +94,7 @@ describe("UI Primitives", () => {
 
       const tab1 = screen.getByRole("tab", { name: "Tab 1" });
       const tab2 = screen.getByRole("tab", { name: "Tab 2" });
+      expect(tab2).toBeInTheDocument();
 
       tab1.focus();
       fireEvent.keyDown(tab1, { key: "ArrowRight" });
