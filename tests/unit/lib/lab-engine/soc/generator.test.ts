@@ -45,9 +45,9 @@ describe("SOC Scenario Generator (Unit & Determinism)", () => {
     // Create modified family with different noise bounds
     const modifiedFamily: SocFamily = {
       ...family,
-      noise: {
-        ...family.noise,
-        noiseRatioRange: [0.95, 0.98],
+      variationAxes: {
+        ...family.variationAxes,
+        noiseRatio: { min: 0.95, max: 0.98 },
       },
     };
 
