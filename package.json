@@ -12,6 +12,7 @@
     "test:security": "vitest run tests/security",
     "test:e2e": "playwright test",
     "check:content": "tsx scripts/check-content.mts",
+    "check:soc": "tsx scripts/check-soc.mts",
     "eval:handler": "tsx scripts/eval-handler.mts",
     "report:learning": "tsx scripts/learning-analytics-report.mts"
   },
