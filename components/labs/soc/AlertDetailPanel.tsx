@@ -60,7 +60,11 @@ export function AlertDetailPanel({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto space-y-4 p-4 font-mono text-xs">
+    <div
+      tabIndex={0}
+      aria-label="Alert Details and Triage Panel"
+      className="flex flex-col h-full overflow-y-auto space-y-4 p-4 font-mono text-xs focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+    >
       {/* Alert Header Box */}
       <div className="rounded-sm border border-line bg-console p-4 space-y-2.5">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2.5">
@@ -226,7 +230,11 @@ export function AlertDetailPanel({
             ))}
           </div>
         ) : (
-          <pre className="p-2.5 rounded-xs bg-surface/80 border border-line/40 text-[11px] text-ink overflow-x-auto max-h-56">
+          <pre
+            tabIndex={0}
+            aria-label="Raw event JSON payload"
+            className="p-2.5 rounded-xs bg-surface/80 border border-line/40 text-[11px] text-ink overflow-x-auto max-h-56 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+          >
             {JSON.stringify(alert.rawFields, null, 2)}
           </pre>
         )}
@@ -239,7 +247,11 @@ export function AlertDetailPanel({
             <span>Correlated Alerts ({relatedAlerts.length})</span>
             <span className="text-[10px] text-muted font-normal">Same Host or User</span>
           </span>
-          <div className="divide-y divide-line/30 max-h-40 overflow-y-auto">
+          <div
+            tabIndex={0}
+            aria-label="Correlated alerts list"
+            className="divide-y divide-line/30 max-h-40 overflow-y-auto focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+          >
             {relatedAlerts.map((rel) => (
               <div
                 key={rel.id}

@@ -220,13 +220,15 @@ export function TriageDecisionForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Severity Assessment */}
         <div className="space-y-1">
-          <label className="block text-[11px] font-semibold text-secondary">
+          <label htmlFor="analyst-severity-select" className="block text-[11px] font-semibold text-secondary">
             2. Analyst Severity Rating:
           </label>
           <select
+            id="analyst-severity-select"
+            aria-label="Analyst Severity Rating"
             value={severity}
             onChange={(e) => setSeverity(e.target.value as SocSeverity)}
-            className="w-full rounded-xs border border-line bg-surface px-2.5 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none"
+            className="w-full rounded-xs border border-line bg-surface px-2.5 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
           >
             <option value="CRITICAL">CRITICAL (Active Breach / Ransomware)</option>
             <option value="HIGH">HIGH (Adversary Execution / Credential Theft)</option>
@@ -271,13 +273,15 @@ export function TriageDecisionForm({
       {/* Target Escalation Tier */}
       {escalate && (
         <div className="space-y-1 pt-1 border-t border-line/40">
-          <label className="block text-[11px] font-semibold text-secondary">
+          <label htmlFor="target-tier-select" className="block text-[11px] font-semibold text-secondary">
             Target Escalation Team:
           </label>
           <select
+            id="target-tier-select"
+            aria-label="Target Escalation Team"
             value={targetTier}
             onChange={(e) => setTargetTier(e.target.value as SocEscalationTier)}
-            className="w-full rounded-xs border border-danger/40 bg-surface px-2.5 py-1.5 text-xs text-ink focus:border-danger focus:outline-none"
+            className="w-full rounded-xs border border-danger/40 bg-surface px-2.5 py-1.5 text-xs text-ink focus:border-danger focus:outline-none focus-visible:ring-1 focus-visible:ring-danger"
           >
             <option value="tier2">Tier-2 Advanced SOC Investigation</option>
             <option value="incident_response">Incident Response (Active Containment)</option>
@@ -290,7 +294,7 @@ export function TriageDecisionForm({
       {/* Rationale Textarea */}
       <div className="space-y-1">
         <div className="flex items-center justify-between text-[11px]">
-          <label className="font-semibold text-secondary">
+          <label htmlFor="triage-rationale-input" className="font-semibold text-secondary">
             4. Triage Rationale & Justification:
           </label>
           <span className={`font-mono ${rationale.length < 10 ? "text-warning" : "text-muted"}`}>
@@ -298,6 +302,8 @@ export function TriageDecisionForm({
           </span>
         </div>
         <textarea
+          id="triage-rationale-input"
+          aria-label="Triage Rationale & Justification"
           rows={3}
           value={rationale}
           onChange={(e) => setRationale(e.target.value)}
@@ -311,15 +317,17 @@ export function TriageDecisionForm({
 
       {/* Evidence References */}
       <div className="space-y-1">
-        <label className="block text-[11px] font-semibold text-secondary">
+        <label htmlFor="evidence-references-input" className="block text-[11px] font-semibold text-secondary">
           5. Evidence References (Alert or Event IDs):
         </label>
         <input
+          id="evidence-references-input"
+          aria-label="Evidence References"
           type="text"
           value={evidenceInput}
           onChange={(e) => setEvidenceInput(e.target.value)}
           placeholder="e.g. alt-001, alt-002, ev-104"
-          className="w-full rounded-xs border border-line bg-surface px-2.5 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none"
+          className="w-full rounded-xs border border-line bg-surface px-2.5 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
         />
       </div>
 

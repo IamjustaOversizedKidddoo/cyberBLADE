@@ -288,6 +288,7 @@ export function AlertQueueTable({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search alerts... (/)"
+              aria-label="Search alerts"
               className="w-full rounded-xs border border-line bg-console pl-8 pr-2.5 py-1.5 text-xs text-ink placeholder:text-muted focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
             />
           </div>
@@ -296,7 +297,7 @@ export function AlertQueueTable({
           <select
             value={sourceFilter}
             onChange={(e) => setSourceFilter(e.target.value)}
-            className="rounded-xs border border-line bg-console px-2 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none"
+            className="rounded-xs border border-line bg-console px-2 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
             aria-label="Filter alerts by detection source"
           >
             <option value="ALL">All Sources ({alerts.length})</option>
@@ -311,7 +312,7 @@ export function AlertQueueTable({
           <select
             value={severityFilter}
             onChange={(e) => setSeverityFilter(e.target.value)}
-            className="rounded-xs border border-line bg-console px-2 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none"
+            className="rounded-xs border border-line bg-console px-2 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
             aria-label="Filter alerts by severity"
           >
             <option value="ALL">All Severities</option>
@@ -326,7 +327,7 @@ export function AlertQueueTable({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xs border border-line bg-console px-2 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none"
+            className="rounded-xs border border-line bg-console px-2 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
             aria-label="Filter alerts by triage status"
           >
             <option value="ALL">All Statuses</option>
@@ -356,62 +357,76 @@ export function AlertQueueTable({
       {/* Sticky Table Header */}
       <div className="border-b border-line bg-surface-raised font-mono text-[11px] text-muted flex items-center px-2 py-2 select-none">
         <div className="w-8 flex justify-center">
-          <input
-            type="checkbox"
-            checked={selectedBulkIds.size === processedAlerts.length && processedAlerts.length > 0}
-            onChange={toggleSelectAll}
-            className="rounded-xs border-line text-cyan focus:ring-cyan"
-            aria-label="Select all visible alerts"
-          />
+          <label className="min-w-[24px] min-h-[24px] flex items-center justify-center cursor-pointer">
+            <span className="sr-only">Select all visible alerts</span>
+            <input
+              type="checkbox"
+              checked={selectedBulkIds.size === processedAlerts.length && processedAlerts.length > 0}
+              onChange={toggleSelectAll}
+              className="h-4 w-4 rounded-xs border-line text-cyan focus:ring-cyan"
+            />
+          </label>
         </div>
-        <button
-          type="button"
-          onClick={() => toggleSort("timestamp")}
-          className="w-20 text-left font-semibold hover:text-ink flex items-center gap-1"
-          aria-sort={sortField === "timestamp" ? (sortOrder === "asc" ? "ascending" : "descending") : "none"}
-        >
-          Time {sortField === "timestamp" && (sortOrder === "asc" ? "▲" : "▼")}
-        </button>
-        <button
-          type="button"
-          onClick={() => toggleSort("severity")}
-          className="w-24 text-left font-semibold hover:text-ink flex items-center gap-1"
-          aria-sort={sortField === "severity" ? (sortOrder === "asc" ? "ascending" : "descending") : "none"}
-        >
-          Severity {sortField === "severity" && (sortOrder === "asc" ? "▲" : "▼")}
-        </button>
-        <button
-          type="button"
-          onClick={() => toggleSort("source")}
-          className="w-28 text-left font-semibold hover:text-ink flex items-center gap-1 hidden md:flex"
-          aria-sort={sortField === "source" ? (sortOrder === "asc" ? "ascending" : "descending") : "none"}
-        >
-          Source {sortField === "source" && (sortOrder === "asc" ? "▲" : "▼")}
-        </button>
-        <button
-          type="button"
-          onClick={() => toggleSort("ruleName")}
-          className="flex-1 text-left font-semibold hover:text-ink flex items-center gap-1"
-          aria-sort={sortField === "ruleName" ? (sortOrder === "asc" ? "ascending" : "descending") : "none"}
-        >
-          Detection Rule {sortField === "ruleName" && (sortOrder === "asc" ? "▲" : "▼")}
-        </button>
+        <div className="w-20">
+          <button
+            type="button"
+            onClick={() => toggleSort("timestamp")}
+            aria-label={`Sort by Time ${sortField === "timestamp" ? (sortOrder === "asc" ? "ascending" : "descending") : ""}`}
+            className="w-full text-left font-semibold hover:text-ink flex items-center gap-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+          >
+            Time {sortField === "timestamp" && (sortOrder === "asc" ? "▲" : "▼")}
+          </button>
+        </div>
+        <div className="w-24">
+          <button
+            type="button"
+            onClick={() => toggleSort("severity")}
+            aria-label={`Sort by Severity ${sortField === "severity" ? (sortOrder === "asc" ? "ascending" : "descending") : ""}`}
+            className="w-full text-left font-semibold hover:text-ink flex items-center gap-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+          >
+            Severity {sortField === "severity" && (sortOrder === "asc" ? "▲" : "▼")}
+          </button>
+        </div>
+        <div className="w-28 hidden md:block">
+          <button
+            type="button"
+            onClick={() => toggleSort("source")}
+            aria-label={`Sort by Source ${sortField === "source" ? (sortOrder === "asc" ? "ascending" : "descending") : ""}`}
+            className="w-full text-left font-semibold hover:text-ink flex items-center gap-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+          >
+            Source {sortField === "source" && (sortOrder === "asc" ? "▲" : "▼")}
+          </button>
+        </div>
+        <div className="flex-1">
+          <button
+            type="button"
+            onClick={() => toggleSort("ruleName")}
+            aria-label={`Sort by Detection Rule ${sortField === "ruleName" ? (sortOrder === "asc" ? "ascending" : "descending") : ""}`}
+            className="w-full text-left font-semibold hover:text-ink flex items-center gap-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+          >
+            Detection Rule {sortField === "ruleName" && (sortOrder === "asc" ? "▲" : "▼")}
+          </button>
+        </div>
         <div className="w-28 text-left font-semibold hidden lg:block">Target Asset</div>
-        <button
-          type="button"
-          onClick={() => toggleSort("status")}
-          className="w-24 text-right font-semibold hover:text-ink flex items-center justify-end gap-1"
-          aria-sort={sortField === "status" ? (sortOrder === "asc" ? "ascending" : "descending") : "none"}
-        >
-          Status {sortField === "status" && (sortOrder === "asc" ? "▲" : "▼")}
-        </button>
+        <div className="w-24">
+          <button
+            type="button"
+            onClick={() => toggleSort("status")}
+            aria-label={`Sort by Status ${sortField === "status" ? (sortOrder === "asc" ? "ascending" : "descending") : ""}`}
+            className="w-full text-right font-semibold hover:text-ink flex items-center justify-end gap-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+          >
+            Status {sortField === "status" && (sortOrder === "asc" ? "▲" : "▼")}
+          </button>
+        </div>
       </div>
 
       {/* Virtualized Table Scroll Body */}
       <div
         ref={containerRef}
         onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
-        className="flex-1 overflow-y-auto relative min-h-[300px]"
+        tabIndex={0}
+        aria-label="Alert queue list"
+        className="flex-1 overflow-y-auto relative min-h-[300px] focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
       >
         {totalCount === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-muted text-xs font-mono space-y-1">
@@ -430,6 +445,7 @@ export function AlertQueueTable({
                 return (
                   <div
                     key={alert.id}
+                    data-testid={`alert-row-${alert.id}`}
                     onClick={() => onSelectAlert(alert.id)}
                     style={{ height: `${ROW_HEIGHT}px` }}
                     className={`flex items-center px-2 border-b border-line/30 cursor-pointer text-xs font-mono transition-colors ${
@@ -440,14 +456,18 @@ export function AlertQueueTable({
                   >
                     {/* Checkbox */}
                     <div className="w-8 flex justify-center">
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={(e) => toggleSelectRow(alert.id, e as unknown as React.MouseEvent)}
+                      <label
+                        className="min-w-[24px] min-h-[24px] flex items-center justify-center cursor-pointer"
                         onClick={(e) => e.stopPropagation()}
-                        className="rounded-xs border-line text-cyan focus:ring-cyan"
-                        aria-label={`Select alert ${alert.id}`}
-                      />
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => toggleSelectRow(alert.id, e as unknown as React.MouseEvent)}
+                          className="h-4 w-4 rounded-xs border-line text-cyan focus:ring-cyan"
+                          aria-label={`Select alert ${alert.id}`}
+                        />
+                      </label>
                     </div>
 
                     {/* Timestamp */}
