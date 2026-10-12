@@ -126,6 +126,12 @@ export const LAB_DEBRIEFS: Record<string, LabDebrief> = {
     commonMistake: "Stopping after discovering one bug instead of chaining vulnerabilities for impact.",
     goFurther: "Automate web vulnerability scans using OWASP ZAP in a CI/CD build pipeline.",
   },
+  "soc-noisy-shift-01": {
+    concept: "Tier-1 SOC alert triage, noise reduction, and correlation under alert fatigue.",
+    realWorld: "Enterprise SOC analyst working an alert queue, separating true threats from benign noise.",
+    commonMistake: "Over-escalating benign administrative actions or closing active adversary alerts as false alarms.",
+    goFurther: "Write Sigma detection rules to tune noisy alerts at the source.",
+  },
 };
 
 export function getLabDebrief(labId: string): LabDebrief | undefined {

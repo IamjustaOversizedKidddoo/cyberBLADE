@@ -54,7 +54,11 @@ export function ShiftResultsModal({ isOpen, result, onClose, onReturnToLabs }: P
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div
+          tabIndex={0}
+          aria-label="Shift evaluation scorecard content"
+          className="flex-1 overflow-y-auto p-6 space-y-6 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+        >
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="rounded-xs border border-line bg-surface p-3 space-y-1">
@@ -154,7 +158,11 @@ export function ShiftResultsModal({ isOpen, result, onClose, onReturnToLabs }: P
               </span>
             </div>
 
-            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+            <div
+              tabIndex={0}
+              aria-label="Individual alert debriefs list"
+              className="space-y-2 max-h-80 overflow-y-auto pr-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+            >
               {result.alertResults.map((item) => {
                 const isSelected = selectedAlertId === item.alertId;
                 const hasDebrief = Boolean(item.debrief);

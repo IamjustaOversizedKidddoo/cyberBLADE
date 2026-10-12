@@ -134,16 +134,18 @@ ${notes || "No notes recorded."}
           <form onSubmit={handleCreateCase} className="p-2.5 rounded-xs bg-surface border border-line space-y-2">
             <input
               type="text"
+              aria-label="New Case Title"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Case title (e.g. Credential Phishing Campaign)..."
-              className="w-full rounded-xs border border-line bg-console px-2.5 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none"
+              className="w-full rounded-xs border border-line bg-console px-2.5 py-1.5 text-xs text-ink focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
             />
             <div className="flex items-center justify-between">
               <select
+                aria-label="New Case Severity"
                 value={newSeverity}
                 onChange={(e) => setNewSeverity(e.target.value as SocSeverity)}
-                className="rounded-xs border border-line bg-console px-2 py-1 text-xs text-ink focus:border-cyan focus:outline-none"
+                className="rounded-xs border border-line bg-console px-2 py-1 text-xs text-ink focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
               >
                 <option value="CRITICAL">CRITICAL</option>
                 <option value="HIGH">HIGH</option>
@@ -165,9 +167,10 @@ ${notes || "No notes recorded."}
         {cases.length > 0 ? (
           <div className="space-y-2">
             <select
+              aria-label="Active Case Selection"
               value={selectedCaseId ?? ""}
               onChange={(e) => setSelectedCaseId(e.target.value)}
-              className="w-full rounded-xs border border-line bg-surface px-2.5 py-1.5 text-xs text-ink font-semibold focus:border-cyan focus:outline-none"
+              className="w-full rounded-xs border border-line bg-surface px-2.5 py-1.5 text-xs text-ink font-semibold focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
             >
               {cases.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -243,7 +246,11 @@ ${notes || "No notes recorded."}
             )}
           </div>
 
-          <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pt-1">
+          <div
+            tabIndex={0}
+            aria-label="Linked alert IDs list"
+            className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pt-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+          >
             {activeCase.alertIds.map((aid) => (
               <span
                 key={aid}
@@ -312,10 +319,11 @@ ${notes || "No notes recorded."}
           </div>
 
           <textarea
+            aria-label="Investigation Notes"
             value={notes}
             onChange={(e) => handleNotesChange(e.target.value)}
             placeholder="Record timeline observations, host triage findings, lateral movement traces..."
-            className="flex-1 w-full rounded-xs border border-line bg-surface p-2.5 text-xs text-ink placeholder:text-muted focus:border-cyan focus:outline-none resize-none font-mono"
+            className="flex-1 w-full rounded-xs border border-line bg-surface p-2.5 text-xs text-ink placeholder:text-muted focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan resize-none font-mono"
           />
 
           {/* Escalation Handoff Summary Export */}

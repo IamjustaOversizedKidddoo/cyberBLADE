@@ -18,6 +18,7 @@ export default defineConfig({
       NEON_DATA_DIR: ".data-e2e",
       NEON_SHOW_DRAFTS: "true",
       CYBERBLADE_ALLOW_LOCAL_E2E: "true",
+      SOC_WORKSPACE_ENABLED: "true",
     },
   },
   projects: [

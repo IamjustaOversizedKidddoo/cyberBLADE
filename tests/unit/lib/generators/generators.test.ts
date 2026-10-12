@@ -5,8 +5,8 @@ import { createRng } from "@/lib/generators/rng";
 describe("generator property tests across all 20 generators", () => {
   const generatorEntries = Object.entries(GENERATORS);
 
-  it("registers exactly 20 distinct generators", () => {
-    expect(generatorEntries.length).toBe(20);
+  it("registers all distinct generators", () => {
+    expect(generatorEntries.length).toBe(21);
   });
 
   for (const [name, generator] of generatorEntries) {
