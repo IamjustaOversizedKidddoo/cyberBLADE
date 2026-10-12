@@ -282,7 +282,7 @@ export const ReferenceSolver: SocSolver = {
 
       // 6. External SSH/Auth Brute Force with Success vs Failures & MFA
       if (rule.includes("brute force") || rule.includes("dictionary attack") || summary.includes("multiple failed logons") || summary.includes("failed logons") || rule.includes("authentication:") || rule.includes("identity:")) {
-        if (rule.includes("novel asn") || summary.includes("novel foreign") || summary.includes("novel asn") || summary.includes("fatigue") || summary.includes("push prompt") || summary.includes("impossible travel")) {
+        if (rule.includes("novel asn") || summary.includes("novel foreign") || summary.includes("novel asn") || summary.includes("fatigue") || summary.includes("push prompt") || summary.includes("push notification") || rule.includes("multi-factor") || summary.includes("impossible travel")) {
           decisions[alert.id] = {
             alertId: alert.id,
             disposition: "true_positive",
