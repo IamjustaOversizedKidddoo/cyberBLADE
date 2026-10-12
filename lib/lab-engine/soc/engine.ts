@@ -49,26 +49,93 @@ export async function loadSocScenario(scenarioId: string): Promise<SocScenario> 
   return socScenarioSchema.parse(parsed);
 }
 
+import { socFamilySchema, type SocFamily, type DifficultyLevel } from "./family-schema";
+import { generateSocVariant, GENERATOR_VERSION } from "./generator";
+import { newSeed } from "@/lib/generators/rng";
+
+export async function loadSocFamily(familyId: string): Promise<SocFamily> {
+  const filePath = path.resolve(`content/soc/families/${familyId}.yaml`);
+  const rawContent = await fs.readFile(filePath, "utf8");
+  const parsed = parseYaml(rawContent);
+  const result = socFamilySchema.safeParse(parsed);
+  if (!result.success) {
+    throw new Error(`Family validation failed: ${result.error.issues.map((i) => i.message).join("; ")}`);
+  }
+  return result.data;
+}
+
+export async function resolveScenarioForAttempt(attempt: SocAttemptRecord): Promise<SocScenario> {
+  if (attempt.familyId || attempt.scenarioId.startsWith("soc-f-")) {
+    const familyId = attempt.familyId ?? attempt.scenarioId;
+    const family = await loadSocFamily(familyId);
+    const difficulty = (attempt.difficulty as DifficultyLevel) ?? "intermediate";
+    const { scenario, contentHash } = generateSocVariant(family, attempt.seed, difficulty);
+    if (attempt.scenarioHash && contentHash !== attempt.scenarioHash) {
+      throw new Error(`Scenario hash mismatch for attempt ${attempt.id}: expected ${attempt.scenarioHash}, got ${contentHash}`);
+    }
+    return scenario;
+  }
+  return loadSocScenario(attempt.scenarioId);
+}
+
 export async function startSocSession(
   ctx: Ctx,
   userId: string,
   scenarioId: string,
+  options?: { difficulty?: DifficultyLevel },
 ): Promise<SocSessionClient> {
-  const scenario = await loadSocScenario(scenarioId);
-
-  // Resume active in-progress attempt or create a new one
+  const isFamily = scenarioId.startsWith("soc-f-");
   let attempt = await ctx.repo.findActiveSocAttempt(userId, scenarioId);
+  let scenario: SocScenario;
+
   if (!attempt) {
-    attempt = await ctx.repo.createSocAttempt({
-      userId,
-      scenarioId,
-      seed: randomUUID(),
-      status: "in_progress",
-      scoreSummary: null,
-      startedAt: ctx.now().toISOString(),
-      submittedAt: null,
-      updatedAt: ctx.now().toISOString(),
-    });
+    if (isFamily) {
+      const family = await loadSocFamily(scenarioId);
+      const difficulty = options?.difficulty ?? "intermediate";
+
+      // Seed policy: non-repeating per (user, family)
+      const usedSeeds = (await (ctx.repo as any).listUsedSeeds?.(userId, family.metadata.id)) ?? [];
+      let seed = newSeed();
+      let rollCount = 0;
+      while (usedSeeds.includes(seed) && rollCount < 10) {
+        seed = newSeed();
+        rollCount++;
+      }
+      await (ctx.repo as any).recordUsedSeed?.(userId, family.metadata.id, seed);
+
+      const { scenario: genScenario, contentHash } = generateSocVariant(family, seed, difficulty);
+      scenario = genScenario;
+
+      attempt = await ctx.repo.createSocAttempt({
+        userId,
+        scenarioId,
+        seed,
+        status: "in_progress",
+        scoreSummary: null,
+        startedAt: ctx.now().toISOString(),
+        submittedAt: null,
+        updatedAt: ctx.now().toISOString(),
+        familyId: family.metadata.id,
+        familyVersion: family.metadata.version,
+        generatorVersion: GENERATOR_VERSION,
+        difficulty,
+        scenarioHash: contentHash,
+      });
+    } else {
+      scenario = await loadSocScenario(scenarioId);
+      attempt = await ctx.repo.createSocAttempt({
+        userId,
+        scenarioId,
+        seed: randomUUID(),
+        status: "in_progress",
+        scoreSummary: null,
+        startedAt: ctx.now().toISOString(),
+        submittedAt: null,
+        updatedAt: ctx.now().toISOString(),
+      });
+    }
+  } else {
+    scenario = await resolveScenarioForAttempt(attempt);
   }
 
   const [rawDecisions, cases] = await Promise.all([
@@ -106,7 +173,7 @@ export async function getSocSession(
   if (!attempt) throw new Error("Attempt not found");
   if (attempt.userId !== userId) throw new Error("Forbidden: Unauthorized attempt access");
 
-  const scenario = await loadSocScenario(attempt.scenarioId);
+  const scenario = await resolveScenarioForAttempt(attempt);
   const [rawDecisions, cases] = await Promise.all([
     ctx.repo.listSocDecisions(attempt.id),
     ctx.repo.listSocCases(attempt.id),
@@ -277,7 +344,7 @@ export async function submitSocAttempt(
     return attempt.scoreSummary;
   }
 
-  const scenario = await loadSocScenario(attempt.scenarioId);
+  const scenario = await resolveScenarioForAttempt(attempt);
   const [decisions, cases] = await Promise.all([
     ctx.repo.listSocDecisions(attempt.id),
     ctx.repo.listSocCases(attempt.id),

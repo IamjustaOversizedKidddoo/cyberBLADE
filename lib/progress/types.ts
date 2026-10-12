@@ -96,6 +96,7 @@ export type ProgressData = {
   socAttempts?: Record<string, SocAttemptRecord>;
   socDecisions?: Record<string, SocDecisionRecord>;
   socCases?: Record<string, SocCaseRecord>;
+  socUsedSeeds?: Record<string, string[]>;
 };
 
 export const emptyProgress = (): ProgressData => ({

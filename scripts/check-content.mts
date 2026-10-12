@@ -69,6 +69,30 @@ async function main(): Promise<number> {
     }
   }
 
+  // Validate SOC scenario families
+  try {
+    const famDir = "content/soc/families";
+    const famFiles = (await fs.readdir(famDir)).filter((f) => f.endsWith(".yaml") || f.endsWith(".yml"));
+    for (const ff of famFiles) {
+      const { socFamilySchema } = await import("@/lib/lab-engine/soc/family-schema");
+      const { runFamilyProof } = await import("@/lib/lab-engine/soc/family-validator");
+      const famContent = await fs.readFile(`${famDir}/${ff}`, "utf8");
+      const famParsed = socFamilySchema.safeParse(parseYaml(famContent));
+      if (!famParsed.success) {
+        errors.push(`failed to parse soc family ${ff}: ${famParsed.error.message}`);
+      } else {
+        const proofRes = runFamilyProof(famParsed.data, 20, "intermediate");
+        if (proofRes.verdict !== "PASSED") {
+          errors.push(`SOC family ${ff} proof failed: ${proofRes.weakestAreas.join("; ")}`);
+        }
+      }
+    }
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+      errors.push(`failed to check soc families: ${(err as Error).message}`);
+    }
+  }
+
   errors.push(...result.errors);
 
   for (const w of result.warnings) console.warn(`warning: ${w}`);

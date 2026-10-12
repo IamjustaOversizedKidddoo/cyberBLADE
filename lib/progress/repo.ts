@@ -419,6 +419,22 @@ export class StoreProgressRepo implements ProgressRepo {
     return Object.values(data.socAttempts ?? {}).filter((a) => a.userId === userId);
   }
 
+  async listUsedSeeds(userId: string, familyId: string): Promise<string[]> {
+    const data = await this.store.read();
+    const key = `${userId}:${familyId}`;
+    return data.socUsedSeeds?.[key] ?? [];
+  }
+
+  async recordUsedSeed(userId: string, familyId: string, seed: string): Promise<void> {
+    const key = `${userId}:${familyId}`;
+    await this.store.update((d) => {
+      d.socUsedSeeds ??= {};
+      const list = d.socUsedSeeds[key] ?? [];
+      if (!list.includes(seed)) list.push(seed);
+      d.socUsedSeeds[key] = list;
+    });
+  }
+
   async deleteUserData(userId: string): Promise<void> {
     await this.store.update((d) => {
       for (const [k, v] of Object.entries(d.lessons)) {
@@ -465,6 +481,11 @@ export class StoreProgressRepo implements ProgressRepo {
       if (d.socCases) {
         for (const [k, v] of Object.entries(d.socCases)) {
           if (userSocAttemptIds.has(v.attemptId)) delete d.socCases[k];
+        }
+      }
+      if (d.socUsedSeeds) {
+        for (const k of Object.keys(d.socUsedSeeds)) {
+          if (k.startsWith(`${userId}:`)) delete d.socUsedSeeds[k];
         }
       }
     });
