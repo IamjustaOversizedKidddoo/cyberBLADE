@@ -11,6 +11,7 @@ import { StreakWidget } from "@/components/dashboard/StreakWidget";
 import { HalftoneField } from "@/components/art/HalftoneField";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { IconPlay, IconSparkles } from "@/components/ui/icons";
+import { FirstRunTour } from "@/components/dashboard/FirstRunTour";
 import { getLessons } from "@/lib/content/lessons";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
@@ -122,6 +123,9 @@ export default async function DashboardPage() {
           </div>
         </div>
       </PosterSection>
+
+      {/* ── FIRST RUN TOUR & HOW THIS WORKS ─────────────────────────────────── */}
+      <FirstRunTour />
 
       {/* ── NEXT MISSION BRIEFING STRIP ──────────────────────────────────────── */}
       <div className="bg-surface-raised border-b border-line">

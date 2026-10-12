@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PosterSection } from "@/components/art/PosterSection";
 import { PosterHeading } from "@/components/art/PosterHeading";
 import { NoiseLayer } from "@/components/art/NoiseLayer";
@@ -68,6 +69,16 @@ export default async function StartPage(props: PageProps<"/start">) {
 
             {/* ── MAIN FORM COLUMN ───────────────────────────────────────── */}
             <div className="bg-void px-6 py-10 sm:px-10 sm:py-14">
+              {/* Back navigation */}
+              <div className="mb-4">
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-1 font-mono text-xs text-cyan hover:underline"
+                >
+                  ‹ RETURN TO BRIEFING
+                </Link>
+              </div>
+
               {/* Terminal panel title bar */}
               <div className="flex items-center gap-0 border-2 border-line">
                 <span className="border-r border-line bg-void px-4 py-2 font-ui text-xs tracking-widest text-cyan">
@@ -85,7 +96,7 @@ export default async function StartPage(props: PageProps<"/start">) {
 
               {/* Form body with terminal inset */}
               <div className="border-2 border-t-0 border-line p-6 sm:p-8">
-                <p className="mb-8 font-mono text-xs tracking-widest text-muted/60">
+                <p className="mb-8 font-mono text-xs tracking-widest text-secondary">
                   &gt; INTAKE SEQUENCE INITIATED — COMPLETE ALL FIELDS TO PROCEED
                 </p>
                 <StartForm
@@ -107,13 +118,13 @@ export default async function StartPage(props: PageProps<"/start">) {
                 {INTAKE_FIELDS.map((field, i) => (
                   <li key={field.id} className="grid grid-cols-[auto_1fr] gap-px bg-line">
                     <div className="flex items-center justify-center bg-void px-4 py-5">
-                      <span className="font-ui text-2xl font-bold text-line">
+                      <span className="font-ui text-2xl font-bold text-muted">
                         {String(i + 1).padStart(2, "0")}
                       </span>
                     </div>
                     <div className="bg-void px-5 py-5">
                       <SystemLabel className="block text-cyan">{field.id}</SystemLabel>
-                      <p className="mt-1 text-sm text-muted">{field.label}</p>
+                      <p className="mt-1 text-sm text-secondary">{field.label}</p>
                     </div>
                   </li>
                 ))}
@@ -121,14 +132,14 @@ export default async function StartPage(props: PageProps<"/start">) {
 
               {/* Telemetry footer */}
               <div className="border-t border-line px-6 py-6 text-xs tracking-wider">
-                <div className="space-y-2 font-ui text-muted/50">
+                <div className="space-y-2 font-ui text-secondary">
                   <div className="flex justify-between">
                     <span>SESSION</span>
-                    <span>{isHosted ? "HOSTED (SUPABASE)" : "LOCAL"}</span>
+                    <span className="text-ink">{isHosted ? "HOSTED (SUPABASE)" : "LOCAL"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>CLEARANCE</span>
-                    <span>PENDING</span>
+                    <span className="text-ink">PENDING</span>
                   </div>
                   <div className="flex justify-between">
                     <span>STATUS</span>
@@ -137,7 +148,7 @@ export default async function StartPage(props: PageProps<"/start">) {
                 </div>
 
                 <div className="mt-8 border-t border-line pt-6">
-                  <p className="text-muted/40 leading-relaxed">
+                  <p className="text-muted leading-relaxed font-sans text-xs">
                     This system stores only your operator handle — a pseudonym you choose. No email, no name, no tracking.
                   </p>
                 </div>
