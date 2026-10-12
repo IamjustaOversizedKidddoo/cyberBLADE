@@ -203,6 +203,7 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
             onSubmit={submitChallengeObjectiveAction.bind(null, session.attemptId)}
             doneMessage={`Rank ${rank + 1} · ${next} unlocked`}
             attemptId={session.attemptId}
+            labId={session.labId}
           />
 
           {/* Abandon */}

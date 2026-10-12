@@ -1,0 +1,727 @@
+{
+  "totalLessons": 38,
+  "totalLabs": 20,
+  "totalQuestions": 152,
+  "positionBias": [
+    152,
+    0,
+    0,
+    0,
+    0
+  ],
+  "longestAnswerCorrectCount": 115,
+  "longestAnswerCorrectPct": 76,
+  "questionsWithThinExplanation": 0,
+  "duplicateStems": [],
+  "lessonStats": [
+    {
+      "id": "core-r0-comp-hardware-01",
+      "title": "What a Computer Really Is",
+      "rank": 0,
+      "module": "computers",
+      "order": 1,
+      "words": 1683,
+      "readTimeMin": 8.4,
+      "checksCount": 4,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r0-comp-os-files-01",
+      "title": "Operating Systems, Files and Permissions",
+      "rank": 0,
+      "module": "computers",
+      "order": 2,
+      "words": 1726,
+      "readTimeMin": 8.6,
+      "checksCount": 4,
+      "labId": "core-r0-files-lab-01",
+      "commandsShown": [
+        "ls -l /etc",
+        "whoami",
+        "cat /etc/shadow"
+      ]
+    },
+    {
+      "id": "core-r0-net-internet-01",
+      "title": "How the Internet Works",
+      "rank": 0,
+      "module": "internet",
+      "order": 3,
+      "words": 1600,
+      "readTimeMin": 8,
+      "checksCount": 4,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r0-term-first-terminal-01",
+      "title": "Your First Terminal",
+      "rank": 0,
+      "module": "terminal",
+      "order": 4,
+      "words": 1692,
+      "readTimeMin": 8.5,
+      "checksCount": 4,
+      "labId": "core-r0-terminal-lab-01",
+      "commandsShown": [
+        "whoami",
+        "pwd",
+        "ls",
+        "ls -a",
+        "cd Documents",
+        "cd ..",
+        "cat notes.txt",
+        "head -n 1 notes.txt",
+        "tail -n 2 /var/log/auth.log",
+        "grep \"Failed password\" /var/log/auth.log",
+        "grep -c \"Failed password\" /var/log/auth.log",
+        "cat /var/log/auth.log | grep root | wc -l",
+        "echo \"I was here\" > hello.txt",
+        "cat hello.txt"
+      ]
+    },
+    {
+      "id": "core-r0-mind-attacker-defender-01",
+      "title": "Thinking Like a Defender vs an Attacker",
+      "rank": 0,
+      "module": "mindset",
+      "order": 5,
+      "words": 1297,
+      "readTimeMin": 6.5,
+      "checksCount": 4,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r0-career-ethics-law-01",
+      "title": "Cyber Careers Map + Ethics & Law",
+      "rank": 0,
+      "module": "mindset",
+      "order": 6,
+      "words": 1740,
+      "readTimeMin": 8.7,
+      "checksCount": 4,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r1-net-osi-01",
+      "title": "Layers: the OSI and TCP/IP Models",
+      "rank": 1,
+      "module": "networking",
+      "order": 1,
+      "words": 2020,
+      "readTimeMin": 10.1,
+      "checksCount": 4,
+      "commandsShown": [
+        "ip link",
+        "ip route",
+        "ss -tln"
+      ]
+    },
+    {
+      "id": "core-r1-net-ip-01",
+      "title": "IP Addresses, Subnets and CIDR (IPv4 + IPv6)",
+      "rank": 1,
+      "module": "networking",
+      "order": 2,
+      "words": 2019,
+      "readTimeMin": 10.1,
+      "checksCount": 4,
+      "labId": "core-r1-net-ip-lab-01",
+      "commandsShown": [
+        "ip a",
+        "ip route"
+      ]
+    },
+    {
+      "id": "core-r1-net-l2-01",
+      "title": "MAC, ARP, Switches and ICMP",
+      "rank": 1,
+      "module": "networking",
+      "order": 3,
+      "words": 2234,
+      "readTimeMin": 11.2,
+      "checksCount": 4,
+      "labId": "core-r1-net-reach-lab-01",
+      "commandsShown": [
+        "ip neigh",
+        "ping -c 2 10.0.2.2",
+        "ping -c 2 offline.example.net",
+        "traceroute example.com"
+      ]
+    },
+    {
+      "id": "core-r1-net-tcpudp-01",
+      "title": "TCP, UDP and Ports",
+      "rank": 1,
+      "module": "networking",
+      "order": 4,
+      "words": 2060,
+      "readTimeMin": 10.3,
+      "checksCount": 4,
+      "labId": "core-r1-pkt-scan-lab-01",
+      "commandsShown": [
+        "ss -tulnp"
+      ]
+    },
+    {
+      "id": "core-r1-net-dns-01",
+      "title": "DNS — The Internet's Phonebook",
+      "rank": 1,
+      "module": "networking",
+      "order": 5,
+      "words": 2100,
+      "readTimeMin": 10.5,
+      "checksCount": 4,
+      "labId": "core-r1-pkt-dns-lab-01",
+      "commandsShown": [
+        "cat /etc/resolv.conf",
+        "dig example.com",
+        "dig +short www.example.com",
+        "dig +short example.com MX",
+        "dig nosuch.example.com"
+      ]
+    },
+    {
+      "id": "core-r1-net-dhcp-nat-01",
+      "title": "DHCP and NAT",
+      "rank": 1,
+      "module": "networking",
+      "order": 6,
+      "words": 2000,
+      "readTimeMin": 10,
+      "checksCount": 4,
+      "commandsShown": [
+        "ip a",
+        "ip route",
+        "cat /etc/resolv.conf"
+      ]
+    },
+    {
+      "id": "core-r1-net-web-01",
+      "title": "HTTP, HTTPS and TLS",
+      "rank": 1,
+      "module": "networking",
+      "order": 7,
+      "words": 2050,
+      "readTimeMin": 10.3,
+      "checksCount": 4,
+      "labId": "core-r1-net-web-lab-01",
+      "commandsShown": [
+        "curl -I http://example.com/",
+        "curl -I -L http://example.com/",
+        "curl -L example.com",
+        "curl http://nosuch.example/",
+        "curl http://offline.example.net/"
+      ]
+    },
+    {
+      "id": "core-r1-net-routing-fw-01",
+      "title": "Routing, Firewalls and Proxies",
+      "rank": 1,
+      "module": "networking",
+      "order": 8,
+      "words": 2242,
+      "readTimeMin": 11.2,
+      "checksCount": 4,
+      "commandsShown": [
+        "ip route",
+        "traceroute example.com"
+      ]
+    },
+    {
+      "id": "core-r1-net-capture-01",
+      "title": "Capturing and Reading Packets",
+      "rank": 1,
+      "module": "networking",
+      "order": 9,
+      "words": 2155,
+      "readTimeMin": 10.8,
+      "checksCount": 4,
+      "labId": "core-r1-pkt-http-lab-01",
+      "commandsShown": [
+        "ip link"
+      ]
+    },
+    {
+      "id": "core-r1-linux-fs-01",
+      "title": "The Linux Filesystem and the Shell",
+      "rank": 1,
+      "module": "linux",
+      "order": 10,
+      "words": 1288,
+      "readTimeMin": 6.4,
+      "checksCount": 4,
+      "commandsShown": [
+        "pwd",
+        "ls /",
+        "head -n 2 /etc/passwd",
+        "cat /etc/passwd | grep bash"
+      ]
+    },
+    {
+      "id": "core-r1-linux-users-01",
+      "title": "Users, Groups and sudo",
+      "rank": 1,
+      "module": "linux",
+      "order": 11,
+      "words": 1217,
+      "readTimeMin": 6.1,
+      "checksCount": 4,
+      "commandsShown": [
+        "whoami",
+        "id",
+        "groups",
+        "sudo -l"
+      ]
+    },
+    {
+      "id": "core-r1-linux-perms-01",
+      "title": "Permissions: Read, Write, Execute",
+      "rank": 1,
+      "module": "linux",
+      "order": 12,
+      "words": 1286,
+      "readTimeMin": 6.4,
+      "checksCount": 4,
+      "labId": "core-r1-linux-perms-lab-01",
+      "commandsShown": [
+        "ls -l /etc/passwd",
+        "ls -l /etc/shadow",
+        "cat /etc/shadow",
+        "chmod 600 ~/.bashrc",
+        "ls -l ~/.bashrc",
+        "chmod 644 ~/.bashrc"
+      ]
+    },
+    {
+      "id": "core-r1-linux-special-01",
+      "title": "SUID, SGID, the Sticky Bit and sudo Rules",
+      "rank": 1,
+      "module": "linux",
+      "order": 13,
+      "words": 1530,
+      "readTimeMin": 7.7,
+      "checksCount": 4,
+      "labId": "core-r1-linux-suid-lab-01",
+      "commandsShown": [
+        "ls -l /usr/bin/passwd",
+        "find / -perm -4000 2>/dev/null",
+        "sudo -l"
+      ]
+    },
+    {
+      "id": "core-r1-linux-proc-01",
+      "title": "Processes, Signals and /proc",
+      "rank": 1,
+      "module": "linux",
+      "order": 14,
+      "words": 1464,
+      "readTimeMin": 7.3,
+      "checksCount": 4,
+      "labId": "core-r1-linux-proc-lab-01",
+      "commandsShown": [
+        "ps",
+        "ps aux | grep nginx",
+        "pgrep cron",
+        "cat /proc/1/cmdline | tr '\\0' ' '"
+      ]
+    },
+    {
+      "id": "core-r1-linux-services-01",
+      "title": "Services, Cron and the Environment",
+      "rank": 1,
+      "module": "linux",
+      "order": 15,
+      "words": 1438,
+      "readTimeMin": 7.2,
+      "checksCount": 4,
+      "commandsShown": [
+        "systemctl status ssh",
+        "systemctl list-units --type=service --state=failed",
+        "cat /etc/crontab",
+        "env | grep SHELL"
+      ]
+    },
+    {
+      "id": "core-r1-linux-investigate-01",
+      "title": "Logs, SSH and Investigating a Linux Host",
+      "rank": 1,
+      "module": "linux",
+      "order": 16,
+      "words": 1397,
+      "readTimeMin": 7,
+      "checksCount": 4,
+      "labId": "core-r1-siem-log-analysis-01",
+      "commandsShown": [
+        "cat /var/log/auth.log | tail -n 5",
+        "cat /var/log/syslog | head -n 1",
+        "cat ~/.ssh/authorized_keys"
+      ]
+    },
+    {
+      "id": "core-r1-win-arch-registry-01",
+      "title": "Windows Architecture & The Windows Registry",
+      "rank": 1,
+      "module": "windows",
+      "order": 17,
+      "words": 1153,
+      "readTimeMin": 5.8,
+      "checksCount": 4,
+      "labId": "core-r1-win-registry-lab-01",
+      "commandsShown": [
+        "Get-ItemProperty HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"
+      ]
+    },
+    {
+      "id": "core-r1-win-powershell-01",
+      "title": "PowerShell Fundamentals & Command Line Operations",
+      "rank": 1,
+      "module": "windows",
+      "order": 18,
+      "words": 1209,
+      "readTimeMin": 6,
+      "checksCount": 4,
+      "commandsShown": [
+        "Get-Process | Select-String svchost"
+      ]
+    },
+    {
+      "id": "core-r1-win-proc-services-01",
+      "title": "Windows Processes, Services & Task Scheduling",
+      "rank": 1,
+      "module": "windows",
+      "order": 19,
+      "words": 1273,
+      "readTimeMin": 6.4,
+      "checksCount": 4,
+      "commandsShown": [
+        "Get-Service -Name Spooler",
+        "Get-ScheduledTask -TaskName ScheduledDefrag"
+      ]
+    },
+    {
+      "id": "core-r1-win-logs-sysmon-01",
+      "title": "Windows Event Logs, Auditing & Sysmon",
+      "rank": 1,
+      "module": "windows",
+      "order": 20,
+      "words": 1407,
+      "readTimeMin": 7,
+      "checksCount": 4,
+      "labId": "core-r1-win-eventlog-lab-01",
+      "commandsShown": [
+        "Get-WinEvent -LogName Security -Id 4625"
+      ]
+    },
+    {
+      "id": "core-r2-http-protocol-01",
+      "title": "HTTP Protocol, Methods & Status Codes",
+      "rank": 2,
+      "module": "web-security",
+      "order": 21,
+      "words": 817,
+      "readTimeMin": 4.1,
+      "checksCount": 4,
+      "labId": null,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r2-cookies-sessions-01",
+      "title": "Cookies, Sessions & Token Security",
+      "rank": 2,
+      "module": "web-security",
+      "order": 22,
+      "words": 663,
+      "readTimeMin": 3.3,
+      "checksCount": 4,
+      "labId": null,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r2-sop-cors-01",
+      "title": "Same-Origin Policy (SOP) & CORS Security",
+      "rank": 2,
+      "module": "web-security",
+      "order": 23,
+      "words": 662,
+      "readTimeMin": 3.3,
+      "checksCount": 4,
+      "labId": null,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r2-sqli-01",
+      "title": "SQL Injection: Mechanisms, Exploitation & Defense",
+      "rank": 2,
+      "module": "web-security",
+      "order": 24,
+      "words": 778,
+      "readTimeMin": 3.9,
+      "checksCount": 4,
+      "labId": "core-r2-sqli-lab-01",
+      "commandsShown": []
+    },
+    {
+      "id": "core-r2-xss-01",
+      "title": "Cross-Site Scripting (XSS) & Content Security Policy",
+      "rank": 2,
+      "module": "web-security",
+      "order": 25,
+      "words": 840,
+      "readTimeMin": 4.2,
+      "checksCount": 4,
+      "labId": "core-r2-xss-lab-01",
+      "commandsShown": []
+    },
+    {
+      "id": "core-r2-idor-bola-01",
+      "title": "Insecure Direct Object References (IDOR / BOLA)",
+      "rank": 2,
+      "module": "web-security",
+      "order": 26,
+      "words": 862,
+      "readTimeMin": 4.3,
+      "checksCount": 4,
+      "labId": "core-r2-idor-lab-01",
+      "commandsShown": []
+    },
+    {
+      "id": "core-r2-csrf-01",
+      "title": "Cross-Site Request Forgery (CSRF) & Defense Tokens",
+      "rank": 2,
+      "module": "web-security",
+      "order": 27,
+      "words": 743,
+      "readTimeMin": 3.7,
+      "checksCount": 4,
+      "labId": null,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r2-ssrf-01",
+      "title": "Server-Side Request Forgery (SSRF) & Webhook Security",
+      "rank": 2,
+      "module": "web-security",
+      "order": 28,
+      "words": 820,
+      "readTimeMin": 4.1,
+      "checksCount": 4,
+      "labId": null,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r2-cmd-injection-01",
+      "title": "Command Injection & Secure Process Invocation",
+      "rank": 2,
+      "module": "web-security",
+      "order": 29,
+      "words": 808,
+      "readTimeMin": 4,
+      "checksCount": 4,
+      "labId": null,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r2-crypto-pki-01",
+      "title": "Applied Cryptography, Hashes & Public Key Infrastructure",
+      "rank": 2,
+      "module": "security-core",
+      "order": 30,
+      "words": 901,
+      "readTimeMin": 4.5,
+      "checksCount": 4,
+      "labId": null,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r2-security-arch-01",
+      "title": "Security Architecture: CIA Triad, Defense-in-Depth & MITRE ATT&CK",
+      "rank": 2,
+      "module": "security-core",
+      "order": 31,
+      "words": 863,
+      "readTimeMin": 4.3,
+      "checksCount": 4,
+      "labId": null,
+      "commandsShown": []
+    },
+    {
+      "id": "core-r2-security-tooling-01",
+      "title": "Security Tooling: Web Interception Proxies, Port Scanning & Recon",
+      "rank": 2,
+      "module": "tooling",
+      "order": 32,
+      "words": 891,
+      "readTimeMin": 4.5,
+      "checksCount": 4,
+      "labId": null,
+      "commandsShown": []
+    }
+  ],
+  "labStats": [
+    {
+      "id": "core-r0-challenge-01",
+      "title": "Night Shift",
+      "kind": "terminal",
+      "objectivesCount": 3,
+      "briefingWords": 103
+    },
+    {
+      "id": "core-r0-files-lab-01",
+      "title": "Who Can Read What?",
+      "kind": "terminal",
+      "objectivesCount": 2,
+      "associatedLesson": "core-r0-comp-os-files-01",
+      "briefingWords": 158
+    },
+    {
+      "id": "core-r0-terminal-lab-01",
+      "title": "First Login",
+      "kind": "terminal",
+      "objectivesCount": 3,
+      "associatedLesson": "core-r0-term-first-terminal-01",
+      "briefingWords": 147
+    },
+    {
+      "id": "core-r1-challenge-01",
+      "title": "Operation Iron Gate",
+      "kind": "terminal",
+      "objectivesCount": 5,
+      "briefingWords": 206
+    },
+    {
+      "id": "core-r1-linux-perms-lab-01",
+      "title": "Permission Puzzle: Modes, Owners and Shared Folders",
+      "kind": "terminal",
+      "objectivesCount": 4,
+      "associatedLesson": "core-r1-linux-perms-01",
+      "briefingWords": 97
+    },
+    {
+      "id": "core-r1-linux-proc-lab-01",
+      "title": "Process Hunt: Detecting Hidden and Disguised Workloads",
+      "kind": "terminal",
+      "objectivesCount": 4,
+      "associatedLesson": "core-r1-linux-proc-01",
+      "briefingWords": 111
+    },
+    {
+      "id": "core-r1-linux-suid-lab-01",
+      "title": "Privilege Audit: SUID Binaries and Sudoers Rules",
+      "kind": "terminal",
+      "objectivesCount": 4,
+      "associatedLesson": "core-r1-linux-special-01",
+      "briefingWords": 121
+    },
+    {
+      "id": "core-r1-net-ip-lab-01",
+      "title": "IP Addresses & Subnets",
+      "kind": "terminal",
+      "objectivesCount": 4,
+      "associatedLesson": "core-r1-net-ip-01",
+      "briefingWords": 119
+    },
+    {
+      "id": "core-r1-net-reach-lab-01",
+      "title": "Network Reachability & Hops",
+      "kind": "terminal",
+      "objectivesCount": 3,
+      "associatedLesson": "core-r1-net-l2-01",
+      "briefingWords": 104
+    },
+    {
+      "id": "core-r1-net-web-lab-01",
+      "title": "Web Services & Intranet Inspection",
+      "kind": "terminal",
+      "objectivesCount": 3,
+      "associatedLesson": "core-r1-net-web-01",
+      "briefingWords": 91
+    },
+    {
+      "id": "core-r1-pkt-dns-lab-01",
+      "title": "DNS Query Investigation",
+      "kind": "packet",
+      "objectivesCount": 3,
+      "associatedLesson": "core-r1-net-dns-01",
+      "briefingWords": 101
+    },
+    {
+      "id": "core-r1-pkt-http-lab-01",
+      "title": "HTTP Credentials & TLS Analysis",
+      "kind": "packet",
+      "objectivesCount": 3,
+      "associatedLesson": "core-r1-net-capture-01",
+      "briefingWords": 114
+    },
+    {
+      "id": "core-r1-pkt-scan-lab-01",
+      "title": "Port Scan Analysis",
+      "kind": "packet",
+      "objectivesCount": 3,
+      "associatedLesson": "core-r1-net-tcpudp-01",
+      "briefingWords": 142
+    },
+    {
+      "id": "core-r1-siem-log-analysis-01",
+      "title": "SIEM Triage: Brute Force & Persistence Investigation",
+      "kind": "siem",
+      "objectivesCount": 5,
+      "associatedLesson": "core-r1-linux-investigate-01",
+      "briefingWords": 254
+    },
+    {
+      "id": "core-r1-win-eventlog-lab-01",
+      "title": "Event Log Forensics: Brute Force & Rogue Service",
+      "kind": "terminal",
+      "objectivesCount": 4,
+      "associatedLesson": "core-r1-win-logs-sysmon-01",
+      "briefingWords": 165
+    },
+    {
+      "id": "core-r1-win-registry-lab-01",
+      "title": "Registry Persistence Hunt: Run Keys & Service Binaries",
+      "kind": "terminal",
+      "objectivesCount": 4,
+      "associatedLesson": "core-r1-win-arch-registry-01",
+      "briefingWords": 148
+    },
+    {
+      "id": "core-r2-challenge-01",
+      "title": "Operation Watchtower: Full Web Spectrum IR & Exploitation",
+      "kind": "webapp",
+      "objectivesCount": 3,
+      "briefingWords": 186
+    },
+    {
+      "id": "core-r2-idor-lab-01",
+      "title": "BOLA / IDOR Horizontal Escalation",
+      "kind": "webapp",
+      "objectivesCount": 2,
+      "associatedLesson": "core-r2-idor-bola-01",
+      "briefingWords": 132
+    },
+    {
+      "id": "core-r2-sqli-lab-01",
+      "title": "SQL Injection: Auth Bypass & Union Extraction",
+      "kind": "webapp",
+      "objectivesCount": 2,
+      "associatedLesson": "core-r2-sqli-01",
+      "briefingWords": 144
+    },
+    {
+      "id": "core-r2-xss-lab-01",
+      "title": "Stored XSS & Session Hijacking",
+      "kind": "webapp",
+      "objectivesCount": 1,
+      "associatedLesson": "core-r2-xss-01",
+      "briefingWords": 128
+    }
+  ],
+  "labsByModule": {
+    "computers": 1,
+    "terminal": 1,
+    "networking": 6,
+    "linux": 4,
+    "windows": 2,
+    "web-security": 3
+  }
+}

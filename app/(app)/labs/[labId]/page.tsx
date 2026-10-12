@@ -67,6 +67,7 @@ export default async function LabPage(props: PageProps<"/labs/[labId]">) {
           onSubmit={submitObjectiveAction.bind(null, session.attemptId)}
           continueTo={continueTo}
           attemptId={session.attemptId}
+          labId={lab.id}
         />
       </div>
       <HandlerDrawer

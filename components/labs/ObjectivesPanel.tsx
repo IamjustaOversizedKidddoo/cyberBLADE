@@ -5,8 +5,16 @@ import { useState } from "react";
 import { requestLabHintAction } from "@/app/(app)/handler/actions";
 import { IconCheck, IconPlay } from "@/components/ui/icons";
 
+import { LabDebriefCard } from "./LabDebriefCard";
+
 export type Objective = { id: string; prompt: string; solved: boolean };
-export type SubmitResult = { correct: boolean; labCompleted?: boolean; passed?: boolean; expired?: boolean };
+export type SubmitResult = {
+  correct: boolean;
+  labCompleted?: boolean;
+  passed?: boolean;
+  expired?: boolean;
+  nudge?: string | null;
+};
 
 type Props = {
   objectives: Objective[];
@@ -15,6 +23,7 @@ type Props = {
   status: string;
   continueTo?: { href: string; label: string } | null;
   attemptId?: string;
+  labId?: string;
 };
 
 type HintDisplay = {
@@ -24,7 +33,7 @@ type HintDisplay = {
 };
 
 /** Answer boxes for each objective. State lives in LabWorkspace (the terminal can submit too). */
-export function ObjectivesPanel({ objectives, solved, onSubmit, status, continueTo, attemptId }: Props) {
+export function ObjectivesPanel({ objectives, solved, onSubmit, status, continueTo, attemptId, labId }: Props) {
   const [feedback, setFeedback] = useState<Record<string, string>>({});
   const [hints, setHints] = useState<Record<string, HintDisplay>>({});
   const [pending, setPending] = useState<string | null>(null);
@@ -40,7 +49,13 @@ export function ObjectivesPanel({ objectives, solved, onSubmit, status, continue
     setPending(id);
     try {
       const r = await onSubmit(id, answer);
-      if (!r.expired) setFeedback((f) => ({ ...f, [id]: r.correct ? "Correct" : "Not quite — keep digging." }));
+      if (!r.expired) {
+        if (r.correct) {
+          setFeedback((f) => ({ ...f, [id]: "Correct" }));
+        } else {
+          setFeedback((f) => ({ ...f, [id]: r.nudge || "Not quite — keep digging." }));
+        }
+      }
     } catch {
       setFeedback((f) => ({ ...f, [id]: "Could not check that. Try again." }));
     } finally {
@@ -182,6 +197,10 @@ export function ObjectivesPanel({ objectives, solved, onSubmit, status, continue
           <IconCheck className="h-4 w-4" />
           <span>{status}</span>
         </p>
+      )}
+
+      {(status || solvedCount === objectives.length) && labId && (
+        <LabDebriefCard labId={labId} />
       )}
 
       {status && continueTo && (

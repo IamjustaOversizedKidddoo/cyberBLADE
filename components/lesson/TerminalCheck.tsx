@@ -104,6 +104,13 @@ function Question({
                       : "border-line/40 bg-surface-subtle text-muted"
                   }`}
                 >
+                  <div className="font-semibold mb-0.5 font-ui">
+                    {i === choice
+                      ? result.correct
+                        ? "WHY THIS IS CORRECT:"
+                        : "WHY THIS DISTRACTOR IS INCORRECT:"
+                      : "OPTION EXPLANATION:"}
+                  </div>
                   {result.explanations[i]}
                 </div>
               )}
@@ -111,6 +118,38 @@ function Question({
           );
         })}
       </ul>
+
+      {/* Productive-failure intervention after 5 attempts */}
+      {attempts >= 5 && !isCorrect && (
+        <div className="mt-4 p-3 rounded-xs border border-cyan/40 bg-cyan/5 text-xs font-sans space-y-2">
+          <div className="font-ui font-semibold text-cyan uppercase tracking-wider flex items-center gap-1.5">
+            <IconAlertTriangle className="h-4 w-4 text-cyan" />
+            <span>Productive Failure Assistance</span>
+          </div>
+          <p className="text-secondary leading-relaxed">
+            You&apos;ve attempted this check {attempts} times. Reviewing the core concepts or asking for a hint can help unlock the solution:
+          </p>
+          <div className="flex flex-wrap items-center gap-2 pt-1 font-ui">
+            <a
+              href="#briefing"
+              className="px-2.5 py-1 min-h-[36px] flex items-center rounded-xs border border-line bg-surface hover:border-cyan text-ink text-xs transition-colors"
+            >
+              📖 Re-read Section
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                const trigger = document.querySelector<HTMLButtonElement>('[aria-controls="handler-drawer"]');
+                trigger?.click();
+              }}
+              className="px-2.5 py-1 min-h-[36px] flex items-center rounded-xs border border-cyan/40 bg-cyan/15 hover:bg-cyan/25 text-cyan text-xs font-semibold transition-colors"
+            >
+              🤖 Get Hint from Handler
+            </button>
+            <span className="text-muted text-xs">or pause for a 5-minute break.</span>
+          </div>
+        </div>
+      )}
 
       {/* Actions and verdict row */}
       <div className="mt-5 flex flex-wrap items-center gap-4 pt-3 border-t border-line/60">
