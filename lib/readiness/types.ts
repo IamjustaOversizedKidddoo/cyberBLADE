@@ -18,4 +18,6 @@ export type CertReadiness = {
   completedObjectives: number;
   totalObjectives: number;
   objectives: ObjectiveReadiness[];
+  disclaimer?: string;
+  decayApplied?: boolean;
 };

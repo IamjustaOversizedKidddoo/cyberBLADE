@@ -108,5 +108,38 @@ describe("Cert Readiness Calculator", () => {
     expect(netplus.scorePercent).toBe(100);
     expect(netplus.band).toBe("Exam Ready");
     expect(netplus.completedObjectives).toBe(2);
+    expect(netplus.disclaimer).toBeDefined();
+  });
+
+  it("applies exponential memory decay after > 14 days of inactivity", () => {
+    const full = calculateReadinessSync({
+      coverage: mockCoverage,
+      completedLessonIds: new Set(["lesson-net-01", "lesson-net-02"]),
+      lessons: mockLessons,
+      daysSinceLastActive: 30, // 16 days of decay
+      applyDecay: true,
+    });
+
+    const netplus = full.find((r) => r.certId === "netplus")!;
+    // Decays below 95%
+    expect(netplus.scorePercent).toBeLessThan(95);
+    expect(netplus.decayApplied).toBe(true);
+  });
+
+  it("guarantees readiness score property: score always falls in [0, 100]", () => {
+    for (let days = 0; days <= 180; days += 15) {
+      const res = calculateReadinessSync({
+        coverage: mockCoverage,
+        completedLessonIds: new Set(["lesson-net-01"]),
+        lessons: mockLessons,
+        daysSinceLastActive: days,
+        applyDecay: true,
+      });
+
+      for (const cert of res) {
+        expect(cert.scorePercent).toBeGreaterThanOrEqual(0);
+        expect(cert.scorePercent).toBeLessThanOrEqual(100);
+      }
+    }
   });
 });

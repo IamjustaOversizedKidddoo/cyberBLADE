@@ -12,7 +12,8 @@
     "test:security": "vitest run tests/security",
     "test:e2e": "playwright test",
     "check:content": "tsx scripts/check-content.mts",
-    "eval:handler": "tsx scripts/eval-handler.mts"
+    "eval:handler": "tsx scripts/eval-handler.mts",
+    "report:learning": "tsx scripts/learning-analytics-report.mts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
