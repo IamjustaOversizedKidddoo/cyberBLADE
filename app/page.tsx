@@ -170,7 +170,7 @@ export default async function Home() {
         {/* 03 SIGNAL — CYBERBLADE splits into CYBER + BLADE while scattered readings settle into a network. */}
         <PosterSection tone="void" sceneId="signal" labelledBy="signal-heading">
           <ScrollScene pin length={2.6} steps={SIGNAL_DIAGRAM.nodes.length} mobile="play" className={STAGE}>
-            <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden font-display text-[length:var(--poster-section)] leading-none text-line max-md:hidden">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden font-display text-[length:var(--poster-section)] leading-none text-secondary/70 max-md:hidden">
               <span data-from={fx({ x: "30vw", y: "30vh", scale: 1.6 })} data-dur="0.45" className="absolute left-[2%] top-[6%]">
                 CYBER
               </span>
