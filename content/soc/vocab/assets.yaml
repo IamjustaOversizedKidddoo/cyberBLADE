@@ -1,0 +1,61 @@
+version: 1
+assetArchetypes:
+  - role: "Workstation"
+    osVariants:
+      - "Windows 11 Enterprise 23H2"
+      - "Windows 10 Enterprise LTSC"
+    criticalityDefault: "MEDIUM"
+    zoneId: "zone-workstations"
+    hostnamePrefix: "ws"
+    tags: ["endpoint", "client-device"]
+
+  - role: "Staging Application Server"
+    osVariants:
+      - "Ubuntu 24.04 LTS"
+      - "Debian 12 Bookworm"
+    criticalityDefault: "MEDIUM"
+    zoneId: "zone-dmz"
+    hostnamePrefix: "srv-stage"
+    tags: ["staging", "web", "external-facing"]
+
+  - role: "Production Web Server"
+    osVariants:
+      - "Ubuntu 24.04 LTS"
+      - "RHEL 9.3"
+    criticalityDefault: "HIGH"
+    zoneId: "zone-dmz"
+    hostnamePrefix: "srv-web"
+    tags: ["production", "web", "external-facing"]
+
+  - role: "Secure Email Gateway"
+    osVariants:
+      - "Hardened Linux Appliance"
+    criticalityDefault: "HIGH"
+    zoneId: "zone-dmz"
+    hostnamePrefix: "srv-mail"
+    tags: ["mail", "perimeter", "mta"]
+
+  - role: "Active Directory Domain Controller"
+    osVariants:
+      - "Windows Server 2022 Datacenter"
+    criticalityDefault: "CRITICAL"
+    zoneId: "zone-core"
+    hostnamePrefix: "dc"
+    tags: ["infrastructure", "identity", "crown-jewel"]
+
+  - role: "Production Database"
+    osVariants:
+      - "RHEL 9.3 Enterprise"
+      - "Rocky Linux 9.3"
+    criticalityDefault: "CRITICAL"
+    zoneId: "zone-databases"
+    hostnamePrefix: "srv-prod-db"
+    tags: ["database", "crown-jewel", "production"]
+
+  - role: "Internal File & Storage Server"
+    osVariants:
+      - "Windows Server 2022 Standard"
+    criticalityDefault: "MEDIUM"
+    zoneId: "zone-workstations"
+    hostnamePrefix: "srv-share"
+    tags: ["storage", "smb", "internal"]

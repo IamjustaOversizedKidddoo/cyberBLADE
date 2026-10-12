@@ -1,0 +1,97 @@
+version: 1
+departments:
+  - name: "Finance"
+    code: "fin"
+    roles:
+      - title: "Senior Accountant"
+        baseRisk: 25
+      - title: "Financial Analyst"
+        baseRisk: 20
+      - title: "Accounts Payable Specialist"
+        baseRisk: 30
+      - title: "Controller"
+        baseRisk: 35
+
+  - name: "Engineering"
+    code: "eng"
+    roles:
+      - title: "Software Developer"
+        baseRisk: 10
+      - title: "Site Reliability Engineer"
+        baseRisk: 20
+      - title: "DevOps Engineer"
+        baseRisk: 25
+      - title: "QA Engineer"
+        baseRisk: 5
+
+  - name: "IT Operations"
+    code: "it"
+    roles:
+      - title: "Systems Administrator"
+        baseRisk: 15
+      - title: "Help Desk Technician"
+        baseRisk: 10
+      - title: "Network Engineer"
+        baseRisk: 20
+
+  - name: "Human Resources"
+    code: "hr"
+    roles:
+      - title: "Talent Acquisition Lead"
+        baseRisk: 20
+      - title: "HR Business Partner"
+        baseRisk: 15
+      - title: "Benefits Coordinator"
+        baseRisk: 25
+
+  - name: "Marketing"
+    code: "mkt"
+    roles:
+      - title: "Campaign Specialist"
+        baseRisk: 5
+      - title: "Content Strategist"
+        baseRisk: 5
+      - title: "Brand Coordinator"
+        baseRisk: 10
+
+  - name: "Infrastructure"
+    code: "infra"
+    roles:
+      - title: "Service Principal"
+        baseRisk: 0
+
+names:
+  firstNames:
+    - "Jane"
+    - "Alex"
+    - "Raj"
+    - "Marcus"
+    - "Elena"
+    - "Liam"
+    - "Sophia"
+    - "David"
+    - "Carlos"
+    - "Amina"
+    - "Taro"
+    - "Kiran"
+    - "Chloe"
+    - "Noah"
+    - "Fatima"
+    - "Lucas"
+  lastNames:
+    - "Doe"
+    - "Smith"
+    - "Patel"
+    - "Chen"
+    - "Vargas"
+    - "O'Connor"
+    - "Hassan"
+    - "Novak"
+    - "Muller"
+    - "Kim"
+    - "Rossi"
+    - "Taylor"
+    - "Al-Mansoor"
+    - "Larsson"
+    - "Tanaka"
+    - "Gomez"

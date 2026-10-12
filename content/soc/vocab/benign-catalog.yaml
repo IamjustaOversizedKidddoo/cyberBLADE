@@ -1,0 +1,78 @@
+version: 1
+noiseArchetypes:
+  - id: noise_scheduled_backup
+    category: "Scheduled Jobs"
+    name: "Nightly Automated Snapshot & Backup"
+    actorType: "service_account"
+    timePattern: "batch_window_nightly"
+    sources: ["Authentication", "Firewall"]
+    summaryTemplate: "High-volume data replication stream initiated by service account '{username}'"
+    disposition: "benign_true_positive"
+    severity: "LOW"
+    escalate: false
+
+  - id: noise_patch_distribution
+    category: "Software Deployment"
+    name: "Central Systems Patch Rollout"
+    actorType: "admin_endpoint"
+    timePattern: "batch_window_maintenance"
+    sources: ["EDR", "Authentication"]
+    summaryTemplate: "Automated package deployment installer executed on '{hostname}' via system daemon"
+    disposition: "benign_true_positive"
+    severity: "LOW"
+    escalate: false
+
+  - id: noise_internal_vuln_scanner
+    category: "Vulnerability Scanning"
+    name: "Authorized Weekly Perimeter Scan"
+    actorType: "security_scanner"
+    timePattern: "batch_window_nightly"
+    sources: ["Network IDS", "Firewall"]
+    summaryTemplate: "High-rate port sweep and service banner probe from authorized internal scanner {scannerIp}"
+    disposition: "benign_true_positive"
+    severity: "MEDIUM"
+    escalate: false
+
+  - id: noise_admin_maintenance
+    category: "Administrative Activity"
+    name: "Routine IT Diagnostic Command"
+    actorType: "admin_user"
+    timePattern: "business_hours"
+    sources: ["EDR"]
+    summaryTemplate: "Administrative script executed interactively on '{hostname}' by user '{username}'"
+    disposition: "benign_true_positive"
+    severity: "LOW"
+    escalate: false
+
+  - id: noise_vpn_traveler
+    category: "Remote Access"
+    name: "Remote VPN Connection from New Geographic Region"
+    actorType: "roaming_user"
+    timePattern: "business_hours"
+    sources: ["Authentication", "Firewall"]
+    summaryTemplate: "Successful VPN tunnel established for '{username}' from roaming IP {roamingIp}"
+    disposition: "benign_true_positive"
+    severity: "LOW"
+    escalate: false
+
+  - id: noise_flapping_sensor
+    category: "Telemetry Flapping"
+    name: "Duplicate Sensor Trigger on Benign Traffic"
+    actorType: "sensor_glitch"
+    timePattern: "anytime"
+    sources: ["Network IDS"]
+    summaryTemplate: "Repetitive protocol anomaly alert on legacy keep-alive connection from '{hostname}'"
+    disposition: "duplicate"
+    severity: "LOW"
+    escalate: false
+
+  - id: noise_self_service_pwd
+    category: "Identity Management"
+    name: "Self-Service Credential Reset"
+    actorType: "standard_user"
+    timePattern: "business_hours"
+    sources: ["Authentication"]
+    summaryTemplate: "Self-service password change followed by multiple logon retries from '{hostname}'"
+    disposition: "false_positive"
+    severity: "LOW"
+    escalate: false
