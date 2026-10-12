@@ -28,7 +28,7 @@ export function BadgesWall({ badges }: { badges: EvaluatedBadge[] }) {
             className={`rounded-sm border p-4.5 transition-all flex flex-col justify-between ${
               b.unlocked
                 ? "border-cyan/50 bg-surface shadow-[0_0_15px_rgba(15,190,255,0.08)]"
-                : "border-line/40 bg-surface-subtle/50 opacity-75 hover:opacity-100"
+                : "border-line/60 bg-surface-subtle"
             }`}
           >
             <div>
@@ -38,12 +38,12 @@ export function BadgesWall({ badges }: { badges: EvaluatedBadge[] }) {
                   className={`font-mono px-2 py-0.5 rounded-xs border ${
                     b.unlocked
                       ? "border-cyan/60 text-cyan bg-cyan/15 font-semibold"
-                      : "border-line/60 text-muted/60 bg-surface-raised"
+                      : "border-line/80 text-secondary bg-surface-raised"
                   }`}
                 >
                   {b.code}
                 </span>
-                <span className="text-muted/70 uppercase tracking-widest text-[10px] font-ui">
+                <span className="text-secondary uppercase tracking-widest text-[10px] font-ui">
                   {b.category}
                 </span>
               </div>
@@ -64,7 +64,7 @@ export function BadgesWall({ badges }: { badges: EvaluatedBadge[] }) {
             </div>
 
             {/* Bottom status with unlock tooltip */}
-            <div className="mt-4 pt-3 border-t border-line/40 flex items-center justify-between font-ui text-xs">
+            <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between font-ui text-xs">
               {b.unlocked ? (
                 <span className="text-success font-semibold flex items-center gap-1.5">
                   <IconCheck className="h-3.5 w-3.5" aria-hidden="true" />
@@ -72,13 +72,13 @@ export function BadgesWall({ badges }: { badges: EvaluatedBadge[] }) {
                 </span>
               ) : (
                 <Tooltip content={b.description ? `Requirement: ${b.description}` : "Locked milestone"}>
-                  <span className="text-muted/60 flex items-center gap-1.5 cursor-help hover:text-muted">
+                  <span className="text-secondary flex items-center gap-1.5 cursor-help hover:text-ink">
                     <IconLock className="h-3.5 w-3.5" />
                     <span>LOCKED</span>
                   </span>
                 </Tooltip>
               )}
-              <span className="font-mono text-[10px] text-muted/40">
+              <span className="font-mono text-[10px] text-secondary">
                 {b.unlocked ? "HONOR VERIFIED" : "IN PROGRESS"}
               </span>
             </div>

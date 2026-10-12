@@ -61,8 +61,8 @@ function Drawing({ nodes, links, active, style, tone, ratio, labels, numbered, c
         >
           <span className={`block border-2 border-current bg-[var(--band-bg,transparent)] ${style === "hand" ? "h-5 w-5" : "h-3 w-3"} ${n.kind === "cloud" || n.kind === "signal" ? "rounded-full" : ""}`} />
           {labels && (
-            <span className="absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap bg-[var(--band-bg,transparent)] px-1 font-ui text-xs tracking-wider sm:text-base">
-              {numbered && <span className="mr-2 opacity-60">{String(i + 1).padStart(2, "0")}</span>}
+            <span className="absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap bg-[var(--band-bg,transparent)] px-1 font-ui text-xs tracking-wider sm:text-base text-[var(--band-fg,inherit)]">
+              {numbered && <span className="mr-2 font-mono text-[var(--band-fg,inherit)] font-semibold">{String(i + 1).padStart(2, "0")}</span>}
               {n.label}
             </span>
           )}
