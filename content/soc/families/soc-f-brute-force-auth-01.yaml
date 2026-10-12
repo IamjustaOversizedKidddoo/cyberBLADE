@@ -1,0 +1,531 @@
+metadata:
+  id: "soc-f-brute-force-auth-01"
+  version: 1
+  title: "L1: Exposed Service Brute Force, Password Spraying & MFA Fatigue"
+  level: "L1"
+  skillsTested:
+    - "soc_alert_triage"
+    - "soc_credential_attacks"
+    - "soc_linux_logs"
+    - "soc_windows_logs"
+    - "soc_escalation_handoff"
+    - "soc_documentation"
+  estimatedMinutes:
+    min: 25
+    max: 45
+  difficultyRange:
+    - "beginner"
+    - "intermediate"
+    - "advanced"
+  author: "CyberBLADE SOC Curriculum Engineering"
+  reviewStatus: "draft"
+  reviewerNotes: "Initial draft modeling external SSH brute force, MFA push fatigue, impossible travel, and benign twins."
+
+environmentTemplate:
+  organizationArchetypes:
+    - "org_apex_dynamics"
+    - "org_vanguard_logistics"
+    - "org_helios_energy"
+    - "org_nexus_saas"
+  assetDistribution:
+    workstations:
+      min: 4
+      max: 7
+    servers:
+      min: 2
+      max: 4
+    domainControllers:
+      min: 1
+      max: 1
+    mailGateways:
+      min: 1
+      max: 1
+  userDistribution:
+    totalUsers:
+      min: 6
+      max: 10
+    departments:
+      - "Finance"
+      - "Engineering"
+      - "IT Operations"
+      - "Human Resources"
+      - "Marketing"
+
+incidentTemplates:
+  - id: "inc-ssh-dictionary-root"
+    titleTemplate: "External Remote Dictionary Attack against {targetServer}"
+    category: "Authentication & Credential Access"
+    rootCauseTemplate: "External actor at {attackerIp} conducted dictionary brute-force attack against exposed SSH service on {targetServer}, obtaining root session."
+    mitreTags:
+      - "T1110.001" # Password Guessing
+      - "T1021.004" # SSH
+    stages:
+      - stageId: "stage-ssh-spray-success"
+        name: "SSH Dictionary Attack & Compromise"
+        phase: "credential_access"
+        timingOffsetMinutes:
+          min: -60
+          max: -10
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "Authentication"
+            action: "failed_login"
+            messageTemplate: "sshd[24190]: 142 failed password attempts for user admin from external address {attackerIp}"
+            fieldsTemplate:
+              service: "sshd"
+              source_ip: "{attackerIp}"
+              target_host: "{targetServer}"
+              failed_attempts: 142
+          - source: "Authentication"
+            action: "successful_login"
+            messageTemplate: "sshd[24190]: Accepted password for root from {attackerIp} port 49210 ssh2"
+            fieldsTemplate:
+              service: "sshd"
+              source_ip: "{attackerIp}"
+              target_host: "{targetServer}"
+              user: "root"
+        alertTemplates:
+          - ruleName: "Network IDS: Automated SSH Login Dictionary Attack"
+            source: "Network IDS"
+            severity: "HIGH"
+            summaryTemplate: "Rapid external remote login failure burst detected against host '{targetServer}' from untrusted address {attackerIp}"
+            relatedAssetBinding: "targetServer"
+            relatedUserBinding: "targetServer"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              source_ip: "{attackerIp}"
+              target_host: "{targetServer}"
+              status: "burst_detected"
+              burst_count: 142
+          - ruleName: "Authentication: External Brute Force Culminating in Successful Logon"
+            source: "Authentication"
+            severity: "CRITICAL"
+            summaryTemplate: "Remote authentication burst followed by root session on host '{targetServer}' from untrusted source address {attackerIp}"
+            relatedAssetBinding: "targetServer"
+            relatedUserBinding: "targetServer"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              source_ip: "{attackerIp}"
+              target_host: "{targetServer}"
+              status: "accepted"
+              burst_count: 142
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-ssh-spray-success"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed external authentication compromise. Attacker at {attackerIp} guessed root password on {targetServer}."
+
+  - id: "inc-mfa-fatigue-bomb"
+    titleTemplate: "MFA Push Fatigue Compromise targeting {victimUser}"
+    category: "Authentication & Credential Access"
+    rootCauseTemplate: "Attacker obtained corporate password for {victimUser} and triggered repeated push notifications until victim approved login from {attackerIp}."
+    mitreTags:
+      - "T1110.003" # Password Spraying
+      - "T1621" # Multi-Factor Authentication Request Generation
+    stages:
+      - stageId: "stage-mfa-push-fatigue"
+        name: "MFA Fatigue Notification Bomb"
+        phase: "credential_access"
+        timingOffsetMinutes:
+          min: 15
+          max: 75
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "Authentication"
+            action: "mfa_prompt"
+            messageTemplate: "IdP[auth-service]: event=mfa_prompt user='{victimUserEmail}' ip={attackerIp} attempt_count=12 status=PUSH_SENT"
+            fieldsTemplate:
+              user: "{victimUserEmail}"
+              source_ip: "{attackerIp}"
+              attempt_count: 12
+          - source: "Authentication"
+            action: "login_success"
+            messageTemplate: "IdP[auth-service]: event=login_success user='{victimUserEmail}' ip={attackerIp} mfa=push_notification status=SUCCESS"
+            fieldsTemplate:
+              user: "{victimUserEmail}"
+              source_ip: "{attackerIp}"
+              status: "success"
+        alertTemplates:
+          - ruleName: "Identity: Rapid Consecutive Multi-Factor Authentication Push Prompts"
+            source: "Authentication"
+            severity: "HIGH"
+            summaryTemplate: "High-frequency push notification burst targeting user '{victimUser}' followed by unexpected approval from address {attackerIp}"
+            relatedUserBinding: "victimUser"
+            relatedAssetBinding: "victimAsset"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              user: "{victimUserEmail}"
+              source_ip: "{attackerIp}"
+              attempt_count: 12
+              prompt_action: "fatigue_accepted"
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "HIGH"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-mfa-push-fatigue"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed MFA fatigue compromise. Attacker bombarded {victimUser} with 12 prompts until approval was granted."
+
+benignTemplates:
+  - id: "benign-dev-ssh-typo"
+    name: "Developer Transient Password Typing Mistake"
+    category: "Administrative Activity"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "business_hours"
+    actorRole: "standard_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "failed_login"
+        messageTemplate: "sshd[28114]: Failed password for {username} from 10.10.1.45 port 51200 ssh2"
+        fieldsTemplate:
+          service: "sshd"
+          user: "{username}"
+          source_ip: "10.10.1.45"
+      - source: "Authentication"
+        action: "successful_login"
+        messageTemplate: "sshd[28114]: Accepted password for {username} from 10.10.1.45 port 51200 ssh2"
+        fieldsTemplate:
+          service: "sshd"
+          user: "{username}"
+          source_ip: "10.10.1.45"
+    alertTemplates:
+      - ruleName: "Authentication: Multiple Failed Logons Followed by Password Change"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Transient authentication retries followed by successful logon for user '{username}' on internal host '{hostname}'"
+        rawFieldsTemplate:
+          user: "{username}"
+          target_host: "{hostname}"
+          failed_count: 2
+          status: "authenticated"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-dev-ssh-typo"
+      acceptableAlternatives: []
+      debriefTemplate: "Routine developer password mistype resolved immediately on internal network. Harmless false positive."
+
+  - id: "benign-vpn-traveler"
+    name: "Remote VPN Connection from Roaming IP"
+    category: "Remote Access"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "business_hours"
+    actorRole: "roaming_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "vpn_login"
+        messageTemplate: "VPN tunnel authenticated for '{username}' from roaming IP {roamingIp}"
+        fieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          status: "connected"
+    alertTemplates:
+      - ruleName: "Firewall: New Geographic VPN Tunnel Established"
+        source: "Firewall"
+        severity: "LOW"
+        summaryTemplate: "Authenticated remote VPN tunnel session established for corporate employee '{username}' from roaming address {roamingIp}"
+        rawFieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          mfa_verified: true
+          status: "connected"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vpn-traveler"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate corporate VPN access by authenticated employee with multi-factor verification."
+
+  - id: "benign-backup-job"
+    name: "Nightly Automated Snapshot & Backup"
+    category: "Scheduled Jobs"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_nightly"
+    actorRole: "service_account"
+    eventTemplates:
+      - source: "Authentication"
+        action: "service_logon"
+        messageTemplate: "Service account 'svc-backup' authenticated successfully via Kerberos"
+        fieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Authentication: High-Volume Service Data Replication"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Scheduled database snapshot stream handled by service account 'svc-backup' on corporate host '{hostname}'"
+        rawFieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+          bytes_transferred: "42.8 GB"
+          operation: "scheduled_backup"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-backup-job"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate automated snapshot and backup initiated by approved service principal 'svc-backup'."
+
+  - id: "benign-vuln-scanner"
+    name: "Authorized Weekly Perimeter Vulnerability Scan"
+    category: "Vulnerability Scanning"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "batch_window_nightly"
+    actorRole: "security_scanner"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "port_scan"
+        messageTemplate: "TCP port sweep detected from scanner IP {scannerIp}"
+        fieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Network IDS: Rapid Port Sweep Probe"
+        source: "Network IDS"
+        severity: "HIGH"
+        summaryTemplate: "Rapid port sweep probe from authorized internal vulnerability scanner address {scannerIp} on host '{hostname}'"
+        rawFieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+          authorized_scanner: true
+          status: "scheduled_audit"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "MEDIUM"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vuln-scanner"
+      acceptableAlternatives: []
+      debriefTemplate: "Authorized vulnerability scanning from known scanner IP {scannerIp}. Baseline approved activity."
+
+  - id: "benign-pwd-reset"
+    name: "Self-Service Credential Reset"
+    category: "Identity Management"
+    frequencyRange:
+      min: 2
+      max: 5
+    timePattern: "business_hours"
+    actorRole: "standard_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "password_change"
+        messageTemplate: "Self-service password change succeeded for user '{username}'"
+        fieldsTemplate:
+          user: "{username}"
+    alertTemplates:
+      - ruleName: "Authentication: Multiple Failed Logons Followed by Password Change"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Self-service password update followed by transient authentication retries from corporate host '{hostname}'"
+        rawFieldsTemplate:
+          user: "{username}"
+          target_host: "{hostname}"
+          auth_method: "SSO_PORTAL"
+          status: "synchronized"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-pwd-reset"
+      acceptableAlternatives: []
+      debriefTemplate: "Routine self-service password update followed by transient logon sync delays."
+
+  - id: "benign-sensor-flapping"
+    name: "Duplicate Sensor Trigger on Benign Keep-Alive"
+    category: "Telemetry Flapping"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "anytime"
+    actorRole: "sensor_glitch"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "protocol_anomaly"
+        messageTemplate: "Malformed HTTP keepalive header on legacy telemetry connection"
+        fieldsTemplate:
+          protocol: "HTTP/1.1"
+    alertTemplates:
+      - ruleName: "Network IDS: Protocol Header Parsing Anomaly"
+        source: "Network IDS"
+        severity: "LOW"
+        summaryTemplate: "Repetitive protocol anomaly sensor trigger observed on internal keep-alive session from host '{hostname}'"
+        rawFieldsTemplate:
+          sensor_id: "suricata-dmz-01"
+          target_host: "{hostname}"
+          duplicate_count: 8
+          protocol: "HTTP/1.1"
+    groundTruth:
+      kind: "duplicate"
+      correctDisposition: "duplicate"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-sensor-flapping"
+      acceptableAlternatives: []
+      debriefTemplate: "Known flapping sensor alert caused by benign legacy keep-alive traffic."
+
+  - id: "benign-patch-deployment"
+    name: "Central Systems Patch Rollout"
+    category: "Software Deployment"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_maintenance"
+    actorRole: "admin_endpoint"
+    eventTemplates:
+      - source: "EDR"
+        action: "package_installer"
+        messageTemplate: "systemd-update executed package upgrade sequence on host '{hostname}'"
+        fieldsTemplate:
+          process_name: "apt-get"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "EDR: System Package Upgrade Sequence"
+        source: "EDR"
+        severity: "MEDIUM"
+        summaryTemplate: "Automated package deployment installer executed during scheduled maintenance on host '{hostname}'"
+        rawFieldsTemplate:
+          installer: "systemd-update"
+          target_host: "{hostname}"
+          operation: "patch_distribution"
+          status: "installed"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-patch-deployment"
+      acceptableAlternatives: []
+      debriefTemplate: "Automated patch rollout during scheduled maintenance window."
+
+twinTemplates:
+  - id: "twin-ssh-auth"
+    name: "SSH Ingress Authentication Twin Pair"
+    description: "Contrasts external dictionary brute-force attack gaining root access vs developer typo on internal host"
+    toolOrTechnique: "SSH Authentication"
+    maliciousStageRef: "stage-ssh-spray-success"
+    benignTemplateRef: "benign-dev-ssh-typo"
+    distinguishingEvidence: "Malicious involves hundreds of failed attempts from untrusted external IP resulting in root session; benign is 2 typos from internal IP by standard developer."
+    acceptableAlternatives: []
+
+  - id: "twin-mfa-push"
+    name: "MFA Authentication Notification Twin Pair"
+    description: "Contrasts high-frequency push bomb fatigue approval vs standard single-push VPN session"
+    toolOrTechnique: "Multi-Factor Authentication"
+    maliciousStageRef: "stage-mfa-push-fatigue"
+    benignTemplateRef: "benign-vpn-traveler"
+    distinguishingEvidence: "Malicious features 12 repeated push alerts approved in rapid succession; benign is a single verified prompt for corporate VPN access."
+    acceptableAlternatives: []
+
+variationAxes:
+  incidentCount:
+    min: 1
+    max: 2
+  noiseRatio:
+    min: 0.65
+    max: 0.85
+  ambiguityCount:
+    min: 1
+    max: 3
+  telemetryGapCount:
+    min: 0
+    max: 2
+  targetAlertCount:
+    min: 30
+    max: 65
+  difficultyProfiles:
+    beginner:
+      incidentCount: 1
+      noiseRatio: 0.65
+      ambiguityCount: 1
+      telemetryGapCount: 0
+      targetAlertCount: 30
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    intermediate:
+      incidentCount: 2
+      noiseRatio: 0.75
+      ambiguityCount: 2
+      telemetryGapCount: 1
+      targetAlertCount: 45
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    advanced:
+      incidentCount: 2
+      noiseRatio: 0.82
+      ambiguityCount: 3
+      telemetryGapCount: 2
+      targetAlertCount: 65
+      expectedScoreCeilingNaive: 50
+      expectedMinScoreReference: 80
+
+debriefTemplates:
+  overallBriefingTemplate: |
+    Welcome to your Tier-1 SOC shift at {orgName}.
+    A queue of {alertCount} incoming alerts has arrived across Linux authentication, Network IDS, and IdP sensors.
+    Your mission:
+    1. Distinguish between external credential attacks that succeeded versus failed scanner bursts that were stopped.
+    2. Identify MFA push fatigue attacks and correlate rapid prompts with subsequent user sessions.
+    3. Escalate verified credential breaches to Tier 2 and close benign user typos without unnecessary disruption.
+  generalGuidanceTemplate: |
+    Shift debrief for {orgName}:
+    In this shift, you investigated {alertCount} alerts covering {incidentCount} security incident(s) alongside operational noise.
+    Key takeaways:
+    - Multiple failed authentication attempts only constitute a true incident if followed by an unauthorized session establishment.
+    - High-frequency push notifications accepted in off-hours are strong indicators of MFA fatigue.
+    - Avoid escalating benign internal user typos; verify origin IP and subsequent successful logon context.
+
+hooks:
+  enrichmentHooks:
+    - id: "hook-ip-reputation"
+      provider: "reputation"
+      dataPoints:
+        - "abuse_confidence_score"
+        - "asn"
+  queryDatasetHooks:
+    - datasetName: "siem_telemetry_flow"
+      extraEventGenerators:
+        - "generate_auth_logs"
+  evidenceViewHooks:
+    - id: "hook-auth-timeline"
+      viewType: "timeline"
+  reportRubricHooks:
+    - sectionId: "executive_summary"
+      criteria:
+        - "Identified brute-force origin IP"
+        - "Assessed compromise outcome"
