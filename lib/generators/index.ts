@@ -21,6 +21,7 @@ import { xssLab } from "./webapp/xss-lab";
 import { idorLab } from "./webapp/idor-lab";
 import { r2Challenge } from "./webapp/r2-challenge";
 import { siemInvestigation } from "./siem/siem-investigation";
+import { socScenario } from "./soc/soc-scenario";
 
 export type GeneratorOutput = { env: LabEnv; answers: Record<string, string> };
 
@@ -49,4 +50,5 @@ export const GENERATORS: Record<string, Generator> = {
   idor_lab: idorLab,
   r2_challenge: r2Challenge,
   siem_investigation: siemInvestigation,
+  soc_scenario: socScenario,
 };

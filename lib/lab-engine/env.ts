@@ -8,7 +8,8 @@ export type LabEnv =
   | { kind: "terminal"; world: World }
   | { kind: "packet"; capture: Capture }
   | { kind: "webapp"; app: WebAppEnv }
-  | { kind: "siem"; siem: SiemEnv };
+  | { kind: "siem"; siem: SiemEnv }
+  | { kind: "soc"; scenarioId: string };
 
 export function assertEnvMatchesLab(lab: Pick<Lab, "id" | "type">, env: LabEnv): void {
   if (lab.type !== env.kind) {

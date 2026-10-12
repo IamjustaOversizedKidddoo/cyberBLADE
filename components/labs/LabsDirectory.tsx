@@ -9,7 +9,7 @@ import { canAccessRank } from "@/lib/progress/access";
 type LabSummary = {
   id: string;
   title: string;
-  type: "terminal" | "packet" | "webapp" | "siem";
+  type: "terminal" | "packet" | "webapp" | "siem" | "soc";
   rank: number;
   estimatedMinutes: number;
   xp: number;
@@ -31,6 +31,8 @@ function typeBadge(type: string, isChallenge: boolean) {
       return "border-pink bg-pink/15 text-pink";
     case "siem":
       return "border-yellow-400 bg-yellow-400/15 text-yellow-300";
+    case "soc":
+      return "border-cyan bg-cyan/20 text-cyan font-bold";
     default:
       return "border-line text-muted";
   }
@@ -110,7 +112,7 @@ export function LabsDirectory({
         {/* Filter Tabs & Search */}
         <div className="grid gap-4 md:grid-cols-[1fr_auto]">
           <div className="flex flex-wrap items-center gap-2">
-            {(["ALL", "TERMINAL", "PACKET", "WEBAPP", "SIEM", "CHALLENGES"] as const).map((t) => (
+            {(["ALL", "TERMINAL", "PACKET", "WEBAPP", "SIEM", "SOC", "CHALLENGES"] as const).map((t) => (
               <button
                 key={t}
                 type="button"

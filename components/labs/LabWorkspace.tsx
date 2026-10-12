@@ -19,6 +19,18 @@ const TerminalLab = dynamic(() => import("./terminal/TerminalLab"), {
   ),
 });
 
+const SocLabSessionLoader = dynamic(
+  () => import("./soc/SocLabSessionLoader").then((m) => m.SocLabSessionLoader),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[420px] border border-line bg-console p-4 font-mono text-muted flex items-center justify-center">
+        <span className="animate-pulse">Connecting to SOC simulator…</span>
+      </div>
+    ),
+  },
+);
+
 type Props = {
   env: LabEnv;
   objectives: Objective[];
@@ -94,8 +106,10 @@ export function LabWorkspace({
           <PacketLab capture={env.capture} />
         ) : env.kind === "webapp" ? (
           <WebAppLab env={env.app} attemptId={attemptId} />
-        ) : (
+        ) : env.kind === "siem" ? (
           <SiemLab env={env.siem} />
+        ) : (
+          <SocLabSessionLoader scenarioId={env.scenarioId} onExit={() => router.push("/labs")} />
         )}
       </div>
 

@@ -5,18 +5,22 @@ import { listLabs } from "@/lib/lab-engine/labs";
 import { getLessons } from "@/lib/content/lessons";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
+import { isSocWorkspaceEnabled } from "@/lib/config/env";
 
 export const metadata: Metadata = { title: "Tactical Labs Range · CyberBLADE" };
 
 export default async function LabsIndexPage() {
   const operator = await requireOperator();
   const ctx = getCtx();
+  const socEnabled = isSocWorkspaceEnabled();
 
-  const [rawLabs, allLessons, attempts] = await Promise.all([
+  const [allRawLabs, allLessons, attempts] = await Promise.all([
     listLabs(),
     getLessons({ track: "core" }),
     ctx.repo.listAttempts(operator.id),
   ]);
+
+  const rawLabs = socEnabled ? allRawLabs : allRawLabs.filter((l) => l.type !== "soc");
 
   // Build lesson lookup: labId -> Lesson
   const lessonByLab = new Map<string, { id: string; title: string }>();
@@ -52,7 +56,7 @@ export default async function LabsIndexPage() {
     <main>
       <HeroBand
         title="tactical_labs_range"
-        kicker={`> BROWSE & DEPLOY · ${rawLabs.length} SIMULATED LABS · TERMINAL / PACKET / WEBAPP / SIEM`}
+        kicker={`> BROWSE & DEPLOY · ${rawLabs.length} SIMULATED LABS · TERMINAL / PACKET / WEBAPP / SIEM / SOC`}
       />
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
         <LabsDirectory labs={labSummaries} operatorRank={operator.rank} />
