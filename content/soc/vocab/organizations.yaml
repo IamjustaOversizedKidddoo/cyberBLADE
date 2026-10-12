@@ -1,0 +1,79 @@
+version: 1
+organizations:
+  - id: org_apex_dynamics
+    name: "Apex Dynamics Corp"
+    sector: "Industrial Automation"
+    domain: "apex.corp.internal"
+    workingHours:
+      startUtc: 8
+      endUtc: 17
+    timeZone: "UTC+0"
+    zones:
+      - id: zone-workstations
+        name: "Corporate Workstations"
+        cidr: "10.10.0.0/16"
+        description: "General staff endpoints and portable laptops"
+      - id: zone-dmz
+        name: "Perimeter DMZ"
+        cidr: "10.20.0.0/16"
+        description: "Inbound proxies, web gateways, external reverse proxies"
+      - id: zone-core
+        name: "Core Infrastructure"
+        cidr: "10.10.0.0/24"
+        description: "Directory services, internal DNS, central identity"
+      - id: zone-databases
+        name: "Production Databases"
+        cidr: "10.30.0.0/16"
+        description: "Relational clusters and transactional state stores"
+
+  - id: org_vanguard_logistics
+    name: "Vanguard Logistics Global"
+    sector: "Supply Chain & Freight"
+    domain: "vanguard.corp.internal"
+    workingHours:
+      startUtc: 7
+      endUtc: 19
+    timeZone: "UTC-5"
+    zones:
+      - id: zone-workstations
+        name: "Terminal & Desk Workstations"
+        cidr: "10.40.0.0/16"
+        description: "Depot management systems and dispatch laptops"
+      - id: zone-dmz
+        name: "Freight Portal DMZ"
+        cidr: "10.50.0.0/16"
+        description: "Partner API gateways and tracking endpoints"
+      - id: zone-core
+        name: "Enterprise Core"
+        cidr: "10.40.0.0/24"
+        description: "Core controllers and centralized logging collectors"
+      - id: zone-databases
+        name: "Logistics Datastore"
+        cidr: "10.60.0.0/16"
+        description: "Manifest and telemetry storage databases"
+
+  - id: org_strata_health
+    name: "Strata Integrated Health"
+    sector: "Healthcare Systems"
+    domain: "strata.corp.internal"
+    workingHours:
+      startUtc: 6
+      endUtc: 22
+    timeZone: "UTC-8"
+    zones:
+      - id: zone-workstations
+        name: "Clinical & Admin Workstations"
+        cidr: "10.70.0.0/16"
+        description: "Staff kiosks, nursing stations, billing desks"
+      - id: zone-dmz
+        name: "Telehealth DMZ"
+        cidr: "10.80.0.0/16"
+        description: "Public portal frontend and integration brokers"
+      - id: zone-core
+        name: "Identity & Key Services"
+        cidr: "10.70.0.0/24"
+        description: "Central authentication and root certificates"
+      - id: zone-databases
+        name: "Clinical Record Repositories"
+        cidr: "10.90.0.0/16"
+        description: "Encrypted patient records and billing engines"
