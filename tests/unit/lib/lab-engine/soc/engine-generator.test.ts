@@ -3,19 +3,42 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import { MemoryProgressRepo } from "@/lib/progress/memory-repo";
+import type { Ctx } from "@/lib/progress/service";
 import { startSocSession, getSocSession, submitSocAttempt } from "@/lib/lab-engine/soc/engine";
 
+function createMockCtx(): Ctx {
+  const repo = new MemoryProgressRepo();
+  const simulatedTime = new Date("2026-10-13T09:00:00Z");
+  return {
+    repo,
+    now: () => simulatedTime,
+    operators: {
+      get: async () => null,
+      create: async () => { throw new Error("not implemented"); },
+      setRank: async () => {},
+      delete: async () => {},
+    },
+    content: {
+      getLesson: async () => null,
+      getLessons: async () => [],
+      loadChecks: async () => { throw new Error("not implemented"); },
+      loadLab: async () => { throw new Error("not implemented"); },
+      listLabs: async () => [],
+      generators: {},
+    },
+  };
+}
+
 describe("SOC Engine Integration with Scenario Families", () => {
-  let repo: MemoryProgressRepo;
-  const now = () => new Date("2026-10-13T09:00:00Z");
+  let ctx: Ctx;
 
   beforeEach(() => {
-    repo = new MemoryProgressRepo();
+    ctx = createMockCtx();
   });
 
   it("starts session for a family ID, generates variant, and records version metadata", async () => {
     const session = await startSocSession(
-      { repo, now },
+      ctx,
       "test-analyst-1",
       "soc-f-mixed-signal-01",
       { difficulty: "intermediate" },
@@ -26,11 +49,11 @@ describe("SOC Engine Integration with Scenario Families", () => {
     expect(session.scenario.alerts.length).toBeGreaterThan(10);
 
     // Verify client projection: No ground truth, no seed
-    expect((session.scenario as any).groundTruth).toBeUndefined();
-    expect((session.attempt as any).seed).toBeUndefined();
+    expect((session.scenario as unknown as Record<string, unknown>).groundTruth).toBeUndefined();
+    expect((session.attempt as unknown as Record<string, unknown>).seed).toBeUndefined();
 
     // Verify stored attempt in repo has versions and scenarioHash
-    const rawAttempt = await repo.getSocAttempt(session.attempt.id);
+    const rawAttempt = await ctx.repo.getSocAttempt(session.attempt.id);
     expect(rawAttempt).not.toBeNull();
     expect(rawAttempt?.familyId).toBe("soc-f-mixed-signal-01");
     expect(rawAttempt?.familyVersion).toBe(1);
@@ -42,7 +65,7 @@ describe("SOC Engine Integration with Scenario Families", () => {
 
   it("resumes active attempt deterministically and verifies scenario hash match", async () => {
     const initialSession = await startSocSession(
-      { repo, now },
+      ctx,
       "test-analyst-2",
       "soc-f-mixed-signal-01",
       { difficulty: "intermediate" },
@@ -50,7 +73,7 @@ describe("SOC Engine Integration with Scenario Families", () => {
 
     // Resuming via getSocSession must produce exact same client view
     const resumedSession = await getSocSession(
-      { repo, now },
+      ctx,
       "test-analyst-2",
       initialSession.attempt.id,
     );
@@ -65,20 +88,20 @@ describe("SOC Engine Integration with Scenario Families", () => {
 
   it("fails safely if scenario content hash drifts / is tampered", async () => {
     const session = await startSocSession(
-      { repo, now },
+      ctx,
       "test-analyst-3",
       "soc-f-mixed-signal-01",
       { difficulty: "intermediate" },
     );
 
     // Artificially corrupt the scenarioHash in the underlying store
-    await (repo as any).store.update((d: any) => {
+    await (ctx.repo as unknown as { store: { update: (fn: (d: { socAttempts: Record<string, { scenarioHash: string }> }) => void) => Promise<void> } }).store.update((d) => {
       d.socAttempts[session.attempt.id].scenarioHash = "corrupted_hash_value_ffffffff";
     });
 
     // Attempting to resolve/resume should throw tamper error
     await expect(
-      getSocSession({ repo, now }, "test-analyst-3", session.attempt.id),
+      getSocSession(ctx, "test-analyst-3", session.attempt.id),
     ).rejects.toThrow(/Scenario hash mismatch/);
   });
 
@@ -87,19 +110,19 @@ describe("SOC Engine Integration with Scenario Families", () => {
     const familyId = "soc-f-mixed-signal-01";
 
     // First attempt
-    const session1 = await startSocSession({ repo, now }, userId, familyId);
-    const attempt1 = (await repo.getSocAttempt(session1.attempt.id))!;
+    const session1 = await startSocSession(ctx, userId, familyId);
+    const attempt1 = (await ctx.repo.getSocAttempt(session1.attempt.id))!;
 
     // Check used seeds recorded
-    const usedSeeds = await repo.listUsedSeeds(userId, familyId);
+    const usedSeeds = await ctx.repo.listUsedSeeds(userId, familyId);
     expect(usedSeeds).toContain(attempt1.seed);
 
     // Complete/submit first attempt properly through engine
-    await submitSocAttempt({ repo, now }, userId, session1.attempt.id);
+    await submitSocAttempt(ctx, userId, session1.attempt.id);
 
     // Second attempt
-    const session2 = await startSocSession({ repo, now }, userId, familyId);
-    const attempt2 = (await repo.getSocAttempt(session2.attempt.id))!;
+    const session2 = await startSocSession(ctx, userId, familyId);
+    const attempt2 = (await ctx.repo.getSocAttempt(session2.attempt.id))!;
 
     expect(attempt2.id).not.toBe(attempt1.id);
     expect(attempt2.seed).not.toBe(attempt1.seed);

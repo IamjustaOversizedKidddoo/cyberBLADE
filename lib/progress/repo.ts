@@ -80,6 +80,8 @@ export interface ProgressRepo {
   deleteSocCase(id: string): Promise<void>;
   listSocCases(attemptId: string): Promise<SocCaseRecord[]>;
   listSocAttempts(userId: string): Promise<SocAttemptRecord[]>;
+  listUsedSeeds(userId: string, familyId: string): Promise<string[]>;
+  recordUsedSeed(userId: string, familyId: string, seed: string): Promise<void>;
   deleteUserData(userId: string): Promise<void>;
 }
 

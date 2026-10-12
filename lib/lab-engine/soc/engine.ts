@@ -94,14 +94,14 @@ export async function startSocSession(
       const difficulty = options?.difficulty ?? "intermediate";
 
       // Seed policy: non-repeating per (user, family)
-      const usedSeeds = (await (ctx.repo as any).listUsedSeeds?.(userId, family.metadata.id)) ?? [];
+      const usedSeeds = (await ctx.repo.listUsedSeeds(userId, family.metadata.id)) ?? [];
       let seed = newSeed();
       let rollCount = 0;
       while (usedSeeds.includes(seed) && rollCount < 10) {
         seed = newSeed();
         rollCount++;
       }
-      await (ctx.repo as any).recordUsedSeed?.(userId, family.metadata.id, seed);
+      await ctx.repo.recordUsedSeed(userId, family.metadata.id, seed);
 
       const { scenario: genScenario, contentHash } = generateSocVariant(family, seed, difficulty);
       scenario = genScenario;

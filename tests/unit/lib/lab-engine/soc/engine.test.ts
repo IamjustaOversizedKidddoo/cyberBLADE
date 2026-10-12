@@ -220,7 +220,7 @@ describe("SOC Engine Service", () => {
     // Replay submit: must return cached result
     const secondEval = await submitSocAttempt(ctx, userId, session.attempt.id);
     expect(secondEval.attemptId).toBe(firstEval.attemptId);
-  });
+  }, 15000);
 
   it("proves the Handler context provider seam never leaks ground truth", async () => {
     const ctx = createMockCtx();

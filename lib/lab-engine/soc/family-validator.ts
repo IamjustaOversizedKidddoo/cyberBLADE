@@ -2,7 +2,7 @@ import { validateSocScenario } from "./validator";
 import { toClientView, type SocScenario, type SocScenarioClient, type SocDisposition, type SocSeverity } from "./schema";
 import { evaluateSocAttempt } from "./evaluator";
 import type { SocFamily, DifficultyLevel } from "./family-schema";
-import { generateSocVariant, computeVariantDistance, computeVariantMetrics, type VariantMetricsSummary } from "./generator";
+import { generateSocVariant, computeVariantMetrics, type VariantMetricsSummary } from "./generator";
 import type { SocDecisionRecord } from "./types";
 
 export type SemanticValidationResult = {
@@ -46,6 +46,12 @@ export function validateVariantSemanticConsistency(scenario: SocScenario): Seman
 
   // 2. Alert -> Incident consistency
   for (const alert of scenario.alerts) {
+    for (const eid of alert.linkedRawEvents) {
+      if (!rawEventIds.has(eid)) {
+        errors.push(`Alert '${alert.id}' links to non-existent raw event '${eid}'`);
+      }
+    }
+
     if (alert.groundTruth.incidentId) {
       const inc = scenario.groundTruth.incidents.find((i) => i.id === alert.groundTruth.incidentId);
       if (!inc) {

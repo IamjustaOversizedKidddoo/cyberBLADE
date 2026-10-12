@@ -934,7 +934,7 @@ export class SupabaseProgressRepo implements ProgressRepo {
     if (casesError || !casesData) return [];
 
     const caseIds = casesData.map((c) => c.id);
-    let alertsMap = new Map<string, string[]>();
+    const alertsMap = new Map<string, string[]>();
     if (caseIds.length > 0) {
       const { data: alertsData } = await client
         .from("soc_case_alerts")
@@ -985,31 +985,34 @@ export class SupabaseProgressRepo implements ProgressRepo {
 
   async listUsedSeeds(userId: string, familyId: string): Promise<string[]> {
     const client = await this.getClient();
-    const { data, error } = await client
-      .from("soc_used_seeds" as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_used_seeds")
       .select("seed")
       .eq("user_id", userId)
       .eq("family_id", familyId);
     if (error || !data) return [];
-    return (data as any[]).map((d) => d.seed);
+    return (data as Array<{ seed: string }>).map((d) => d.seed);
   }
 
   async recordUsedSeed(userId: string, familyId: string, seed: string): Promise<void> {
     const client = await this.getClient();
-    await client
-      .from("soc_used_seeds" as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (client as any)
+      .from("soc_used_seeds")
       .insert({
         id: randomUUID(),
         user_id: userId,
         family_id: familyId,
         seed,
-      } as any);
+      });
   }
 
   async deleteUserData(userId: string): Promise<void> {
     const client = await this.getClient();
     await client.from("soc_attempts").delete().eq("user_id", userId);
-    await client.from("soc_used_seeds" as any).delete().eq("user_id", userId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (client as any).from("soc_used_seeds").delete().eq("user_id", userId);
     await client.from("exam_reports").delete().eq("user_id", userId);
     await client.from("review_items").delete().eq("user_id", userId);
   }

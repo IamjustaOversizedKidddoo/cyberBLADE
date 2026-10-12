@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { createRng, type Rng } from "@/lib/generators/rng";
+import { createRng } from "@/lib/generators/rng";
 import type {
   SocScenario,
   SocAsset,
@@ -13,8 +13,6 @@ import type {
 import type {
   SocFamily,
   DifficultyLevel,
-  IncidentTemplate,
-  BenignNoiseTemplate,
 } from "./family-schema";
 import { loadVocab, type SocVocab } from "./vocab";
 
@@ -124,8 +122,8 @@ function generateSingleVariant(
   const incRng = createRng(`${seed}:incidents`);
   const noiseRng = createRng(`${seed}:noise`);
   const timeRng = createRng(`${seed}:timing`);
-  const idRng = createRng(`${seed}:ids`);
-  const textRng = createRng(`${seed}:text`);
+  const _idRng = createRng(`${seed}:ids`);
+  const _textRng = createRng(`${seed}:text`);
 
   // 2. Select difficulty profile
   const profile = family.variationAxes.difficultyProfiles[difficulty] ??
