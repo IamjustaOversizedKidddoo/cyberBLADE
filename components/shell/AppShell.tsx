@@ -20,20 +20,20 @@ export function AppShell({
       <Scanlines />
 
       {/* ─── FIXED TACTICAL HEADER ─────────────────────────────────────────── */}
-      <header className="sticky top-0 z-[var(--z-ui)] border-b border-line bg-void/90 backdrop-blur-md">
+      <header className="sticky top-0 z-[var(--z-ui)] border-b border-line bg-void/90 backdrop-blur-md w-full max-w-full overflow-x-clip">
         {/* Subtle glowing cyan top border line */}
         <div aria-hidden="true" className="h-px w-full bg-gradient-to-r from-transparent via-cyan/60 to-transparent" />
 
         <nav
           aria-label="Application navigation"
-          className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2 sm:gap-4 sm:px-6"
+          className="mx-auto flex max-w-7xl items-center justify-between gap-1.5 px-2 py-2 sm:gap-4 sm:px-6"
         >
           {/* LEFT — tactical wordmark */}
           <Link
             href="/dashboard"
-            className="flex items-center gap-1.5 font-display text-lg text-ink transition-colors hover:text-cyan sm:gap-2 sm:text-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan rounded-xs"
+            className="flex items-center gap-1 sm:gap-2 font-display text-base text-ink transition-colors hover:text-cyan sm:text-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan rounded-xs"
           >
-            <BladeMark className="h-6 w-6 text-cyan sm:h-7 sm:w-7 shrink-0" />
+            <BladeMark className="h-5 w-5 text-cyan sm:h-7 sm:w-7 shrink-0" />
             <span>{BRAND.name}</span>
             <BlinkCursor />
           </Link>

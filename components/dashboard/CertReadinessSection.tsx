@@ -37,7 +37,7 @@ export function CertReadinessSection({ readiness }: { readiness: CertReadiness[]
     <section aria-labelledby="readiness-heading" className="space-y-6">
       <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-line pb-3">
         <div>
-          <h2 id="readiness-heading" className="font-display text-3xl text-ink">
+          <h2 id="readiness-heading" className="font-display text-xl sm:text-3xl text-ink break-words">
             certification_readiness
           </h2>
           <p className="font-ui text-xs tracking-wider text-muted mt-1">

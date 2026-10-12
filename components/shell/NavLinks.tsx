@@ -26,7 +26,7 @@ export function NavLinks({ mobile = false }: { mobile?: boolean }) {
 
   if (mobile) {
     return (
-      <div className="flex md:hidden items-center justify-around border-t border-line/60 bg-surface-subtle px-2 py-1.5 font-ui text-[11px] tracking-wider text-muted">
+      <div className="flex md:hidden items-center justify-around border-t border-line/60 bg-surface-subtle px-1 py-1 font-ui text-[11px] tracking-wider text-muted overflow-x-hidden">
         {NAV_ITEMS.map((item) => {
           const active = isActive(item);
           return (
@@ -34,7 +34,7 @@ export function NavLinks({ mobile = false }: { mobile?: boolean }) {
               key={item.href}
               href={item.href}
               data-active={active ? "true" : undefined}
-              className={`p-1.5 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan ${
+              className={`px-1 py-1 transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan ${
                 active
                   ? "text-cyan font-bold border-b-2 border-cyan -mb-px"
                   : "hover:text-cyan text-muted"

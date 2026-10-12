@@ -72,10 +72,13 @@ export function ObjectivesPanel({ objectives, solved, onSubmit, status, continue
 
   return (
     <section aria-labelledby="objectives-heading" className="space-y-4">
+      <h2 id="objectives-heading" className="sr-only">
+        objectives
+      </h2>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3">
-        <h2 id="objectives-heading" className="font-ui text-base font-bold tracking-wider text-ink uppercase">
+        <span aria-hidden="true" className="font-ui text-base font-bold tracking-wider text-ink uppercase">
           objectives
-        </h2>
+        </span>
         <span className="font-ui text-xs text-cyan border border-cyan/40 bg-cyan/10 px-2.5 py-0.5 rounded-xs font-semibold">
           {solvedCount} / {objectives.length} SOLVED
         </span>

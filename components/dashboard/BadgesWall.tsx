@@ -9,7 +9,7 @@ export function BadgesWall({ badges }: { badges: EvaluatedBadge[] }) {
     <section aria-labelledby="badges-heading" className="space-y-6">
       <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-line pb-3">
         <div>
-          <h2 id="badges-heading" className="font-display text-3xl text-ink">
+          <h2 id="badges-heading" className="font-display text-xl sm:text-3xl text-ink break-words">
             operational_badges
           </h2>
           <p className="font-ui text-xs tracking-wider text-muted mt-1">
@@ -67,8 +67,8 @@ export function BadgesWall({ badges }: { badges: EvaluatedBadge[] }) {
             <div className="mt-4 pt-3 border-t border-line/40 flex items-center justify-between font-ui text-xs">
               {b.unlocked ? (
                 <span className="text-success font-semibold flex items-center gap-1.5">
-                  <IconCheck className="h-3.5 w-3.5" />
-                  <span>CLEARED</span>
+                  <IconCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>✓ CLEARED</span>
                 </span>
               ) : (
                 <Tooltip content={b.description ? `Requirement: ${b.description}` : "Locked milestone"}>

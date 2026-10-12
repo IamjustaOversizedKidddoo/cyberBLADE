@@ -97,7 +97,7 @@ function LessonList({ lessons, progress, open }: { lessons: Lesson[]; progress: 
             <div className="hidden sm:flex items-center gap-2 shrink-0">
               {open && (
                 <span
-                  className={`rounded-xs border px-2 py-0.5 font-ui text-[11px] tracking-wider uppercase font-semibold ${
+                  className={`rounded-xs border px-2 py-0.5 font-ui text-[11px] tracking-wider font-semibold ${
                     isCompleted
                       ? "border-success/40 bg-success/10 text-success"
                       : status === "in_progress"
@@ -105,7 +105,7 @@ function LessonList({ lessons, progress, open }: { lessons: Lesson[]; progress: 
                       : "border-line bg-surface text-muted"
                   }`}
                 >
-                  {isCompleted ? "COMPLETED" : status === "in_progress" ? "IN PROGRESS" : "AVAILABLE"}
+                  {isCompleted ? "✓ Completed" : status === "in_progress" ? "In Progress" : "Available"}
                 </span>
               )}
             </div>
@@ -182,10 +182,11 @@ function ChallengeCard({ rank, summary }: { rank: number; summary: RankSummary }
       {kind !== "locked" && (
         <Link
           href={`/challenge/${rank}`}
+          aria-label={kind === "active" ? "Return to the challenge" : "Open the challenge"}
           className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xs border-2 border-cyan bg-cyan/10 px-5 py-2 font-ui text-xs font-bold tracking-wider text-cyan transition-all hover:bg-cyan hover:text-void shadow-[0_0_12px_rgba(15,190,255,0.25)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
         >
           <IconPlay className="h-3 w-3" />
-          <span>{kind === "active" ? "RETURN TO CHALLENGE →" : "OPEN CHALLENGE →"}</span>
+          <span>{kind === "active" ? "Return to the challenge" : "Open the challenge"}</span>
         </Link>
       )}
     </section>
@@ -273,15 +274,15 @@ export default async function CoreMapPage(props: PageProps<"/learn/core">) {
               key={r.rank}
               id={`rank-${r.rank}`}
               aria-labelledby={`rank-heading-${r.rank}`}
-              className="rounded-sm border border-line bg-surface p-6 sm:p-8"
+              className="rounded-sm border border-line bg-surface p-4 sm:p-8"
             >
               {/* Header with rank badge and progress */}
               <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-line/60 pb-5">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <RankBadge rank={r.rank} />
                   <h2
                     id={`rank-heading-${r.rank}`}
-                    className={`font-display text-2xl sm:text-3xl ${r.open ? "text-ink" : "text-muted"}`}
+                    className={`font-display text-xl sm:text-3xl ${r.open ? "text-ink" : "text-muted"}`}
                   >
                     rank_{r.rank} · {r.name}
                   </h2>

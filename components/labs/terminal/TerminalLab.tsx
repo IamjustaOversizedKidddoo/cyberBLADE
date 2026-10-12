@@ -13,7 +13,6 @@ import { IconTerminal } from "@/components/ui/icons";
 
 const PINK = "\x1b[38;2;255;16;101m";
 const CYAN = "\x1b[38;2;15;190;255m";
-const GREEN = "\x1b[38;2;16;185;129m";
 const RESET = "\x1b[0m";
 
 type Props = {
@@ -52,6 +51,8 @@ export default function TerminalLab({ world, objectives, onSubmit }: Props) {
 
   const isWindows = world.hostname?.toLowerCase().includes("win") || Boolean((world as unknown as { isPowerShell?: boolean }).isPowerShell);
 
+  const initialFontSizeRef = useRef(fontSize);
+
   useEffect(() => {
     const world: World = JSON.parse(worldJson);
     if (!host.current) return;
@@ -61,7 +62,7 @@ export default function TerminalLab({ world, objectives, onSubmit }: Props) {
       convertEol: true,
       cursorBlink: document.documentElement.dataset.motion !== "reduce",
       fontFamily: mono,
-      fontSize,
+      fontSize: initialFontSizeRef.current,
       lineHeight: 1.25,
       theme: {
         background: "#05070a",
@@ -107,8 +108,8 @@ export default function TerminalLab({ world, objectives, onSubmit }: Props) {
     let cursor = 0;
     const prompt = () => term.write(`${CYAN}${shell.prompt()}${RESET}`);
 
-    term.writeln(`Connected to ${world.hostname}. Environment simulation verified.`);
-    term.writeln(`Type ${CYAN}help${RESET} for available tools. Submit flags with ${CYAN}submit <number> <answer>${RESET}.\n`);
+    term.writeln(`Connected to ${world.hostname}. This machine is a simulation you are allowed to explore.`);
+    term.writeln(`Type ${CYAN}help${RESET} to see the commands. Send answers with ${CYAN}submit <number> <answer>${RESET}.\n`);
     prompt();
 
     let busy = false;
@@ -121,17 +122,18 @@ export default function TerminalLab({ world, objectives, onSubmit }: Props) {
         return;
       }
       busy = true;
-      term.write("verifying answer...\r");
+      term.write("checking…\r");
       try {
         const r = await onSubmitRef.current(objective.id, request.answer);
         term.write("\x1b[2K");
         if (r.expired) term.write(`${PINK}Time is up — this attempt has ended.${RESET}\n`);
-        else if (r.correct) term.write(`${GREEN}✓ Correct — objective ${request.objective} solved.${RESET}\n`);
+        else if (r.correct) term.write(`${CYAN}✓ Correct — objective ${request.objective} solved.${RESET}\n`);
         else term.write(`${PINK}✗ Not quite. Keep digging.${RESET}\n`);
       } catch {
         term.write(`\x1b[2K${PINK}Could not check that answer. Try again.${RESET}\n`);
       } finally {
         busy = false;
+        prompt();
       }
     }
 
