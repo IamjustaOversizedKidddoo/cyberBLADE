@@ -35,6 +35,10 @@ const mockSession: SocSessionClient = {
     skillsTested: ["soc_alert_triage", "soc_incident_correlation"],
     difficulty: "intermediate",
     briefing: "Frontline shift defending Apex Global Logistics.",
+    rawEvents: [],
+    evidenceViews: [],
+    instantFeedback: false,
+    examMode: false,
     environment: {
       assets: [
         {
@@ -72,6 +76,7 @@ const mockSession: SocSessionClient = {
         summary: "Inbound invoice with malicious macro targeting emiller",
         relatedAsset: "ws-fin-04.corp.internal",
         relatedUser: "emiller",
+        relatedIocs: [],
         linkedRawEvents: [],
         rawFields: { subject: "Overdue Invoice", hash: "synthetic-md5-001" },
       },
@@ -84,6 +89,7 @@ const mockSession: SocSessionClient = {
         summary: "Encoded powershell command line executed on ws-fin-04",
         relatedAsset: "ws-fin-04.corp.internal",
         relatedUser: "emiller",
+        relatedIocs: [],
         linkedRawEvents: [],
         rawFields: { command: "powershell -enc JABzAD0..." },
       },
@@ -94,6 +100,7 @@ const mockSession: SocSessionClient = {
         ruleName: "ROUTINE_NTP_SYNC_SWEEP",
         severity: "INFO",
         summary: "Standard clock synchronization from time.corp.internal",
+        relatedIocs: [],
         linkedRawEvents: [],
         rawFields: { dest_port: "123" },
       },

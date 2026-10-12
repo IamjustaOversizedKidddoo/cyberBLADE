@@ -1,0 +1,57 @@
+id: soc-noisy-shift-01
+title: "SOC Triage: A Noisy Morning Shift"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 45
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: soc-l1-noisy-shift
+objectives:
+  - id: o1
+    prompt: "Identify the alert ID corresponding to the initial macro phishing attachment delivered to Emily Miller."
+    check:
+      kind: flag
+      answer_from: generator.phishing_indicator
+  - id: o2
+    prompt: "Identify the initial detection alert ID for the SSH brute-force staging activity targeting srv-bastion-01."
+    check:
+      kind: flag
+      answer_from: generator.bastion_indicator
+  - id: o3
+    prompt: "Identify the internal hostname of the authorized vulnerability scanner performing routine port sweeps."
+    check:
+      kind: flag
+      answer_from: generator.scanner_host
+      case_sensitive: false
+  - id: o4
+    prompt: "Enter your shift completion token awarded upon submitting your evaluation."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Filter your queue by Source: Email Gateway or search for user 'emiller'."
+    - "Inspect inbound email attachments flagged with macro-enabled document signatures."
+    - "Look for alert alt-001 targeting accountant Emily Miller with an invoice subject line."
+  o2:
+    - "Search for 'srv-bastion-01' or filter by Source: Authentication."
+    - "Examine rapid authentication failures followed by anomalous administrative login."
+    - "The initial external brute-force burst triggered alert alt-008."
+  o3:
+    - "Review the High-severity rapid database port scan alert."
+    - "Check the source_host parameter in the raw fields or cross-reference with the CMDB inventory."
+    - "The scheduled vulnerability scanner hostname begins with 'sec-scanner'."
+  o4:
+    - "Complete triage decisions for your queue alerts in the SOC workspace."
+    - "Correlate related alerts into structured investigation cases."
+    - "Click 'Submit Shift' in the top bar to trigger server evaluation and retrieve your debrief token."
+xp: 150
+mitre:
+  - "T1566.001"
+  - "T1059.001"
+  - "T1110.001"
+  - "T1046"
+  - "T1105"

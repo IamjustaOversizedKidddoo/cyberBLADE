@@ -7,6 +7,7 @@ import type { Ctx } from "@/lib/progress/service";
 import { socScenarioSchema, toClientView, type SocScenario } from "./schema";
 import { validateSocScenario } from "./validator";
 import { evaluateSocAttempt } from "./evaluator";
+import { recordLearningEvent } from "@/lib/analytics/learning-events";
 import type {
   SocAttemptRecord,
   SocDecisionRecord,
@@ -177,6 +178,19 @@ export async function recordSocDecision(
     createdAt: ctx.now().toISOString(),
   });
 
+  try {
+    await recordLearningEvent(ctx, userId, "soc_alert_decided", {
+      scenarioId: attempt.scenarioId,
+      alertId,
+      disposition: input.disposition,
+      severity: input.severity,
+      escalate: input.escalate,
+      targetTier: input.targetTier,
+    });
+  } catch {
+    // Non-fatal telemetry recording
+  }
+
   return decision;
 }
 
@@ -282,6 +296,19 @@ export async function submitSocAttempt(
   // Idempotent XP award if passed (150 XP for demo scenario)
   if (evaluation.passed) {
     await ctx.repo.awardXp(userId, `soc_scenario:${scenario.id}`, 150);
+  }
+
+  try {
+    await recordLearningEvent(ctx, userId, "soc_attempt_submitted", {
+      scenarioId: attempt.scenarioId,
+      percentage: evaluation.percentage,
+      passed: evaluation.passed,
+      alertsDecided: evaluation.alertsDecided,
+      incidentsFound: evaluation.incidents.filter((i) => i.detected).length,
+      incidentsTotal: evaluation.incidents.length,
+    });
+  } catch {
+    // Non-fatal telemetry recording
   }
 
   return evaluation;
