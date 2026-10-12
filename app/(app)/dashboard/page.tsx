@@ -16,7 +16,9 @@ import { getLessons } from "@/lib/content/lessons";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 import { rankName } from "@/lib/progress/ranks";
-import { nextMission } from "@/lib/progress/next-mission";
+import { getNextBestAction } from "@/lib/progress/next-action";
+import { computeMasteryOverview } from "@/lib/progress/mastery";
+import { MasteryMapWidget } from "@/components/dashboard/MasteryMapWidget";
 import { calculateCertReadiness } from "@/lib/readiness/calculator";
 import { calculateStreak } from "@/lib/gamification/streaks";
 import { evaluateBadges } from "@/lib/gamification/badges";
@@ -26,13 +28,14 @@ export const metadata: Metadata = { title: "Dashboard · CyberBLADE" };
 export default async function DashboardPage() {
   const operator = await requireOperator();
   const ctx = getCtx();
-  const [lessons, allCoreLessons, progress, xp, xpEvents, attempts] = await Promise.all([
+  const [lessons, allCoreLessons, progress, xp, xpEvents, attempts, reviewItems] = await Promise.all([
     getLessons({ track: "core", rank: operator.rank }),
     getLessons({ track: "core" }),
     ctx.repo.listLessonProgress(operator.id),
     ctx.repo.getXpTotal(operator.id),
     ctx.repo.listXpEvents(operator.id),
     ctx.repo.listAttempts(operator.id),
+    ctx.repo.listReviewItems(operator.id),
   ]);
 
   const completedLessons = progress.filter((p) => p.status === "completed");
@@ -40,7 +43,22 @@ export default async function DashboardPage() {
 
   const done = lessons.filter((l) => completedLessonIds.has(l.id)).length;
   const pct = lessons.length > 0 ? Math.round((done / lessons.length) * 100) : 0;
-  const next = nextMission(operator.rank, lessons, progress);
+
+  // Spaced review & Next Best Action
+  const now = ctx.now();
+  const dueReviewCount = reviewItems.filter((i) => new Date(i.dueAt).getTime() <= now.getTime()).length;
+  const failedAttempt = attempts.find((a) => !a.completedAt && (a.failedAt !== null || (a.expiresAt && new Date(a.expiresAt) < now)));
+  const nextAction = getNextBestAction({
+    dueReviewCount,
+    failedLab: failedAttempt ? { id: failedAttempt.labId, title: failedAttempt.labId } : null,
+    rankLessons: lessons,
+    progress,
+    operatorRank: operator.rank,
+    challengeReady: done === lessons.length,
+  });
+
+  // Mastery Map calculation
+  const mastery = computeMasteryOverview(allCoreLessons, progress, reviewItems);
 
   // Compute Cert Readiness
   const readiness = await calculateCertReadiness({
@@ -136,34 +154,29 @@ export default async function DashboardPage() {
               <div className="relative h-3 w-3 rounded-full bg-cyan shadow-[0_0_8px_rgba(15,190,255,0.8)]" />
             </div>
             <div>
-              <p className="font-ui text-xs tracking-widest text-cyan font-semibold truncate">
-                {next.kind === "lesson"
-                  ? `NEXT MISSION // ${next.lesson.order.toString().padStart(2, "0")}: ${next.lesson.title.toUpperCase()}`
-                  : next.kind === "challenge"
-                  ? `NEXT MISSION // RANK_${operator.rank} CHALLENGE DEPLOYED`
-                  : "ACTIVE CAMPAIGN // SHARED CORE COMPLETE"}
-              </p>
-              {isBrandNew && (
-                <p className="font-sans text-[11px] text-muted hidden sm:block">
-                  Begin your foundational training. First objective: Linux filesystem navigation.
+              <div className="flex items-center gap-2">
+                <p className="font-ui text-xs tracking-widest text-cyan font-bold uppercase truncate">
+                  {nextAction.badge} // {nextAction.title.toUpperCase()}
                 </p>
-              )}
+                {nextAction.estimatedMinutes > 0 && (
+                  <span className="font-mono text-[10px] text-muted border border-line px-1.5 py-0.5 rounded-xs">
+                    ~{nextAction.estimatedMinutes} MIN
+                  </span>
+                )}
+              </div>
+              <p className="font-sans text-[11px] text-secondary mt-0.5 max-w-2xl">
+                {nextAction.reason}
+              </p>
             </div>
           </div>
 
-          {next.kind !== "none" && (
-            <Link
-              href={next.kind === "lesson" ? `/learn/${next.lesson.id}` : `/challenge/${next.rank}`}
-              className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-xs bg-cyan px-5 py-2 font-ui text-xs font-bold tracking-wider text-void shadow-[0_0_15px_rgba(15,190,255,0.35)] transition-all hover:bg-cyan/90 hover:shadow-[0_0_20px_rgba(15,190,255,0.6)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan active:translate-y-px"
-            >
-              <IconPlay className="h-3 w-3" />
-              <span>
-                {next.kind === "lesson"
-                  ? (next.resume ? "RESUME MISSION →" : "START MISSION →")
-                  : "DEPLOY CHALLENGE →"}
-              </span>
-            </Link>
-          )}
+          <Link
+            href={nextAction.href}
+            className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-xs bg-cyan px-5 py-2 font-ui text-xs font-bold tracking-wider text-void shadow-[0_0_15px_rgba(15,190,255,0.35)] transition-all hover:bg-cyan/90 hover:shadow-[0_0_20px_rgba(15,190,255,0.6)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan active:translate-y-px"
+          >
+            <IconPlay className="h-3 w-3" />
+            <span>EXECUTE ACTION →</span>
+          </Link>
         </div>
       </div>
 
@@ -187,7 +200,7 @@ export default async function DashboardPage() {
                 </div>
               </div>
               <Link
-                href={next.kind === "lesson" ? `/learn/${next.lesson.id}` : "/learn/core"}
+                href={nextAction.href}
                 className="font-ui text-xs font-semibold text-cyan hover:underline flex items-center gap-1"
               >
                 <span>OPEN FIRST LESSON</span>
@@ -200,7 +213,7 @@ export default async function DashboardPage() {
 
       {/* ── OPERATIONAL TELEMETRY & STREAK ───────────────────────────────────── */}
       <div className="border-b border-line bg-canvas">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 space-y-6">
           <div className="grid gap-6 md:grid-cols-3">
             <div className="md:col-span-1">
               <StreakWidget streak={streak} />
@@ -228,6 +241,9 @@ export default async function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Mastery Map Widget */}
+          <MasteryMapWidget mastery={mastery} />
         </div>
       </div>
 

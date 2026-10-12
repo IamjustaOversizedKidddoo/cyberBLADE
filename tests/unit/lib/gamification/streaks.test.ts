@@ -77,4 +77,28 @@ describe("Streak Calculator", () => {
     expect(res.currentStreak).toBe(2);
     expect(res.longestStreak).toBe(5);
   });
+
+  it("applies weekly grace freeze when missed 1 day and active two days ago", () => {
+    const timestamps = [
+      "2026-10-07T10:00:00Z",
+      "2026-10-08T10:00:00Z",
+      // 2026-10-09 missed!
+      "2026-10-10T10:00:00Z", // today
+    ];
+
+    const res = calculateStreak(timestamps, fixedNow, { allowGraceFreeze: true });
+    expect(res.graceFreezeUsed).toBe(true);
+    // 2 days before + 1 frozen day + 1 today = 4 days streak
+    expect(res.currentStreak).toBe(4);
+    expect(res.activePastWeek[5].frozen).toBe(true);
+  });
+
+  it("respects timezone offset when calculating calendar boundaries", () => {
+    // 2026-10-10 at 01:00 UTC with timezone offset +330 (IST: UTC+5:30) is 2026-10-10 06:30 IST
+    const nowUtc = new Date("2026-10-10T01:00:00Z");
+    const ts = ["2026-10-10T00:30:00Z"];
+
+    const res = calculateStreak(ts, nowUtc, { timezoneOffsetMinutes: -330 });
+    expect(res.activeToday).toBe(true);
+  });
 });

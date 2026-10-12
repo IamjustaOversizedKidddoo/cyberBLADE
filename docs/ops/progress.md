@@ -13,8 +13,8 @@
 | **Stage 1** | **1A** | Learning Audit & Baseline Metrics | ✅ Complete | Pending | Computed load table, question bias, prereqs |
 | **Stage 1** | **1B** | Feedback Quality (Rationales, Debriefs, Nudges) | ✅ Complete | Pending | Distractor rationales, near-misses, debriefs |
 | **Stage 1** | **1C** | Retrieval Practice & Spaced Review (SM-2, Daily Review) | ✅ Complete | Pending | Scheduler, flashcards, DB migrations |
-| **Stage 1** | **1D** | Pacing, Progress & Motivation (Next Action, Mastery, Streaks) | ⏳ Next | — | Streak grace, timezone fix, XP simulation |
-| **Stage 1** | **1E** | Readiness Accuracy & Analytics (Bugs, Decay, Telemetry) | ⬜ Pending | — | Non-linear decay, exam self-report |
+| **Stage 1** | **1D** | Pacing, Progress & Motivation (Next Action, Mastery, Streaks) | ✅ Complete | Pending | Streak grace, timezone fix, XP simulation |
+| **Stage 1** | **1E** | Readiness Accuracy & Analytics (Bugs, Decay, Telemetry) | ⏳ Next | — | Non-linear decay, exam self-report |
 | **Stage 1** | **1F** | Stage 1 Tests & Verification | ⬜ Pending | — | E2E, simulated learners, axe checks |
 | **Stage 2** | **2A** | Test Suite Health (Mutation, Flakiness, Hermetic E2E) | ⬜ Pending | — | Coverage per dir, artifact scan |
 | **Stage 2** | **2B** | CI/CD, Environments & Feature Flags | ⬜ Pending | — | GitHub Actions, typed config, Dockerfile |
@@ -52,3 +52,16 @@
 - Implemented complete JSON store fallback in `StoreProgressRepo` and wired `SupabaseProgressRepo`.
 - Built accessible Daily Review screen at `app/(app)/review/page.tsx` and `components/review/DailyReviewSession.tsx` with ARIA live announcements, keyboard navigation (Space/Enter + 1/2/3/4), and added `/review` to primary navigation.
 - 15 unit tests added and passing across scheduler, queue builder, and review store methods.
+
+### Entry 4: Part 1D Completed (Next Best Action, Mastery Map & Streak Grace)
+- Built deterministic `getNextBestAction` engine in `lib/progress/next-action.ts` prioritizing: (1) Due spaced reviews (prevent memory decay) -> (2) Retry failed labs -> (3) Resume/start lessons in rank order -> (4) Rank challenge certification -> (5) All complete.
+- Upgraded streak engine in `lib/gamification/streaks.ts`: calendar-day date math immune to DST transitions (23h/25h shifts), timezone offset support, and rolling weekly grace freeze.
+- Implemented `MasteryMapWidget` and `computeMasteryOverview` in `lib/progress/mastery.ts` classifying competencies into Solid, Developing, and Needs Review.
+- Integrated Next Best Action strip and Mastery Map directly into `/dashboard`.
+- Ran XP economy simulation (`scripts/simulate-xp-economy.mts`):
+  | Persona | Study Time | Rank 1 Days | Rank 2 Days | Full Completion | Total XP |
+  | :--- | :---: | :---: | :---: | :---: | :---: |
+  | Fast / Accelerated | 75 min/day | 3 days | 9 days | 14 days | 3,850 XP |
+  | Average / Consistent | 35 min/day | 7 days | 25 days | 39 days | 4,720 XP |
+  | Casual / Slower | 15 min/day | 19 days | 70 days | 110 days | 5,925 XP |
+- All tests passing.
