@@ -6,9 +6,9 @@ import { E2E_BASE_URL, E2E_PORT } from "./tests/e2e/helpers/base";
 export default defineConfig({
   testDir: "tests/e2e",
   globalSetup: "./tests/e2e/global-setup.ts",
-  // Browsers and the server share one machine; past 4 workers the WebGL/pinned-scene tests starve the
+  // Browsers and the server share one machine; past 2 workers the WebGL/pinned-scene tests starve the
   // server and unrelated journeys time out waiting for it.
-  workers: 4,
+  workers: 2,
   use: { baseURL: E2E_BASE_URL },
   webServer: {
     command: `npm run build && npm run start -- -p ${E2E_PORT}`,
