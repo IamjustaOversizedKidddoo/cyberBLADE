@@ -2,7 +2,7 @@
 
 **Branch:** `main`  
 **Pass:** P8–P10 (Learning Effectiveness, Ship Readiness, Consolidation & Polish)  
-**Status:** In Progress — Stage 1 (Part 1A Complete)
+**Status:** In Progress — Stage 2 (Ship Readiness)
 
 ---
 
@@ -15,8 +15,8 @@
 | **Stage 1** | **1C** | Retrieval Practice & Spaced Review (SM-2, Daily Review) | ✅ Complete | Pending | Scheduler, flashcards, DB migrations |
 | **Stage 1** | **1D** | Pacing, Progress & Motivation (Next Action, Mastery, Streaks) | ✅ Complete | Pending | Streak grace, timezone fix, XP simulation |
 | **Stage 1** | **1E** | Readiness Accuracy & Analytics (Bugs, Decay, Telemetry) | ✅ Complete | Pending | Non-linear decay, exam self-report |
-| **Stage 1** | **1F** | Stage 1 Tests & Verification | ⏳ Next | — | E2E, simulated learners, axe checks |
-| **Stage 2** | **2A** | Test Suite Health (Mutation, Flakiness, Hermetic E2E) | ⬜ Pending | — | Coverage per dir, artifact scan |
+| **Stage 1** | **1F** | Stage 1 Tests & Verification | ✅ Complete | `27ecd02` | Flashcard integrity, mastery, PII sanitization, learner journey sim |
+| **Stage 2** | **2A** | Test Suite Health (Mutation, Flakiness, Hermetic E2E) | ⏳ Next | — | Coverage per dir, artifact scan |
 | **Stage 2** | **2B** | CI/CD, Environments & Feature Flags | ⬜ Pending | — | GitHub Actions, typed config, Dockerfile |
 | **Stage 2** | **2C** | Observability, Backup, Resilience & Load Testing | ⬜ Pending | — | Redaction, restore rehearsal, load harness |
 | **Stage 2** | **2D** | Beta Mechanisms (Invite Codes, Feedback Widget, Rollout) | ⬜ Pending | — | Hashed codes, rate limits, /help |
@@ -72,3 +72,11 @@
 - Built privacy-preserving telemetry logger in `lib/analytics/learning-events.ts` strictly redacting PII, tokens, and IPs.
 - Created `ExamReportDialog` in `components/exam/ExamReportDialog.tsx` and `submitExamReportAction` in `app/(app)/exam/actions.ts` allowing voluntary real-world certification self-reporting.
 - Implemented `scripts/learning-analytics-report.mts` (`npm run report:learning`) producing aggregated curriculum, lab, SM-2, and exam statistics.
+
+### Entry 6: Part 1F Completed (Stage 1 Tests & Verification)
+- Created `tests/unit/lib/review/flashcards.test.ts` — 11 tests verifying flashcard library integrity (unique IDs, valid categories/ranks, well-formed question format, helper functions).
+- Created `tests/unit/lib/progress/mastery.test.ts` — 7 tests verifying mastery overview computation (solid/developing/needs_review classification, lapse detection, overdue detection, mixed-state aggregation).
+- Created `tests/unit/lib/analytics/learning-events.test.ts` — 10 tests covering PII sanitization (top-level, nested, case-insensitive key stripping) and simulated multi-session learner journeys (SM-2 progression, lapse recovery, EF convergence, queue mixing, rating helpers).
+- Total test count: 146 test files, 1144 tests passing (28 new tests in this part).
+- TypeScript typecheck clean (exit code 0).
+- **Stage 1 COMPLETE**: All 6 parts (1A–1F) verified, committed, and documented.
