@@ -1,0 +1,513 @@
+metadata:
+  id: "soc-f-attachment-script-01"
+  version: 1
+  title: "L1: Malicious Attachment to Script Execution & Persistence"
+  level: "L1"
+  skillsTested:
+    - "soc_alert_triage"
+    - "soc_endpoint_triage"
+    - "soc_windows_logs"
+    - "soc_malware_triage"
+    - "soc_siem_correlation"
+    - "soc_escalation_handoff"
+    - "soc_documentation"
+  estimatedMinutes:
+    min: 25
+    max: 45
+  difficultyRange:
+    - "beginner"
+    - "intermediate"
+    - "advanced"
+  author: "CyberBLADE SOC Curriculum Engineering"
+  reviewStatus: "draft"
+  reviewerNotes: "Initial draft modeling macro delivery, LOLBin payload staging, registry persistence, and benign twins."
+
+environmentTemplate:
+  organizationArchetypes:
+    - "org_apex_dynamics"
+    - "org_meridian_fintech"
+    - "org_strata_health"
+    - "org_helios_energy"
+  assetDistribution:
+    workstations:
+      min: 4
+      max: 7
+    servers:
+      min: 2
+      max: 4
+    domainControllers:
+      min: 1
+      max: 1
+    mailGateways:
+      min: 1
+      max: 1
+  userDistribution:
+    totalUsers:
+      min: 6
+      max: 10
+    departments:
+      - "Finance"
+      - "Engineering"
+      - "IT Operations"
+      - "Human Resources"
+      - "Marketing"
+
+incidentTemplates:
+  - id: "inc-macro-powershell-staging"
+    titleTemplate: "Macro Execution & LOLBin Payload Staging on {victimAsset}"
+    category: "Execution & Persistence"
+    rootCauseTemplate: "Weaponized spreadsheet opened by {victimUser} spawned encoded PowerShell and certutil to download payload from {c2Domain}."
+    mitreTags:
+      - "T1204.002" # Malicious File
+      - "T1059.001" # PowerShell
+      - "T1218.011" # System Binary Proxy Execution: Certutil
+      - "T1547.001" # Registry Run Keys
+    stages:
+      - stageId: "stage-macro-powershell-spawn"
+        name: "Macro Spawning Encoded PowerShell"
+        phase: "execution"
+        timingOffsetMinutes:
+          min: -45
+          max: -10
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "EDR"
+            action: "process_creation"
+            messageTemplate: "Microsoft-Windows-Security-Auditing: A new process has been created. Creator: excel.exe, New Process: powershell.exe, CommandLine: powershell.exe -NoP -NonI -W Hidden -Exec Bypass -Enc VABlAHMAdABQAGEAeQBsAG8AYQBkAA=="
+            fieldsTemplate:
+              parent_process: "excel.exe"
+              process_name: "powershell.exe"
+              command_line: "-NoP -NonI -W Hidden -Exec Bypass -Enc VABlAHMAdABQAGEAeQBsAG8AYQBkAA=="
+              user: "{victimUser}"
+        alertTemplates:
+          - ruleName: "EDR: Encoded PowerShell Command Execution"
+            source: "EDR"
+            severity: "HIGH"
+            summaryTemplate: "Script interpreter spawned by office application on host '{victimAsset}' with encoded parameters"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            rawFieldsTemplate:
+              parent_process: "excel.exe"
+              process_name: "powershell.exe"
+              target_host: "{victimAsset}"
+              command_line: "-NoP -NonI -W Hidden -Exec Bypass -Enc VABlAHMAdABQAGEAeQBsAG8AYQBkAA=="
+          - ruleName: "EDR: Living-Off-The-Land Binary (certutil) Network Connection"
+            source: "EDR"
+            severity: "CRITICAL"
+            summaryTemplate: "Suspicious execution of certutil.exe downloading binary payload from external domain '{c2Domain}' on host '{victimAsset}'"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            iocs:
+              - type: "domain"
+                valueTemplate: "{c2Domain}"
+              - type: "hash"
+                valueTemplate: "{fileHash}"
+            rawFieldsTemplate:
+              process_name: "certutil.exe"
+              target_host: "{victimAsset}"
+              download_url: "https://{c2Domain}/stage2.bin"
+              destination_path: "C:\\Users\\Public\\update.bin"
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-macro-powershell-spawn"
+          acceptableAlternatives: []
+          debriefTemplate: "Critical living-off-the-land staging on {victimAsset}. Weaponized office document spawned powershell and certutil to pull secondary payload."
+
+  - id: "inc-vbs-scheduled-task"
+    titleTemplate: "Script Interpreter Task Persistence on {victimAsset}"
+    category: "Persistence & Defense Evasion"
+    rootCauseTemplate: "Archive payload extracted inert script to Public directory, installing scheduled task persistence for {victimUser}."
+    mitreTags:
+      - "T1059.005" # Visual Basic
+      - "T1053.005" # Scheduled Task
+    stages:
+      - stageId: "stage-task-persistence"
+        name: "Scheduled Task Persistence Installation"
+        phase: "persistence"
+        timingOffsetMinutes:
+          min: 15
+          max: 60
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "EDR"
+            action: "process_creation"
+            messageTemplate: "schtasks.exe /create /tn 'SystemCacheUpdate' /tr 'wscript.exe C:\\Users\\Public\\staging.vbs' /sc daily"
+            fieldsTemplate:
+              process_name: "schtasks.exe"
+              command_line: "/create /tn 'SystemCacheUpdate' /tr 'wscript.exe C:\\Users\\Public\\staging.vbs' /sc daily"
+              user: "{victimUser}"
+              target_host: "{victimAsset}"
+        alertTemplates:
+          - ruleName: "EDR: Encoded PowerShell Command Execution"
+            source: "EDR"
+            severity: "HIGH"
+            summaryTemplate: "Script interpreter spawned by scheduled task creation utility on host '{victimAsset}' with hidden window flags"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            rawFieldsTemplate:
+              process_name: "schtasks.exe"
+              target_host: "{victimAsset}"
+              task_name: "SystemCacheUpdate"
+              command_line: "wscript.exe C:\\Users\\Public\\staging.vbs"
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "HIGH"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-task-persistence"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed persistence installation on {victimAsset}. Attacker created scheduled task referencing untrusted script in Public directory."
+
+benignTemplates:
+  - id: "benign-certutil-crl"
+    name: "Routine PKI Certificate Revocation Check"
+    category: "Administrative Activity"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "business_hours"
+    actorRole: "system_utility"
+    eventTemplates:
+      - source: "EDR"
+        action: "process_creation"
+        messageTemplate: "certutil.exe -verify -urlcache http://pki.corp.internal/crl/root.crl"
+        fieldsTemplate:
+          process_name: "certutil.exe"
+          command_line: "-verify -urlcache http://pki.corp.internal/crl/root.crl"
+          target_host: "{hostname}"
+          status: "success"
+    alertTemplates:
+      - ruleName: "EDR: Living-Off-The-Land Binary Execution"
+        source: "EDR"
+        severity: "HIGH"
+        summaryTemplate: "Administrative utility certutil.exe executed with CRL verification flags on host '{hostname}'"
+        rawFieldsTemplate:
+          process_name: "certutil.exe"
+          target_host: "{hostname}"
+          command_line: "-verify -urlcache http://pki.corp.internal/crl/root.crl"
+          status: "crl_valid"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-certutil-crl"
+      acceptableAlternatives: []
+      debriefTemplate: "Routine PKI certificate revocation check against internal domain. Not an attack."
+
+  - id: "benign-admin-diagnostic"
+    name: "Routine IT Diagnostic Script Execution"
+    category: "Administrative Activity"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "business_hours"
+    actorRole: "admin_user"
+    eventTemplates:
+      - source: "EDR"
+        action: "process_creation"
+        messageTemplate: "powershell.exe -ExecutionPolicy Bypass -File C:\\ITAdmin\\Scripts\\Collect-DiagnosticLogs.ps1"
+        fieldsTemplate:
+          process_name: "powershell.exe"
+          command_line: "-ExecutionPolicy Bypass -File C:\\ITAdmin\\Scripts\\Collect-DiagnosticLogs.ps1"
+          target_host: "{hostname}"
+          status: "completed"
+    alertTemplates:
+      - ruleName: "EDR: Living-Off-The-Land Binary Execution"
+        source: "EDR"
+        severity: "HIGH"
+        summaryTemplate: "Administrative diagnostic script executed interactively on host '{hostname}' by user '{username}'"
+        rawFieldsTemplate:
+          process_name: "powershell.exe"
+          target_host: "{hostname}"
+          user: "{username}"
+          status: "approved_script"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-admin-diagnostic"
+      acceptableAlternatives: []
+      debriefTemplate: "Authorized IT administration script execution in local maintenance context."
+
+  - id: "benign-backup-job"
+    name: "Nightly Automated Snapshot & Backup"
+    category: "Scheduled Jobs"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_nightly"
+    actorRole: "service_account"
+    eventTemplates:
+      - source: "Authentication"
+        action: "service_logon"
+        messageTemplate: "Service account 'svc-backup' authenticated successfully via Kerberos"
+        fieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Authentication: High-Volume Service Data Replication"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Scheduled database snapshot stream handled by service account 'svc-backup' on corporate host '{hostname}'"
+        rawFieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+          bytes_transferred: "42.8 GB"
+          operation: "scheduled_backup"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-backup-job"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate automated snapshot and backup initiated by approved service principal 'svc-backup'."
+
+  - id: "benign-vuln-scanner"
+    name: "Authorized Weekly Perimeter Vulnerability Scan"
+    category: "Vulnerability Scanning"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "batch_window_nightly"
+    actorRole: "security_scanner"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "port_scan"
+        messageTemplate: "TCP port sweep detected from scanner IP {scannerIp}"
+        fieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Network IDS: Rapid Port Sweep Probe"
+        source: "Network IDS"
+        severity: "HIGH"
+        summaryTemplate: "Rapid port sweep probe from authorized internal vulnerability scanner address {scannerIp} on host '{hostname}'"
+        rawFieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+          authorized_scanner: true
+          status: "scheduled_audit"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "MEDIUM"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vuln-scanner"
+      acceptableAlternatives: []
+      debriefTemplate: "Authorized vulnerability scanning from known scanner IP {scannerIp}. Baseline approved activity."
+
+  - id: "benign-patch-deployment"
+    name: "Central Systems Patch Rollout"
+    category: "Software Deployment"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_maintenance"
+    actorRole: "admin_endpoint"
+    eventTemplates:
+      - source: "EDR"
+        action: "package_installer"
+        messageTemplate: "systemd-update executed package upgrade sequence on host '{hostname}'"
+        fieldsTemplate:
+          process_name: "apt-get"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "EDR: System Package Upgrade Sequence"
+        source: "EDR"
+        severity: "MEDIUM"
+        summaryTemplate: "Automated package deployment installer executed during scheduled maintenance on host '{hostname}'"
+        rawFieldsTemplate:
+          installer: "systemd-update"
+          target_host: "{hostname}"
+          operation: "patch_distribution"
+          status: "installed"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-patch-deployment"
+      acceptableAlternatives: []
+      debriefTemplate: "Automated patch rollout during scheduled maintenance window."
+
+  - id: "benign-vpn-traveler"
+    name: "Remote VPN Connection from Roaming IP"
+    category: "Remote Access"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "business_hours"
+    actorRole: "roaming_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "vpn_login"
+        messageTemplate: "VPN tunnel authenticated for '{username}' from roaming IP {roamingIp}"
+        fieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          status: "connected"
+    alertTemplates:
+      - ruleName: "Firewall: New Geographic VPN Tunnel Established"
+        source: "Firewall"
+        severity: "LOW"
+        summaryTemplate: "Authenticated remote VPN tunnel session established for corporate employee '{username}' from roaming address {roamingIp}"
+        rawFieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          mfa_verified: true
+          status: "connected"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vpn-traveler"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate corporate VPN access by authenticated employee with multi-factor verification."
+
+  - id: "benign-sensor-flapping"
+    name: "Duplicate Sensor Trigger on Benign Keep-Alive"
+    category: "Telemetry Flapping"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "anytime"
+    actorRole: "sensor_glitch"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "protocol_anomaly"
+        messageTemplate: "Malformed HTTP keepalive header on legacy telemetry connection"
+        fieldsTemplate:
+          protocol: "HTTP/1.1"
+    alertTemplates:
+      - ruleName: "Network IDS: Protocol Header Parsing Anomaly"
+        source: "Network IDS"
+        severity: "LOW"
+        summaryTemplate: "Repetitive protocol anomaly sensor trigger observed on internal keep-alive session from host '{hostname}'"
+        rawFieldsTemplate:
+          sensor_id: "suricata-dmz-01"
+          target_host: "{hostname}"
+          duplicate_count: 8
+          protocol: "HTTP/1.1"
+    groundTruth:
+      kind: "duplicate"
+      correctDisposition: "duplicate"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-sensor-flapping"
+      acceptableAlternatives: []
+      debriefTemplate: "Known flapping sensor alert caused by benign legacy keep-alive traffic."
+
+twinTemplates:
+  - id: "twin-certutil-execution"
+    name: "Living-Off-The-Land certutil.exe Twin Pair"
+    description: "Contrasts malicious external payload download vs legitimate internal PKI CRL verification"
+    toolOrTechnique: "certutil.exe"
+    maliciousStageRef: "stage-macro-powershell-spawn"
+    benignTemplateRef: "benign-certutil-crl"
+    distinguishingEvidence: "Inspection of command-line arguments: malicious downloads binary from external untrusted domain via -urlcache -split -f; benign performs CRL verification against internal PKI server via -verify."
+    acceptableAlternatives: []
+
+  - id: "twin-powershell-execution"
+    name: "PowerShell Script Interpreter Twin Pair"
+    description: "Contrasts encoded hidden execution spawned from Office app vs authorized IT diagnostic script"
+    toolOrTechnique: "powershell.exe"
+    maliciousStageRef: "stage-macro-powershell-spawn"
+    benignTemplateRef: "benign-admin-diagnostic"
+    distinguishingEvidence: "Parent process and command-line: malicious spawned by excel.exe with encoded hidden flags; benign executed by itadmin running signed diagnostic script."
+    acceptableAlternatives: []
+
+variationAxes:
+  incidentCount:
+    min: 1
+    max: 2
+  noiseRatio:
+    min: 0.65
+    max: 0.85
+  ambiguityCount:
+    min: 1
+    max: 3
+  telemetryGapCount:
+    min: 0
+    max: 2
+  targetAlertCount:
+    min: 30
+    max: 65
+  difficultyProfiles:
+    beginner:
+      incidentCount: 1
+      noiseRatio: 0.65
+      ambiguityCount: 1
+      telemetryGapCount: 0
+      targetAlertCount: 30
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    intermediate:
+      incidentCount: 2
+      noiseRatio: 0.75
+      ambiguityCount: 2
+      telemetryGapCount: 1
+      targetAlertCount: 45
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    advanced:
+      incidentCount: 2
+      noiseRatio: 0.82
+      ambiguityCount: 3
+      telemetryGapCount: 2
+      targetAlertCount: 65
+      expectedScoreCeilingNaive: 50
+      expectedMinScoreReference: 80
+
+debriefTemplates:
+  overallBriefingTemplate: |
+    Welcome to your Tier-1 SOC shift at {orgName}.
+    A queue of {alertCount} incoming alerts has arrived across EDR, Windows Security, and Authentication sensors.
+    Your mission:
+    1. Distinguish between malicious living-off-the-land executions (such as certutil binary downloads) and legitimate administrative utilities.
+    2. Inspect process creation events and parent-child hierarchies to identify weaponized office attachments.
+    3. Escalate verified endpoint intrusions to Tier 2 with containment recommendations and isolate affected hosts.
+  generalGuidanceTemplate: |
+    Shift debrief for {orgName}:
+    In this shift, you investigated {alertCount} alerts covering {incidentCount} security incident(s) alongside operational noise.
+    Key takeaways:
+    - Never judge a process solely by its binary name; living-off-the-land binaries (certutil, powershell) require inspecting arguments and parents.
+    - Office applications spawning command interpreters or PowerShell is an abnormal behavior pattern in enterprise environments.
+    - Differentiate routine PKI revocation checks against internal servers from external payload retrieval cradles.
+
+hooks:
+  enrichmentHooks:
+    - id: "hook-whois-domain"
+      provider: "whois"
+      dataPoints:
+        - "creation_date"
+        - "registrar"
+  queryDatasetHooks:
+    - datasetName: "siem_telemetry_flow"
+      extraEventGenerators:
+        - "generate_dns_flows"
+  evidenceViewHooks:
+    - id: "hook-edr-tree"
+      viewType: "process_tree"
+  reportRubricHooks:
+    - sectionId: "executive_summary"
+      criteria:
+        - "Identified weaponized macro parent process"
+        - "Documented staging payload destination"

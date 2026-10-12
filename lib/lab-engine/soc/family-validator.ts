@@ -337,13 +337,13 @@ export const ReferenceSolver: SocSolver = {
             escalate: false,
             rationale: "Routine PKI certificate revocation check performed by system utility.",
           };
-        } else if (raw.includes("-enc") || raw.includes("hidden") || summary.includes("encoded powershell")) {
+        } else if (raw.includes("-enc") || raw.includes("hidden") || summary.includes("encoded powershell") || raw.includes("public\\") || raw.includes(".vbs") || summary.includes("scheduled task creation")) {
           decisions[alert.id] = {
             alertId: alert.id,
             disposition: "true_positive",
             severity: "HIGH",
             escalate: true,
-            rationale: "Encoded obfuscated PowerShell execution indicates suspicious script activity.",
+            rationale: "Script interpreter execution from untrusted directory or persistent task creation.",
           };
         } else {
           decisions[alert.id] = {
