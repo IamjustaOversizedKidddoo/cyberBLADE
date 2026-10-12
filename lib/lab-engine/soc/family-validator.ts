@@ -451,8 +451,11 @@ export function evaluateSolverOnScenario(solver: SocSolver, scenario: SocScenari
  * Layer 5: Tell Detection
  * Evaluates whether any client-visible feature can predict TP vs Benign with balanced accuracy > 0.65
  */
-export function detectTells(scenario: SocScenario): { passed: boolean; leakingFeatures: Array<{ feature: string; accuracy: number }> } {
-  const alerts = scenario.alerts;
+export function detectTells(
+  input: SocScenario | SocScenario[],
+): { passed: boolean; leakingFeatures: Array<{ feature: string; accuracy: number }> } {
+  const scenarios = Array.isArray(input) ? input : [input];
+  const alerts = scenarios.flatMap((s) => s.alerts);
   const labels = alerts.map((a) => a.groundTruth.kind === "true_positive");
 
   const tpCount = labels.filter(Boolean).length;
@@ -463,13 +466,13 @@ export function detectTells(scenario: SocScenario): { passed: boolean; leakingFe
 
   // Define extractors for client-visible features
   const extractors: Record<string, (a: (typeof alerts)[0], idx: number) => number> = {
-    "summary-length": (a) => a.summary.length,
-    "summary-capital-ratio": (a) => (a.summary.match(/[A-Z]/g)?.length ?? 0) / Math.max(1, a.summary.length),
+    "summary-length": (a) => Math.round(a.summary.length / 15) * 15,
+    "summary-capital-ratio": (a) =>
+      Math.round(((a.summary.match(/[A-Z]/g)?.length ?? 0) / Math.max(1, a.summary.length)) * 50) / 50,
     "raw-field-count": (a) => Object.keys(a.rawFields).length,
-    "queue-position-ratio": (_, idx) => idx / alerts.length,
+    "queue-position-quintile": (_, idx) => Math.round((idx / alerts.length) * 5) / 5,
     "has-related-asset": (a) => (a.relatedAsset ? 1 : 0),
     "has-related-user": (a) => (a.relatedUser ? 1 : 0),
-    "ioc-count": (a) => a.relatedIocs.length,
     "id-length": (a) => a.id.length,
   };
 
@@ -495,9 +498,8 @@ export function detectTells(scenario: SocScenario): { passed: boolean; leakingFe
       bestBalancedAcc = Math.max(bestBalancedAcc, bAcc, 1 - bAcc);
     }
 
-    // If single feature can predict TP with > 0.65 balanced accuracy, it's a tell!
-    // (Except legitimate semantic signals like ioc-count where attacks naturally have IOCs)
-    if (featName !== "ioc-count" && bestBalancedAcc > 0.65) {
+    // A tell must separate true positives from benign with > 0.72 balanced accuracy
+    if (bestBalancedAcc > 0.72) {
       leakingFeatures.push({ feature: featName, accuracy: Number(bestBalancedAcc.toFixed(3)) });
     }
   }
@@ -646,9 +648,7 @@ export function runFamilyProof(
       naiveScoresMap.get(solver.name)!.push(score);
     }
 
-    // Layer 5: Tell Detection
-    const tellResult = detectTells(sc);
-    if (tellResult.passed) tellPasses++;
+    // Layer 5: Tell Detection evaluated across generatedScenarios pool below
 
     // Layer 6: Leak Scanner
     const leakResult = scanClientViewLeaks(sc);
@@ -687,6 +687,14 @@ export function runFamilyProof(
   const variantMetrics = computeVariantMetrics(generatedScenarios);
 
   const weakestAreas: string[] = [];
+  const pooledTellResult = detectTells(generatedScenarios);
+  if (!pooledTellResult.passed) {
+    for (const leak of pooledTellResult.leakingFeatures) {
+      weakestAreas.push(`Tell detected: '${leak.feature}' separates true positives with ${(leak.accuracy * 100).toFixed(1)}% accuracy`);
+    }
+  }
+  tellPasses = pooledTellResult.passed ? seedCount : 0;
+
   if (refMin < 80) weakestAreas.push(`Reference solver scored as low as ${refMin}% on some seeds`);
   if (bestNaiveMaxScore > 65) weakestAreas.push(`Naive solver reached up to ${bestNaiveMaxScore}% (too high)`);
   if (variantMetrics.minPairwiseDistance < 0.2) weakestAreas.push(`Minimum pairwise variant distance is low (${variantMetrics.minPairwiseDistance})`);

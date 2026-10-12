@@ -180,7 +180,7 @@ function generateSingleVariant(
     });
   }
 
-  // Ensure at least one IT Admin / Service Account
+  // Ensure at least one IT Admin / Service Account and system principals
   if (!users.some((u) => u.department === "IT Operations")) {
     users.push({
       id: `usr-${(users.length + 1).toString().padStart(3, "0")}`,
@@ -200,6 +200,28 @@ function generateSingleVariant(
       displayName: "Service Account - Backup Daemon",
       department: "Infrastructure",
       role: "Service Principal",
+      riskScore: 0,
+    });
+  }
+  if (!users.some((u) => u.username === "root")) {
+    users.push({
+      id: `usr-${(users.length + 1).toString().padStart(3, "0")}`,
+      username: "root",
+      email: `root@${org.domain}`,
+      displayName: "Root Administrator (System)",
+      department: "Infrastructure",
+      role: "System Superuser",
+      riskScore: 0,
+    });
+  }
+  if (!users.some((u) => u.username === "system")) {
+    users.push({
+      id: `usr-${(users.length + 1).toString().padStart(3, "0")}`,
+      username: "system",
+      email: `system@${org.domain}`,
+      displayName: "NT AUTHORITY\\SYSTEM",
+      department: "Infrastructure",
+      role: "System Principal",
       riskScore: 0,
     });
   }
@@ -368,8 +390,8 @@ function generateSingleVariant(
     const rootCause = substituteTokens(incTemplate.rootCauseTemplate, tokens);
     const tempIncidentAlertIds: string[] = [];
 
-    // Base time offset for this incident (spread over morning shift)
-    const incBaseMinutes = incIdx * 30 + timeRng.int(5, 20);
+    // Base jitter offset for this incident
+    const incBaseMinutes = timeRng.int(-5, 15);
 
     for (const stage of incTemplate.stages) {
       const stageOffset = timeRng.int(stage.timingOffsetMinutes.min, stage.timingOffsetMinutes.max);
@@ -499,11 +521,11 @@ function generateSingleVariant(
     if (benignTpl.timePattern === "business_hours") {
       timeMinutes = timeRng.int(10, 240);
     } else if (benignTpl.timePattern === "batch_window_nightly") {
-      timeMinutes = timeRng.int(-120, 10);
-    } else if (benignTpl.timePattern === "batch_window_maintenance") {
       timeMinutes = timeRng.int(-60, 30);
+    } else if (benignTpl.timePattern === "batch_window_maintenance") {
+      timeMinutes = timeRng.int(-30, 90);
     } else {
-      timeMinutes = timeRng.int(-100, 300);
+      timeMinutes = timeRng.int(-45, 220);
     }
     const noiseEpoch = shiftEpoch + timeMinutes * 60 * 1000;
     const noiseTime = formatIsoTime(noiseEpoch);

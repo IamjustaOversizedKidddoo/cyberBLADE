@@ -106,8 +106,8 @@ export const incidentStageTemplateSchema = z.object({
   name: z.string().min(1),
   phase: mitreAttackPhaseSchema,
   timingOffsetMinutes: z.object({
-    min: z.number().nonnegative(),
-    max: z.number().nonnegative(),
+    min: z.number(),
+    max: z.number(),
   }),
   jitterMinutes: z.number().nonnegative().default(2),
   branching: z
