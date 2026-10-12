@@ -84,7 +84,7 @@ export function ExamReportDialog({ reports }: Props) {
                 id="examType"
                 value={examType}
                 onChange={(e) => setExamType(e.target.value)}
-                className="w-full rounded-xs border border-line bg-surface-subtle px-3 py-1.5 font-ui text-xs text-ink focus:border-cyan focus:outline-none"
+                className="w-full rounded-xs border border-line bg-surface-subtle px-3 py-1.5 font-ui text-xs text-ink focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
               >
                 <option value="CompTIA Security+ (SY0-701)">CompTIA Security+ (SY0-701)</option>
                 <option value="CompTIA Network+ (N10-009)">CompTIA Network+ (N10-009)</option>
@@ -106,7 +106,7 @@ export function ExamReportDialog({ reports }: Props) {
                   placeholder="e.g. 780"
                   value={score}
                   onChange={(e) => setScore(e.target.value)}
-                  className="w-full rounded-xs border border-line bg-surface-subtle px-3 py-1.5 font-mono text-xs text-ink focus:border-cyan focus:outline-none"
+                  className="w-full rounded-xs border border-line bg-surface-subtle px-3 py-1.5 font-mono text-xs text-ink focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
                 />
               </div>
 
@@ -120,7 +120,7 @@ export function ExamReportDialog({ reports }: Props) {
                   required
                   value={maxScore}
                   onChange={(e) => setMaxScore(e.target.value)}
-                  className="w-full rounded-xs border border-line bg-surface-subtle px-3 py-1.5 font-mono text-xs text-ink focus:border-cyan focus:outline-none"
+                  className="w-full rounded-xs border border-line bg-surface-subtle px-3 py-1.5 font-mono text-xs text-ink focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
                 />
               </div>
             </div>
@@ -132,7 +132,7 @@ export function ExamReportDialog({ reports }: Props) {
                 type="checkbox"
                 checked={passed}
                 onChange={(e) => setPassed(e.target.checked)}
-                className="rounded-xs text-cyan focus:ring-cyan"
+                className="rounded-xs text-cyan focus:ring-cyan focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
               />
               <span>Examination Passed</span>
             </label>
@@ -148,14 +148,14 @@ export function ExamReportDialog({ reports }: Props) {
               placeholder="e.g. PBQs matched our lab scenarios closely"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-xs border border-line bg-surface-subtle px-3 py-1.5 font-sans text-xs text-ink focus:border-cyan focus:outline-none"
+              className="w-full rounded-xs border border-line bg-surface-subtle px-3 py-1.5 font-sans text-xs text-ink focus:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
             />
           </div>
 
           <button
             type="submit"
             disabled={pending}
-            className="rounded-xs bg-cyan px-5 py-2 font-ui text-xs font-bold tracking-wider text-void hover:bg-cyan/90 transition-colors disabled:opacity-50"
+            className="rounded-xs bg-cyan px-5 py-2 font-ui text-xs font-bold tracking-wider text-void hover:bg-cyan/90 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
           >
             {pending ? "RECORDING..." : "SAVE VERIFICATION RECORD"}
           </button>
