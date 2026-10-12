@@ -1,0 +1,50 @@
+version: 1
+skills:
+  - id: soc_alert_triage
+    title: "SOC Operations & Alert Handling"
+    category: operations
+    description: "Triage incoming alert queues, separate true attacks from ambient noise, prioritize by severity, and make defensible disposition decisions."
+  - id: soc_phishing_analysis
+    title: "Phishing & Email Analysis"
+    category: email
+    description: "Analyze email headers, sender reputation, credential harvesting links, and suspicious attachments."
+  - id: soc_network_traffic
+    title: "Network Traffic Analysis"
+    category: network
+    description: "Inspect packet captures and connection flows for abnormal protocols, beaconing, DNS tunneling, and data exfiltration."
+  - id: soc_network_monitoring
+    title: "Network Security Monitoring"
+    category: network
+    description: "Interpret IDS/IPS/Zeek alerts, identify signature matches, and validate against raw flow logs."
+  - id: soc_windows_logs
+    title: "Windows Log Analysis"
+    category: endpoint
+    description: "Analyze Security event logs, Sysmon telemetry, process executions, logon types, and registry modifications."
+  - id: soc_linux_logs
+    title: "Linux Log Analysis"
+    category: endpoint
+    description: "Analyze auth.log, syslog, scheduled cron jobs, sudo events, and suspicious daemon activity."
+  - id: soc_web_log_analysis
+    title: "Web & Application Log Analysis"
+    category: application
+    description: "Inspect WAF and HTTP server access logs for SQL injection, traversal, webshell interactions, and scanner traffic."
+  - id: soc_malware_triage
+    title: "Malware Triage Concepts"
+    category: malware
+    description: "Perform safe static triage: compute hashes, inspect strings, evaluate sandbox reports, and identify LOLBins."
+  - id: soc_threat_intel
+    title: "Threat Intelligence & Enrichment"
+    category: intelligence
+    description: "Correlate IOCs against reputation feeds, WHOIS data, and contextualize alerts with MITRE ATT&CK techniques."
+  - id: soc_siem_correlation
+    title: "SIEM Querying & Event Correlation"
+    category: siem
+    description: "Construct queries to filter, aggregate, and timeline multi-source telemetry across hosts and network devices."
+  - id: soc_incident_response
+    title: "Incident Response Lifecycle"
+    category: operations
+    description: "Execute triage, containment recommendations, eradication guidance, and evidence preservation following NIST/SANS."
+  - id: soc_case_management
+    title: "Case Management & Incident Grouping"
+    category: operations
+    description: "Group related alerts into cohesive incident cases, establish attack timelines, and record forensic case notes."

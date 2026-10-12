@@ -52,6 +52,23 @@ async function main(): Promise<number> {
     },
     now: new Date(),
   });
+  // Validate SOC scenarios
+  try {
+    const socDir = "content/soc/scenarios";
+    const socFiles = (await fs.readdir(socDir)).filter((f) => f.endsWith(".yaml") || f.endsWith(".yml"));
+    for (const sf of socFiles) {
+      const { validateSocScenario } = await import("@/lib/lab-engine/soc/validator");
+      const socContent = await fs.readFile(`${socDir}/${sf}`, "utf8");
+      const socRes = validateSocScenario(parseYaml(socContent), sf);
+      errors.push(...socRes.errors);
+      for (const w of socRes.warnings) console.warn(`warning: ${w}`);
+    }
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+      errors.push(`failed to check soc scenarios: ${(err as Error).message}`);
+    }
+  }
+
   errors.push(...result.errors);
 
   for (const w of result.warnings) console.warn(`warning: ${w}`);
@@ -60,7 +77,7 @@ async function main(): Promise<number> {
     console.error(`\n✗ content check failed: ${errors.length} error(s)`);
     return 1;
   }
-  console.log(`✓ content OK — ${lessons.length} lessons, ${labs.length} labs, ${coverage.objectives.length} objectives`);
+  console.log(`✓ content OK — ${lessons.length} lessons, ${labs.length} labs, ${coverage.objectives.length} objectives, SOC scenarios validated`);
   return 0;
 }
 

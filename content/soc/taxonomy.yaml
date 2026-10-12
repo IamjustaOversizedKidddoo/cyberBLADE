@@ -1,0 +1,41 @@
+version: 1
+taxonomies:
+  - id: true_positive
+    label: "True Positive"
+    shortCode: "TP"
+    color: "danger"
+    description: "Malicious activity confirmed. Detection rule triggered on genuine threat or adversary actions."
+    whenToUse: "Use when telemetry demonstrates malicious behavior (e.g. credential harvesting, unauthorized execution, C2 callback)."
+    requiresEscalationRecommendation: true
+
+  - id: false_positive
+    label: "False Positive"
+    shortCode: "FP"
+    color: "success"
+    description: "Benign activity misidentified as malicious by rule logic or overly broad signatures."
+    whenToUse: "Use when the observed event is completely benign and normal (e.g. broken regex matching safe file, normal browser telemetry)."
+    requiresEscalationRecommendation: false
+
+  - id: benign_true_positive
+    label: "Benign True Positive"
+    shortCode: "BTP"
+    color: "info"
+    description: "Rule triggered accurately on the specified condition, but the activity is authorized, expected, or approved."
+    whenToUse: "Use when an authorized vulnerability scan, scheduled admin script, or approved IT maintenance triggers a security rule."
+    requiresEscalationRecommendation: false
+
+  - id: duplicate
+    label: "Duplicate / Related"
+    shortCode: "DUP"
+    color: "warning"
+    description: "Redundant alert belonging to an already identified parent alert or active case."
+    whenToUse: "Use when identical or cascaded alerts fire for the same underlying event or during the same active investigation."
+    requiresEscalationRecommendation: false
+
+  - id: needs_more_info
+    label: "Needs More Information"
+    shortCode: "NMI"
+    color: "muted"
+    description: "Inconclusive telemetry. Requires endpoint isolation, raw packet capture, or user confirmation before closure."
+    whenToUse: "Use sparingly when available logs are insufficient to confirm or deny compromise and secondary triage is required."
+    requiresEscalationRecommendation: true
