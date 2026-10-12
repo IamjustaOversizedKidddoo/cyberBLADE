@@ -299,6 +299,9 @@
 .band-void { --band-bg: var(--color-void); --band-fg: var(--color-ink); --band-accent: var(--color-cyan); }
 .band-cyan { --band-bg: var(--color-cyan); --band-fg: var(--color-void); --band-accent: var(--color-void); }
 .band-paper, .band-void, .band-cyan { background: var(--band-bg); color: var(--band-fg); }
+.band-paper .text-muted { color: #334155 !important; }
+.band-paper .text-pink { color: #be185d !important; }
+.band-paper .text-cyan { color: #0284c7 !important; }
 
 /* High contrast doubles as the dark-room mode: light bands turn dark (owner decision 2026-10-07). */
 [data-contrast="high"] .band-paper,

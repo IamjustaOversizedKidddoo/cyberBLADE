@@ -207,3 +207,23 @@ export function IconCircle({ className = "h-3.5 w-3.5", ...props }: SVGProps<SVG
     </svg>
   );
 }
+
+export function IconVolume2({ className = "h-4 w-4", ...props }: SVGProps<SVGSVGElement>) {
+  return (
+    <svg aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className={className} {...props}>
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14" />
+    </svg>
+  );
+}
+
+export function IconVolumeX({ className = "h-4 w-4", ...props }: SVGProps<SVGSVGElement>) {
+  return (
+    <svg aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className={className} {...props}>
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <line x1="23" y1="9" x2="17" y2="15" strokeLinecap="round" />
+      <line x1="17" y1="9" x2="23" y2="15" strokeLinecap="round" />
+    </svg>
+  );
+}
+

@@ -33,6 +33,13 @@ import {
 import { BRAND } from "@/lib/brand";
 import { TRACKS } from "@/lib/catalog/tracks";
 
+import { getPlatformStats } from "@/lib/content/stats";
+import { HowItWorks } from "@/components/landing/HowItWorks";
+import { EngineShowcase } from "@/components/landing/EngineShowcase";
+import { HandlerIntro } from "@/components/landing/HandlerIntro";
+import { CharterSummary } from "@/components/landing/CharterSummary";
+import { FaqSection } from "@/components/landing/FaqSection";
+
 /** Scene-language helper: start values for the scene engine (lib/art/scene.ts). */
 const fx = (vars: Record<string, number | string>) => JSON.stringify(vars);
 
@@ -43,8 +50,17 @@ const CAMERA = "contents md:col-span-12 md:grid md:grid-cols-12 md:gap-x-6 md:ga
 const WALL = ["tilt--1", "tilt-1 md:mt-16", "tilt-1 md:-mt-4", "tilt--2 md:mt-12"];
 const STAMP_TONE: Record<LaunchTrackId, "purple" | "cyan" | "pink"> = { purple: "purple", soc: "cyan", pentest: "pink", cloud: "cyan" };
 
-export default function Home() {
+export default async function Home() {
   const launch = TRACKS.filter((t) => t.status === "open");
+  const stats = await getPlatformStats();
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: BRAND.name,
+    url: "https://cyberblade.dev",
+    description: BRAND.tagline,
+  };
 
   return (
     <>
@@ -92,13 +108,30 @@ export default function Home() {
                   {BRAND.tagline}
                 </span>
               </p>
-              <div className="mt-8">
+              <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Magnetic>
                   <Link href="/start" className={`${START_BUTTON} border-ink bg-void text-ink hover:border-cyan hover:bg-cyan hover:text-void`}>
                     Start
                   </Link>
                 </Magnetic>
+                <a href="#curriculum" className="inline-flex min-h-[44px] items-center justify-center border border-ink/40 bg-void/80 px-6 py-2.5 font-ui text-base tracking-wider text-muted hover:border-cyan hover:text-cyan transition-colors">
+                  See the curriculum
+                </a>
               </div>
+              <div className="mt-6 flex flex-wrap items-center gap-3 font-mono text-xs text-muted">
+                <span className="border border-line/60 bg-void px-2.5 py-1 text-cyan">
+                  {stats.lessonCount} LESSONS
+                </span>
+                <span className="border border-line/60 bg-void px-2.5 py-1 text-emerald">
+                  {stats.labCount} LABS
+                </span>
+                <span className="border border-line/60 bg-void px-2.5 py-1 text-purple">
+                  {stats.engineCount} ENGINES
+                </span>
+              </div>
+              <p className="mt-3 text-xs text-muted max-w-lg font-sans">
+                Aligned with published domains of CompTIA Security+, Network+, A+, and ISC2 CC (educational alignment only; no affiliation or endorsement).
+              </p>
             </div>
           </ScrollScene>
         </PosterSection>
@@ -267,6 +300,7 @@ export default function Home() {
               ))}
             </ol>
 
+            <div id="curriculum" className="scroll-mt-24" />
             <h2 id="tracks" className="mt-20 scroll-mt-24 font-ui text-2xl">Then pick the job you want</h2>
             <p className="mt-2 max-w-[52ch] text-lg">Everyone starts with the shared core. After Rank 2 you choose a path.</p>
             <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-x-12">
@@ -286,6 +320,13 @@ export default function Home() {
         </PosterSection>
         <InkEdge edge="bottom" tone="cyan" className="band-paper" />
 
+        {/* Detailed Curriculum, Engine Showcase, The Handler, Ethics Charter, and FAQ */}
+        <HowItWorks />
+        <EngineShowcase />
+        <HandlerIntro />
+        <CharterSummary />
+        <FaqSection />
+
         <PosterSection tone="cyan" labelledBy="start-heading" className="py-20 sm:py-28" backdrop={<HalftoneField tone="current" density={6} fade="left" className="opacity-20" />}>
           <PosterSection.Type className="col-span-full md:col-span-8">
             <PosterHeading id="start-heading" lines={["START AT", "RANK_00"]} size="section" cursor />
@@ -301,6 +342,11 @@ export default function Home() {
             </div>
           </PosterSection.Caption>
         </PosterSection>
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </main>
     </>
   );
