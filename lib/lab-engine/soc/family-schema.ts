@@ -44,6 +44,7 @@ export const socFamilyMetadataSchema = z.object({
   author: z.string().min(1),
   reviewStatus: reviewStatusSchema,
   reviewerNotes: z.string().optional(),
+  published: z.boolean().default(false),
   publishedHash: z.string().optional(),
 }).refine(
   (data) => {

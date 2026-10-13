@@ -117,4 +117,45 @@ test.describe("SOC Tier-1 Workspace Engine (E2E & Accessibility)", () => {
     await alertTab.click();
     await expect(page.getByText("CMDB Asset Profile")).toBeVisible();
   });
+
+  test("starts a shift profile from UI, plays a slice, refreshes/resumes, and checks axe compliance", async ({ page }) => {
+    await page.goto("/labs/soc/shift-quiet-day");
+    await page.waitForLoadState("domcontentloaded");
+
+    // 1. Verify shift workspace rendered with dynamic variant
+    await expect(page.getByText("SOC//WORKSPACE")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/Quiet Day Shift/i)).toBeVisible();
+
+    // 2. Select first alert
+    const firstRow = page.locator('[data-testid^="alert-row-"]').first();
+    await expect(firstRow).toBeVisible();
+    await firstRow.click();
+
+    // 3. Make a decision
+    const btpBtn = page.getByRole("button", { name: /^Benign True Positive/i });
+    if (await btpBtn.isVisible()) {
+      await btpBtn.click();
+    } else {
+      await page.getByRole("button", { name: /^False Positive/i }).click();
+    }
+    await page.getByPlaceholder(/State: WHAT occurred/i).fill("Verified baseline routine operational activity.");
+    await page.getByRole("button", { name: /Save Decision/i }).click();
+    await expect(page.getByText("Triaged ✓")).toBeVisible({ timeout: 10_000 });
+
+    // 4. Refresh / Resume test: ensure session and decision persist
+    await page.reload();
+    await page.waitForLoadState("domcontentloaded");
+    await expect(page.getByText("SOC//WORKSPACE")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("Triaged ✓")).toBeVisible();
+
+    // 5. Axe WCAG 2.2 AA Accessibility Check
+    const axeResults = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
+      .exclude(".neon-glitch-copy")
+      .analyze();
+    const seriousOrCritical = axeResults.violations.filter(
+      (v) => v.impact === "serious" || v.impact === "critical",
+    );
+    expect(seriousOrCritical).toHaveLength(0);
+  });
 });

@@ -1,0 +1,26 @@
+id: soc-shift-quiet-day
+title: "SOC Shift: Quiet Day Operations & Verification"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 30
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: shift-quiet-day
+objectives:
+  - id: o1
+    prompt: "Complete triage decisions for all queue alerts and submit your shift verification token."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Filter queue alerts by Source: Email Gateway and Authentication to review priority events."
+    - "Inspect sender verification headers and identify the credential harvesting domain."
+    - "Submit triage decisions in the top bar to retrieve your evaluation completion token."
+xp: 120
+mitre:
+  - "T1566.002"
+  - "T1110.001"

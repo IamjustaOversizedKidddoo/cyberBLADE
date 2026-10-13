@@ -38,16 +38,14 @@ export function SocWorkspace({ session, onExit }: Props) {
   const [isKbdHelpOpen, setIsKbdHelpOpen] = useState(false);
   const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [liveAnnouncement, setLiveAnnouncement] = useState("");
+  const [actionAnnouncement, setActionAnnouncement] = useState("");
 
   const activeAlert = scenario.alerts.find((a) => a.id === selectedAlertId) ?? scenario.alerts[0];
-
-  // Announce alert selection to screen readers
-  useEffect(() => {
-    if (activeAlert) {
-      setLiveAnnouncement(`Selected alert ${activeAlert.id}: ${activeAlert.ruleName}, severity ${activeAlert.severity}`);
-    }
-  }, [activeAlert]);
+  const liveAnnouncement = actionAnnouncement || (
+    activeAlert
+      ? `Selected alert ${activeAlert.id}: ${activeAlert.ruleName}, severity ${activeAlert.severity}`
+      : ""
+  );
 
   // Global keyboard shortcuts (when not in inputs)
   useEffect(() => {
@@ -88,7 +86,7 @@ export function SocWorkspace({ session, onExit }: Props) {
         ...prev,
         [activeAlert.id]: record,
       }));
-      setLiveAnnouncement(`Decision recorded for alert ${activeAlert.id}: ${input.disposition}`);
+      setActionAnnouncement(`Decision recorded for alert ${activeAlert.id}: ${input.disposition}`);
     },
     [session.attempt.id, activeAlert],
   );

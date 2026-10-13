@@ -1,0 +1,26 @@
+id: soc-fam-alert-fatigue-01
+title: "SOC Practice: Operational Noise & False-Positive Dissection"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: soc-f-alert-fatigue-01
+objectives:
+  - id: o1
+    prompt: "Differentiate routine scanner bursts, maintenance windows, and duplicate sensor triggers from real alerts."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Verify vulnerability scanner IP addresses against internal IT maintenance schedules."
+    - "Differentiate flapping keepalive triggers from genuine network anomalies."
+    - "Submit triage decisions to collect your evaluation token."
+xp: 100
+mitre:
+  - "T1046"
+  - "T1110.001"

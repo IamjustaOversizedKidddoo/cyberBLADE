@@ -50,7 +50,9 @@ export async function loadSocScenario(scenarioId: string): Promise<SocScenario> 
 }
 
 import { socFamilySchema, type SocFamily, type DifficultyLevel } from "./family-schema";
-import { generateSocVariant, GENERATOR_VERSION } from "./generator";
+import { shiftProfileSchema, type ShiftProfile } from "./shift-schema";
+import { generateSocVariant, computeScenarioHash, GENERATOR_VERSION } from "./generator";
+import { composeShiftScenario } from "./shift-composer";
 import { newSeed } from "@/lib/generators/rng";
 
 export async function loadSocFamily(familyId: string): Promise<SocFamily> {
@@ -64,7 +66,23 @@ export async function loadSocFamily(familyId: string): Promise<SocFamily> {
   return result.data;
 }
 
+export async function loadSocShift(shiftId: string): Promise<ShiftProfile> {
+  const filePath = path.resolve(`content/soc/shifts/${shiftId}.yaml`);
+  const rawContent = await fs.readFile(filePath, "utf8");
+  const parsed = parseYaml(rawContent);
+  const result = shiftProfileSchema.safeParse(parsed);
+  if (!result.success) {
+    throw new Error(`Shift validation failed: ${result.error.issues.map((i) => i.message).join("; ")}`);
+  }
+  return result.data;
+}
+
 export async function resolveScenarioForAttempt(attempt: SocAttemptRecord): Promise<SocScenario> {
+  if (attempt.scenarioId.startsWith("shift-") || (attempt.familyId && attempt.familyId.startsWith("shift-"))) {
+    const shiftId = attempt.familyId ?? attempt.scenarioId;
+    const shiftProfile = await loadSocShift(shiftId);
+    return composeShiftScenario(shiftProfile, attempt.seed);
+  }
   if (attempt.familyId || attempt.scenarioId.startsWith("soc-f-")) {
     const familyId = attempt.familyId ?? attempt.scenarioId;
     const family = await loadSocFamily(familyId);
@@ -85,11 +103,41 @@ export async function startSocSession(
   options?: { difficulty?: DifficultyLevel },
 ): Promise<SocSessionClient> {
   const isFamily = scenarioId.startsWith("soc-f-");
+  const isShift = scenarioId.startsWith("shift-");
   let attempt = await ctx.repo.findActiveSocAttempt(userId, scenarioId);
   let scenario: SocScenario;
 
   if (!attempt) {
-    if (isFamily) {
+    if (isShift) {
+      const shiftProfile = await loadSocShift(scenarioId);
+      const usedSeeds = (await ctx.repo.listUsedSeeds(userId, shiftProfile.id)) ?? [];
+      let seed = newSeed();
+      let rollCount = 0;
+      while (usedSeeds.includes(seed) && rollCount < 10) {
+        seed = newSeed();
+        rollCount++;
+      }
+      await ctx.repo.recordUsedSeed(userId, shiftProfile.id, seed);
+
+      scenario = composeShiftScenario(shiftProfile, seed);
+      const contentHash = computeScenarioHash(scenario);
+
+      attempt = await ctx.repo.createSocAttempt({
+        userId,
+        scenarioId,
+        seed,
+        status: "in_progress",
+        scoreSummary: null,
+        startedAt: ctx.now().toISOString(),
+        submittedAt: null,
+        updatedAt: ctx.now().toISOString(),
+        familyId: shiftProfile.id,
+        familyVersion: shiftProfile.version,
+        generatorVersion: GENERATOR_VERSION,
+        difficulty: shiftProfile.difficulty,
+        scenarioHash: contentHash,
+      });
+    } else if (isFamily) {
       const family = await loadSocFamily(scenarioId);
       const difficulty = options?.difficulty ?? "intermediate";
 

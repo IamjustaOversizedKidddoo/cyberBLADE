@@ -1,0 +1,27 @@
+id: soc-shift-night-telemetry-gaps
+title: "SOC Shift: Night Operations & Telemetry Degradation"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 55
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: shift-night-telemetry-gaps
+objectives:
+  - id: o1
+    prompt: "Investigate after-hours identity and data staging anomalies amidst telemetry blind spots, then enter your token."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Examine cloud IAM audit trails for off-hours role policy modifications and new access key generation."
+    - "Correlate removable storage volume mount events with user authorization contexts."
+    - "Submit triage decisions and collect your shift debrief completion token."
+xp: 220
+mitre:
+  - "T1098"
+  - "T1078.004"
+  - "T1052.001"

@@ -1,0 +1,26 @@
+id: soc-fam-phishing-cred-01
+title: "SOC Practice: Phishing to Credential Compromise"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: soc-f-phishing-cred-01
+objectives:
+  - id: o1
+    prompt: "Investigate email gateway and authentication alerts, confirm account takeover, and enter your evaluation token."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Check the inbound email gateway log for external link domains not matching corporate portals."
+    - "Inspect authentication logs for logins originating from suspicious external IP addresses shortly after the link click."
+    - "Submit triage decisions and collect your verification token."
+xp: 100
+mitre:
+  - "T1566.002"
+  - "T1078.004"

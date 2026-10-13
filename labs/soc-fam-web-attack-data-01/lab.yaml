@@ -1,0 +1,26 @@
+id: soc-fam-web-attack-data-01
+title: "SOC Practice: Web Application Attacks & SQL Injection"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 30
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: soc-f-web-attack-data-01
+objectives:
+  - id: o1
+    prompt: "Investigate web server access logs and WAF alerts to differentiate blocked scans from successful SQLi."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Check HTTP response status codes: 403 Forbidden indicates blocked probes, 200 OK with high response size indicates potential exploit success."
+    - "Inspect database query error logs correlating with public web parameters."
+    - "Submit triage decisions to collect your evaluation token."
+xp: 120
+mitre:
+  - "T1190"
+  - "T1505.003"

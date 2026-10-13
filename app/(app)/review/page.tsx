@@ -52,7 +52,7 @@ export default async function ReviewPage() {
           </Link>
 
           <span className="font-mono text-xs text-muted">
-            OPERATOR: {operator.handle.toUpperCase()} // RANK_{operator.rank}
+            OPERATOR: {operator.handle.toUpperCase()} {"//"} RANK_{operator.rank}
           </span>
         </div>
 

@@ -258,7 +258,7 @@ export function generateWindowsSecurityLog(p: WindowsSecurityLogParams) {
 export function generateLinuxAuthLog(p: LinuxAuthLogParams) {
   const pid = p.pid ?? 24190;
   let line = "";
-  let actionStr = p.action;
+  const actionStr = p.action;
 
   switch (p.action) {
     case "failed_password":

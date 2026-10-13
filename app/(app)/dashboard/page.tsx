@@ -156,7 +156,7 @@ export default async function DashboardPage() {
             <div>
               <div className="flex items-center gap-2">
                 <p className="font-ui text-xs tracking-widest text-cyan font-bold uppercase truncate">
-                  {nextAction.badge} // {nextAction.title.toUpperCase()}
+                  {nextAction.badge} {"//"} {nextAction.title.toUpperCase()}
                 </p>
                 {nextAction.estimatedMinutes > 0 && (
                   <span className="font-mono text-[10px] text-muted border border-line px-1.5 py-0.5 rounded-xs">
