@@ -1,0 +1,44 @@
+id: "shift-alert-storm"
+version: 1
+title: "Alert-Storm Shift: High Noise & Rapid Triage Under Fatigue"
+level: "L1"
+description: "A high-pressure alert-storm scenario with over 180 incoming events, flapping SIEM detection rules, routine scanner bursts, and stealthy exfiltration concealed beneath informational noise."
+estimatedMinutes:
+  min: 50
+  max: 85
+difficulty: "advanced"
+shiftWindow: "day_shift"
+targetAlertCount:
+  min: 180
+  max: 230
+organizationArchetypes:
+  - "org-ecommerce-retail"
+  - "org-cloud-fintech"
+  - "org-global-logistics"
+incidentSelections:
+  - familyId: "soc-f-outbound-exfil-01"
+    stageOffsetMinutes: 20
+    linkToPreviousVictim: false
+  - familyId: "soc-f-brute-force-auth-01"
+    stageOffsetMinutes: 80
+    linkToPreviousVictim: false
+skillsTested:
+  - "soc-sk-alert-triage"
+  - "soc-sk-fp-identification"
+  - "soc-sk-cred-attacks"
+  - "soc-sk-network-indicators"
+  - "soc-sk-data-exfiltration"
+  - "soc-sk-correlation"
+  - "soc-sk-scope-impact"
+  - "soc-sk-escalation"
+  - "soc-sk-documentation"
+noiseMix:
+  alertFatigueRatio: 0.75
+  includeFamilyBenign: true
+  extraNoiseCount: 40
+telemetryGaps:
+  count: 1
+  hideAlertProbability: 0.15
+debrief:
+  briefingTemplate: "Emergency surge at {orgName}: alert queue has spiked to {alertCount} alerts due to concurrent internal maintenance and vulnerability scanners. Analysts must resist fatigue, filter out flapping threshold rules, and detect true anomalous exfiltration."
+  guidanceTemplate: "Alert-storm debrief for {orgName}: The critical finding was high-volume DNS query exfiltration and outbound data archive staging amidst routine backup jobs. Analysts who relied solely on tool severity ratings missed low-rated stealthy exfiltration signals amidst loud vulnerability scanner noise."

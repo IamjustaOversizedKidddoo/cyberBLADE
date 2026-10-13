@@ -1,0 +1,43 @@
+id: "shift-night-telemetry-gaps"
+version: 1
+title: "Night Shift: Telemetry Degradation & Cloud Anomalies"
+level: "L1"
+description: "An overnight shift characterized by low general activity, missing telemetry sources, and subtle internal threats including rogue cloud role assignments and unauthorized off-hours data staging."
+estimatedMinutes:
+  min: 45
+  max: 75
+difficulty: "advanced"
+shiftWindow: "night_shift"
+targetAlertCount:
+  min: 110
+  max: 150
+organizationArchetypes:
+  - "org-cloud-fintech"
+  - "org-midmarket-saas"
+  - "org-regional-bank"
+incidentSelections:
+  - familyId: "soc-f-insider-policy-01"
+    stageOffsetMinutes: 15
+    linkToPreviousVictim: false
+  - familyId: "soc-f-cloud-identity-01"
+    stageOffsetMinutes: 55
+    linkToPreviousVictim: false
+skillsTested:
+  - "soc-sk-alert-triage"
+  - "soc-sk-fp-identification"
+  - "soc-sk-insider-policy"
+  - "soc-sk-cloud-identity"
+  - "soc-sk-correlation"
+  - "soc-sk-scope-impact"
+  - "soc-sk-escalation"
+  - "soc-sk-documentation"
+noiseMix:
+  alertFatigueRatio: 0.45
+  includeFamilyBenign: true
+  extraNoiseCount: 30
+telemetryGaps:
+  count: 2
+  hideAlertProbability: 0.35
+debrief:
+  briefingTemplate: "Night operations at {orgName}. Queue currently lists {alertCount} alerts. Note that scheduled perimeter log maintenance may cause intermittent endpoint telemetry gaps. Correlate identity provider audit trails with network flow logs to confirm unauthorized account modifications."
+  guidanceTemplate: "Night shift review for {orgName}: Analysts successfully navigated telemetry gaps by correlating cloud audit records with external IP logins to identify unauthorized administrator privilege escalation. Off-hours bulk data staging was identified as an insider policy violation rather than routine server maintenance."

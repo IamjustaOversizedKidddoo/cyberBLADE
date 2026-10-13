@@ -1,0 +1,40 @@
+id: "shift-quiet-day"
+version: 1
+title: "Quiet Day Shift: Standard Operations & Verification"
+level: "L1"
+description: "A steady morning shift with routine corporate activity, low noise volume, and two clear security incidents requiring alert triage, sender verification, and brute-force recognition."
+estimatedMinutes:
+  min: 25
+  max: 45
+difficulty: "beginner"
+shiftWindow: "day_shift"
+targetAlertCount:
+  min: 60
+  max: 85
+organizationArchetypes:
+  - "org-midmarket-saas"
+  - "org-regional-bank"
+incidentSelections:
+  - familyId: "soc-f-phishing-cred-01"
+    stageOffsetMinutes: 15
+    linkToPreviousVictim: false
+  - familyId: "soc-f-brute-force-auth-01"
+    stageOffsetMinutes: 60
+    linkToPreviousVictim: false
+skillsTested:
+  - "soc-sk-alert-triage"
+  - "soc-sk-fp-identification"
+  - "soc-sk-phishing-analysis"
+  - "soc-sk-cred-attacks"
+  - "soc-sk-escalation"
+  - "soc-sk-documentation"
+noiseMix:
+  alertFatigueRatio: 0.35
+  includeFamilyBenign: true
+  extraNoiseCount: 20
+telemetryGaps:
+  count: 0
+  hideAlertProbability: 0.0
+debrief:
+  briefingTemplate: "Welcome to your day shift at {orgName}. Queue shows {alertCount} alerts across email gateways, endpoints, and perimeter authentications. Maintain SLA response times while validating sender authentication headers and monitoring external authentication velocity."
+  guidanceTemplate: "Shift review for {orgName}: Analysts correctly prioritized the credential harvesting link targeting finance personnel over benign marketing announcements. The secondary brute-force attempt against the staging portal was properly classified and mitigated without falling for informational alert fatigue."
