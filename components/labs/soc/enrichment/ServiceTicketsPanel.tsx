@@ -2,7 +2,7 @@
 
 import type { TicketHistoryResult, EntityType } from "@/lib/lab-engine/soc/enrichment/types";
 import { Badge } from "@/components/ui/Badge";
-import { IconCheck, IconClock, IconAlertTriangle, IconFile } from "@/components/ui/icons";
+import { IconClock, IconFile } from "@/components/ui/icons";
 
 type Props = {
   data: TicketHistoryResult;
@@ -90,10 +90,24 @@ export function ServiceTicketsPanel({ data, onPivot, onAttachEvidence }: Props) 
                 <h5 className="font-bold text-ink text-[12px]">{t.title}</h5>
                 <div className="grid grid-cols-2 gap-2 text-[11px] text-muted pt-1">
                   <div>
-                    <span>Submitter:</span> <strong className="text-ink">{t.submitter}</strong>
+                    <span>Submitter:</span>{" "}
+                    <button
+                      type="button"
+                      onClick={() => onPivot("user", t.submitter)}
+                      className="text-cyan font-semibold hover:underline"
+                    >
+                      {t.submitter}
+                    </button>
                   </div>
                   <div>
-                    <span>Approver:</span> <strong className="text-ink">{t.approver}</strong>
+                    <span>Approver:</span>{" "}
+                    <button
+                      type="button"
+                      onClick={() => onPivot("user", t.approver)}
+                      className="text-cyan font-semibold hover:underline"
+                    >
+                      {t.approver}
+                    </button>
                   </div>
                 </div>
               </div>

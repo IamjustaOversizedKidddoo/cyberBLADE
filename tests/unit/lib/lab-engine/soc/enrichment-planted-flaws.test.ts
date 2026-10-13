@@ -9,8 +9,6 @@ import {
   detectEnrichmentTells,
   verifySourceCalibration,
 } from "@/lib/lab-engine/soc/enrichment/validator";
-import { evaluateSourceReputation } from "@/lib/lab-engine/soc/enrichment/sources";
-import { createRng } from "@/lib/generators/rng";
 import type { EntityRole, ReputationSourceReport } from "@/lib/lab-engine/soc/enrichment/types";
 
 function loadFamily(familyId: string): SocFamily {
@@ -59,7 +57,7 @@ describe("SOC Enrichment Planted Flaw & Tell Detection Suite", () => {
   });
 
   it("Flaw 4: Artificial latency disparity between malicious and benign must be caught by detectEnrichmentTells", () => {
-    const samples: Array<{ role: EntityRole; payload: any; latencyMs: number }> = [];
+    const samples: Array<{ role: EntityRole; payload: Record<string, unknown>; latencyMs: number }> = [];
 
     // 10 attacker queries with 120ms latency
     for (let i = 0; i < 10; i++) {
@@ -76,7 +74,7 @@ describe("SOC Enrichment Planted Flaw & Tell Detection Suite", () => {
   });
 
   it("Flaw 5: Unanimous malicious verdict tell (zero false negatives) must be caught by detectEnrichmentTells", () => {
-    const samples: Array<{ role: EntityRole; payload: any }> = [];
+    const samples: Array<{ role: EntityRole; payload: Record<string, unknown> }> = [];
 
     // 10 attacker queries where all sources report 100% malicious without any disagreement
     for (let i = 0; i < 10; i++) {
@@ -145,7 +143,7 @@ describe("SOC Enrichment Planted Flaw & Tell Detection Suite", () => {
       });
     }
 
-    const calibResult = verifySourceCalibration(brokenSamples as any);
+    const calibResult = verifySourceCalibration(brokenSamples);
     expect(calibResult.passed).toBe(false);
     expect(calibResult.rates.threatwatch_community.realizedFP).toBe(0.8);
   });

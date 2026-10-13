@@ -74,7 +74,16 @@ export function CmdbDirectoryPanel({ data, onPivot, onAttachEvidence }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
             <div>
               <span className="text-muted">Assigned IP / Network Zone:</span>
-              <div className="text-ink font-semibold">{asset.ip} ({asset.zone})</div>
+              <div className="flex items-center gap-1.5 pt-0.5">
+                <button
+                  type="button"
+                  onClick={() => onPivot("ip", asset.ip)}
+                  className="text-cyan font-semibold hover:underline"
+                >
+                  {asset.ip}
+                </button>
+                <span className="text-muted">({asset.zone})</span>
+              </div>
             </div>
             <div>
               <span className="text-muted">Asset Role & Purpose:</span>
@@ -86,7 +95,13 @@ export function CmdbDirectoryPanel({ data, onPivot, onAttachEvidence }: Props) {
             </div>
             <div>
               <span className="text-muted">Custodian / Business Owner:</span>
-              <div className="text-ink font-semibold">{asset.owner}</div>
+              <button
+                type="button"
+                onClick={() => onPivot("user", asset.owner)}
+                className="text-cyan font-semibold hover:underline block pt-0.5"
+              >
+                {asset.owner}
+              </button>
             </div>
           </div>
 

@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { SocSeverity } from "../schema";
 
 /**
  * Supported indicator types for Tier-1 SOC investigation

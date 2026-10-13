@@ -1,10 +1,10 @@
-import { createRng, type Rng } from "@/lib/generators/rng";
+import { createRng } from "@/lib/generators/rng";
 
 export function createSubStream(parentSeed: string, subStreamName: string): string {
   return `${parentSeed}:${subStreamName}`;
 }
 
-import type { SocScenario, SocAlert, SocRawEvent } from "../schema";
+import type { SocScenario } from "../schema";
 import type {
   EntityType,
   EntityRole,
@@ -168,10 +168,6 @@ export function generateWhois(
   const rng = createRng(subSeed);
 
   if (entityType === "ip") {
-    const isDocIp =
-      entityValue.startsWith("192.0.2.") ||
-      entityValue.startsWith("198.51.100.") ||
-      entityValue.startsWith("203.0.113.");
     const cidr = entityValue.substring(0, entityValue.lastIndexOf(".")) + ".0/24";
     const asn = `AS${rng.int(64512, 65534)}`;
     const asnOrg = role === "attacker_infra" ? "Offshore Bulletproof Transit Ltd" : "Global Tier-1 Communications Corp";
@@ -462,8 +458,6 @@ export function generateUrlAnalysis(
   urlStr: string,
 ): UrlAnalysisResult {
   const role = resolveEntityRole(scenario, "url", urlStr);
-  const subSeed = createSubStream(seed, `url:${urlStr.toLowerCase()}`);
-  const rng = createRng(subSeed);
 
   let parsedHost = "portal.example";
   let parsedPath = "/login";
@@ -760,9 +754,6 @@ export function generateCmdb(
   entityType: EntityType,
   entityValue: string,
 ): CmdbResult {
-  const subSeed = createSubStream(seed, `cmdb:${entityType}:${entityValue.toLowerCase()}`);
-  const rng = createRng(subSeed);
-
   const normalized = entityValue.toLowerCase();
   if (entityType === "host" || entityType === "ip") {
     const asset = scenario.environment.assets.find(

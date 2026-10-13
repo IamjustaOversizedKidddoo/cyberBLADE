@@ -148,9 +148,15 @@ export function WhoisRecordPanel({ data, onPivot, onAttachEvidence }: Props) {
             <span className="text-muted text-[10px] uppercase font-bold">Authoritative Name Servers:</span>
             <div className="flex flex-wrap gap-1.5">
               {data.nameServers.map((ns: string) => (
-                <span key={ns} className="rounded-xs border border-line bg-console px-2 py-0.5 text-[10px] text-ink font-mono">
+                <button
+                  key={ns}
+                  type="button"
+                  onClick={() => onPivot("domain", ns)}
+                  className="rounded-xs border border-line bg-console px-2 py-0.5 text-[10px] text-cyan hover:bg-surface-hover font-mono"
+                  title={`Pivot to WHOIS/pDNS for ${ns}`}
+                >
                   {ns}
-                </span>
+                </button>
               ))}
             </div>
           </div>

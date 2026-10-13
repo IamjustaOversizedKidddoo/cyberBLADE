@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { UrlAnalysisResult, EntityType, UrlRedirectHop } from "@/lib/lab-engine/soc/enrichment/types";
 import { defangIndicator } from "@/lib/lab-engine/soc/enrichment/detector";
 import { Badge, type BadgeVariant } from "@/components/ui/Badge";
-import { IconCopy, IconCheck, IconGlobe, IconAlertTriangle, IconArrowRight, IconLayers } from "@/components/ui/icons";
+import { IconCopy, IconCheck, IconGlobe, IconLayers } from "@/components/ui/icons";
 
 type Props = {
   data: UrlAnalysisResult;
