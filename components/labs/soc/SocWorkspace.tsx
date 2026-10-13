@@ -10,15 +10,19 @@ import { CaseManagementPanel } from "./CaseManagementPanel";
 import { ShiftBriefingModal } from "./ShiftBriefingModal";
 import { ShiftResultsModal } from "./ShiftResultsModal";
 import { KeyboardHelpDialog } from "./KeyboardHelpDialog";
+import {
+  EnrichmentWorkbenchDrawer,
+  type InvestigationTarget,
+} from "./enrichment/EnrichmentWorkbenchDrawer";
 import { Badge } from "@/components/ui/Badge";
-import { IconClock } from "@/components/ui/icons";
+import { IconClock, IconShield } from "@/components/ui/icons";
 
 type Props = {
   session: SocSessionClient;
   onExit?: () => void;
 };
 
-type MobileTab = "queue" | "detail" | "cases";
+type MobileTab = "queue" | "detail" | "cases" | "tools";
 
 export function SocWorkspace({ session, onExit }: Props) {
   const { scenario, attempt: initialAttempt } = session;
@@ -38,6 +42,8 @@ export function SocWorkspace({ session, onExit }: Props) {
   const [isKbdHelpOpen, setIsKbdHelpOpen] = useState(false);
   const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEnrichmentOpen, setIsEnrichmentOpen] = useState(false);
+  const [enrichmentTarget, setEnrichmentTarget] = useState<InvestigationTarget | null>(null);
   const [actionAnnouncement, setActionAnnouncement] = useState("");
 
   const activeAlert = scenario.alerts.find((a) => a.id === selectedAlertId) ?? scenario.alerts[0];
@@ -58,10 +64,14 @@ export function SocWorkspace({ session, onExit }: Props) {
       if (e.key === "?") {
         e.preventDefault();
         setIsKbdHelpOpen((prev) => !prev);
+      } else if (e.key === "i" || e.key === "I") {
+        e.preventDefault();
+        setIsEnrichmentOpen((prev) => !prev);
       } else if (e.key === "Escape") {
         setIsKbdHelpOpen(false);
         setIsBriefingOpen(false);
         setIsSubmitConfirmOpen(false);
+        setIsEnrichmentOpen(false);
       }
     };
 
@@ -214,6 +224,17 @@ export function SocWorkspace({ session, onExit }: Props) {
             Briefing
           </button>
 
+          {/* Investigation Workbench Launcher */}
+          <button
+            type="button"
+            onClick={() => setIsEnrichmentOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-xs border border-cyan/40 bg-cyan/10 px-2.5 py-1 text-xs text-cyan hover:bg-cyan/20 font-bold focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+            title="Open Investigation Workbench (i)"
+          >
+            <IconShield className="h-3.5 w-3.5" />
+            <span>Investigate</span>
+          </button>
+
           {/* Keyboard Shortcuts Dialog Button */}
           <button
             type="button"
@@ -291,6 +312,20 @@ export function SocWorkspace({ session, onExit }: Props) {
         >
           Cases ({cases.length})
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMobileTab("tools");
+            setIsEnrichmentOpen(true);
+          }}
+          className={`flex-1 py-2 text-center rounded-xs font-bold min-h-[44px] ${
+            mobileTab === "tools" || isEnrichmentOpen
+              ? "bg-cyan/15 text-cyan border border-cyan/40"
+              : "text-muted hover:text-ink"
+          }`}
+        >
+          Tools
+        </button>
       </div>
 
       {/* Main Workspace Body */}
@@ -326,6 +361,10 @@ export function SocWorkspace({ session, onExit }: Props) {
               existingDecision={decisions[activeAlert.id]}
               onSelectRelatedAlert={(id) => setSelectedAlertId(id)}
               onSaveDecision={handleSaveDecision}
+              onOpenEnrichment={(target) => {
+                setEnrichmentTarget(target);
+                setIsEnrichmentOpen(true);
+              }}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-muted text-xs">
@@ -416,6 +455,39 @@ export function SocWorkspace({ session, onExit }: Props) {
       <KeyboardHelpDialog
         isOpen={isKbdHelpOpen}
         onClose={() => setIsKbdHelpOpen(false)}
+      />
+
+      {/* Simulated Investigation Workbench Drawer */}
+      <EnrichmentWorkbenchDrawer
+        attemptId={session.attempt.id}
+        isOpen={isEnrichmentOpen}
+        initialTarget={enrichmentTarget}
+        onClose={() => {
+          setIsEnrichmentOpen(false);
+          setEnrichmentTarget(null);
+        }}
+        onAttachEvidenceToCase={async (evidenceSummary) => {
+          if (cases.length > 0) {
+            const firstCase = cases[0];
+            const updatedNotes = firstCase.notes
+              ? `${firstCase.notes}\n[Evidence] ${evidenceSummary}`
+              : `[Evidence] ${evidenceSummary}`;
+            await handleManageCase({
+              action: "update",
+              caseId: firstCase.id,
+              notes: updatedNotes,
+            });
+            setActionAnnouncement(`Attached evidence to case ${firstCase.title}`);
+          } else {
+            await handleManageCase({
+              action: "create",
+              title: `Investigation: ${activeAlert?.ruleName ?? "Case"}`,
+              notes: `[Evidence] ${evidenceSummary}`,
+              alertIds: activeAlert ? [activeAlert.id] : [],
+            });
+            setActionAnnouncement("Created new case with attached evidence");
+          }
+        }}
       />
     </div>
   );

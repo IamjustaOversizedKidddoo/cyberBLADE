@@ -17,7 +17,7 @@ describe("Enrichment Pipeline & Server Execution Controls", () => {
   async function setupTestCtx() {
     const store = createMemoryStore(emptyProgress);
     const repo = new StoreProgressRepo(store);
-    const ctx: Ctx = { repo };
+    const ctx: Ctx = { repo } as unknown as Ctx;
 
     const attempt: SocAttemptRecord = {
       id: attemptId,

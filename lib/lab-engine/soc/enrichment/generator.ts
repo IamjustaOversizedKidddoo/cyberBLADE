@@ -883,7 +883,7 @@ export function generateTickets(
     if (rng.next() < 0.3) {
       tickets.push({
         id: `INC-20${rng.int(10, 99)}`,
-        category: "helpdesk",
+        category: "incident",
         title: "User reported slow workstation startup after restart",
         submitter: "target.user",
         approver: "service-desk-agent",
