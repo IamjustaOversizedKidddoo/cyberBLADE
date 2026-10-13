@@ -118,3 +118,28 @@ export type SocSessionClient = {
   cases: SocCaseRecord[];
   results: SocEvaluationResult | null;
 };
+
+export type SocQueryLogRecord = {
+  id: string;
+  attemptId: string;
+  userId: string;
+  languageVersion: string;
+  queryText: string;
+  resultRowCount: number;
+  executionSteps: number;
+  durationMs: number;
+  budgetFlags: Record<string, boolean>;
+  createdAt: string;
+};
+
+export type SocQuestionAttemptRecord = {
+  id: string;
+  attemptId: string;
+  userId: string;
+  questionId: string;
+  submittedAnswer: string;
+  isCorrect: boolean;
+  attemptsUsed: number;
+  hintsUsed: number;
+  createdAt: string;
+};

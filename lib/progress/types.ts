@@ -82,6 +82,8 @@ import type {
   SocAttemptRecord,
   SocDecisionRecord,
   SocCaseRecord,
+  SocQueryLogRecord,
+  SocQuestionAttemptRecord,
 } from "@/lib/lab-engine/soc/types";
 import type { SocEnrichmentLookupRecord } from "@/lib/lab-engine/soc/enrichment/types";
 
@@ -99,6 +101,8 @@ export type ProgressData = {
   socCases?: Record<string, SocCaseRecord>;
   socUsedSeeds?: Record<string, string[]>;
   socEnrichmentLookups?: Record<string, SocEnrichmentLookupRecord>;
+  socQueryLogs?: Record<string, SocQueryLogRecord>;
+  socQuestionAttempts?: Record<string, SocQuestionAttemptRecord>;
 };
 
 export const emptyProgress = (): ProgressData => ({
