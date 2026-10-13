@@ -1,0 +1,514 @@
+metadata:
+  id: "soc-f-cloud-identity-01"
+  version: 1
+  title: "L1: Cloud Identity Anomalies, Privilege Escalation & Access Key Creation"
+  level: "L1"
+  skillsTested:
+    - "soc_alert_triage"
+    - "soc_cloud_identity"
+    - "soc_credential_attacks"
+    - "soc_siem_correlation"
+    - "soc_escalation_handoff"
+    - "soc_documentation"
+  estimatedMinutes:
+    min: 25
+    max: 45
+  difficultyRange:
+    - "beginner"
+    - "intermediate"
+    - "advanced"
+  author: "CyberBLADE SOC Curriculum Engineering"
+  reviewStatus: "draft"
+  reviewerNotes: "Initial draft modeling cloud IAM privilege escalation, programmatic key backdoors, and Terraform CI twins."
+
+environmentTemplate:
+  organizationArchetypes:
+    - "org_apex_dynamics"
+    - "org_meridian_fintech"
+    - "org_nexus_saas"
+    - "org_helios_energy"
+  assetDistribution:
+    workstations:
+      min: 4
+      max: 7
+    servers:
+      min: 2
+      max: 4
+    domainControllers:
+      min: 1
+      max: 1
+    mailGateways:
+      min: 1
+      max: 1
+  userDistribution:
+    totalUsers:
+      min: 6
+      max: 10
+    departments:
+      - "Finance"
+      - "Engineering"
+      - "IT Operations"
+      - "Human Resources"
+      - "Marketing"
+
+incidentTemplates:
+  - id: "inc-iam-privilege-escalation"
+    titleTemplate: "Cloud IAM Privilege Escalation & Backdoor Key Creation on {victimUser}"
+    category: "Cloud Identity & Privilege Escalation"
+    rootCauseTemplate: "Compromised developer credentials used from {attackerIp} to attach AdministratorAccess policy and generate access keys for {victimUser}."
+    mitreTags:
+      - "T1098.001" # Additional Cloud Credentials
+      - "T1078.004" # Cloud Accounts
+    stages:
+      - stageId: "stage-admin-policy-attach"
+        name: "Administrator Policy Attachment"
+        phase: "privilege_escalation"
+        timingOffsetMinutes:
+          min: -40
+          max: 10
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "Authentication"
+            action: "attachuserpolicy"
+            messageTemplate: "CloudTrail: eventSource='iam.amazonaws.com' eventName='AttachUserPolicy' caller='{victimUser}' sourceIP='{attackerIp}'"
+            fieldsTemplate:
+              event_source: "iam.amazonaws.com"
+              event_name: "AttachUserPolicy"
+              caller_identity: "{victimUser}"
+              source_ip: "{attackerIp}"
+        alertTemplates:
+          - ruleName: "Cloud Audit: Administrator IAM Policy Attached to User"
+            source: "Authentication"
+            severity: "HIGH"
+            summaryTemplate: "Administrator access policy attached to identity '{victimUser}' from untrusted external address {attackerIp}"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              caller_identity: "{victimUser}"
+              target_user: "{victimUser}"
+              source_ip: "{attackerIp}"
+              policy_name: "AdministratorAccess"
+          - ruleName: "Cloud Audit: Programmatic Access Key Created for Existing Identity"
+            source: "Authentication"
+            severity: "MEDIUM"
+            summaryTemplate: "Programmatic cloud access key created for identity '{victimUser}' from untrusted external address {attackerIp}"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              caller_identity: "{victimUser}"
+              target_user: "{victimUser}"
+              source_ip: "{attackerIp}"
+              key_id: "AKIA_BACKDOOR_KEY"
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-admin-policy-attach"
+          acceptableAlternatives: []
+          debriefTemplate: "Critical cloud identity compromise. Unauthorized entity from {attackerIp} granted Administrator privileges and created backdoor access key for {victimUser}."
+
+  - id: "inc-console-novel-asn"
+    titleTemplate: "Cloud Management Console Session Hijacking for {victimUser}"
+    category: "Cloud Identity & Privilege Escalation"
+    rootCauseTemplate: "Stolen session cookie utilized from foreign IP {attackerIp} to establish interactive console session for {victimUser}."
+    mitreTags:
+      - "T1539" # Steal Web Session Cookie
+      - "T1078.004" # Cloud Accounts
+    stages:
+      - stageId: "stage-novel-asn-session"
+        name: "Interactive Console Session from Foreign Origin"
+        phase: "initial_access"
+        timingOffsetMinutes:
+          min: 15
+          max: 60
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "Authentication"
+            action: "consolelogin"
+            messageTemplate: "CloudTrail: eventSource='signin.amazonaws.com' eventName='ConsoleLogin' caller='{victimUser}' sourceIP='{attackerIp}'"
+            fieldsTemplate:
+              event_source: "signin.amazonaws.com"
+              event_name: "ConsoleLogin"
+              caller_identity: "{victimUser}"
+              source_ip: "{attackerIp}"
+        alertTemplates:
+          - ruleName: "Identity: Cloud Management Console Logon from Novel ASN"
+            source: "Authentication"
+            severity: "MEDIUM"
+            summaryTemplate: "Single sign-on console login for user '{victimUser}' authenticated from novel foreign address {attackerIp} without verification challenge"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              caller_identity: "{victimUser}"
+              target_user: "{victimUser}"
+              source_ip: "{attackerIp}"
+              mfa_used: false
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-novel-asn-session"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed cloud session hijacking. Attacker at {attackerIp} accessed management console as {victimUser} without multi-factor challenge."
+
+benignTemplates:
+  - id: "benign-terraform-ci-deploy"
+    name: "Continuous Integration Infrastructure Deployment"
+    category: "Cloud Automation"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "business_hours"
+    actorRole: "service_principal"
+    eventTemplates:
+      - source: "Authentication"
+        action: "attachuserpolicy"
+        messageTemplate: "CloudTrail: eventSource='iam.amazonaws.com' eventName='AttachRolePolicy' caller='svc-terraform' sourceIP='10.10.0.10'"
+        fieldsTemplate:
+          event_source: "iam.amazonaws.com"
+          event_name: "AttachRolePolicy"
+          caller_identity: "svc-terraform"
+          source_ip: "10.10.0.10"
+    alertTemplates:
+      - ruleName: "Cloud Audit: Administrator IAM Policy Attached to User"
+        source: "Authentication"
+        severity: "LOW"
+        summaryTemplate: "Approved cloud infrastructure automation pipeline modified staging roles for service account 'svc-terraform'"
+        rawFieldsTemplate:
+          caller_identity: "svc-terraform"
+          target_user: "staging-cluster-role"
+          source_ip: "10.10.0.10"
+          status: "pipeline_approved"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-terraform-ci-deploy"
+      acceptableAlternatives: []
+      debriefTemplate: "Routine automated infrastructure deployment by approved Terraform CI service principal. Fully benign."
+
+  - id: "benign-admin-key-rotation"
+    name: "Scheduled Administrator Access Key Rotation"
+    category: "Identity Management"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "business_hours"
+    actorRole: "admin_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "createaccesskey"
+        messageTemplate: "CloudTrail: eventSource='iam.amazonaws.com' eventName='CreateAccessKey' caller='itadmin' sourceIP='10.10.1.25'"
+        fieldsTemplate:
+          event_source: "iam.amazonaws.com"
+          event_name: "CreateAccessKey"
+          caller_identity: "itadmin"
+          source_ip: "10.10.1.25"
+    alertTemplates:
+      - ruleName: "Cloud Audit: Programmatic Access Key Created for Existing Identity"
+        source: "Authentication"
+        severity: "LOW"
+        summaryTemplate: "Scheduled quarterly access key rotation performed for corporate identity 'itadmin' during maintenance hours"
+        rawFieldsTemplate:
+          caller_identity: "itadmin"
+          target_user: "itadmin"
+          source_ip: "10.10.1.25"
+          operation: "scheduled_rotation"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-admin-key-rotation"
+      acceptableAlternatives: []
+      debriefTemplate: "Scheduled access key rotation by authorized administrator on internal corporate subnet. Safe maintenance activity."
+
+  - id: "benign-backup-job"
+    name: "Nightly Automated Snapshot & Backup"
+    category: "Scheduled Jobs"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_nightly"
+    actorRole: "service_account"
+    eventTemplates:
+      - source: "Authentication"
+        action: "service_logon"
+        messageTemplate: "Service account 'svc-backup' authenticated successfully via Kerberos"
+        fieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Authentication: High-Volume Service Data Replication"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Scheduled database snapshot stream handled by service account 'svc-backup' on corporate host '{hostname}'"
+        rawFieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+          bytes_transferred: "42.8 GB"
+          operation: "scheduled_backup"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-backup-job"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate automated snapshot and backup initiated by approved service principal 'svc-backup'."
+
+  - id: "benign-vpn-traveler"
+    name: "Remote VPN Connection from Roaming IP"
+    category: "Remote Access"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "business_hours"
+    actorRole: "roaming_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "vpn_login"
+        messageTemplate: "VPN tunnel authenticated for '{username}' from roaming IP {roamingIp}"
+        fieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          status: "connected"
+    alertTemplates:
+      - ruleName: "Firewall: New Geographic VPN Tunnel Established"
+        source: "Firewall"
+        severity: "LOW"
+        summaryTemplate: "Authenticated remote VPN tunnel session established for corporate employee '{username}' from roaming address {roamingIp}"
+        rawFieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          mfa_verified: true
+          status: "connected"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vpn-traveler"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate corporate VPN access by authenticated employee with multi-factor verification."
+
+  - id: "benign-vuln-scanner"
+    name: "Authorized Weekly Perimeter Vulnerability Scan"
+    category: "Vulnerability Scanning"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "batch_window_nightly"
+    actorRole: "security_scanner"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "port_scan"
+        messageTemplate: "TCP port sweep detected from scanner IP {scannerIp}"
+        fieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Network IDS: Rapid Port Sweep Probe"
+        source: "Network IDS"
+        severity: "HIGH"
+        summaryTemplate: "Rapid port sweep probe from authorized internal vulnerability scanner address {scannerIp} on host '{hostname}'"
+        rawFieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+          authorized_scanner: true
+          status: "scheduled_audit"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "MEDIUM"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vuln-scanner"
+      acceptableAlternatives: []
+      debriefTemplate: "Authorized vulnerability scanning from known scanner IP {scannerIp}. Baseline approved activity."
+
+  - id: "benign-sensor-flapping"
+    name: "Duplicate Sensor Trigger on Benign Keep-Alive"
+    category: "Telemetry Flapping"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "anytime"
+    actorRole: "sensor_glitch"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "protocol_anomaly"
+        messageTemplate: "Malformed HTTP keepalive header on legacy telemetry connection"
+        fieldsTemplate:
+          protocol: "HTTP/1.1"
+    alertTemplates:
+      - ruleName: "Network IDS: Protocol Header Parsing Anomaly"
+        source: "Network IDS"
+        severity: "LOW"
+        summaryTemplate: "Repetitive protocol anomaly sensor trigger observed on internal keep-alive session from host '{hostname}'"
+        rawFieldsTemplate:
+          sensor_id: "suricata-dmz-01"
+          target_host: "{hostname}"
+          duplicate_count: 8
+          protocol: "HTTP/1.1"
+    groundTruth:
+      kind: "duplicate"
+      correctDisposition: "duplicate"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-sensor-flapping"
+      acceptableAlternatives: []
+      debriefTemplate: "Known flapping sensor alert caused by benign legacy keep-alive traffic."
+
+  - id: "benign-patch-deployment"
+    name: "Central Systems Patch Rollout"
+    category: "Software Deployment"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_maintenance"
+    actorRole: "admin_endpoint"
+    eventTemplates:
+      - source: "EDR"
+        action: "package_installer"
+        messageTemplate: "systemd-update executed package upgrade sequence on host '{hostname}'"
+        fieldsTemplate:
+          process_name: "apt-get"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "EDR: System Package Upgrade Sequence"
+        source: "EDR"
+        severity: "MEDIUM"
+        summaryTemplate: "Automated package deployment installer executed during scheduled maintenance on corporate host '{hostname}'"
+        rawFieldsTemplate:
+          installer: "systemd-update"
+          target_host: "{hostname}"
+          operation: "patch_distribution"
+          status: "installed"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-patch-deployment"
+      acceptableAlternatives: []
+      debriefTemplate: "Automated patch rollout during scheduled maintenance window."
+
+twinTemplates:
+  - id: "twin-iam-policy"
+    name: "Cloud IAM Policy Attachment Twin Pair"
+    description: "Contrasts unauthorized AdministratorAccess attachment from foreign IP vs scheduled Terraform CI role assignment"
+    toolOrTechnique: "Cloud IAM Policy Delegation"
+    maliciousStageRef: "stage-admin-policy-attach"
+    benignTemplateRef: "benign-terraform-ci-deploy"
+    distinguishingEvidence: "Caller identity and origin IP: malicious attaches AdministratorAccess to user from external untrusted IP; benign is automated pipeline using svc-terraform on internal management subnet."
+    acceptableAlternatives: []
+
+  - id: "twin-key-generation"
+    name: "Cloud Access Key Generation Twin Pair"
+    description: "Contrasts backdoor access key creation from untrusted IP vs scheduled quarterly rotation by IT admin"
+    toolOrTechnique: "Programmatic Cloud Access Keys"
+    maliciousStageRef: "stage-admin-policy-attach"
+    benignTemplateRef: "benign-admin-key-rotation"
+    distinguishingEvidence: "Origin IP and operational context: malicious originates from untrusted external IP without change record; benign originates from corporate IT subnet during approved rotation."
+    acceptableAlternatives: []
+
+variationAxes:
+  incidentCount:
+    min: 1
+    max: 2
+  noiseRatio:
+    min: 0.65
+    max: 0.85
+  ambiguityCount:
+    min: 1
+    max: 3
+  telemetryGapCount:
+    min: 0
+    max: 2
+  targetAlertCount:
+    min: 30
+    max: 65
+  difficultyProfiles:
+    beginner:
+      incidentCount: 1
+      noiseRatio: 0.65
+      ambiguityCount: 1
+      telemetryGapCount: 0
+      targetAlertCount: 30
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    intermediate:
+      incidentCount: 2
+      noiseRatio: 0.75
+      ambiguityCount: 2
+      telemetryGapCount: 1
+      targetAlertCount: 45
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    advanced:
+      incidentCount: 2
+      noiseRatio: 0.82
+      ambiguityCount: 3
+      telemetryGapCount: 2
+      targetAlertCount: 65
+      expectedScoreCeilingNaive: 50
+      expectedMinScoreReference: 80
+
+debriefTemplates:
+  overallBriefingTemplate: |
+    Welcome to your Tier-1 SOC shift at {orgName}.
+    A queue of {alertCount} incoming alerts has arrived across CloudTrail, IAM audit, and identity provider telemetry.
+    Your mission:
+    1. Distinguish between authorized infrastructure automation (Terraform CI pipelines) versus unauthorized cloud privilege escalations.
+    2. Identify backdoor programmatic access keys created from unverified external IP addresses.
+    3. Document evidence findings with caller identities and escalate confirmed cloud compromises to Tier 2.
+  generalGuidanceTemplate: |
+    Shift debrief for {orgName}:
+    In this shift, you investigated {alertCount} alerts covering {incidentCount} security incident(s) alongside operational noise.
+    Key takeaways:
+    - Attaching AdministratorAccess policies to standard user identities from external IPs is a critical privilege escalation event.
+    - Programmatic access key generation should always be checked against service principal naming rules and IP whitelists.
+    - Differentiate routine Terraform CI/CD pipeline deployments from manual unauthenticated credential tampering.
+
+hooks:
+  enrichmentHooks:
+    - id: "hook-ip-reputation"
+      provider: "reputation"
+      dataPoints:
+        - "abuse_confidence_score"
+        - "asn"
+  queryDatasetHooks:
+    - datasetName: "siem_telemetry_flow"
+      extraEventGenerators:
+        - "generate_cloud_audit"
+  evidenceViewHooks:
+    - id: "hook-auth-timeline"
+      viewType: "timeline"
+  reportRubricHooks:
+    - sectionId: "executive_summary"
+      criteria:
+        - "Identified cloud caller identity and source IP"
+        - "Assessed IAM policy and access key status"
