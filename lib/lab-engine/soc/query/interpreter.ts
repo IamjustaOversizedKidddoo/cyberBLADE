@@ -242,7 +242,13 @@ export class BladeQLInterpreter {
     if (filter.operator === "in") {
       if (!Array.isArray(targetVal)) return false;
       const strRowVal = String(rawVal ?? "").toLowerCase();
-      return targetVal.some((item) => String(item.value ?? "").toLowerCase() === strRowVal);
+      return targetVal.some((item) => {
+        const itemVal = String(item.value ?? "");
+        if (item.valueType === "cidr" || itemVal.includes("/")) {
+          return this.cidrMatch(strRowVal, itemVal);
+        }
+        return itemVal.toLowerCase() === strRowVal;
+      });
     }
 
     if (Array.isArray(targetVal)) return false;

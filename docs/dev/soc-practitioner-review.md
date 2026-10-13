@@ -56,6 +56,12 @@ When reviewing sample variants, evaluate against these four operational pillars:
 - [ ] **Passive DNS & WHOIS**: Do registration dates and nameserver records align with scenario attack timelines? Are shared hosting inferences plausible without leaking answers?
 - [ ] **CMDB & IT ServiceDesk**: Are change tickets and maintenance windows properly correlated with benign operational alerts? Are outdated CMDB records plausible without being impossible to navigate?
 
+### 6. Log Lake Dataset & Investigation Questions (Phase 3 Prompt 5)
+- [ ] **Log Lake Field Consistency**: Do raw log entries across sources (auth, firewall, endpoint, dns, proxy) contain authentic native headers, event codes (e.g. Windows Security EventCode 4624/4625/4688, Cisco ASA %ASA-6-302013), and natural naming variations?
+- [ ] **Background Noise Volume**: Does the volume curve reflect business-hours traffic vs. batch maintenance? Are non-malicious connections realistically interleaved?
+- [ ] **Investigation Questions Neutrality**: Do question stems ask objective questions ("How many failed sign-ins occurred from the top source IP?") without disclosing answers or attacker presence?
+- [ ] **Answerability with BladeQL**: Can questions be reliably answered by an analyst using standard BladeQL pipeline hunting commands without relying on secret fields?
+
 ---
 
 ## 3. Review Workflow & Status Lifecycle
