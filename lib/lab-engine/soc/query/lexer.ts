@@ -457,6 +457,20 @@ export class Lexer {
       text += this.advance();
     }
 
+    if (text.length === 0) {
+      const unexpected = this.advance();
+      throw new BladeQLError({
+        code: "UNEXPECTED_TOKEN",
+        message: `Unexpected character '${unexpected.charCodeAt(0) < 32 ? `\\x${unexpected.charCodeAt(0).toString(16).padStart(2, "0")}` : unexpected}' at line ${startLine}, column ${startCol}.`,
+        loc: {
+          line: startLine,
+          column: startCol,
+          offset: startOffset,
+          length: 1,
+        },
+      });
+    }
+
     const loc: SourceLocation = {
       line: startLine,
       column: startCol,

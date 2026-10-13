@@ -121,12 +121,16 @@ export class Parser {
       loc: startLoc,
     };
 
-    // If does not start with pipe, parse BaseSearch
-    if (!this.check("PIPE") && !this.isAtEnd()) {
-      baseSearch = this.parseBaseSearch();
-    }
-
     const commands: CommandNode[] = [];
+
+    // If does not start with pipe, parse BaseSearch UNLESS first token is a known command
+    if (!this.check("PIPE") && !this.isAtEnd()) {
+      if (this.check("IDENTIFIER") && KNOWN_COMMANDS.includes(this.peek().value.toLowerCase() as any)) {
+        commands.push(this.parseCommand());
+      } else {
+        baseSearch = this.parseBaseSearch();
+      }
+    }
 
     while (this.match("PIPE")) {
       if (this.isAtEnd()) {

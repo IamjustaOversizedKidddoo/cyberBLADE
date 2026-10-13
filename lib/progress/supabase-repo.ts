@@ -20,6 +20,8 @@ import type {
   SocDecisionRecord,
   SocCaseRecord,
   SocEvaluationResult,
+  SocQueryLogRecord,
+  SocQuestionAttemptRecord,
 } from "@/lib/lab-engine/soc/types";
 import type { SocEnrichmentLookupRecord } from "@/lib/lab-engine/soc/enrichment/types";
 
@@ -1067,6 +1069,131 @@ export class SupabaseProgressRepo implements ProgressRepo {
     }));
   }
 
+  async saveSocQueryLog(log: Omit<SocQueryLogRecord, "id" | "createdAt">): Promise<SocQueryLogRecord> {
+    const client = await this.getClient();
+    const id = randomUUID();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_query_logs")
+      .insert({
+        id,
+        attempt_id: log.attemptId,
+        user_id: log.userId,
+        language_version: log.languageVersion,
+        query_text: log.queryText,
+        result_row_count: log.resultRowCount,
+        execution_steps: log.executionSteps,
+        duration_ms: log.durationMs,
+        budget_flags: log.budgetFlags,
+      })
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to save soc query log: ${error?.message}`);
+    }
+
+    return {
+      id: data.id,
+      attemptId: data.attempt_id,
+      userId: data.user_id,
+      languageVersion: data.language_version,
+      queryText: data.query_text,
+      resultRowCount: data.result_row_count,
+      executionSteps: data.execution_steps,
+      durationMs: data.duration_ms,
+      budgetFlags: data.budget_flags ?? {},
+      createdAt: data.created_at,
+    };
+  }
+
+  async listSocQueryLogs(attemptId: string): Promise<SocQueryLogRecord[]> {
+    const client = await this.getClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_query_logs")
+      .select("*")
+      .eq("attempt_id", attemptId)
+      .order("created_at", { ascending: false });
+
+    if (error || !data) return [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data as any[]).map((d) => ({
+      id: d.id,
+      attemptId: d.attempt_id,
+      userId: d.user_id,
+      languageVersion: d.language_version,
+      queryText: d.query_text,
+      resultRowCount: d.result_row_count,
+      executionSteps: d.execution_steps,
+      durationMs: d.duration_ms,
+      budgetFlags: d.budget_flags ?? {},
+      createdAt: d.created_at,
+    }));
+  }
+
+  async saveSocQuestionAttempt(attempt: Omit<SocQuestionAttemptRecord, "id" | "createdAt">): Promise<SocQuestionAttemptRecord> {
+    const client = await this.getClient();
+    const id = randomUUID();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_question_attempts")
+      .insert({
+        id,
+        attempt_id: attempt.attemptId,
+        user_id: attempt.userId,
+        question_id: attempt.questionId,
+        submitted_answer: attempt.submittedAnswer,
+        is_correct: attempt.isCorrect,
+        attempts_used: attempt.attemptsUsed,
+        hints_used: attempt.hintsUsed,
+      })
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to save soc question attempt: ${error?.message}`);
+    }
+
+    return {
+      id: data.id,
+      attemptId: data.attempt_id,
+      userId: data.user_id,
+      questionId: data.question_id,
+      submittedAnswer: data.submitted_answer,
+      isCorrect: data.is_correct,
+      attemptsUsed: data.attempts_used,
+      hintsUsed: data.hints_used,
+      createdAt: data.created_at,
+    };
+  }
+
+  async listSocQuestionAttempts(attemptId: string): Promise<SocQuestionAttemptRecord[]> {
+    const client = await this.getClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_question_attempts")
+      .select("*")
+      .eq("attempt_id", attemptId)
+      .order("created_at", { ascending: false });
+
+    if (error || !data) return [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data as any[]).map((d) => ({
+      id: d.id,
+      attemptId: d.attempt_id,
+      userId: d.user_id,
+      questionId: d.question_id,
+      submittedAnswer: d.submitted_answer,
+      isCorrect: d.is_correct,
+      attemptsUsed: d.attempts_used,
+      hintsUsed: d.hints_used,
+      createdAt: d.created_at,
+    }));
+  }
+
   async deleteUserData(userId: string): Promise<void> {
     const client = await this.getClient();
     await client.from("soc_attempts").delete().eq("user_id", userId);
@@ -1074,6 +1201,10 @@ export class SupabaseProgressRepo implements ProgressRepo {
     await (client as any).from("soc_used_seeds").delete().eq("user_id", userId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (client as any).from("soc_enrichment_lookups").delete().eq("user_id", userId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (client as any).from("soc_query_logs").delete().eq("user_id", userId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (client as any).from("soc_question_attempts").delete().eq("user_id", userId);
     await client.from("exam_reports").delete().eq("user_id", userId);
     await client.from("review_items").delete().eq("user_id", userId);
   }

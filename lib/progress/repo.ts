@@ -16,6 +16,8 @@ import type {
   SocAttemptRecord,
   SocDecisionRecord,
   SocCaseRecord,
+  SocQueryLogRecord,
+  SocQuestionAttemptRecord,
 } from "@/lib/lab-engine/soc/types";
 import type { SocEnrichmentLookupRecord } from "@/lib/lab-engine/soc/enrichment/types";
 
@@ -83,6 +85,10 @@ export interface ProgressRepo {
   listSocAttempts(userId: string): Promise<SocAttemptRecord[]>;
   saveSocEnrichmentLookup(lookup: Omit<SocEnrichmentLookupRecord, "id" | "createdAt">): Promise<SocEnrichmentLookupRecord>;
   listSocEnrichmentLookups(attemptId: string): Promise<SocEnrichmentLookupRecord[]>;
+  saveSocQueryLog(log: Omit<SocQueryLogRecord, "id" | "createdAt">): Promise<SocQueryLogRecord>;
+  listSocQueryLogs(attemptId: string): Promise<SocQueryLogRecord[]>;
+  saveSocQuestionAttempt(attempt: Omit<SocQuestionAttemptRecord, "id" | "createdAt">): Promise<SocQuestionAttemptRecord>;
+  listSocQuestionAttempts(attemptId: string): Promise<SocQuestionAttemptRecord[]>;
   listUsedSeeds(userId: string, familyId: string): Promise<string[]>;
   recordUsedSeed(userId: string, familyId: string, seed: string): Promise<void>;
   deleteUserData(userId: string): Promise<void>;
@@ -462,6 +468,50 @@ export class StoreProgressRepo implements ProgressRepo {
       .sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
   }
 
+  async saveSocQueryLog(log: Omit<SocQueryLogRecord, "id" | "createdAt">): Promise<SocQueryLogRecord> {
+    const id = randomUUID();
+    const createdAt = new Date().toISOString();
+    const record: SocQueryLogRecord = {
+      ...log,
+      id,
+      createdAt,
+    };
+    await this.store.update((d) => {
+      d.socQueryLogs ??= {};
+      d.socQueryLogs[id] = record;
+    });
+    return record;
+  }
+
+  async listSocQueryLogs(attemptId: string): Promise<SocQueryLogRecord[]> {
+    const data = await this.store.read();
+    return Object.values(data.socQueryLogs ?? {})
+      .filter((l) => l.attemptId === attemptId)
+      .sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
+  }
+
+  async saveSocQuestionAttempt(attempt: Omit<SocQuestionAttemptRecord, "id" | "createdAt">): Promise<SocQuestionAttemptRecord> {
+    const id = randomUUID();
+    const createdAt = new Date().toISOString();
+    const record: SocQuestionAttemptRecord = {
+      ...attempt,
+      id,
+      createdAt,
+    };
+    await this.store.update((d) => {
+      d.socQuestionAttempts ??= {};
+      d.socQuestionAttempts[id] = record;
+    });
+    return record;
+  }
+
+  async listSocQuestionAttempts(attemptId: string): Promise<SocQuestionAttemptRecord[]> {
+    const data = await this.store.read();
+    return Object.values(data.socQuestionAttempts ?? {})
+      .filter((q) => q.attemptId === attemptId)
+      .sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
+  }
+
   async deleteUserData(userId: string): Promise<void> {
     await this.store.update((d) => {
       for (const [k, v] of Object.entries(d.lessons)) {
@@ -519,6 +569,20 @@ export class StoreProgressRepo implements ProgressRepo {
         for (const [k, v] of Object.entries(d.socEnrichmentLookups)) {
           if (v.userId === userId || userSocAttemptIds.has(v.attemptId)) {
             delete d.socEnrichmentLookups[k];
+          }
+        }
+      }
+      if (d.socQueryLogs) {
+        for (const [k, v] of Object.entries(d.socQueryLogs)) {
+          if (v.userId === userId || userSocAttemptIds.has(v.attemptId)) {
+            delete d.socQueryLogs[k];
+          }
+        }
+      }
+      if (d.socQuestionAttempts) {
+        for (const [k, v] of Object.entries(d.socQuestionAttempts)) {
+          if (v.userId === userId || userSocAttemptIds.has(v.attemptId)) {
+            delete d.socQuestionAttempts[k];
           }
         }
       }
