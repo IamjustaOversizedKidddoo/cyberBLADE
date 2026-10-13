@@ -140,6 +140,44 @@ export const EnrichmentAwareReferenceSolver = {
         }
       }
 
+      // 4. Authentication & Brute Force / Credential Access
+      if (
+        rule.includes("brute") ||
+        rule.includes("spray") ||
+        rule.includes("failed") ||
+        rule.includes("logon") ||
+        summary.includes("failed login") ||
+        summary.includes("brute force")
+      ) {
+        const srcIp = (alert.rawFields.sourceIp as string) || (alert.rawFields.clientIp as string) || "198.51.100.24";
+        const rep = performLookup<ReputationResult>("reputation", "ip", srcIp);
+        const isMaliciousIp = rep.sources.some((s) => s.verdict === "malicious" && s.score >= 70);
+
+        const targetUser = alert.relatedUser || (alert.rawFields.user as string) || "user";
+        const tickets = performLookup<TicketHistoryResult>("tickets", "user", targetUser);
+        const isPenTest = tickets.tickets.some((t) => t.category === "pen_test_notice" && t.status === "approved");
+
+        if (isPenTest) {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "benign_true_positive",
+            severity: "LOW",
+            escalate: false,
+            rationale: "Corroborated by active authorized security penetration testing notice in ServiceDesk.",
+          };
+          continue;
+        } else if (isMaliciousIp) {
+          decisions[alert.id] = {
+            alertId: alert.id,
+            disposition: "true_positive",
+            severity: "HIGH",
+            escalate: true,
+            rationale: "External brute force attack corroborated by high-confidence threat reputation.",
+          };
+          continue;
+        }
+      }
+
       // 4. Ticket verification for maintenance / authorized activities
       const host = alert.relatedAsset || alert.relatedUser || alert.id;
       const tickets = performLookup<TicketHistoryResult>("tickets", "host", host);
