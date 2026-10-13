@@ -166,3 +166,155 @@ export interface PreSubmitLintResult {
   warnings: Array<{ sectionId: string; message: string }>;
   checksRun: number;
 }
+
+// ============================================================================
+// Report Ground Truth Types (Server-Side Only - Hidden from learner)
+// ============================================================================
+
+export interface IocGroundTruth {
+  type: IocType;
+  value: string;
+  role: IocRole;
+  isTruePositive: boolean;
+  description?: string;
+}
+
+export interface MilestoneGroundTruth {
+  id: string;
+  timestamp: string;
+  entity: string;
+  actionKeywords: string[];
+  toleranceSeconds: number;
+  description: string;
+}
+
+export interface ActionGroundTruth {
+  requiredActionIds: string[];
+  priorityOrder: string[];
+  acceptableActionIds: string[];
+  harmfulActionIds: string[];
+}
+
+export interface TechniqueGroundTruth {
+  acceptableTechniqueIds: string[];
+  acceptableTactics: string[];
+}
+
+export interface EscalationGroundTruth {
+  requiresEscalation: boolean;
+  acceptableTargets: string[];
+  acceptableUrgencies: EscalationUrgency[];
+  requiredHandoffElements: string[];
+}
+
+export interface VerdictGroundTruth {
+  correctDisposition: SocDisposition;
+  correctSeverity: SocSeverity;
+  acceptableAlternatives: Array<{
+    disposition: SocDisposition;
+    severity: SocSeverity;
+    partialCredit: number;
+  }>;
+}
+
+export interface ScopeGroundTruth {
+  affectedAssets: string[];
+  affectedUsers: string[];
+  unrelatedAssets: string[];
+  unrelatedUsers: string[];
+}
+
+export interface SocReportGroundTruth {
+  verdict: VerdictGroundTruth;
+  scope: ScopeGroundTruth;
+  iocs: IocGroundTruth[];
+  milestones: MilestoneGroundTruth[];
+  actions: ActionGroundTruth;
+  techniques: TechniqueGroundTruth;
+  escalation: EscalationGroundTruth;
+  modelReport: SocReportData;
+}
+
+// ============================================================================
+// Rubric and Grader Result Types
+// ============================================================================
+
+export interface RubricCriterion {
+  id: string;
+  title: string;
+  skillTags: string[];
+  maxPoints: number;
+  weight: number;
+  graderType: "deterministic" | "ai";
+  feedbackBands: Array<{ minScore: number; feedbackTemplate: string }>;
+  teachingNotes: string;
+}
+
+export interface ReportRubric {
+  id: string;
+  version: string;
+  criteria: RubricCriterion[];
+}
+
+export interface ClaimAnnotation {
+  claimType: string;
+  claimId?: string;
+  status: "supported" | "unsupported" | "missing" | "incorrect" | "extra";
+  detail: string;
+}
+
+export interface CriterionResult {
+  criterionId: string;
+  score: number;
+  maxScore: number;
+  weight: number;
+  status: "graded" | "not_available" | "error";
+  feedback: string;
+  teachingPointers: string[];
+  annotations: ClaimAnnotation[];
+  missedItems: string[];
+  flags: string[];
+}
+
+export interface GradingResult {
+  submissionId: string;
+  rubricId: string;
+  rubricVersion: string;
+  graderVersion: string;
+  scoringVersion: string;
+  totalScore: number;
+  maxScore: number;
+  availableGradedPoints: number;
+  earnedGradedPoints: number;
+  isFullyGraded: boolean;
+  criterionResults: Record<string, CriterionResult>;
+  flags: {
+    paddingDetected: boolean;
+    fabricationDetected: boolean;
+    contradictionsDetected: boolean;
+    copyPasteDetected: boolean;
+    injectionDetected: boolean;
+  };
+  modelReportReveal: SocReportData;
+  versionLabel: string;
+  computedAt: string;
+}
+
+export interface ScoringConfig {
+  version: string;
+  weights: Record<string, number>;
+  penalties: {
+    paddingPenaltyPerItem: number;
+    fabricationPenaltyPerItem: number;
+    harmfulActionPenalty: number;
+    unorderedTimelinePenalty: number;
+    missingEvidencePenalty: number;
+    unsupportedClaimPenalty: number;
+  };
+  tolerances: {
+    timelineSeconds: number;
+    minNarrativeLength: number;
+    maxNarrativeLength: number;
+  };
+}
+

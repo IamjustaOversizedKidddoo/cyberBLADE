@@ -1,0 +1,194 @@
+# SOC L1 Incident Report Rubric
+# Provisional scoring — calibrated against practitioner graders in a later release.
+rubricId: incident-report-l1-rubric
+version: "1.0.0"
+provisionalNotice: >
+  Provisional scoring; weights and bands will be calibrated against
+  practitioner graders in a future release. Current weights reflect
+  domain-expert estimates.
+
+criteria:
+  - id: verdict_accuracy
+    title: "Verdict & Severity Correctness"
+    graderType: deterministic
+    weight: 0.15
+    maxPoints: 15
+    skillTags: ["triage", "classification"]
+    feedbackBands:
+      - minScore: 15
+        feedbackTemplate: "Perfect verdict: correct disposition and severity."
+      - minScore: 10
+        feedbackTemplate: "Good verdict. You identified the correct disposition but consider reviewing the severity calibration against the alert telemetry."
+      - minScore: 5
+        feedbackTemplate: "Partial credit. The severity was off by more than one band, or the disposition was an acceptable alternative rather than the primary answer."
+      - minScore: 0
+        feedbackTemplate: "The verdict was incorrect. Compare your classification with the alert evidence to understand the correct disposition and severity."
+    teachingNotes: >
+      Verdicts anchor the entire report. An incorrect disposition cascades
+      into wrong scoping, actions, and escalation. Always start from the
+      highest-severity corroborating alert and work downward.
+
+  - id: incident_scoping
+    title: "Incident Detection & Scoping"
+    graderType: deterministic
+    weight: 0.15
+    maxPoints: 15
+    skillTags: ["scoping", "asset-attribution"]
+    feedbackBands:
+      - minScore: 15
+        feedbackTemplate: "All affected assets and users correctly identified with no false attributions."
+      - minScore: 10
+        feedbackTemplate: "Most affected entities found. Review the alert-to-asset mapping to find the missing ones."
+      - minScore: 5
+        feedbackTemplate: "Significant scoping gaps. Unaffected assets were included or key compromised hosts were missed."
+      - minScore: 0
+        feedbackTemplate: "Scoping was largely incorrect. Re-examine which assets appear in true-positive alert chains."
+    teachingNotes: >
+      Correct scoping determines containment boundaries. Including
+      uncompromised assets wastes incident response resources; missing
+      compromised ones leaves active threats uncontained.
+
+  - id: ioc_extraction
+    title: "Indicator of Compromise (IoC) Extraction"
+    graderType: deterministic
+    weight: 0.20
+    maxPoints: 20
+    skillTags: ["ioc-extraction", "intelligence"]
+    feedbackBands:
+      - minScore: 18
+        feedbackTemplate: "Excellent IoC extraction with high precision and recall."
+      - minScore: 12
+        feedbackTemplate: "Good extraction. Some true indicators were missed or benign items included."
+      - minScore: 6
+        feedbackTemplate: "Partial extraction. Review alert payloads and enrichment data for missed IoCs."
+      - minScore: 0
+        feedbackTemplate: "IoC extraction needs significant improvement. Focus on extracting indicators from confirmed malicious alerts."
+    teachingNotes: >
+      Precision matters as much as recall. Including every IP address you
+      saw (dump-everything strategy) reduces precision and triggers
+      padding penalties. Extract only indicators with evidence of
+      malicious activity.
+
+  - id: timeline_accuracy
+    title: "Timeline Chronology & Coverage"
+    graderType: deterministic
+    weight: 0.15
+    maxPoints: 15
+    skillTags: ["timeline-analysis", "reconstruction"]
+    feedbackBands:
+      - minScore: 13
+        feedbackTemplate: "Timeline accurately captures the key milestones in correct chronological order."
+      - minScore: 8
+        feedbackTemplate: "Timeline covers most milestones but has ordering issues or gaps in coverage."
+      - minScore: 4
+        feedbackTemplate: "Significant timeline gaps. Several key events are missing or out of order."
+      - minScore: 0
+        feedbackTemplate: "Timeline reconstruction needs major work. Review alert timestamps and reconstruct the attack chain chronologically."
+    teachingNotes: >
+      A correct timeline demonstrates you understand the adversary's
+      progression. Use Kendall-Tau ordering — even if you miss some
+      milestones, getting the order right matters.
+
+  - id: evidence_support
+    title: "Evidence Support & Attribution"
+    graderType: deterministic
+    weight: 0.10
+    maxPoints: 10
+    skillTags: ["evidence-handling"]
+    feedbackBands:
+      - minScore: 9
+        feedbackTemplate: "Claims are well-supported with verifiable evidence references."
+      - minScore: 5
+        feedbackTemplate: "Some claims lack evidence references. Every assertion in a professional report should cite its source."
+      - minScore: 0
+        feedbackTemplate: "Most claims are unsupported. Attach evidence references (alert:, event:, query:, lookup:) to your assertions."
+    teachingNotes: >
+      Every claim in a professional incident report must be traceable to
+      a specific evidence artifact. Unsupported claims erode trust and
+      make the report unsuitable for legal or compliance proceedings.
+
+  - id: technique_mapping
+    title: "ATT&CK Technique Mapping"
+    graderType: deterministic
+    weight: 0.05
+    maxPoints: 5
+    skillTags: ["mitre-attack"]
+    feedbackBands:
+      - minScore: 4
+        feedbackTemplate: "Accurate technique mapping with correct tactic alignment."
+      - minScore: 2
+        feedbackTemplate: "Some techniques identified. Consider the full kill chain observed in your timeline."
+      - minScore: 0
+        feedbackTemplate: "Technique mapping is missing or incorrect. Review the ATT&CK framework for observed adversary behaviors."
+    teachingNotes: >
+      MITRE ATT&CK mapping enables cross-incident correlation and
+      intelligence sharing. Map observed behaviors to the most specific
+      technique, not just the tactic.
+
+  - id: response_actions
+    title: "Response & Containment Actions"
+    graderType: deterministic
+    weight: 0.10
+    maxPoints: 10
+    skillTags: ["incident-response", "remediation"]
+    feedbackBands:
+      - minScore: 9
+        feedbackTemplate: "Appropriate containment and response actions selected with correct prioritization."
+      - minScore: 5
+        feedbackTemplate: "Most required actions identified. Review whether any harmful or premature actions were selected."
+      - minScore: 0
+        feedbackTemplate: "Response actions are insufficient or include harmful choices. Focus on containment first, then eradication."
+    teachingNotes: >
+      Selecting harmful actions (e.g., reimaging before forensic capture)
+      destroys evidence and incurs heavy penalties. Always prioritize
+      containment, then forensics, then eradication.
+
+  - id: escalation_handoff
+    title: "Escalation & Handoff Quality"
+    graderType: deterministic
+    weight: 0.05
+    maxPoints: 5
+    skillTags: ["communication", "escalation"]
+    feedbackBands:
+      - minScore: 4
+        feedbackTemplate: "Clear escalation with appropriate urgency and all required handoff elements."
+      - minScore: 2
+        feedbackTemplate: "Escalation present but missing key handoff details or urgency calibration."
+      - minScore: 0
+        feedbackTemplate: "Escalation is missing or misdirected. All confirmed incidents require escalation with affected assets, IoCs, and containment status."
+    teachingNotes: >
+      A Tier-2 analyst receiving your handoff needs to immediately
+      understand: what happened, what's affected, what's been contained,
+      and what they should do next.
+
+  - id: report_hygiene
+    title: "Report Hygiene & Defanging"
+    graderType: deterministic
+    weight: 0.05
+    maxPoints: 5
+    skillTags: ["opsec", "hygiene"]
+    feedbackBands:
+      - minScore: 4
+        feedbackTemplate: "Excellent hygiene: all IoCs properly defanged, no raw log dumps, clean formatting."
+      - minScore: 2
+        feedbackTemplate: "Minor hygiene issues: some IoCs not defanged or minor formatting problems."
+      - minScore: 0
+        feedbackTemplate: "Significant hygiene issues. Defang all indicators (IP[.]addr, hxxp://), remove raw log dumps from narrative sections."
+    teachingNotes: >
+      Defanging prevents accidental clicks on malicious URLs/IPs in
+      reports. Raw log dumps in narrative sections indicate analysis
+      was not performed — logs belong in the Evidence Appendix.
+
+  - id: narrative_quality
+    title: "Narrative Quality & Synthesis"
+    graderType: ai
+    weight: 0.00
+    maxPoints: 0
+    skillTags: ["technical-writing"]
+    feedbackBands:
+      - minScore: 0
+        feedbackTemplate: "Narrative quality grading is not yet available in this version."
+    teachingNotes: >
+      Reserved for future AI-assisted evaluation. Clear, concise
+      technical writing that synthesizes evidence into a coherent
+      attack story is the hallmark of a senior analyst.

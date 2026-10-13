@@ -23,6 +23,7 @@ import {
 import { loadVocab } from "./vocab";
 import type { ShiftProfile } from "./shift-schema";
 import { GENERATOR_VERSION, computeVariantMetrics } from "./generator";
+import { synthesizeReportGroundTruth } from "./reports/ground-truth-synthesis";
 import { validateSocScenario } from "./validator";
 import {
   validateVariantSemanticConsistency,
@@ -647,7 +648,7 @@ export function composeShiftScenario(
       .map((a) => a.timestamp)
       .sort();
 
-    return {
+    const incBase: SocIncidentGroundTruth = {
       id: finalIncId,
       title: inc.title,
       category: inc.category,
@@ -657,6 +658,8 @@ export function composeShiftScenario(
       rootCause: inc.rootCause,
       mitre: inc.mitre,
     };
+    incBase.reportGroundTruth = synthesizeReportGroundTruth(incBase, finalAlerts, { assets, users });
+    return incBase;
   });
 
   for (let i = 0; i < finalAlerts.length; i++) {

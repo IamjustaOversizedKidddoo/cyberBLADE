@@ -15,6 +15,7 @@ import type {
   DifficultyLevel,
 } from "./family-schema";
 import { loadVocab, type SocVocab } from "./vocab";
+import { synthesizeReportGroundTruth } from "./reports/ground-truth-synthesis";
 
 export const GENERATOR_VERSION = "1.0.0";
 
@@ -652,7 +653,7 @@ function generateSingleVariant(
       .map((a) => a.timestamp)
       .sort();
 
-    return {
+    const incBase: SocIncidentGroundTruth = {
       id: finalIncId,
       title: inc.title,
       category: inc.category,
@@ -662,6 +663,8 @@ function generateSingleVariant(
       rootCause: inc.rootCause,
       mitre: inc.mitre,
     };
+    incBase.reportGroundTruth = synthesizeReportGroundTruth(incBase, finalAlerts, { assets, users });
+    return incBase;
   });
 
   // Update groundTruth.incidentId on alerts with final opaque incident IDs
