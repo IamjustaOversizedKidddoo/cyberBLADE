@@ -1,0 +1,503 @@
+metadata:
+  id: "soc-f-insider-policy-01"
+  version: 1
+  title: "L1: Insider Threat, Removable Media & Policy Violations"
+  level: "L1"
+  skillsTested:
+    - "soc_alert_triage"
+    - "soc_insider_policy"
+    - "soc_data_exfiltration"
+    - "soc_endpoint_triage"
+    - "soc_windows_logs"
+    - "soc_escalation_handoff"
+    - "soc_documentation"
+  estimatedMinutes:
+    min: 25
+    max: 45
+  difficultyRange:
+    - "beginner"
+    - "intermediate"
+    - "advanced"
+  author: "CyberBLADE SOC Curriculum Engineering"
+  reviewStatus: "draft"
+  reviewerNotes: "Initial draft modeling unauthorized USB exports, off-hours bulk uploads, IT imaging lookalikes, and twins."
+
+environmentTemplate:
+  organizationArchetypes:
+    - "org_apex_dynamics"
+    - "org_vanguard_logistics"
+    - "org_strata_health"
+    - "org_meridian_fintech"
+  assetDistribution:
+    workstations:
+      min: 4
+      max: 7
+    servers:
+      min: 2
+      max: 4
+    domainControllers:
+      min: 1
+      max: 1
+    mailGateways:
+      min: 1
+      max: 1
+  userDistribution:
+    totalUsers:
+      min: 6
+      max: 10
+    departments:
+      - "Finance"
+      - "Engineering"
+      - "IT Operations"
+      - "Human Resources"
+      - "Marketing"
+
+incidentTemplates:
+  - id: "inc-usb-mass-export"
+    titleTemplate: "Unauthorized Removable Media Mass Export on {victimAsset}"
+    category: "Insider Threat & Policy Violation"
+    rootCauseTemplate: "User {victimUser} connected unauthorized USB storage device to {victimAsset} and copied confidential engineering files."
+    mitreTags:
+      - "T1052.001" # Exfiltration over Physical Medium
+      - "T1005" # Data from Local System
+    stages:
+      - stageId: "stage-usb-export"
+        name: "Unauthorized USB Data Transfer"
+        phase: "exfiltration"
+        timingOffsetMinutes:
+          min: -40
+          max: 10
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "EDR"
+            action: "device_mount"
+            messageTemplate: "Microsoft-Windows-Security-Auditing: Removable media drive mounted. Device: USBSTOR\\DiskSanDisk_Ultra_64GB on {victimAsset} by {victimUser}"
+            fieldsTemplate:
+              device_id: "USBSTOR\\DiskSanDisk_Ultra_64GB"
+              user: "{victimUser}"
+              target_host: "{victimAsset}"
+              operation: "device_mount"
+          - source: "EDR"
+            action: "file_modification"
+            messageTemplate: "File write burst: 450 confidential engineering schematics copied to removable drive volume on {victimAsset}"
+            fieldsTemplate:
+              user: "{victimUser}"
+              target_host: "{victimAsset}"
+              file_count: 450
+              destination: "E:\\schematics_export"
+        alertTemplates:
+          - ruleName: "EDR: Process Created from Removable Storage Volume"
+            source: "EDR"
+            severity: "HIGH"
+            summaryTemplate: "Unauthorized removable media storage device mounted on host '{victimAsset}' with mass export of corporate files"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            rawFieldsTemplate:
+              user: "{victimUser}"
+              target_host: "{victimAsset}"
+              device_vendor: "SanDisk"
+              files_transferred: 450
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "HIGH"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-usb-export"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed insider policy breach on {victimAsset}. User {victimUser} copied 450 confidential files to unauthorized USB drive."
+
+  - id: "inc-offhours-bulk-upload"
+    titleTemplate: "Off-Hours Bulk Customer Record Export by {victimUser}"
+    category: "Insider Threat & Policy Violation"
+    rootCauseTemplate: "Employee {victimUser} downloaded customer records and initiated large off-hours bulk upload from {victimAsset}."
+    mitreTags:
+      - "T1567.002" # Exfiltration to Cloud Storage
+      - "T1078.004" # Cloud Accounts
+    stages:
+      - stageId: "stage-bulk-cloud-upload"
+        name: "Off-Hours Cloud Archive Upload"
+        phase: "exfiltration"
+        timingOffsetMinutes:
+          min: 15
+          max: 60
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "Firewall"
+            action: "flow_allow"
+            messageTemplate: "FW[edge]: ALLOW TCP {victimIp}:51420 -> 198.51.100.89:443 rule='OUTBOUND_HTTPS' bytes=1240000000"
+            fieldsTemplate:
+              src_ip: "{victimIp}"
+              dst_ip: "{attackerIp}"
+              target_host: "{victimAsset}"
+              bytes_sent: 1240000000
+        alertTemplates:
+          - ruleName: "DLP: Off-Hours Bulk Cloud Data Transmission"
+            source: "EDR"
+            severity: "HIGH"
+            summaryTemplate: "Off-hours bulk cloud upload detected from corporate host '{victimAsset}' by user '{victimUser}' to storage host"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            rawFieldsTemplate:
+              user: "{victimUser}"
+              target_host: "{victimAsset}"
+              bytes_transferred: "1.2 GB"
+              time_window: "off_hours"
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "HIGH"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-bulk-cloud-upload"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed data handling policy violation. User {victimUser} uploaded 1.2 GB customer database records during off-hours."
+
+benignTemplates:
+  - id: "benign-authorized-usb-imaging"
+    name: "IT Technician Approved Removable Media Storage"
+    category: "Endpoint Operations"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "business_hours"
+    actorRole: "it_technician"
+    eventTemplates:
+      - source: "EDR"
+        action: "device_mount"
+        messageTemplate: "Microsoft-Windows-Security-Auditing: Removable media drive mounted. Device: USBSTOR\\DiskKingston_CorpEncrypted on {hostname} by itadmin"
+        fieldsTemplate:
+          device_id: "USBSTOR\\DiskKingston_CorpEncrypted"
+          user: "itadmin"
+          target_host: "{hostname}"
+          operation: "device_mount"
+    alertTemplates:
+      - ruleName: "EDR: Process Created from Removable Storage Volume"
+        source: "EDR"
+        severity: "LOW"
+        summaryTemplate: "Approved IT technician removable media diagnostics drive mounted on corporate host '{hostname}' by administrator"
+        rawFieldsTemplate:
+          user: "itadmin"
+          target_host: "{hostname}"
+          device_registered: true
+          status: "approved_hardware"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-authorized-usb-imaging"
+      acceptableAlternatives: []
+      debriefTemplate: "Approved IT technician hardware diagnostics drive on registered corporate endpoint. Fully benign."
+
+  - id: "benign-marketing-collateral-zip"
+    name: "Authorized Marketing Collateral Archiving"
+    category: "Application Traffic"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "business_hours"
+    actorRole: "standard_user"
+    eventTemplates:
+      - source: "EDR"
+        action: "process_creation"
+        messageTemplate: "7z.exe a -tzip C:\\Marketing\\Partner_Collateral.zip C:\\Marketing\\PublicDocs\\*.*"
+        fieldsTemplate:
+          process_name: "7z.exe"
+          user: "{username}"
+          target_host: "{hostname}"
+          command_line: "7z.exe a -tzip C:\\Marketing\\Partner_Collateral.zip C:\\Marketing\\PublicDocs\\*.*"
+    alertTemplates:
+      - ruleName: "EDR: Living-Off-The-Land Binary Execution"
+        source: "EDR"
+        severity: "LOW"
+        summaryTemplate: "Marketing file archiving utility executed during business hours on corporate host '{hostname}' by user '{username}'"
+        rawFieldsTemplate:
+          user: "{username}"
+          target_host: "{hostname}"
+          operation: "archive_creation"
+          classification: "public"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-marketing-collateral-zip"
+      acceptableAlternatives: []
+      debriefTemplate: "Routine public marketing collateral compression by marketing staff. Authorized business task."
+
+  - id: "benign-backup-job"
+    name: "Nightly Automated Snapshot & Backup"
+    category: "Scheduled Jobs"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_nightly"
+    actorRole: "service_account"
+    eventTemplates:
+      - source: "Authentication"
+        action: "service_logon"
+        messageTemplate: "Service account 'svc-backup' authenticated successfully via Kerberos"
+        fieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Authentication: High-Volume Service Data Replication"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Scheduled database snapshot stream handled by service account 'svc-backup' on corporate host '{hostname}'"
+        rawFieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+          bytes_transferred: "42.8 GB"
+          operation: "scheduled_backup"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-backup-job"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate automated snapshot and backup initiated by approved service principal 'svc-backup'."
+
+  - id: "benign-vpn-traveler"
+    name: "Remote VPN Connection from Roaming IP"
+    category: "Remote Access"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "business_hours"
+    actorRole: "roaming_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "vpn_login"
+        messageTemplate: "VPN tunnel authenticated for '{username}' from roaming IP {roamingIp}"
+        fieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          status: "connected"
+    alertTemplates:
+      - ruleName: "Firewall: New Geographic VPN Tunnel Established"
+        source: "Firewall"
+        severity: "LOW"
+        summaryTemplate: "Authenticated remote VPN tunnel session established for corporate employee '{username}' from roaming address {roamingIp}"
+        rawFieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          mfa_verified: true
+          status: "connected"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vpn-traveler"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate corporate VPN access by authenticated employee with multi-factor verification."
+
+  - id: "benign-vuln-scanner"
+    name: "Authorized Weekly Perimeter Vulnerability Scan"
+    category: "Vulnerability Scanning"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "batch_window_nightly"
+    actorRole: "security_scanner"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "port_scan"
+        messageTemplate: "TCP port sweep detected from scanner IP {scannerIp}"
+        fieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Network IDS: Rapid Port Sweep Probe"
+        source: "Network IDS"
+        severity: "HIGH"
+        summaryTemplate: "Rapid port sweep probe from authorized internal vulnerability scanner address {scannerIp} on host '{hostname}'"
+        rawFieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+          authorized_scanner: true
+          status: "scheduled_audit"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "MEDIUM"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vuln-scanner"
+      acceptableAlternatives: []
+      debriefTemplate: "Authorized vulnerability scanning from known scanner IP {scannerIp}. Baseline approved activity."
+
+  - id: "benign-sensor-flapping"
+    name: "Duplicate Sensor Trigger on Benign Keep-Alive"
+    category: "Telemetry Flapping"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "anytime"
+    actorRole: "sensor_glitch"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "protocol_anomaly"
+        messageTemplate: "Malformed HTTP keepalive header on legacy telemetry connection"
+        fieldsTemplate:
+          protocol: "HTTP/1.1"
+    alertTemplates:
+      - ruleName: "Network IDS: Protocol Header Parsing Anomaly"
+        source: "Network IDS"
+        severity: "LOW"
+        summaryTemplate: "Repetitive protocol anomaly sensor trigger observed on internal keep-alive session from host '{hostname}'"
+        rawFieldsTemplate:
+          sensor_id: "suricata-dmz-01"
+          target_host: "{hostname}"
+          duplicate_count: 8
+          protocol: "HTTP/1.1"
+    groundTruth:
+      kind: "duplicate"
+      correctDisposition: "duplicate"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-sensor-flapping"
+      acceptableAlternatives: []
+      debriefTemplate: "Known flapping sensor alert caused by benign legacy keep-alive traffic."
+
+  - id: "benign-patch-deployment"
+    name: "Central Systems Patch Rollout"
+    category: "Software Deployment"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_maintenance"
+    actorRole: "admin_endpoint"
+    eventTemplates:
+      - source: "EDR"
+        action: "package_installer"
+        messageTemplate: "systemd-update executed package upgrade sequence on host '{hostname}'"
+        fieldsTemplate:
+          process_name: "apt-get"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "EDR: System Package Upgrade Sequence"
+        source: "EDR"
+        severity: "MEDIUM"
+        summaryTemplate: "Automated package deployment installer executed during scheduled maintenance on corporate host '{hostname}'"
+        rawFieldsTemplate:
+          installer: "systemd-update"
+          target_host: "{hostname}"
+          operation: "patch_distribution"
+          status: "installed"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-patch-deployment"
+      acceptableAlternatives: []
+      debriefTemplate: "Automated patch rollout during scheduled maintenance window."
+
+twinTemplates:
+  - id: "twin-usb-device"
+    name: "Removable Media Usage Twin Pair"
+    description: "Contrasts unauthorized USB mass copy of confidential blueprints vs authorized IT hardware diagnostic drive"
+    toolOrTechnique: "Removable Storage Hardware"
+    maliciousStageRef: "stage-usb-export"
+    benignTemplateRef: "benign-authorized-usb-imaging"
+    distinguishingEvidence: "Asset registration and file classification: malicious involves unmanaged SanDisk drive copying 450 confidential files; benign is registered encrypted IT drive mounted by itadmin."
+    acceptableAlternatives: []
+
+  - id: "twin-archive-export"
+    name: "Bulk File Movement Twin Pair"
+    description: "Contrasts off-hours bulk upload of customer records vs authorized marketing archive compilation"
+    toolOrTechnique: "Bulk File Staging & Upload"
+    maliciousStageRef: "stage-bulk-cloud-upload"
+    benignTemplateRef: "benign-marketing-collateral-zip"
+    distinguishingEvidence: "Access timing and destination: malicious occurs at 23:45 uploading 1.2 GB to external address; benign occurs during business hours compressing public docs in marketing folder."
+    acceptableAlternatives: []
+
+variationAxes:
+  incidentCount:
+    min: 1
+    max: 2
+  noiseRatio:
+    min: 0.65
+    max: 0.85
+  ambiguityCount:
+    min: 1
+    max: 3
+  telemetryGapCount:
+    min: 0
+    max: 2
+  targetAlertCount:
+    min: 30
+    max: 65
+  difficultyProfiles:
+    beginner:
+      incidentCount: 1
+      noiseRatio: 0.65
+      ambiguityCount: 1
+      telemetryGapCount: 0
+      targetAlertCount: 30
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    intermediate:
+      incidentCount: 2
+      noiseRatio: 0.75
+      ambiguityCount: 2
+      telemetryGapCount: 1
+      targetAlertCount: 45
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    advanced:
+      incidentCount: 2
+      noiseRatio: 0.82
+      ambiguityCount: 3
+      telemetryGapCount: 2
+      targetAlertCount: 65
+      expectedScoreCeilingNaive: 50
+      expectedMinScoreReference: 80
+
+debriefTemplates:
+  overallBriefingTemplate: |
+    Welcome to your Tier-1 SOC shift at {orgName}.
+    A queue of {alertCount} incoming alerts has arrived across endpoint DLP, storage auditing, and firewall flow sensors.
+    Your mission:
+    1. Distinguish between authorized IT maintenance using removable media versus unauthorized data exports.
+    2. Analyze data volumes, file classifications, and transfer times to recognize insider policy violations.
+    3. Document evidence findings with specific file counts and escalate verified breaches to Tier 2.
+  generalGuidanceTemplate: |
+    Shift debrief for {orgName}:
+    In this shift, you investigated {alertCount} alerts covering {incidentCount} security incident(s) alongside operational noise.
+    Key takeaways:
+    - Connecting an unregistered USB device to copy confidential blueprints is a critical data loss prevention violation.
+    - Large off-hours outbound data transmissions without prior change authorization warrant immediate investigation.
+    - Differentiate registered administrative hardware diagnostic drives from unapproved consumer USB devices.
+
+hooks:
+  enrichmentHooks:
+    - id: "hook-whois-domain"
+      provider: "whois"
+      dataPoints:
+        - "creation_date"
+        - "registrar"
+  queryDatasetHooks:
+    - datasetName: "siem_telemetry_flow"
+      extraEventGenerators:
+        - "generate_file_events"
+  evidenceViewHooks:
+    - id: "hook-auth-timeline"
+      viewType: "timeline"
+  reportRubricHooks:
+    - sectionId: "executive_summary"
+      criteria:
+        - "Identified removable media serial or destination"
+        - "Assessed exfiltrated data classification"
