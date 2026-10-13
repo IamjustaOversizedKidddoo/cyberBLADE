@@ -228,17 +228,18 @@ export function SearchResultsTable({
             <tbody className="divide-y divide-line/30">
               {pagedEvents.map((evt, idx) => {
                 const rowNum = (page - 1) * pageSize + idx + 1;
-                const isExpanded = expandedRowId === evt.id;
+                const rowKey = evt.id !== undefined ? String(evt.id) : String(idx);
+                const isExpanded = expandedRowId === rowKey;
 
                 return (
                   <tr
-                    key={evt.id || idx}
+                    key={rowKey}
                     className={`hover:bg-surface-raised/60 transition-colors ${
                       isExpanded ? "bg-cyan/5 border-l-2 border-cyan" : ""
                     }`}
                   >
                     <td
-                      onClick={() => setExpandedRowId(isExpanded ? null : (evt.id || String(idx)))}
+                      onClick={() => setExpandedRowId(isExpanded ? null : rowKey)}
                       className="px-2 py-1.5 text-center text-muted/60 cursor-pointer hover:text-cyan text-[11px]"
                     >
                       {isExpanded ? "▼" : rowNum}
@@ -251,7 +252,7 @@ export function SearchResultsTable({
                       return (
                         <td
                           key={col}
-                          onClick={() => setExpandedRowId(isExpanded ? null : (evt.id || String(idx)))}
+                          onClick={() => setExpandedRowId(isExpanded ? null : rowKey)}
                           className="px-2.5 py-1.5 truncate max-w-[240px] text-ink cursor-pointer"
                           title={valStr}
                         >

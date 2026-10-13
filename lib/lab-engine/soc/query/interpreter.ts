@@ -11,6 +11,7 @@ import type {
   CommandNode,
   AggregationDefNode,
   SortFieldDef,
+  LiteralNode,
 } from "./ast";
 import type {
   BladeQLEvent,
@@ -253,16 +254,26 @@ export class BladeQLInterpreter {
 
     if (Array.isArray(targetVal)) return false;
 
+    // Wildcard filter
+    if (targetVal.type === "Wildcard") {
+      const pattern = targetVal.pattern;
+      const regexStr = "^" + pattern.replace(/\./g, "\\.").replace(/\*/g, ".*").replace(/\?/g, ".") + "$";
+      const rx = new SafeRegex(regexStr, "i");
+      const matched = rx.test(String(rawVal ?? ""));
+      return filter.operator === "!=" ? !matched : matched;
+    }
+
+    const lit = targetVal as LiteralNode;
+
     // CIDR match filter
-    if (filter.operator === "cidrmatch" || (filter.operator === "==" && targetVal.valueType === "cidr")) {
+    if (filter.operator === "cidrmatch" || (filter.operator === "==" && lit.valueType === "cidr")) {
       const ip = String(rawVal ?? "");
-      const cidr = String(targetVal.value ?? "");
+      const cidr = String(lit.value ?? "");
       return this.cidrMatch(ip, cidr);
     }
 
-    // Wildcard filter
-    if (targetVal.type === "Wildcard" || (typeof targetVal.value === "string" && (targetVal.value.includes("*") || targetVal.value.includes("?")))) {
-      const pattern = String(targetVal.value);
+    if (typeof lit.value === "string" && (lit.value.includes("*") || lit.value.includes("?"))) {
+      const pattern = lit.value;
       const regexStr = "^" + pattern.replace(/\./g, "\\.").replace(/\*/g, ".*").replace(/\?/g, ".") + "$";
       const rx = new SafeRegex(regexStr, "i");
       const matched = rx.test(String(rawVal ?? ""));
@@ -270,33 +281,33 @@ export class BladeQLInterpreter {
     }
 
     const rowValStr = String(rawVal ?? "").toLowerCase();
-    const targetValStr = String(targetVal.value ?? "").toLowerCase();
+    const targetValStr = String(lit.value ?? "").toLowerCase();
 
     switch (filter.operator) {
       case "==":
       case "=":
-        if (typeof rawVal === "number" && typeof targetVal.value === "number") {
-          return rawVal === targetVal.value;
+        if (typeof rawVal === "number" && typeof lit.value === "number") {
+          return rawVal === lit.value;
         }
         return rowValStr === targetValStr;
 
       case "!=":
-        if (typeof rawVal === "number" && typeof targetVal.value === "number") {
-          return rawVal !== targetVal.value;
+        if (typeof rawVal === "number" && typeof lit.value === "number") {
+          return rawVal !== lit.value;
         }
         return rowValStr !== targetValStr;
 
       case "===":
-        return String(rawVal ?? "") === String(targetVal.value ?? "");
+        return String(rawVal ?? "") === String(lit.value ?? "");
 
       case "<":
-        return Number(rawVal) < Number(targetVal.value);
+        return Number(rawVal) < Number(lit.value);
       case "<=":
-        return Number(rawVal) <= Number(targetVal.value);
+        return Number(rawVal) <= Number(lit.value);
       case ">":
-        return Number(rawVal) > Number(targetVal.value);
+        return Number(rawVal) > Number(lit.value);
       case ">=":
-        return Number(rawVal) >= Number(targetVal.value);
+        return Number(rawVal) >= Number(lit.value);
 
       case "=~": {
         const rx = new SafeRegex(String(targetVal.value), "i");

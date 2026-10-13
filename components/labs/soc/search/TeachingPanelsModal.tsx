@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BLADEQL_SPEC } from "@/lib/lab-engine/soc/query/spec";
 import { Parser } from "@/lib/lab-engine/soc/query/parser";
 
@@ -22,6 +22,10 @@ export function TeachingPanelsModal({
   const [activeTab, setActiveTab] = useState<"reference" | "examples" | "explain" | "concepts">(defaultTab);
   const [refSearch, setRefSearch] = useState("");
 
+  useEffect(() => {
+    setActiveTab(defaultTab);
+  }, [defaultTab]);
+
   if (!isOpen) return null;
 
   // Generate plain-language deterministic explanation for current query
@@ -41,8 +45,8 @@ export function TeachingPanelsModal({
         );
       }
 
-      // Pipeline stages
-      ast.stages.forEach((stage, idx) => {
+      // Pipeline commands
+      ast.commands.forEach((stage: any, idx: number) => {
         const num = idx + 2;
         switch (stage.type) {
           case "WhereCommand":
@@ -50,25 +54,25 @@ export function TeachingPanelsModal({
             break;
           case "StatsCommand":
             steps.push(
-              `${num}. Aggregation (stats): Calculate aggregate metrics (${stage.aggregations.map((a) => `${a.fn}(${a.field || "*"})`).join(", ")}) grouped by (${stage.byFields.join(", ") || "entire dataset"}).`,
+              `${num}. Aggregation (stats): Calculate aggregate metrics (${stage.aggregations.map((a: any) => `${a.fn}(${a.field || "*"})`).join(", ")}) grouped by (${stage.byFields.join(", ") || "entire dataset"}).`,
             );
             break;
           case "SortCommand":
             steps.push(
-              `${num}. Ordering (sort): Sort stream by field ${stage.field} in ${stage.direction === "asc" ? "ascending" : "descending"} order.`,
+              `${num}. Ordering (sort): Sort stream by (${stage.fields.map((f: any) => `${f.field} ${f.direction}`).join(", ")}).`,
             );
             break;
           case "HeadCommand":
-            steps.push(`${num}. Truncate (head): Restrict results to the top ${stage.count} events.`);
+            steps.push(`${num}. Truncate (head): Restrict results to the top ${stage.limit} events.`);
             break;
           case "TailCommand":
-            steps.push(`${num}. Tail: Keep only the last ${stage.count} events of the stream.`);
+            steps.push(`${num}. Tail: Keep only the last ${stage.limit} events of the stream.`);
             break;
           case "TopCommand":
-            steps.push(`${num}. Top Talkers (top): Compute highest-frequency values for field ${stage.field}.`);
+            steps.push(`${num}. Top Talkers (top): Compute highest-frequency values for field ${stage.field} (limit ${stage.limit}).`);
             break;
           case "RareCommand":
-            steps.push(`${num}. Anomaly Detection (rare): Compute lowest-frequency values for field ${stage.field}.`);
+            steps.push(`${num}. Anomaly Detection (rare): Compute lowest-frequency values for field ${stage.field} (limit ${stage.limit}).`);
             break;
           case "TableCommand":
             steps.push(`${num}. Projection (table): Restrict output columns strictly to (${stage.fields.join(", ")}).`);
@@ -79,7 +83,7 @@ export function TeachingPanelsModal({
             );
             break;
           case "EvalCommand":
-            steps.push(`${num}. Compute (eval): Compute and assign calculated field \`${stage.field}\`.`);
+            steps.push(`${num}. Compute (eval): Compute and assign calculated fields (${stage.assignments.map((a: any) => a.field).join(", ")}).`);
             break;
           case "DedupCommand":
             steps.push(`${num}. Deduplicate (dedup): Discard consecutive duplicates on fields (${stage.fields.join(", ")}).`);
@@ -187,7 +191,7 @@ export function TeachingPanelsModal({
         <div className="flex items-center justify-between px-4 py-3 border-b border-line bg-surface-raised">
           <div className="flex items-center gap-2">
             <span className="font-bold text-ink">BladeQL Reference & Guidance</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.5 bg-cyan/15 text-cyan border border-cyan/40 rounded-xs">
+            <span className="text-[10px] font-mono px-1.5 py-0.5 bg-surface text-cyan border border-cyan/40 rounded-xs">
               v1.0.0
             </span>
           </div>
@@ -267,7 +271,7 @@ export function TeachingPanelsModal({
                   Pipeline Commands
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {Object.entries(BLADEQL_SPEC.commands)
+                  {(Object.entries(BLADEQL_SPEC.commands) as [string, any][])
                     .filter(
                       ([cmd, spec]) =>
                         cmd.toLowerCase().includes(refSearch.toLowerCase()) ||
@@ -291,7 +295,7 @@ export function TeachingPanelsModal({
                   Built-in Eval & Aggregation Functions
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {Object.entries(BLADEQL_SPEC.functions)
+                  {(Object.entries(BLADEQL_SPEC.functions) as [string, any][])
                     .filter(
                       ([fn, spec]) =>
                         fn.toLowerCase().includes(refSearch.toLowerCase()) ||

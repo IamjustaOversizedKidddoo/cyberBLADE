@@ -47,7 +47,7 @@ export function BladeQLEditor({
     const items: AutocompleteItem[] = [];
 
     // Commands
-    for (const [cmd, spec] of Object.entries(BLADEQL_SPEC.commands)) {
+    for (const [cmd, spec] of Object.entries(BLADEQL_SPEC.commands) as [string, any][]) {
       items.push({
         type: "command",
         label: cmd,
@@ -57,7 +57,7 @@ export function BladeQLEditor({
     }
 
     // Functions
-    for (const [fn, spec] of Object.entries(BLADEQL_SPEC.functions)) {
+    for (const [fn, spec] of Object.entries(BLADEQL_SPEC.functions) as [string, any][]) {
       items.push({
         type: "function",
         label: `${fn}()`,

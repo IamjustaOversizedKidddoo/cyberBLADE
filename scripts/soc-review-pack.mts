@@ -90,9 +90,10 @@ async function main(): Promise<number> {
     const sc = sampleVariants[vIdx];
     const client = toClientView(sc);
 
+    const seed = sc.seed ?? `review-seed-${vIdx}`;
     // Dataset generation for review
-    const dataset = generateScenarioDataset(sc, sc.seed, 5000);
-    const { learnerQuestions, serverTruths } = generateScenarioQuestions(sc, sc.seed);
+    const dataset = generateScenarioDataset(sc, seed, 5000);
+    const { learnerQuestions, serverTruths } = generateScenarioQuestions(sc, seed);
 
     console.log("--------------------------------------------------------------------------------");
     console.log(`SAMPLE VARIANT ${vIdx + 1} OF ${count} [Seed: ${sc.seed}]`);
@@ -176,7 +177,7 @@ async function main(): Promise<number> {
 
   for (let vIdx = 0; vIdx < sampleVariants.length; vIdx++) {
     const sc = sampleVariants[vIdx];
-    const { serverTruths } = generateScenarioQuestions(sc, sc.seed);
+    const { serverTruths } = generateScenarioQuestions(sc, sc.seed ?? `review-seed-${vIdx}`);
 
     answerContent += `--- VARIANT ${vIdx + 1} OF ${count} [Seed: ${sc.seed}] ---\n`;
     answerContent += `Incidents Ground Truth (${sc.groundTruth.incidents.length} total):\n`;

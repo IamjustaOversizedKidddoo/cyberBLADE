@@ -28,7 +28,7 @@ export class SafeRegex {
   public readonly pattern: string;
   public readonly caseInsensitive: boolean;
   public readonly hasAnchorStart: boolean;
-  public readonly groupNames: string[] = [];
+  public groupNames: string[] = [];
   private states: NfaState[] = [];
   private startState = 0;
   private maxSteps: number;

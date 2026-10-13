@@ -176,10 +176,11 @@ export function verifyAnswer(
     if (submitted.length !== truth.referenceAnswer.length) {
       return { isCorrect: false };
     }
+    const refList = truth.referenceAnswer as string[];
     const isEq = submitted.every(
       (item, idx) =>
         String(item).trim().toLowerCase() ===
-        String(truth.referenceAnswer[idx]).trim().toLowerCase(),
+        String(refList[idx]).trim().toLowerCase(),
     );
     return { isCorrect: isEq };
   }
@@ -232,7 +233,8 @@ export function generateScenarioQuestions(
   const dataset = generateScenarioDataset(scenario, seed, 5000);
 
   // Pick question templates for this scenario's family
-  const templates = getFamilyQuestionTemplates(scenario.familyId ?? "soc-f-phishing-cred-01");
+  const famId = (scenario as any).familyId ?? (scenario as any).scenarioId ?? "soc-f-phishing-cred-01";
+  const templates = getFamilyQuestionTemplates(famId);
 
   const learnerQuestions: LearnerQuestion[] = [];
   const serverTruths: ServerQuestionTruth[] = [];

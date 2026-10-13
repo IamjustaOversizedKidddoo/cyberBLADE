@@ -465,3 +465,37 @@ export const CONCEPT_MAPPINGS: ConceptMapping[] = [
     notes: "Sessionizes timeline when event delta exceeds maxgap.",
   },
 ];
+
+export interface BladeQLSpecCommand {
+  name: string;
+  syntax: string;
+  description: string;
+  summary: string;
+  category: string;
+  examples: string[];
+}
+
+export interface BladeQLSpecFunction {
+  name: string;
+  signature: string;
+  description: string;
+  summary: string;
+  category: string;
+  returnType: string;
+  examples: string[];
+}
+
+export const BLADEQL_SPEC = {
+  commands: Object.fromEntries(
+    Object.entries(BLADEQL_COMMANDS).map(([k, v]) => [
+      k,
+      { ...v, summary: v.description } as BladeQLSpecCommand,
+    ]),
+  ) as Record<string, BladeQLSpecCommand>,
+  functions: Object.fromEntries(
+    Object.entries(BLADEQL_FUNCTIONS).map(([k, v]) => [
+      k,
+      { ...v, summary: v.description, returnType: v.category } as BladeQLSpecFunction,
+    ]),
+  ) as Record<string, BladeQLSpecFunction>,
+};
