@@ -15,10 +15,10 @@ import { InvestigationQuestionsPanel } from "./InvestigationQuestionsPanel";
 import { TeachingPanelsModal } from "./TeachingPanelsModal";
 
 export interface SocSearchTabProps {
-  scenario: SocScenario;
+  scenario: any;
   attemptId: string;
   seed?: string;
-  onOpenEnrichment?: (target: { type: "ip" | "domain" | "hash" | "user" | "host"; value: string }) => void;
+  onOpenEnrichment?: (target: any) => void;
   onAttachEvidence?: (event: BladeQLEvent) => void;
 }
 

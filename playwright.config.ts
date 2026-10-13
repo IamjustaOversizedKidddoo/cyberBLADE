@@ -19,6 +19,8 @@ export default defineConfig({
       NEON_SHOW_DRAFTS: "true",
       CYBERBLADE_ALLOW_LOCAL_E2E: "true",
       SOC_WORKSPACE_ENABLED: "true",
+      SOC_ENRICHMENT_ENABLED: "true",
+      SOC_QUERY_ENABLED: "true",
     },
   },
   projects: [

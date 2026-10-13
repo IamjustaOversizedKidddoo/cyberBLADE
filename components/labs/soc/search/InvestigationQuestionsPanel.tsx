@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { LearnerQuestion, QuestionSubmissionResult } from "@/lib/lab-engine/soc/query/questions";
 import { submitQuestionAnswer } from "@/lib/lab-engine/soc/query/questions";
 
@@ -27,6 +27,12 @@ export function InvestigationQuestionsPanel({
   const [activeHints, setActiveHints] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState<Record<string, boolean>>({});
   const [errorMessages, setErrorMessages] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (initialQuestions && initialQuestions.length > 0) {
+      setQuestions(initialQuestions);
+    }
+  }, [initialQuestions]);
 
   const handleTextAnswerChange = (qId: string, val: string) => {
     setAnswers((prev) => ({ ...prev, [qId]: val }));
@@ -129,7 +135,7 @@ export function InvestigationQuestionsPanel({
             Verified server-side: {completedCount} / {questions.length} solved
           </span>
         </div>
-        <span className="px-2 py-0.5 rounded-xs font-mono font-bold text-[11px] bg-cyan/15 text-cyan border border-cyan/40">
+        <span className="px-2 py-0.5 rounded-xs font-mono font-bold text-[11px] bg-surface text-cyan border border-cyan/40">
           {questions.reduce((sum, q) => (q.status === "correct" ? sum + q.points : sum), 0)} pts
         </span>
       </div>

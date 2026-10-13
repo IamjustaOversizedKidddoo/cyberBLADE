@@ -238,7 +238,15 @@ export function SocWorkspace({ session, onExit }: Props) {
               }`}
             >
               <span>Log Search</span>
-              <span className="text-[10px] font-mono px-1 py-0.2 bg-cyan/15 text-cyan rounded">BladeQL</span>
+              <span
+                className={`text-[10px] font-mono px-1 py-0.2 rounded ${
+                  workspaceView === "search"
+                    ? "bg-cyan text-console font-bold"
+                    : "bg-surface text-cyan border border-cyan/40"
+                }`}
+              >
+                BladeQL
+              </span>
             </button>
           </div>
         </div>
@@ -387,7 +395,7 @@ export function SocWorkspace({ session, onExit }: Props) {
           <SocSearchTab
             scenario={scenario}
             attemptId={session.attempt.id}
-            seed={session.attempt.seed}
+            seed={(scenario as any).seed ?? "scenario-seed"}
             onOpenEnrichment={(target) => {
               setEnrichmentTarget(target);
               setIsEnrichmentOpen(true);
@@ -396,7 +404,7 @@ export function SocWorkspace({ session, onExit }: Props) {
               handleManageCase({
                 action: "create",
                 title: `Evidence: ${event.source} ${event.action ?? ""} (${event.id})`,
-                severity: "medium",
+                severity: "MEDIUM",
                 notes: `Log evidence from BladeQL search:\n${event._raw ?? JSON.stringify(event)}`,
               });
               setActionAnnouncement(`Evidence event ${event.id} attached to new case.`);
