@@ -212,7 +212,7 @@ describe("Simulated Learner Journey (SM-2 Multi-Session)", () => {
   });
 
   it("rating convenience helpers produce expected state progressions", () => {
-    let state = initialReviewState(baseTime);
+    const state = initialReviewState(baseTime);
 
     // "again" always resets
     const again = reviewWithRating(state, "again", baseTime);

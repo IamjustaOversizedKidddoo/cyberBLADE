@@ -1,0 +1,26 @@
+id: soc-fam-insider-policy-01
+title: "SOC Practice: Insider Threat & Removable Media Violations"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 30
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: soc-f-insider-policy-01
+objectives:
+  - id: o1
+    prompt: "Investigate DLP alerts, removable storage copying, and bulk data staging to identify policy violations."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Check USB mount logs and file copy events involving confidential documents on user workstations."
+    - "Differentiate authorized IT technician diagnostics from unauthorized off-hours staff data transfers."
+    - "Submit triage decisions to collect your evaluation token."
+xp: 120
+mitre:
+  - "T1052.001"
+  - "T1567"

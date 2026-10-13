@@ -12,14 +12,15 @@ import type {
   SocAlert,
   SocIncidentGroundTruth,
   SocAlertIoc,
+  AcceptableAlternative,
 } from "./schema";
 import {
   socFamilySchema,
   type SocFamily,
   type IncidentTemplate,
-  type BenignTemplate,
+  type BenignNoiseTemplate,
 } from "./family-schema";
-import { loadVocab, type SocVocab } from "./vocab";
+import { loadVocab } from "./vocab";
 import type { ShiftProfile } from "./shift-schema";
 import { GENERATOR_VERSION, computeVariantMetrics } from "./generator";
 import { validateSocScenario } from "./validator";
@@ -499,7 +500,7 @@ export function composeShiftScenario(
       fatigueBenignPool.length > 0 &&
       (familyBenignPool.length === 0 || noiseRng.next() < shiftProfile.noiseMix.alertFatigueRatio);
 
-    const benignTpl: BenignTemplate = pickFatigue
+    const benignTpl: BenignNoiseTemplate = pickFatigue
       ? fatigueBenignPool[noiseIndex % fatigueBenignPool.length]
       : familyBenignPool[noiseIndex % familyBenignPool.length];
     noiseIndex++;
@@ -553,7 +554,7 @@ export function composeShiftScenario(
       const rawFields = substituteRecord(altTpl.rawFieldsTemplate, noiseTokens);
       const debrief = substituteTokens(benignTpl.groundTruth.debriefTemplate, noiseTokens);
 
-      const iocs: SocAlertIoc[] = altTpl.iocs.map((ioc) => ({
+      const iocs: SocAlertIoc[] = altTpl.iocs.map((ioc: { type: "ip" | "domain" | "hash" | "url" | "email"; valueTemplate: string }) => ({
         type: ioc.type,
         value: substituteTokens(ioc.valueTemplate, noiseTokens),
       }));
@@ -576,7 +577,7 @@ export function composeShiftScenario(
           correctDisposition: benignTpl.groundTruth.correctDisposition,
           correctSeverity: benignTpl.groundTruth.correctSeverity,
           correctEscalation: benignTpl.groundTruth.correctEscalation,
-          acceptableAlternatives: benignTpl.groundTruth.acceptableAlternatives.map((alt) => ({ ...alt })),
+          acceptableAlternatives: benignTpl.groundTruth.acceptableAlternatives.map((alt: AcceptableAlternative) => ({ ...alt })),
           debrief,
         },
       });

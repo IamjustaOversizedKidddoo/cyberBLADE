@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import type { SocCaseRecord } from "@/lib/lab-engine/soc/types";
 import type { SocAlertClient, SocSeverity } from "@/lib/lab-engine/soc/schema";
 import { Badge } from "@/components/ui/Badge";
@@ -40,14 +40,11 @@ export function CaseManagementPanel({
 
   const activeCase = cases.find((c) => c.id === selectedCaseId);
 
-  // Sync active case notes
-  useEffect(() => {
-    if (activeCase) {
-      setNotes(activeCase.notes);
-    } else {
-      setNotes("");
-    }
-  }, [selectedCaseId, activeCase]);
+  const [prevCaseId, setPrevCaseId] = useState(selectedCaseId);
+  if (prevCaseId !== selectedCaseId) {
+    setPrevCaseId(selectedCaseId);
+    setNotes(activeCase?.notes ?? "");
+  }
 
   // Debounced autosave for case notes
   const handleNotesChange = (newNotes: string) => {

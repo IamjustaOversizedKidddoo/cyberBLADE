@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { SocAlertClient, SocDisposition, SocSeverity, SocEscalationTier } from "@/lib/lab-engine/soc/schema";
 import type { SocDecisionRecord } from "@/lib/lab-engine/soc/types";
 import { Badge } from "@/components/ui/Badge";
@@ -93,18 +93,6 @@ export function TriageDecisionForm({
 
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
-
-  // Sync state when active alert changes
-  useEffect(() => {
-    setDisposition(existingDecision?.disposition ?? "false_positive");
-    setSeverity(existingDecision?.severity ?? alert.severity);
-    setEscalate(existingDecision?.escalate ?? false);
-    setTargetTier(existingDecision?.targetTier ?? "tier2");
-    setRationale(existingDecision?.rationale ?? "");
-    setEvidenceInput(existingDecision?.evidenceRefs?.join(", ") ?? alert.id);
-    setSaveStatus("idle");
-    setErrorMessage("");
-  }, [alert.id, existingDecision]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

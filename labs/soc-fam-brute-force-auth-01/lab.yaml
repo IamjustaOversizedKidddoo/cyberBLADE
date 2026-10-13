@@ -1,0 +1,26 @@
+id: soc-fam-brute-force-auth-01
+title: "SOC Practice: Exposed Service Brute Force & MFA Fatigue"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: soc-f-brute-force-auth-01
+objectives:
+  - id: o1
+    prompt: "Investigate authentication failure velocity, detect MFA push fatigue compromises, and submit your evaluation token."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Filter alerts by Authentication source and check for repeated failed login events on srv-stage-01 or SSH."
+    - "Look for anomalous multi-factor push notifications followed immediately by an external login success."
+    - "Submit triage decisions to collect your evaluation token."
+xp: 100
+mitre:
+  - "T1110.001"
+  - "T1621"

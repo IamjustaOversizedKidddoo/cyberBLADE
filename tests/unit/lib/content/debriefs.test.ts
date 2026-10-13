@@ -3,9 +3,9 @@ import { LAB_DEBRIEFS, getLabDebrief } from "@/lib/content/debriefs";
 import { listLabs } from "@/lib/lab-engine/labs";
 
 describe("LAB_DEBRIEFS", () => {
-  it("provides a debrief for all 20 labs in the curriculum", async () => {
+  it("provides a debrief for all labs in the curriculum", async () => {
     const labs = await listLabs("labs");
-    expect(labs.length).toBe(21);
+    expect(labs.length).toBe(33);
 
     for (const lab of labs) {
       const debrief = getLabDebrief(lab.id);

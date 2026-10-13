@@ -274,6 +274,7 @@ export function AlertDetailPanel({
 
       {/* Triage Decision Form */}
       <TriageDecisionForm
+        key={alert.id}
         alert={alert}
         existingDecision={existingDecision}
         instantFeedbackEnabled={Boolean(scenario.instantFeedback)}

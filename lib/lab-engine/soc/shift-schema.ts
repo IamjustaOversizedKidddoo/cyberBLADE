@@ -50,6 +50,7 @@ export const shiftProfileSchema = z.object({
   organizationArchetypes: z.array(z.string()).min(1),
   incidentSelections: z.array(shiftIncidentSelectionSchema).min(2).max(5),
   skillsTested: z.array(z.string()).default([]),
+  published: z.boolean().default(false),
   noiseMix: shiftNoiseMixSchema,
   telemetryGaps: shiftTelemetryGapsSchema,
   debrief: shiftDebriefSchema,

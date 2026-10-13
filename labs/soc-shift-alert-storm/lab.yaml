@@ -1,0 +1,27 @@
+id: soc-shift-alert-storm
+title: "SOC Shift: Alert Storm & Fatigue Management"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 60
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: shift-alert-storm
+objectives:
+  - id: o1
+    prompt: "Triage over 180 incoming events, isolate covert exfiltration amidst scanner noise, and enter your evaluation token."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Do not rely on tool severity ratings alone; routine vulnerability scanners often trigger High severity alerts."
+    - "Investigate high-entropy DNS request volumes and periodic outbound session bursts."
+    - "Complete decisions across the queue and submit the shift evaluation to retrieve the token."
+xp: 250
+mitre:
+  - "T1071.004"
+  - "T1048"
+  - "T1110.003"

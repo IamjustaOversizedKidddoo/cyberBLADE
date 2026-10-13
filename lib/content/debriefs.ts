@@ -132,6 +132,78 @@ export const LAB_DEBRIEFS: Record<string, LabDebrief> = {
     commonMistake: "Over-escalating benign administrative actions or closing active adversary alerts as false alarms.",
     goFurther: "Write Sigma detection rules to tune noisy alerts at the source.",
   },
+  "soc-fam-phishing-cred-01": {
+    concept: "Credential harvesting phishing triage, deceptive link analysis, and mailbox compromise detection.",
+    realWorld: "SOC Tier-1 analyst triaging reported suspicious emails containing typo-squatted login portals.",
+    commonMistake: "Relying purely on sender display name rather than analyzing Return-Path and auth headers.",
+    goFurther: "Configure automated mail gateway transport rules and DMARC quarantine policies.",
+  },
+  "soc-fam-attachment-script-01": {
+    concept: "Malicious attachment triage, script-based loaders (PowerShell, VBScript), and child process execution.",
+    realWorld: "Detecting initial access loaders masquerading as invoices or shipping documents on employee endpoints.",
+    commonMistake: "Classifying an attachment as benign before checking downstream process spawning in EDR telemetry.",
+    goFurther: "Implement Attack Surface Reduction (ASR) rules blocking Office apps from creating child processes.",
+  },
+  "soc-fam-brute-force-auth-01": {
+    concept: "Authentication anomaly detection, credential stuffing bursts, and distributed password spraying.",
+    realWorld: "Investigating distributed SSH and VPN brute-force campaigns originating from multiple external IPs.",
+    commonMistake: "Filtering by single source IP instead of aggregating failed attempts across target usernames.",
+    goFurther: "Deploy adaptive MFA lockouts and geo-velocity anomaly alerts on corporate identity providers.",
+  },
+  "soc-fam-web-attack-data-01": {
+    concept: "Web application intrusion detection, SQLi/RCE payloads, and HTTP error code correlation.",
+    realWorld: "Analyzing web server access logs to distinguish automated vulnerability scanner noise from successful exploit executions.",
+    commonMistake: "Assuming all 200 OK responses indicate successful exploitation without checking response sizes and database error logs.",
+    goFurther: "Correlate WAF block signatures with backend application exception telemetry.",
+  },
+  "soc-fam-outbound-exfil-01": {
+    concept: "Data exfiltration detection, abnormal outbound byte spikes, and unauthorized cloud upload channels.",
+    realWorld: "Triaging proxy and firewall connection spikes to unapproved file sharing sites or staging servers.",
+    commonMistake: "Focusing solely on packet counts rather than total transferred bytes and destination reputations.",
+    goFurther: "Build network baseline anomaly alerts for outbound traffic outside normal business hours.",
+  },
+  "soc-fam-insider-policy-01": {
+    concept: "Insider threat hunting, bulk removable media transfers, and unauthorized sensitive directory access.",
+    realWorld: "Identifying departing employees staging confidential source code or customer databases onto USB storage.",
+    commonMistake: "Dismissing high-volume file transfers as authorized work without correlating with employee departure notices.",
+    goFurther: "Implement host-based DLP agent alerts and USB mass-storage write restrictions.",
+  },
+  "soc-fam-cloud-identity-01": {
+    concept: "Cloud IAM auditing, impossible travel anomalies, and suspicious administrative role grants.",
+    realWorld: "Detecting compromised cloud tenant credentials initiating unauthorized API tokens or privilege escalations.",
+    commonMistake: "Ignoring concurrent login locations when corporate VPN split-tunneling creates artificial geo-diversity.",
+    goFurther: "Enforce conditional access policies requiring managed device compliance for all cloud logins.",
+  },
+  "soc-fam-alert-fatigue-01": {
+    concept: "Alert fatigue management, true-threat prioritization, and batch triage under high queue volume.",
+    realWorld: "Triaging high-volume SOC queues during telemetry storms without overlooking critical true positives.",
+    commonMistake: "Carelessly bulk-closing repetitive alerts without validating host identity and payload variants.",
+    goFurther: "Tune alert detection thresholds and write aggregation rules to reduce false alarm spam.",
+  },
+  "soc-shift-quiet-day": {
+    concept: "Routine SOC shift operations, baseline verification, and low-volume alert queue maintenance.",
+    realWorld: "Working a quiet shift where meticulous validation prevents benign administrative actions from escalating unnecessarily.",
+    commonMistake: "Rushing through quiet queues without thoroughly documenting rationale for false positive dispositions.",
+    goFurther: "Use shift downtime to conduct proactive threat hunting and review detection rule health.",
+  },
+  "soc-shift-standard-mixed": {
+    concept: "Multi-incident shift triage, cross-alert correlation, and operational priority ranking.",
+    realWorld: "Balancing multiple simultaneous incident leads ranging from suspicious emails to unusual outbound network traffic.",
+    commonMistake: "Fixating on the first alert received rather than triaging the queue by business risk and severity.",
+    goFurther: "Practice structured shift handovers summarizing open containment actions and unresolved artifacts.",
+  },
+  "soc-shift-alert-storm": {
+    concept: "High-stress alert storm triage, rapid noise suppression, and critical incident containment.",
+    realWorld: "Surviving a major telemetry spike during a synchronized attack while keeping SLA response times intact.",
+    commonMistake: "Becoming overwhelmed by alarm volume and abandoning structured investigation checklists.",
+    goFurther: "Establish incident escalation triggers that notify senior analysts before queues breach SLA limits.",
+  },
+  "soc-shift-night-telemetry-gaps": {
+    concept: "Incomplete telemetry triage, blind-spot navigation, and corroborating partial audit evidence.",
+    realWorld: "Investigating overnight security events when log forwarders fail or critical endpoints are offline.",
+    commonMistake: "Closing an unverified alert as benign simply because a key log source is missing.",
+    goFurther: "Document telemetry blind spots and trigger secondary evidence collection from adjacent network taps.",
+  },
 };
 
 export function getLabDebrief(labId: string): LabDebrief | undefined {

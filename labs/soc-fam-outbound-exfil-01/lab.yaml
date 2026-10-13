@@ -1,0 +1,27 @@
+id: soc-fam-outbound-exfil-01
+title: "SOC Practice: Outbound Egress & DNS Exfiltration"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 35
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: soc-f-outbound-exfil-01
+objectives:
+  - id: o1
+    prompt: "Isolate covert outbound C2 beaconing and DNS tunneling from legitimate corporate cloud synchronization."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Look for high-frequency DNS query volumes querying variable encoded subdomains."
+    - "Differentiate authorized cloud storage file sync sessions from unauthorized HTTPS archival transfers."
+    - "Submit triage decisions to collect your evaluation token."
+xp: 140
+mitre:
+  - "T1071.004"
+  - "T1048"
+  - "T1041"

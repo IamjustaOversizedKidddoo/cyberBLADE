@@ -18,18 +18,18 @@ export function DailyReviewSession({ initialQueue }: Props) {
   const [pending, setPending] = useState(false);
   const [completedCount, setCompletedCount] = useState(0);
   const [totalXpEarned, setTotalXpEarned] = useState(0);
-  const [liveAnnouncement, setLiveAnnouncement] = useState("");
+  const [actionAnnouncement, setActionAnnouncement] = useState("");
 
   const currentItem = queue[currentIndex];
   const isFinished = currentIndex >= queue.length;
 
-  useEffect(() => {
-    if (currentItem) {
-      setLiveAnnouncement(`Card ${currentIndex + 1} of ${queue.length}: ${currentItem.card.front}`);
-    } else if (isFinished) {
-      setLiveAnnouncement("Spaced review session complete. All cards reviewed.");
-    }
-  }, [currentIndex, isFinished, queue.length, currentItem]);
+  const liveAnnouncement = actionAnnouncement || (
+    currentItem
+      ? `Card ${currentIndex + 1} of ${queue.length}: ${currentItem.card.front}`
+      : isFinished
+        ? "Spaced review session complete. All cards reviewed."
+        : ""
+  );
 
   // Keyboard shortcut handler
   useEffect(() => {
@@ -43,7 +43,7 @@ export function DailyReviewSession({ initialQueue }: Props) {
         if (e.key === " " || e.key === "Enter") {
           e.preventDefault();
           setRevealed(true);
-          setLiveAnnouncement(`Answer revealed: ${currentItem?.card.back}`);
+          setActionAnnouncement(`Answer revealed: ${currentItem?.card.back}`);
         }
       } else {
         if (e.key === "1") {
@@ -79,7 +79,7 @@ export function DailyReviewSession({ initialQueue }: Props) {
       setRevealed(false);
       setCurrentIndex((prev) => prev + 1);
     } catch {
-      setLiveAnnouncement("Error saving review. Please try clicking the button again.");
+      setActionAnnouncement("Error saving review. Please try clicking the button again.");
     } finally {
       setPending(false);
     }
@@ -176,7 +176,7 @@ export function DailyReviewSession({ initialQueue }: Props) {
               type="button"
               onClick={() => {
                 setRevealed(true);
-                setLiveAnnouncement(`Answer revealed: ${card.back}`);
+                setActionAnnouncement(`Answer revealed: ${card.back}`);
               }}
               className="w-full min-h-[48px] rounded-xs border-2 border-cyan/70 bg-cyan/10 p-3 font-ui text-sm font-bold tracking-wider text-cyan hover:bg-cyan hover:text-void transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
             >

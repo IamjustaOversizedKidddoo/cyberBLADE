@@ -1,0 +1,26 @@
+id: soc-fam-cloud-identity-01
+title: "SOC Practice: Cloud Identity & Privilege Escalation"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 35
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: soc-f-cloud-identity-01
+objectives:
+  - id: o1
+    prompt: "Investigate cloud audit trails, identify unauthorized role attachments and access key generation, and submit your token."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Examine cloud IAM management logs for AttachUserPolicy or CreateAccessKey calls."
+    - "Compare IAM modifications against scheduled infrastructure deployment pipelines."
+    - "Submit triage decisions to collect your evaluation token."
+xp: 140
+mitre:
+  - "T1098"
+  - "T1078.004"

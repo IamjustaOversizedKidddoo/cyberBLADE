@@ -8,8 +8,6 @@ import {
   validateVariantSemanticConsistency,
   scanClientViewLeaks,
   detectTells,
-  evaluateSolverOnScenario,
-  TrustToolSeveritySolver,
 } from "@/lib/lab-engine/soc/family-validator";
 
 describe("SOC Planted Flaw Detection Suite", () => {

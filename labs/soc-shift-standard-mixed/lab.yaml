@@ -1,0 +1,27 @@
+id: soc-shift-standard-mixed
+title: "SOC Shift: Multi-Vector Perimeter & Host Triage"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 50
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: shift-standard-mixed
+objectives:
+  - id: o1
+    prompt: "Investigate multi-stage attack chains across email, EDR, and web perimeter, then submit your evaluation token."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Correlate inbound email delivery timestamps with local endpoint script execution events."
+    - "Review web application HTTP response status codes (HTTP 200 vs HTTP 403 Forbidden)."
+    - "Group verified true positive alerts into incident cases and submit your shift evaluation."
+xp: 200
+mitre:
+  - "T1566.001"
+  - "T1059.001"
+  - "T1190"
