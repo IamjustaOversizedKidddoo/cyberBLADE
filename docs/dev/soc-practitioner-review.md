@@ -11,19 +11,21 @@ Your mission during practitioner review is not to check syntax—the automated t
 You do not need programming knowledge. Run the following command from the repository root:
 
 ```bash
-# Generate 3 distinct review samples across different difficulties
-npm run soc:gen -- --family soc-f-mixed-signal-01 --seed 101 --difficulty beginner --out .temp/review-beginner
-npm run soc:gen -- --family soc-f-mixed-signal-01 --seed 202 --difficulty intermediate --out .temp/review-intermediate
-npm run soc:gen -- --family soc-f-mixed-signal-01 --seed 303 --difficulty advanced --out .temp/review-advanced
+# Generate interactive HTML Review Pack with queue tables and answer key
+npm run soc:review-pack -- --family soc-f-phishing-cred-01 --count 3 --out .temp/review-packs
+
+# Or generate for a composite shift profile:
+npm run soc:review-pack -- --shift shift-standard-mixed --count 3 --out .temp/review-packs
+
+# Generate JSON client/server views for custom inspection
+npm run soc:gen -- --family soc-f-phishing-cred-01 --seed 101 --difficulty intermediate --out .temp/review-sample
 ```
 
-In each output directory, inspect:
-- `client-view.json`: Exactly what the Tier 1 analyst sees in their queue, raw event logs, and case workspace.
-- `ground-truth.json`: The authoritative ground truth, incident explanations, and scoring rubric.
+Open `.temp/review-packs/index.html` in any browser to review the formatted triage queue, underlying raw logs, attacker timeline, and expert rationale.
 
 To inspect the automated 1,000-seed mathematical proof:
 ```bash
-npm run soc:family-report -- --family soc-f-mixed-signal-01 --seeds 1000
+npm run soc:family-report -- --family soc-f-phishing-cred-01 --seeds 1000
 ```
 Open `docs/generated/soc-family-report-soc-f-mixed-signal-01.md`.
 
