@@ -1,0 +1,501 @@
+metadata:
+  id: "soc-f-outbound-exfil-01"
+  version: 1
+  title: "L1: Suspicious Outbound Egress, C2 Beaconing & Exfiltration"
+  level: "L1"
+  skillsTested:
+    - "soc_alert_triage"
+    - "soc_network_indicators"
+    - "soc_data_exfiltration"
+    - "soc_endpoint_triage"
+    - "soc_siem_correlation"
+    - "soc_escalation_handoff"
+    - "soc_documentation"
+  estimatedMinutes:
+    min: 25
+    max: 45
+  difficultyRange:
+    - "beginner"
+    - "intermediate"
+    - "advanced"
+  author: "CyberBLADE SOC Curriculum Engineering"
+  reviewStatus: "draft"
+  reviewerNotes: "Initial draft modeling DNS tunneling, C2 periodic beaconing, cloud sync benign lookalikes, and twins."
+
+environmentTemplate:
+  organizationArchetypes:
+    - "org_apex_dynamics"
+    - "org_meridian_fintech"
+    - "org_helios_energy"
+    - "org_nexus_saas"
+  assetDistribution:
+    workstations:
+      min: 4
+      max: 7
+    servers:
+      min: 2
+      max: 4
+    domainControllers:
+      min: 1
+      max: 1
+    mailGateways:
+      min: 1
+      max: 1
+  userDistribution:
+    totalUsers:
+      min: 6
+      max: 10
+    departments:
+      - "Finance"
+      - "Engineering"
+      - "IT Operations"
+      - "Human Resources"
+      - "Marketing"
+
+incidentTemplates:
+  - id: "inc-dns-tunnel-exfil"
+    titleTemplate: "DNS Subdomain Tunneling Exfiltration on {victimAsset}"
+    category: "Command & Control and Exfiltration"
+    rootCauseTemplate: "Compromised workstation {victimAsset} initiated high-entropy DNS TXT query burst to {c2Domain} to exfiltrate staging data."
+    mitreTags:
+      - "T1071.004" # Application Layer Protocol: DNS
+      - "T1048.003" # Exfiltration Over Alternative Protocol
+    stages:
+      - stageId: "stage-dns-tunnel"
+        name: "DNS Subdomain Tunneling Burst"
+        phase: "exfiltration"
+        timingOffsetMinutes:
+          min: -40
+          max: 10
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "Network IDS"
+            action: "dns_query"
+            messageTemplate: "DNS[resolver]: query=chunk-8924.{c2Domain} type=TXT rcode=NOERROR client={victimIp} resolved=[none]"
+            fieldsTemplate:
+              client_ip: "{victimIp}"
+              query_domain: "chunk-8924.{c2Domain}"
+              record_type: "TXT"
+              target_host: "{victimAsset}"
+        alertTemplates:
+          - ruleName: "Network IDS: High-Entropy DNS Subdomain Query Burst"
+            source: "Network IDS"
+            severity: "HIGH"
+            summaryTemplate: "DNS query tunneling detected on host '{victimAsset}' to external domain '{c2Domain}'"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            iocs:
+              - type: "domain"
+                valueTemplate: "{c2Domain}"
+            rawFieldsTemplate:
+              source_ip: "{victimIp}"
+              target_host: "{victimAsset}"
+              query_domain: "{c2Domain}"
+              record_type: "TXT"
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-dns-tunnel"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed DNS tunneling exfiltration on {victimAsset}. High-entropy TXT queries directed to untrusted domain {c2Domain}."
+
+  - id: "inc-https-c2-beacon"
+    titleTemplate: "Periodic Outbound C2 Callback Beaconing from {victimAsset}"
+    category: "Command & Control and Exfiltration"
+    rootCauseTemplate: "Malicious process on {victimAsset} initiated rigid periodic TLS beacon connections to external IP {attackerIp}."
+    mitreTags:
+      - "T1071.001" # Web Protocols
+      - "T1573" # Encrypted Channel
+    stages:
+      - stageId: "stage-c2-beacon"
+        name: "Periodic C2 Callback Connection"
+        phase: "command_and_control"
+        timingOffsetMinutes:
+          min: 15
+          max: 60
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "Firewall"
+            action: "flow_allow"
+            messageTemplate: "FW[edge]: ALLOW TCP {victimIp}:51240 -> {attackerIp}:443 rule='OUTBOUND_HTTPS' bytes=2048"
+            fieldsTemplate:
+              src_ip: "{victimIp}"
+              dst_ip: "{attackerIp}"
+              dst_port: 443
+              target_host: "{victimAsset}"
+        alertTemplates:
+          - ruleName: "Network IDS: High-Entropy DNS Subdomain Query Burst"
+            source: "Network IDS"
+            severity: "HIGH"
+            summaryTemplate: "Periodic callback beaconing detected from corporate host '{victimAsset}' to remote address {attackerIp}"
+            relatedAssetBinding: "victimAsset"
+            relatedUserBinding: "victimUser"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              source_ip: "{victimIp}"
+              target_host: "{victimAsset}"
+              dest_ip: "{attackerIp}"
+              beacon_interval: "60s"
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-c2-beacon"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed C2 beaconing channel on {victimAsset}. Workstation maintains regular encrypted callbacks to {attackerIp}."
+
+benignTemplates:
+  - id: "benign-cloud-storage-sync"
+    name: "Enterprise Cloud Storage File Sync"
+    category: "Cloud Synchronization"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "business_hours"
+    actorRole: "standard_user"
+    eventTemplates:
+      - source: "Firewall"
+        action: "flow_allow"
+        messageTemplate: "FW[edge]: ALLOW TCP {victimIp}:54120 -> 198.51.100.201:443 rule='OUTBOUND_HTTPS' bytes=84200"
+        fieldsTemplate:
+          src_ip: "10.10.1.45"
+          dst_ip: "198.51.100.201"
+          target_host: "{hostname}"
+          bytes_sent: 84200
+    alertTemplates:
+      - ruleName: "Firewall: New Geographic VPN Tunnel Established"
+        source: "Firewall"
+        severity: "LOW"
+        summaryTemplate: "Authorized cloud storage file sync session established from corporate host '{hostname}' by user '{username}'"
+        rawFieldsTemplate:
+          user: "{username}"
+          target_host: "{hostname}"
+          operation: "cloud_sync"
+          status: "connected"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-cloud-storage-sync"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate corporate cloud storage file sync by authenticated staff. Fully benign."
+
+  - id: "benign-split-horizon-dns"
+    name: "Internal Split-Horizon DNS Service Discovery"
+    category: "Network Infrastructure"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "anytime"
+    actorRole: "system_utility"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "dns_query"
+        messageTemplate: "DNS[resolver]: query=_kdc._tcp.{orgDomain} type=SRV rcode=NOERROR client=10.10.1.10 resolved=[10.10.0.10]"
+        fieldsTemplate:
+          client_ip: "10.10.1.10"
+          query_domain: "_kdc._tcp.{orgDomain}"
+          record_type: "SRV"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Network IDS: Protocol Header Parsing Anomaly"
+        source: "Network IDS"
+        severity: "LOW"
+        summaryTemplate: "Internal service discovery DNS queries dispatched from corporate host '{hostname}' across local network"
+        rawFieldsTemplate:
+          source_ip: "10.10.1.10"
+          target_host: "{hostname}"
+          query_type: "SRV"
+          status: "internal_lookup"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-split-horizon-dns"
+      acceptableAlternatives: []
+      debriefTemplate: "Routine internal directory service discovery queries. Safe network traffic."
+
+  - id: "benign-vuln-scanner"
+    name: "Authorized Weekly Perimeter Vulnerability Scan"
+    category: "Vulnerability Scanning"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "batch_window_nightly"
+    actorRole: "security_scanner"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "port_scan"
+        messageTemplate: "TCP port sweep detected from scanner IP {scannerIp}"
+        fieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Network IDS: Rapid Port Sweep Probe"
+        source: "Network IDS"
+        severity: "HIGH"
+        summaryTemplate: "Rapid port sweep probe from authorized internal vulnerability scanner address {scannerIp} on host '{hostname}'"
+        rawFieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+          authorized_scanner: true
+          status: "scheduled_audit"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "MEDIUM"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vuln-scanner"
+      acceptableAlternatives: []
+      debriefTemplate: "Authorized vulnerability scanning from known scanner IP {scannerIp}. Baseline approved activity."
+
+  - id: "benign-backup-job"
+    name: "Nightly Automated Snapshot & Backup"
+    category: "Scheduled Jobs"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_nightly"
+    actorRole: "service_account"
+    eventTemplates:
+      - source: "Authentication"
+        action: "service_logon"
+        messageTemplate: "Service account 'svc-backup' authenticated successfully via Kerberos"
+        fieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Authentication: High-Volume Service Data Replication"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Scheduled database snapshot stream handled by service account 'svc-backup' on corporate host '{hostname}'"
+        rawFieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+          bytes_transferred: "42.8 GB"
+          operation: "scheduled_backup"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-backup-job"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate automated snapshot and backup initiated by approved service principal 'svc-backup'."
+
+  - id: "benign-vpn-traveler"
+    name: "Remote VPN Connection from Roaming IP"
+    category: "Remote Access"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "business_hours"
+    actorRole: "roaming_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "vpn_login"
+        messageTemplate: "VPN tunnel authenticated for '{username}' from roaming IP {roamingIp}"
+        fieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          status: "connected"
+    alertTemplates:
+      - ruleName: "Firewall: New Geographic VPN Tunnel Established"
+        source: "Firewall"
+        severity: "LOW"
+        summaryTemplate: "Authenticated remote VPN tunnel session established for corporate employee '{username}' from roaming address {roamingIp}"
+        rawFieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          mfa_verified: true
+          status: "connected"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vpn-traveler"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate corporate VPN access by authenticated employee with multi-factor verification."
+
+  - id: "benign-sensor-flapping"
+    name: "Duplicate Sensor Trigger on Benign Keep-Alive"
+    category: "Telemetry Flapping"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "anytime"
+    actorRole: "sensor_glitch"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "protocol_anomaly"
+        messageTemplate: "Malformed HTTP keepalive header on legacy telemetry connection"
+        fieldsTemplate:
+          protocol: "HTTP/1.1"
+    alertTemplates:
+      - ruleName: "Network IDS: Protocol Header Parsing Anomaly"
+        source: "Network IDS"
+        severity: "LOW"
+        summaryTemplate: "Repetitive protocol anomaly sensor trigger observed on internal keep-alive session from host '{hostname}'"
+        rawFieldsTemplate:
+          sensor_id: "suricata-dmz-01"
+          target_host: "{hostname}"
+          duplicate_count: 8
+          protocol: "HTTP/1.1"
+    groundTruth:
+      kind: "duplicate"
+      correctDisposition: "duplicate"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-sensor-flapping"
+      acceptableAlternatives: []
+      debriefTemplate: "Known flapping sensor alert caused by benign legacy keep-alive traffic."
+
+  - id: "benign-patch-deployment"
+    name: "Central Systems Patch Rollout"
+    category: "Software Deployment"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_maintenance"
+    actorRole: "admin_endpoint"
+    eventTemplates:
+      - source: "EDR"
+        action: "package_installer"
+        messageTemplate: "systemd-update executed package upgrade sequence on host '{hostname}'"
+        fieldsTemplate:
+          process_name: "apt-get"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "EDR: System Package Upgrade Sequence"
+        source: "EDR"
+        severity: "MEDIUM"
+        summaryTemplate: "Automated package deployment installer executed during scheduled maintenance on corporate host '{hostname}'"
+        rawFieldsTemplate:
+          installer: "systemd-update"
+          target_host: "{hostname}"
+          operation: "patch_distribution"
+          status: "installed"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-patch-deployment"
+      acceptableAlternatives: []
+      debriefTemplate: "Automated patch rollout during scheduled maintenance window."
+
+twinTemplates:
+  - id: "twin-dns-traffic"
+    name: "DNS Tunneling vs Service Discovery Twin Pair"
+    description: "Contrasts high-entropy DNS subdomain tunneling queries vs internal split-horizon service discovery"
+    toolOrTechnique: "DNS Query Resolution"
+    maliciousStageRef: "stage-dns-tunnel"
+    benignTemplateRef: "benign-split-horizon-dns"
+    distinguishingEvidence: "Query structure and entropy: malicious queries high-entropy randomized TXT records to external untrusted domain; benign queries standard SRV records to internal domain."
+    acceptableAlternatives: []
+
+  - id: "twin-outbound-sync"
+    name: "Outbound C2 Beacon vs Cloud Sync Twin Pair"
+    description: "Contrasts rigid periodic C2 callback connection vs approved business cloud storage file synchronization"
+    toolOrTechnique: "Encrypted Outbound Egress"
+    maliciousStageRef: "stage-c2-beacon"
+    benignTemplateRef: "benign-cloud-storage-sync"
+    distinguishingEvidence: "Traffic pattern and destination: malicious connects to unknown external IP on regular 60s timer; benign connects to corporate cloud storage IP during user file save."
+    acceptableAlternatives: []
+
+variationAxes:
+  incidentCount:
+    min: 1
+    max: 2
+  noiseRatio:
+    min: 0.65
+    max: 0.85
+  ambiguityCount:
+    min: 1
+    max: 3
+  telemetryGapCount:
+    min: 0
+    max: 2
+  targetAlertCount:
+    min: 30
+    max: 65
+  difficultyProfiles:
+    beginner:
+      incidentCount: 1
+      noiseRatio: 0.65
+      ambiguityCount: 1
+      telemetryGapCount: 0
+      targetAlertCount: 30
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    intermediate:
+      incidentCount: 2
+      noiseRatio: 0.75
+      ambiguityCount: 2
+      telemetryGapCount: 1
+      targetAlertCount: 45
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    advanced:
+      incidentCount: 2
+      noiseRatio: 0.82
+      ambiguityCount: 3
+      telemetryGapCount: 2
+      targetAlertCount: 65
+      expectedScoreCeilingNaive: 50
+      expectedMinScoreReference: 80
+
+debriefTemplates:
+  overallBriefingTemplate: |
+    Welcome to your Tier-1 SOC shift at {orgName}.
+    A queue of {alertCount} incoming alerts has arrived across DNS, Firewall flow, and Proxy sensors.
+    Your mission:
+    1. Detect DNS tunneling and periodic C2 callback beacons amidst normal enterprise traffic.
+    2. Differentiate authorized cloud storage file sync sessions from unauthorized data exfiltration channels.
+    3. Escalate verified command-and-control activity to Tier 2 and implement network containment.
+  generalGuidanceTemplate: |
+    Shift debrief for {orgName}:
+    In this shift, you investigated {alertCount} alerts covering {incidentCount} security incident(s) alongside operational noise.
+    Key takeaways:
+    - High-entropy subdomains and unusual record types (such as TXT bursts) are strong indicators of DNS tunneling.
+    - Periodic network callbacks with low variance often signify automated C2 beaconing frameworks.
+    - Always correlate outbound data flows with authorized cloud storage services before deciding exfiltration alerts.
+
+hooks:
+  enrichmentHooks:
+    - id: "hook-whois-domain"
+      provider: "whois"
+      dataPoints:
+        - "creation_date"
+        - "registrar"
+  queryDatasetHooks:
+    - datasetName: "siem_telemetry_flow"
+      extraEventGenerators:
+        - "generate_dns_flows"
+  evidenceViewHooks:
+    - id: "hook-auth-timeline"
+      viewType: "timeline"
+  reportRubricHooks:
+    - sectionId: "executive_summary"
+      criteria:
+        - "Identified DNS tunneling subdomain pattern"
+        - "Quantified exfiltration volume"
