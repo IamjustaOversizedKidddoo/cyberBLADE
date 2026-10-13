@@ -1,4 +1,4 @@
-import type { SocScenario, SocAlertClient } from "../schema";
+import type { SocScenario, SocAlertClient, SocScenarioClient } from "../schema";
 import { ReferenceSolver, type SocSolverDecision, type SocSolver } from "../family-validator";
 import { generateEnrichment } from "./generator";
 import type {

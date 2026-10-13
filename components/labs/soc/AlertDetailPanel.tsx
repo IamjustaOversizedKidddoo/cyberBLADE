@@ -21,6 +21,11 @@ type Props = {
     evidenceRefs?: string[];
   }) => Promise<void>;
   onUndoDecision?: (alertId: string) => Promise<void>;
+  onOpenEnrichment?: (target: {
+    tool: "reputation" | "whois" | "pdns" | "email_headers" | "url_analysis" | "sandbox" | "pcap_flows" | "endpoint_timeline" | "cmdb" | "tickets";
+    entityType: "ip" | "domain" | "url" | "hash" | "email" | "user" | "host";
+    entityValue: string;
+  }) => void;
 };
 
 export function AlertDetailPanel({
@@ -30,6 +35,7 @@ export function AlertDetailPanel({
   onSelectRelatedAlert,
   onSaveDecision,
   onUndoDecision,
+  onOpenEnrichment,
 }: Props) {
   const [viewMode, setViewMode] = useState<"formatted" | "raw">("formatted");
   const [copied, setCopied] = useState(false);
@@ -87,6 +93,36 @@ export function AlertDetailPanel({
 
           <div className="flex items-center gap-2 text-[11px] text-muted">
             <span>{new Date(alert.timestamp).toISOString()}</span>
+            {onOpenEnrichment && (
+              <button
+                type="button"
+                onClick={() => {
+                  const targetVal =
+                    (alert.relatedIocs && alert.relatedIocs[0]?.value) ||
+                    (alert.rawFields.sourceIp as string) ||
+                    (alert.rawFields.destinationIp as string) ||
+                    (alert.rawFields.hash as string) ||
+                    alert.relatedAsset ||
+                    alert.id;
+                  let tool: "reputation" | "whois" | "pdns" | "email_headers" | "url_analysis" | "sandbox" | "pcap_flows" | "endpoint_timeline" | "cmdb" | "tickets" = "reputation";
+                  let type: "ip" | "domain" | "url" | "hash" | "email" | "user" | "host" = "ip";
+                  if (alert.source === "Email Gateway") {
+                    tool = "email_headers";
+                    type = "domain";
+                  } else if (alert.source === "EDR") {
+                    tool = "endpoint_timeline";
+                    type = "host";
+                  } else if (alert.source === "Network IDS" || alert.source === "Firewall") {
+                    tool = "pcap_flows";
+                    type = "ip";
+                  }
+                  onOpenEnrichment({ tool, entityType: type, entityValue: targetVal });
+                }}
+                className="inline-flex items-center gap-1 rounded-xs border border-cyan/40 bg-cyan/10 px-2 py-0.5 text-[10px] text-cyan hover:bg-cyan/20 font-bold focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+              >
+                <IconShield className="h-3 w-3" /> Investigate
+              </button>
+            )}
             <button
               type="button"
               onClick={handleCopyJson}
