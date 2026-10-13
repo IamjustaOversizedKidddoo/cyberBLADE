@@ -45,7 +45,18 @@ export const socFamilyMetadataSchema = z.object({
   reviewStatus: reviewStatusSchema,
   reviewerNotes: z.string().optional(),
   publishedHash: z.string().optional(),
-});
+}).refine(
+  (data) => {
+    if (data.reviewStatus === "practitioner-reviewed" || data.reviewStatus === "approved") {
+      return typeof data.reviewerNotes === "string" && data.reviewerNotes.trim().length > 0;
+    }
+    return true;
+  },
+  {
+    message: "reviewStatus 'practitioner-reviewed' or 'approved' requires non-empty reviewerNotes",
+    path: ["reviewerNotes"],
+  },
+);
 export type SocFamilyMetadata = z.infer<typeof socFamilyMetadataSchema>;
 
 export const environmentTemplateSchema = z.object({

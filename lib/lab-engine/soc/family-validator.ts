@@ -124,6 +124,18 @@ export function validateVariantSemanticConsistency(scenario: SocScenario): Seman
     }
   }
 
+  // 5. Tool Severity Imperfection / Calibration Check
+  if (scenario.alerts.length >= 5) {
+    const perfectSeverityMatches = scenario.alerts.filter(
+      (a) => a.severity === a.groundTruth.correctSeverity,
+    ).length;
+    if (perfectSeverityMatches === scenario.alerts.length) {
+      errors.push(
+        "Uncalibrated tool severity: 100% of alerts have tool-raised severity identical to ground truth severity. Simulated tool severity must be realistically imperfect per calibration guidelines.",
+      );
+    }
+  }
+
   return {
     valid: errors.length === 0,
     errors,
