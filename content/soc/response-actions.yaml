@@ -1,0 +1,85 @@
+version: 1
+catalog:
+  - id: "isolate_host"
+    category: "containment"
+    name: "Isolate Endpoint / Host"
+    defaultPriority: 1
+    description: "Sever network connectivity from the endpoint to halt lateral movement and C2, preserving agent connection and volatile memory."
+
+  - id: "disable_account"
+    category: "containment"
+    name: "Disable User Account"
+    defaultPriority: 1
+    description: "Temporarily disable user account in directory service (AD/IdP) to block interactive login and API access."
+
+  - id: "revoke_sessions"
+    category: "containment"
+    name: "Revoke Active Sessions & Tokens"
+    defaultPriority: 1
+    description: "Invalidate active OAuth refresh tokens, session cookies, and Kerberos TGTs to evict adversary sessions."
+
+  - id: "block_ip_perimeter"
+    category: "containment"
+    name: "Block Indicator IP at Perimeter Firewall"
+    defaultPriority: 2
+    description: "Inject egress and ingress drop rules for the malicious IP at edge firewalls."
+
+  - id: "block_domain_proxy"
+    category: "containment"
+    name: "Block / Sinkhole Domain on Proxy & DNS"
+    defaultPriority: 2
+    description: "Add malicious domain to secure web gateway blocklist and internal DNS sinkhole."
+
+  - id: "quarantine_email"
+    category: "containment"
+    name: "Quarantine / Purge Inbound Email Message"
+    defaultPriority: 2
+    description: "Execute tenant-wide search and delete for the phishing message across all recipient mailboxes."
+
+  - id: "kill_process"
+    category: "containment"
+    name: "Terminate Active Malicious Process"
+    defaultPriority: 2
+    description: "Send termination signal to malicious processes and child execution threads on endpoint."
+
+  - id: "collect_forensic_image"
+    category: "investigation"
+    name: "Collect Volatile Memory & Forensic Artifacts"
+    defaultPriority: 1
+    description: "Capture RAM dump and endpoint triage package (MFT, event logs, prefetch) before host modification."
+
+  - id: "reset_credentials"
+    category: "eradication"
+    name: "Reset User Credentials"
+    defaultPriority: 3
+    description: "Issue emergency password reset with random string and enforce MFA re-registration."
+
+  - id: "delete_persistence"
+    category: "eradication"
+    name: "Remove Malicious Persistence Mechanisms"
+    defaultPriority: 3
+    description: "Delete rogue scheduled tasks, services, WMI event subscriptions, and registry run keys."
+
+  - id: "reimage_host"
+    category: "recovery"
+    name: "Reimage Endpoint from Golden Master"
+    defaultPriority: 4
+    description: "Wipe compromised drive and deploy standard enterprise baseline OS image."
+
+  - id: "restore_from_backup"
+    category: "recovery"
+    name: "Restore Data from Verified Clean Backup"
+    defaultPriority: 4
+    description: "Restore corrupted or encrypted file shares from verified offline or immutable backup snapshots."
+
+  - id: "notify_stakeholder"
+    category: "notification"
+    name: "Escalate to IR Lead / Management"
+    defaultPriority: 2
+    description: "Brief security operations management, legal, or compliance regarding verified incident scope."
+
+  - id: "notify_user"
+    category: "notification"
+    name: "Contact and Brief Affected User"
+    defaultPriority: 3
+    description: "Interview victim employee and provide security guidance regarding credentials and workstation status."
