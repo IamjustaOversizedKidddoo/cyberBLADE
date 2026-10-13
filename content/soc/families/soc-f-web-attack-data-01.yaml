@@ -1,0 +1,502 @@
+metadata:
+  id: "soc-f-web-attack-data-01"
+  version: 1
+  title: "L1: Web Application Attacks, SQL Injection & Data Access"
+  level: "L1"
+  skillsTested:
+    - "soc_alert_triage"
+    - "soc_web_attacks"
+    - "soc_linux_logs"
+    - "soc_siem_correlation"
+    - "soc_escalation_handoff"
+    - "soc_documentation"
+  estimatedMinutes:
+    min: 25
+    max: 45
+  difficultyRange:
+    - "beginner"
+    - "intermediate"
+    - "advanced"
+  author: "CyberBLADE SOC Curriculum Engineering"
+  reviewStatus: "draft"
+  reviewerNotes: "Initial draft modeling SQL injection data extraction, webshell RCE, blocked WAF probes, and benign twins."
+
+environmentTemplate:
+  organizationArchetypes:
+    - "org_apex_dynamics"
+    - "org_vanguard_logistics"
+    - "org_meridian_fintech"
+    - "org_nexus_saas"
+  assetDistribution:
+    workstations:
+      min: 4
+      max: 7
+    servers:
+      min: 2
+      max: 4
+    domainControllers:
+      min: 1
+      max: 1
+    mailGateways:
+      min: 1
+      max: 1
+  userDistribution:
+    totalUsers:
+      min: 6
+      max: 10
+    departments:
+      - "Finance"
+      - "Engineering"
+      - "IT Operations"
+      - "Human Resources"
+      - "Marketing"
+
+incidentTemplates:
+  - id: "inc-sqli-extraction"
+    titleTemplate: "SQL Injection Data Extraction on {targetServer}"
+    category: "Web & Application Exploitation"
+    rootCauseTemplate: "Attacker at {attackerIp} executed SQL injection via search endpoint on {targetServer}, retrieving customer records via HTTP 200."
+    mitreTags:
+      - "T1190" # Exploit Public-Facing Application
+      - "T1505.003" # Web Shell
+    stages:
+      - stageId: "stage-sqli-success"
+        name: "SQL Injection Extraction"
+        phase: "initial_access"
+        timingOffsetMinutes:
+          min: -40
+          max: 10
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "Network IDS"
+            action: "http_request"
+            messageTemplate: "{attackerIp} - - [12/Oct/2026:08:25:00 +0000] 'GET /products?id=1%20UNION%20SELECT%20null,username,password%20FROM%20users-- HTTP/1.1' 200 845210"
+            fieldsTemplate:
+              client_ip: "{attackerIp}"
+              method: "GET"
+              status_code: 200
+              bytes_sent: 845210
+        alertTemplates:
+          - ruleName: "Web Server: Anomalous Web Application Response Size"
+            source: "Network IDS"
+            severity: "MEDIUM"
+            summaryTemplate: "Web exploit succeeded with elevated byte response on host '{targetServer}' from remote address {attackerIp}"
+            relatedAssetBinding: "targetServer"
+            relatedUserBinding: "targetServer"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              source_ip: "{attackerIp}"
+              target_host: "{targetServer}"
+              status_code: 200
+              bytes_sent: 845210
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-sqli-success"
+          acceptableAlternatives: []
+          debriefTemplate: "Confirmed web application compromise on {targetServer}. Attacker at {attackerIp} dumped records via SQLi returning HTTP 200."
+
+  - id: "inc-webshell-interaction"
+    titleTemplate: "Web Shell Command Execution on {targetServer}"
+    category: "Web & Application Exploitation"
+    rootCauseTemplate: "Adversary at {attackerIp} interacted with uploaded web shell on {targetServer}, issuing operating system commands."
+    mitreTags:
+      - "T1505.003" # Web Shell
+      - "T1059.004" # Unix Shell
+    stages:
+      - stageId: "stage-webshell-post"
+        name: "Web Shell Ingress Interaction"
+        phase: "execution"
+        timingOffsetMinutes:
+          min: 20
+          max: 65
+        jitterMinutes: 2
+        eventTemplates:
+          - source: "Network IDS"
+            action: "http_request"
+            messageTemplate: "{attackerIp} - - [12/Oct/2026:08:45:00 +0000] 'POST /uploads/cache.php?cmd=whoami HTTP/1.1' 200 120"
+            fieldsTemplate:
+              client_ip: "{attackerIp}"
+              method: "POST"
+              status_code: 200
+              bytes_sent: 120
+        alertTemplates:
+          - ruleName: "Web Server: Anomalous Web Application Response Size"
+            source: "Network IDS"
+            severity: "HIGH"
+            summaryTemplate: "Web exploit succeeded with active command execution on host '{targetServer}' from remote address {attackerIp}"
+            relatedAssetBinding: "targetServer"
+            relatedUserBinding: "targetServer"
+            iocs:
+              - type: "ip"
+                valueTemplate: "{attackerIp}"
+            rawFieldsTemplate:
+              source_ip: "{attackerIp}"
+              target_host: "{targetServer}"
+              script_path: "/uploads/cache.php"
+              status_code: 200
+        groundTruth:
+          kind: "true_positive"
+          correctDisposition: "true_positive"
+          correctSeverity: "CRITICAL"
+          correctEscalation: true
+          targetTier: "tier2"
+          minimumEvidenceSet:
+            - "stage-webshell-post"
+          acceptableAlternatives: []
+          debriefTemplate: "Critical web intrusion on {targetServer}. Attacker executed commands through web shell script in uploads directory."
+
+benignTemplates:
+  - id: "benign-waf-blocked-probe"
+    name: "Automated Scanner Probe Blocked by Firewall"
+    category: "Web Infrastructure"
+    frequencyRange:
+      min: 5
+      max: 9
+    timePattern: "anytime"
+    actorRole: "security_scanner"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "http_request"
+        messageTemplate: "198.51.100.201 - - [12/Oct/2026:08:10:00 +0000] 'GET /search?q=%27%20OR%201=1-- HTTP/1.1' 403 240"
+        fieldsTemplate:
+          client_ip: "198.51.100.201"
+          method: "GET"
+          status_code: 403
+          bytes_sent: 240
+    alertTemplates:
+      - ruleName: "WAF: SQL Injection Attack Pattern Blocked"
+        source: "Network IDS"
+        severity: "CRITICAL"
+        summaryTemplate: "Automated scanning probe blocked by edge firewall filter on host '{hostname}' with forbidden status code"
+        rawFieldsTemplate:
+          source_ip: "198.51.100.201"
+          target_host: "{hostname}"
+          status_code: 403
+          rule_action: "blocked"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-waf-blocked-probe"
+      acceptableAlternatives: []
+      debriefTemplate: "Automated internet scanner probe blocked by WAF with HTTP 403 Forbidden. Harmless ambient noise."
+
+  - id: "benign-api-search-apostrophe"
+    name: "Legitimate Customer Search with Apostrophe"
+    category: "Application Traffic"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "business_hours"
+    actorRole: "standard_user"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "http_request"
+        messageTemplate: "10.10.1.55 - - [12/Oct/2026:08:15:00 +0000] 'GET /catalog?author=O%27Reilly HTTP/1.1' 200 1200"
+        fieldsTemplate:
+          client_ip: "10.10.1.55"
+          method: "GET"
+          status_code: 200
+          bytes_sent: 1200
+    alertTemplates:
+      - ruleName: "Network IDS: Protocol Header Parsing Anomaly"
+        source: "Network IDS"
+        severity: "LOW"
+        summaryTemplate: "Single quotation character query parsed inside customer catalog search on corporate host '{hostname}'"
+        rawFieldsTemplate:
+          client_ip: "10.10.1.55"
+          target_host: "{hostname}"
+          status_code: 200
+          status: "catalog_query"
+    groundTruth:
+      kind: "false_positive"
+      correctDisposition: "false_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-api-search-apostrophe"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate user search for book author containing apostrophe. Normal application traffic."
+
+  - id: "benign-health-check"
+    name: "Load Balancer Service Health Check Probe"
+    category: "Web Infrastructure"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "anytime"
+    actorRole: "service_utility"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "http_request"
+        messageTemplate: "10.20.1.1 - - [12/Oct/2026:08:35:00 +0000] 'GET /healthz HTTP/1.1' 200 12"
+        fieldsTemplate:
+          client_ip: "10.20.1.1"
+          method: "GET"
+          status_code: 200
+          bytes_sent: 12
+    alertTemplates:
+      - ruleName: "Network IDS: Protocol Header Parsing Anomaly"
+        source: "Network IDS"
+        severity: "LOW"
+        summaryTemplate: "Frequent HTTP service health probe requests from internal load balancer against corporate host '{hostname}'"
+        rawFieldsTemplate:
+          source_ip: "10.20.1.1"
+          target_host: "{hostname}"
+          endpoint: "/healthz"
+          status_code: 200
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-health-check"
+      acceptableAlternatives: []
+      debriefTemplate: "Routine load balancer HTTP health check probe. Safe ambient noise."
+
+  - id: "benign-vuln-scanner"
+    name: "Authorized Weekly Perimeter Vulnerability Scan"
+    category: "Vulnerability Scanning"
+    frequencyRange:
+      min: 4
+      max: 8
+    timePattern: "batch_window_nightly"
+    actorRole: "security_scanner"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "port_scan"
+        messageTemplate: "TCP port sweep detected from scanner IP {scannerIp}"
+        fieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Network IDS: Rapid Port Sweep Probe"
+        source: "Network IDS"
+        severity: "HIGH"
+        summaryTemplate: "Rapid port sweep probe from authorized internal vulnerability scanner address {scannerIp} on host '{hostname}'"
+        rawFieldsTemplate:
+          source_ip: "{scannerIp}"
+          target_host: "{hostname}"
+          authorized_scanner: true
+          status: "scheduled_audit"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "MEDIUM"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vuln-scanner"
+      acceptableAlternatives: []
+      debriefTemplate: "Authorized vulnerability scanning from known scanner IP {scannerIp}. Baseline approved activity."
+
+  - id: "benign-backup-job"
+    name: "Nightly Automated Snapshot & Backup"
+    category: "Scheduled Jobs"
+    frequencyRange:
+      min: 3
+      max: 6
+    timePattern: "batch_window_nightly"
+    actorRole: "service_account"
+    eventTemplates:
+      - source: "Authentication"
+        action: "service_logon"
+        messageTemplate: "Service account 'svc-backup' authenticated successfully via Kerberos"
+        fieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+    alertTemplates:
+      - ruleName: "Authentication: High-Volume Service Data Replication"
+        source: "Authentication"
+        severity: "MEDIUM"
+        summaryTemplate: "Scheduled database snapshot stream handled by service account 'svc-backup' on corporate host '{hostname}'"
+        rawFieldsTemplate:
+          user: "svc-backup"
+          target_host: "{hostname}"
+          bytes_transferred: "42.8 GB"
+          operation: "scheduled_backup"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-backup-job"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate automated snapshot and backup initiated by approved service principal 'svc-backup'."
+
+  - id: "benign-vpn-traveler"
+    name: "Remote VPN Connection from Roaming IP"
+    category: "Remote Access"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "business_hours"
+    actorRole: "roaming_user"
+    eventTemplates:
+      - source: "Authentication"
+        action: "vpn_login"
+        messageTemplate: "VPN tunnel authenticated for '{username}' from roaming IP {roamingIp}"
+        fieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          status: "connected"
+    alertTemplates:
+      - ruleName: "Firewall: New Geographic VPN Tunnel Established"
+        source: "Firewall"
+        severity: "LOW"
+        summaryTemplate: "Authenticated remote VPN tunnel session established for corporate employee '{username}' from roaming address {roamingIp}"
+        rawFieldsTemplate:
+          user: "{username}"
+          source_ip: "{roamingIp}"
+          mfa_verified: true
+          status: "connected"
+    groundTruth:
+      kind: "benign_true_positive"
+      correctDisposition: "benign_true_positive"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-vpn-traveler"
+      acceptableAlternatives: []
+      debriefTemplate: "Legitimate corporate VPN access by authenticated employee with multi-factor verification."
+
+  - id: "benign-sensor-flapping"
+    name: "Duplicate Sensor Trigger on Benign Keep-Alive"
+    category: "Telemetry Flapping"
+    frequencyRange:
+      min: 3
+      max: 7
+    timePattern: "anytime"
+    actorRole: "sensor_glitch"
+    eventTemplates:
+      - source: "Network IDS"
+        action: "protocol_anomaly"
+        messageTemplate: "Malformed HTTP keepalive header on legacy telemetry connection"
+        fieldsTemplate:
+          protocol: "HTTP/1.1"
+    alertTemplates:
+      - ruleName: "Network IDS: Protocol Header Parsing Anomaly"
+        source: "Network IDS"
+        severity: "LOW"
+        summaryTemplate: "Repetitive protocol anomaly sensor trigger observed on internal keep-alive session from host '{hostname}'"
+        rawFieldsTemplate:
+          sensor_id: "suricata-dmz-01"
+          target_host: "{hostname}"
+          duplicate_count: 8
+          protocol: "HTTP/1.1"
+    groundTruth:
+      kind: "duplicate"
+      correctDisposition: "duplicate"
+      correctSeverity: "LOW"
+      correctEscalation: false
+      minimumEvidenceSet:
+        - "benign-sensor-flapping"
+      acceptableAlternatives: []
+      debriefTemplate: "Known flapping sensor alert caused by benign legacy keep-alive traffic."
+
+twinTemplates:
+  - id: "twin-sqli-status"
+    name: "SQL Injection Exploitation vs Blocked Scan Twin Pair"
+    description: "Contrasts successful SQLi data extraction returning HTTP 200 vs blocked scanner probe returning HTTP 403"
+    toolOrTechnique: "Web Application SQL Injection"
+    maliciousStageRef: "stage-sqli-success"
+    benignTemplateRef: "benign-waf-blocked-probe"
+    distinguishingEvidence: "HTTP response code and byte volume: malicious exploit returns HTTP 200 with 845 KB data; benign probe is blocked by WAF with HTTP 403 and small error body."
+    acceptableAlternatives: []
+
+  - id: "twin-search-query"
+    name: "Apostrophe Query Parameter Twin Pair"
+    description: "Contrasts malicious SQLi syntax in query string vs legitimate customer search containing single quotation mark"
+    toolOrTechnique: "HTTP Query Parameter Parsing"
+    maliciousStageRef: "stage-sqli-success"
+    benignTemplateRef: "benign-api-search-apostrophe"
+    distinguishingEvidence: "Malicious request injects UNION SELECT SQL syntax; benign query is a standard author name search returning normal catalog response."
+    acceptableAlternatives: []
+
+variationAxes:
+  incidentCount:
+    min: 1
+    max: 2
+  noiseRatio:
+    min: 0.65
+    max: 0.85
+  ambiguityCount:
+    min: 1
+    max: 3
+  telemetryGapCount:
+    min: 0
+    max: 2
+  targetAlertCount:
+    min: 30
+    max: 65
+  difficultyProfiles:
+    beginner:
+      incidentCount: 1
+      noiseRatio: 0.65
+      ambiguityCount: 1
+      telemetryGapCount: 0
+      targetAlertCount: 30
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    intermediate:
+      incidentCount: 2
+      noiseRatio: 0.75
+      ambiguityCount: 2
+      telemetryGapCount: 1
+      targetAlertCount: 45
+      expectedScoreCeilingNaive: 55
+      expectedMinScoreReference: 85
+    advanced:
+      incidentCount: 2
+      noiseRatio: 0.82
+      ambiguityCount: 3
+      telemetryGapCount: 2
+      targetAlertCount: 65
+      expectedScoreCeilingNaive: 50
+      expectedMinScoreReference: 80
+
+debriefTemplates:
+  overallBriefingTemplate: |
+    Welcome to your Tier-1 SOC shift at {orgName}.
+    A queue of {alertCount} incoming alerts has arrived across WAF, web server access logs, and network sensors.
+    Your mission:
+    1. Distinguish between automated scanner probes blocked by WAF filters versus successful web application exploits.
+    2. Examine HTTP response status codes and byte sizes to confirm whether data extraction occurred.
+    3. Escalate confirmed web intrusions to Tier 2 with containment steps for affected web services.
+  generalGuidanceTemplate: |
+    Shift debrief for {orgName}:
+    In this shift, you investigated {alertCount} alerts covering {incidentCount} security incident(s) alongside operational noise.
+    Key takeaways:
+    - Never assume an alert labeled Critical by a WAF indicates compromise; blocked attacks (HTTP 403) are ambient noise.
+    - Focus on HTTP status code 200 with elevated byte response size to identify successful data exfiltration.
+    - Differentiate benign customer search terms (such as names with apostrophes) from SQL injection syntax.
+
+hooks:
+  enrichmentHooks:
+    - id: "hook-ip-reputation"
+      provider: "reputation"
+      dataPoints:
+        - "abuse_confidence_score"
+        - "asn"
+  queryDatasetHooks:
+    - datasetName: "siem_telemetry_flow"
+      extraEventGenerators:
+        - "generate_web_logs"
+  evidenceViewHooks:
+    - id: "hook-auth-timeline"
+      viewType: "timeline"
+  reportRubricHooks:
+    - sectionId: "executive_summary"
+      criteria:
+        - "Identified HTTP response status code"
+        - "Evaluated data exfiltration volume"
