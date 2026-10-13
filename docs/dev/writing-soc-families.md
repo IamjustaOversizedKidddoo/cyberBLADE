@@ -204,9 +204,35 @@ npx tsx scripts/soc-library-benchmark.mts
 
 ---
 
+---
+
 ## 5. Review & Publication Gates
 
 1. **Draft Stage**: Author writes family YAML with `reviewStatus: "draft"` and `published: false`. Automated proof tests and planted flaw suite pass.
 2. **Practitioner Review**: A practicing SOC analyst inspects generated review packs, audits realism against `docs/dev/soc-practitioner-review.md`, and adds sign-off notes in `reviewerNotes`.
 3. **Approval & Publication**: Status transitions to `reviewStatus: "approved"`. Once curriculum readiness is achieved, `published: true` is set.
+
+---
+
+## 6. Enrichment & Evidence Layer Authoring (Phase 3 Prompt 4)
+
+When authoring or expanding scenario families, simulated enrichment tools (Reputation, WHOIS, pDNS, Email Headers, URL Analysis, Sandbox Detonation, PCAP/Flows, Endpoint Timelines, CMDB, and ServiceDesk Tickets) generate consistent evidence from the hidden scenario state.
+
+### 1. Declaring Entity Roles
+Entities in families map to canonical roles:
+- `attacker_infra`: Adversary C2 servers, phishing delivery domains, dropper hashes. Sources simulate ~15–20% false negatives (unknown to some feeds) and high scores elsewhere.
+- `victim`: Targeted user endpoints and accounts. Timelines reflect process execution and credential misuse; CMDB reflects valid business identity.
+- `benign_business`: Authorized internal servers, routine user activity. Sources simulate ~3–12% false positives (heuristic warnings) and low baseline scores.
+- `shared_infra`: Multi-tenant cloud providers, CDNs, dynamic cloud storage. Induces natural reputation ambiguity and mixed-source disagreements.
+- `scanner`: Authorized internal or external vulnerability scanners. Corroborated by ServiceDesk pen-test notices.
+
+### 2. Zero-Network Synthetic Artifact Rules
+- **Domains**: Strictly use reserved RFC domains: `.example`, `.test`, `.invalid`, or `.corp.internal`. Never use registered external domains.
+- **IPs**: Strictly use RFC 5737 documentation blocks (`192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`) and RFC 1918 private subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`).
+- **Hashes & Files**: Abstract, inert payloads with realistic SHA-256 formatting. Never reference live malware hashes, active C2 hosts, or operational exploits.
+
+### 3. Anti-Tell & Symmetry Mandates
+- **Field Shape Invariance**: Malicious and benign indicators return identical JSON schemas. No tool output may introduce unique fields (e.g. `isMalicious: true`) that leak role by presence.
+- **Latency Clamping**: Server execution clamps latency to a uniform window (35–55ms) to prevent side-channel timing attacks.
+- **Imperfect Truth Enforcement**: No single tool yields a 100% decisive verdict. Analysts must correlate at least two corroborating signals (e.g., header authentication failure + pDNS domain history) before drawing conclusions.
 

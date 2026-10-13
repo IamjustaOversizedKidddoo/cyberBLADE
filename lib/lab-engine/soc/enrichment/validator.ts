@@ -1,6 +1,6 @@
 import type { SocScenario } from "../schema";
-import { generateEnrichment, resolveEntityRole } from "./generator";
-import { ENRICHMENT_TOOLS, type EnrichmentTool, type EntityRole, type ReputationSourceReport, type EmailHeaderAnalysisResult, type SandboxReportResult, type PdnsResult, type CmdbResult } from "./types";
+import { generateEnrichment } from "./generator";
+import type { EnrichmentTool, EntityRole, ReputationSourceReport, EmailHeaderAnalysisResult, SandboxReportResult, CmdbResult } from "./types";
 import { SIMULATED_SOURCES } from "./sources";
 
 export type EnrichmentConsistencyResult = {
@@ -123,7 +123,7 @@ export function validateEnrichmentConsistency(
  * Detects whether any structural tells exist between attacker infrastructure and benign entities.
  */
 export function detectEnrichmentTells(
-  samples: Array<{ role: EntityRole; payload: any; latencyMs?: number }>,
+  samples: Array<{ role: EntityRole; payload: Record<string, unknown>; latencyMs?: number }>,
 ): EnrichmentTellResult {
   const leakingFeatures: LeakingFeature[] = [];
 
@@ -135,7 +135,7 @@ export function detectEnrichmentTells(
   }
 
   // Tell 1: Field Presence asymmetry
-  const getKeys = (obj: any): string[] => {
+  const getKeys = (obj: Record<string, unknown> | null | undefined): string[] => {
     if (!obj || typeof obj !== "object") return [];
     return Object.keys(obj).sort();
   };
@@ -178,12 +178,13 @@ export function detectEnrichmentTells(
 
   // Tell 3: 100% Unanimous verdict tell
   // If ALL attacker entities receive unanimous "malicious" across all sources with zero false negatives
-  const repSamples = samples.filter((s) => s.payload && Array.isArray(s.payload.sources));
+  const repSamples = samples.filter((s) => s.payload && Array.isArray((s.payload as { sources?: unknown[] }).sources));
   if (repSamples.length >= 10) {
     const atkReps = repSamples.filter((s) => s.role === "attacker_infra");
-    const allUnanimous = atkReps.every((a) =>
-      a.payload.sources.every((src: any) => src.verdict === "malicious"),
-    );
+    const allUnanimous = atkReps.every((a) => {
+      const sources = (a.payload as { sources?: Array<{ verdict: string }> }).sources ?? [];
+      return sources.every((src) => src.verdict === "malicious");
+    });
     if (allUnanimous) {
       leakingFeatures.push({
         feature: "unanimous-attacker-verdict",

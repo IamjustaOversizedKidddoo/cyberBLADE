@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { SandboxReportResult, EntityType } from "@/lib/lab-engine/soc/enrichment/types";
 import { defangIndicator } from "@/lib/lab-engine/soc/enrichment/detector";
 import { Badge, type BadgeVariant } from "@/components/ui/Badge";
-import { IconCopy, IconCheck, IconFile, IconTerminal, IconShield, IconAlertTriangle } from "@/components/ui/icons";
+import { IconCopy, IconCheck, IconFile, IconTerminal } from "@/components/ui/icons";
 
 type Props = {
   data: SandboxReportResult;

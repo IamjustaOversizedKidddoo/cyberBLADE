@@ -7,14 +7,11 @@ import type {
   EndpointEventRecord,
   EntityType,
 } from "@/lib/lab-engine/soc/enrichment/types";
-import { defangIndicator } from "@/lib/lab-engine/soc/enrichment/detector";
 import { Badge } from "@/components/ui/Badge";
 import {
   IconTerminal,
-  IconClock,
   IconChevronRight,
   IconChevronDown,
-  IconShield,
   IconAlertTriangle,
 } from "@/components/ui/icons";
 

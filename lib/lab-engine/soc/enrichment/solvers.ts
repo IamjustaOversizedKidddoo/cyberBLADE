@@ -1,5 +1,5 @@
-import type { SocScenario, SocAlertClient, SocScenarioClient } from "../schema";
-import { ReferenceSolver, type SocSolverDecision, type SocSolver } from "../family-validator";
+import type { SocScenario, SocScenarioClient } from "../schema";
+import { ReferenceSolver, type SocSolverDecision } from "../family-validator";
 import { generateEnrichment } from "./generator";
 import type {
   EnrichmentTool,
@@ -8,7 +8,6 @@ import type {
   EmailHeaderAnalysisResult,
   SandboxReportResult,
   TicketHistoryResult,
-  PcapFlowsResult,
 } from "./types";
 
 export type LookupStats = {

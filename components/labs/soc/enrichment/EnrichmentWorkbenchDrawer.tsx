@@ -31,7 +31,6 @@ import {
   IconActivity,
   IconTerminal,
   IconLayers,
-  IconCheck,
 } from "@/components/ui/icons";
 
 // Tool components
@@ -146,10 +145,14 @@ export function EnrichmentWorkbenchDrawer({
   // Sync initial target when opened with specific entity
   useEffect(() => {
     if (initialTarget && isOpen) {
-      setSelectedTool(initialTarget.tool);
-      setSearchQuery(initialTarget.entityValue);
-      setDetectedType(initialTarget.entityType);
-      executeLookup(initialTarget.tool, initialTarget.entityType, initialTarget.entityValue);
+      const target = initialTarget;
+      const timer = setTimeout(() => {
+        setSelectedTool(target.tool);
+        setSearchQuery(target.entityValue);
+        setDetectedType(target.entityType);
+        void executeLookup(target.tool, target.entityType, target.entityValue);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [initialTarget, isOpen, executeLookup]);
 
@@ -245,7 +248,7 @@ export function EnrichmentWorkbenchDrawer({
                 value={searchQuery}
                 onChange={(e) => handleQueryChange(e.target.value)}
                 placeholder="Enter IP, domain, URL, hash, email, user, or host..."
-                className="w-full rounded-xs border border-line bg-surface px-3 py-2 text-xs text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-cyan"
+                className="w-full rounded-xs border border-line bg-surface px-3 py-2 text-xs text-ink placeholder:text-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
               />
               {detectedType && (
                 <div className="absolute right-2 top-2">

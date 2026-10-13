@@ -17,8 +17,6 @@ import {
   IconCheck,
   IconAlertTriangle,
   IconMail,
-  IconShield,
-  IconArrowRight,
   IconPaperclip,
 } from "@/components/ui/icons";
 
@@ -245,7 +243,7 @@ export function EmailHeaderAnalyzerPanel({ data, onPivot, onAttachEvidence }: Pr
           </div>
 
           <div className="space-y-2">
-            {data.receivedHops.map((hop: EmailReceivedHop, idx: number) => (
+            {data.receivedHops.map((hop: EmailReceivedHop) => (
               <div
                 key={hop.hopNumber}
                 className="rounded-xs border border-line bg-surface p-3 space-y-2"

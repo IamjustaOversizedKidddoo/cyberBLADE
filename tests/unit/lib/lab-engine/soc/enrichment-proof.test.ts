@@ -11,15 +11,16 @@ import {
   detectEnrichmentTells,
   verifySourceCalibration,
 } from "@/lib/lab-engine/soc/enrichment/validator";
-import { generateEnrichment, resolveEntityRole } from "@/lib/lab-engine/soc/enrichment/generator";
+import { generateEnrichment } from "@/lib/lab-engine/soc/enrichment/generator";
 import { evaluateSourceReputation } from "@/lib/lab-engine/soc/enrichment/sources";
 import {
   EnrichmentAwareReferenceSolver,
   LazyEnrichmentSolver,
   ScoreOnlySolver,
 } from "@/lib/lab-engine/soc/enrichment/solvers";
-import { ENRICHMENT_TOOLS, type EntityRole, type ReputationSourceReport, type ReputationResult } from "@/lib/lab-engine/soc/enrichment/types";
+import { ENRICHMENT_TOOLS, type EntityRole, type ReputationSourceReport } from "@/lib/lab-engine/soc/enrichment/types";
 import { createRng } from "@/lib/generators/rng";
+import type { SocSolverDecision } from "@/lib/lab-engine/soc/family-validator";
 
 function loadFamily(familyId: string): SocFamily {
   const filePath = path.resolve(`content/soc/families/${familyId}.yaml`);
@@ -55,20 +56,20 @@ describe("Part E Proof Toolchain: Solvability, Calibration, Tells, and Coherence
     const family = loadFamily("soc-f-phishing-cred-01");
     const { scenario } = generateSocVariant(family, "tell-detection-seed-42", "intermediate");
 
-    const samples: Array<{ role: EntityRole; payload: any; latencyMs: number }> = [];
+    const samples: Array<{ role: EntityRole; payload: Record<string, unknown>; latencyMs: number }> = [];
 
     // Sample attacker indicators
     const attackerIps = ["198.51.100.24", "198.51.100.99"];
     for (const ip of attackerIps) {
       const res = generateEnrichment(scenario, "tell-detection-seed-42", "reputation", "ip", ip);
-      samples.push({ role: "attacker_infra", payload: res.data, latencyMs: 42 });
+      samples.push({ role: "attacker_infra", payload: res.data as unknown as Record<string, unknown>, latencyMs: 42 });
     }
 
     // Sample benign indicators
     const benignIps = ["192.0.2.10", "192.0.2.45"];
     for (const ip of benignIps) {
       const res = generateEnrichment(scenario, "tell-detection-seed-42", "reputation", "ip", ip);
-      samples.push({ role: "benign_business", payload: res.data, latencyMs: 44 });
+      samples.push({ role: "benign_business", payload: res.data as unknown as Record<string, unknown>, latencyMs: 44 });
     }
 
     const tellResult = detectEnrichmentTells(samples);
@@ -115,11 +116,12 @@ describe("Part E Proof Toolchain: Solvability, Calibration, Tells, and Coherence
   });
 
   it("proves Reference Solver solvability with tools across diverse families with +15% margin over naive solvers", () => {
-    function toDecisionRecords(map: Record<string, any>) {
+    function toDecisionRecords(map: Record<string, SocSolverDecision>) {
       return Object.values(map).map((d) => ({
         ...d,
         id: `dec-${d.alertId}`,
         attemptId: "test-attempt",
+        targetTier: d.escalate ? ("tier2" as const) : null,
         evidenceRefs: [],
         createdAt: new Date().toISOString(),
       }));

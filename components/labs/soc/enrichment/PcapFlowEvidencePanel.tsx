@@ -2,12 +2,11 @@
 
 import { useState } from "react";
 import type { PcapFlowsResult, EntityType, FlowRecord } from "@/lib/lab-engine/soc/enrichment/types";
-import { defangIndicator } from "@/lib/lab-engine/soc/enrichment/detector";
 import { Badge } from "@/components/ui/Badge";
 import { PacketTable } from "@/components/labs/packet/PacketTable";
 import { PacketDetails } from "@/components/labs/packet/PacketDetails";
 import type { Packet } from "@/lib/lab-engine/packet/types";
-import { IconCopy, IconCheck, IconDownload, IconLayers, IconActivity, IconShield } from "@/components/ui/icons";
+import { IconDownload, IconLayers, IconActivity } from "@/components/ui/icons";
 
 type Props = {
   data: PcapFlowsResult;

@@ -49,13 +49,16 @@ When reviewing sample variants, evaluate against these four operational pillars:
 - [ ] **Administrative Lookalikes**: Do the benign twins use genuine administrative tools (e.g., SCCM, PsExec for scheduled updates, PowerShell inventory scripts)?
 - [ ] **Investigative Contrast**: Is there sufficient evidence in the raw logs for a careful analyst to separate authorized IT admin activity from an adversary living off the land?
 
-### 4. Debrief Technical Accuracy
-- [ ] **Teaching Value**: Does the debrief clearly explain *why* an alert was true positive or benign?
-- [ ] **Operational Guidance**: Does the debrief suggest industry-standard follow-ups (e.g., host isolation, credential revocation, firewall block requests, mailbox forwarding rule audit)?
+### 5. Simulated Enrichment & Evidence Tool Realism (Phase 3 Prompt 4)
+- [ ] **Email Header Analyzer**: Are hop-by-hop Received headers parsed in believable chronological order? Do SPF/DKIM/DMARC headers mimic real enterprise mail gateways (e.g., Proofpoint, Mimecast) without declaring verdicts? Are From vs. Return-Path mismatches realistic?
+- [ ] **Threat Intel Reputation Disagreements**: Do external sources disagree naturally on ambiguous indicators? Is there NO single summary verdict banner (avoiding "VT green/red score tells")?
+- [ ] **Endpoint Process Tree**: Are parent-child process chains authentic (e.g., `winword.exe` spawning `powershell.exe` or `cmd.exe` spawning `whoami.exe`)? Do process integrity levels (`SYSTEM`, `Medium`, `High`) match realistic user/service contexts?
+- [ ] **Passive DNS & WHOIS**: Do registration dates and nameserver records align with scenario attack timelines? Are shared hosting inferences plausible without leaking answers?
+- [ ] **CMDB & IT ServiceDesk**: Are change tickets and maintenance windows properly correlated with benign operational alerts? Are outdated CMDB records plausible without being impossible to navigate?
 
 ---
 
-## 5. Review Workflow & Status Lifecycle
+## 3. Review Workflow & Status Lifecycle
 
 1. **`draft`**: The author has written the family blueprint and automated proof tests pass.
 2. **`practitioner-reviewed`**: At least one working SOC analyst has inspected variants, confirmed operational realism, and documented feedback in the `reviewerNotes` field of the family YAML.

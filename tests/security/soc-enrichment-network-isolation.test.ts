@@ -9,7 +9,7 @@ import { parse as parseYaml } from "yaml";
 import { socFamilySchema, type SocFamily } from "@/lib/lab-engine/soc/family-schema";
 import { generateSocVariant } from "@/lib/lab-engine/soc/generator";
 import { generateEnrichment } from "@/lib/lab-engine/soc/enrichment/generator";
-import type { EnrichmentTool, EntityType } from "@/lib/lab-engine/soc/enrichment/types";
+import type { EnrichmentTool, EntityType, WhoisResult, PdnsResult } from "@/lib/lab-engine/soc/enrichment/types";
 
 function loadFamily(familyId: string): SocFamily {
   const filePath = path.resolve(`content/soc/families/${familyId}.yaml`);
@@ -37,30 +37,30 @@ describe("Security Guard: SOC Enrichment Zero Outbound Network Isolation", () =>
     }) as unknown as typeof fetch;
 
     // Intercept http.request
-    http.request = vi.fn((...args: any[]) => {
+    http.request = vi.fn((...args: unknown[]) => {
       const target = typeof args[0] === "string" ? args[0] : JSON.stringify(args[0]);
       outboundNetworkCalls.push({ method: "http.request", target });
       throw new Error(`CRITICAL SECURITY FAILURE: Outbound http.request intercepted to ${target}`);
-    }) as any;
+    }) as unknown as typeof http.request;
 
     // Intercept https.request
-    https.request = vi.fn((...args: any[]) => {
+    https.request = vi.fn((...args: unknown[]) => {
       const target = typeof args[0] === "string" ? args[0] : JSON.stringify(args[0]);
       outboundNetworkCalls.push({ method: "https.request", target });
       throw new Error(`CRITICAL SECURITY FAILURE: Outbound https.request intercepted to ${target}`);
-    }) as any;
+    }) as unknown as typeof https.request;
 
     // Intercept net.Socket.prototype.connect
-    net.Socket.prototype.connect = vi.fn((...args: any[]) => {
+    net.Socket.prototype.connect = vi.fn((...args: unknown[]) => {
       outboundNetworkCalls.push({ method: "net.Socket.connect", target: JSON.stringify(args[0]) });
       throw new Error(`CRITICAL SECURITY FAILURE: Outbound socket connect intercepted`);
-    }) as any;
+    }) as unknown as typeof net.Socket.prototype.connect;
 
     // Intercept dns.lookup
-    dns.lookup = vi.fn((...args: any[]) => {
+    dns.lookup = vi.fn((...args: unknown[]) => {
       outboundNetworkCalls.push({ method: "dns.lookup", target: String(args[0]) });
       throw new Error(`CRITICAL SECURITY FAILURE: Outbound dns.lookup intercepted for ${args[0]}`);
-    }) as any;
+    }) as unknown as typeof dns.lookup;
   });
 
   afterEach(() => {
@@ -121,13 +121,13 @@ describe("Security Guard: SOC Enrichment Zero Outbound Network Isolation", () =>
     const { scenario } = generateSocVariant(family, "seed-synthetic-audit-42", "intermediate");
 
     const whoisRes = generateEnrichment(scenario, "seed-synthetic-audit-42", "whois", "domain", "secure-login.example");
-    const data = whoisRes.data as any;
+    const data = whoisRes.data as WhoisResult;
 
     expect(data.entity.value).toMatch(/\.(example|test|invalid|corp\.internal|internal)$/i);
     expect(data.nameServers.every((ns: string) => ns.endsWith(".example") || ns.endsWith(".internal"))).toBe(true);
 
     const pdnsRes = generateEnrichment(scenario, "seed-synthetic-audit-42", "pdns", "domain", "secure-login.example");
-    const pdnsData = pdnsRes.data as any;
+    const pdnsData = pdnsRes.data as PdnsResult;
     for (const res of pdnsData.forwardResolutions) {
       // Must be in documentation ranges (192.0.2.x, 198.51.100.x, 203.0.113.x) or private 10.x / 192.168.x
       expect(

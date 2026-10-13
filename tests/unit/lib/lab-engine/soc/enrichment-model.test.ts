@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { detectEntityType, defangIndicator, refangIndicator } from "@/lib/lab-engine/soc/enrichment/detector";
-import { generateEnrichment, resolveEntityRole } from "@/lib/lab-engine/soc/enrichment/generator";
+import { generateEnrichment } from "@/lib/lab-engine/soc/enrichment/generator";
 import {
   EnrichmentAwareReferenceSolver,
   LazyEnrichmentSolver,
@@ -10,6 +10,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
 import { socFamilySchema, type SocFamily } from "@/lib/lab-engine/soc/family-schema";
+import type { SocSolverDecision } from "@/lib/lab-engine/soc/family-validator";
 
 function loadFamily(familyId: string): SocFamily {
   const filePath = path.resolve(`content/soc/families/${familyId}.yaml`);
@@ -19,7 +20,7 @@ function loadFamily(familyId: string): SocFamily {
 import { generateSocVariant } from "@/lib/lab-engine/soc/generator";
 import { toClientView } from "@/lib/lab-engine/soc/schema";
 import { evaluateSocAttempt } from "@/lib/lab-engine/soc/evaluator";
-import type { ReputationResult, WhoisResult, EmailHeaderAnalysisResult } from "@/lib/lab-engine/soc/enrichment/types";
+import type { ReputationResult, EmailHeaderAnalysisResult } from "@/lib/lab-engine/soc/enrichment/types";
 
 describe("Enrichment Indicator Detector & Sanitizer", () => {
   it("accurately classifies diverse indicator types", () => {
@@ -90,11 +91,17 @@ describe("Deterministic Enrichment Generation & Consistency", () => {
 });
 
 describe("Solver Hierarchy: Reference vs Lazy vs Score-Only Solvers", () => {
-  function toDecisionRecords(map: Record<string, any>) {
+  function toDecisionRecords(map: Record<string, SocSolverDecision>) {
     return Object.values(map).map((d) => ({
-      ...d,
-      id: d.alertId,
+      id: `dec-${d.alertId}`,
       attemptId: "test-attempt",
+      alertId: d.alertId,
+      disposition: d.disposition,
+      severity: d.severity,
+      escalate: d.escalate,
+      targetTier: d.escalate ? ("tier2" as const) : null,
+      rationale: d.rationale,
+      evidenceRefs: [],
       createdAt: new Date().toISOString(),
     }));
   }
