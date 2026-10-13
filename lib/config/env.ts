@@ -25,6 +25,7 @@ const envSchema = z.object({
   // Phase 3 SOC Track Feature Flag
   SOC_WORKSPACE_ENABLED: z.string().optional(),
   SOC_ENRICHMENT_ENABLED: z.string().optional(),
+  SOC_QUERY_ENABLED: z.string().optional(),
 });
 
 export function isSocWorkspaceEnabled(): boolean {
@@ -37,6 +38,14 @@ export function isSocWorkspaceEnabled(): boolean {
 
 export function isSocEnrichmentEnabled(): boolean {
   const flag = process.env.SOC_ENRICHMENT_ENABLED;
+  if (flag === "false" || flag === "0") return false;
+  if (flag === "true" || flag === "1") return true;
+  // Default on in development & test, off in production until reviewed
+  return process.env.NODE_ENV !== "production";
+}
+
+export function isSocQueryEnabled(): boolean {
+  const flag = process.env.SOC_QUERY_ENABLED;
   if (flag === "false" || flag === "0") return false;
   if (flag === "true" || flag === "1") return true;
   // Default on in development & test, off in production until reviewed
