@@ -1,0 +1,104 @@
+id: incident-report-l1
+version: "1.0.0"
+title: "SOC Tier-1 Comprehensive Incident Report"
+description: "Standard end-to-end incident documentation for confirmed security incidents and high-confidence escalations."
+applicableScenarios:
+  - "*"
+sections:
+  - id: header
+    title: "Incident Header & Case Metadata"
+    type: header
+    required: true
+    guidance: "Record core tracking metadata: give the report an informative, descriptive title (e.g. 'Phishing Credential Harvest against Finance Workstation WS-014'), link your working case ID, confirm analyst attribution, and select the correct taxonomy classification."
+    fieldLimits:
+      titleMaxLength: 160
+
+  - id: executive_summary
+    title: "Executive Summary"
+    type: free_text
+    required: true
+    guidance: "Provide a concise non-technical synopsis for leadership and cross-functional teams: state what occurred in 2-3 sentences, summarize the current containment status, identify affected systems, and articulate the overall business or operational risk."
+    fieldLimits:
+      minLength: 50
+      maxLength: 1200
+
+  - id: verdict_and_severity
+    title: "Triage Verdict & Severity Justification"
+    type: verdict
+    required: true
+    guidance: "Select the confirmed disposition (e.g. True Positive), assign an objective severity rating (Low to Critical) calibrated against organizational impact, state your analytical confidence, and document the specific evidence justifying your conclusion."
+    fieldLimits:
+      justificationMinLength: 30
+      justificationMaxLength: 800
+
+  - id: scope_and_impact
+    title: "Scope & Affected Entities"
+    type: scope_picker
+    required: true
+    guidance: "Itemize every compromised or impacted host, workstation, server, and user identity. Do not pad with unrelated healthy systems. Clearly specify data assets or cloud services at risk and describe direct operational disruption."
+    fieldLimits:
+      maxAssets: 20
+      maxUsers: 20
+      impactStatementMaxLength: 800
+
+  - id: timeline
+    title: "Chronological Incident Timeline"
+    type: timeline_table
+    required: true
+    guidance: "Reconstruct the sequence of critical events in chronological order. Each entry must specify a timestamp with timezone, concise event description, log data source, and a clickable evidence reference link back to the supporting log event or alert."
+    fieldLimits:
+      minRows: 2
+      maxRows: 30
+      rowDescriptionMaxLength: 300
+
+  - id: indicators_of_compromise
+    title: "Indicators of Compromise (IoCs)"
+    type: ioc_table
+    required: true
+    guidance: "Extract validated malicious indicators (IPs, domains, hashes, URLs, sender addresses, scripts). Ensure external network indicators are properly defanged (e.g. 198.51.100[.]24). Assign tactical roles (Delivery, C2, Staging) and link supporting evidence."
+    fieldLimits:
+      minRows: 1
+      maxRows: 40
+
+  - id: attack_narrative
+    title: "Attack Narrative & Root Cause Analysis"
+    type: free_text
+    required: true
+    guidance: "Synthesize the complete kill-chain narrative from initial vector to objective. Detail how the perimeter was traversed, what tools or commands were executed locally, how persistence was achieved, and identify the root cause or control gap."
+    fieldLimits:
+      minLength: 100
+      maxLength: 3500
+
+  - id: technique_mapping
+    title: "MITRE ATT&CK Mapping"
+    type: technique_picker
+    required: false
+    guidance: "Map observed attacker tradecraft to standardized MITRE ATT&CK techniques. Only map techniques directly supported by logged telemetry."
+    fieldLimits:
+      maxTechniques: 12
+
+  - id: response_actions
+    title: "Containment, Eradication & Recovery Recommendations"
+    type: action_picker
+    required: true
+    guidance: "Select prioritized remediation actions from the catalog. Prioritize immediate containment (e.g. isolate host, revoke sessions) over long-term recovery. For each chosen action, provide a brief technical rationale."
+    fieldLimits:
+      minActions: 1
+      maxActions: 10
+      rationaleMaxLength: 300
+
+  - id: escalation_handoff
+    title: "Escalation & Next-Tier Handoff"
+    type: escalation_form
+    required: true
+    guidance: "Specify whether Tier-2 or specialized Incident Response escalation is required, name the target receiving group, declare urgency, and itemize critical next steps needed from the receiving analysts."
+    fieldLimits:
+      handoffSummaryMaxLength: 600
+
+  - id: lessons_learned
+    title: "Detection Improvements & Lessons Learned"
+    type: free_text
+    required: false
+    guidance: "Recommend defensive telemetry enhancements, tuning for high-noise detection rules, or security architecture adjustments to prevent future occurrences."
+    fieldLimits:
+      maxLength: 1200

@@ -1,0 +1,67 @@
+id: escalation-handoff-l1
+version: "1.0.0"
+title: "SOC Tier-1 Rapid Escalation Handoff"
+description: "Streamlined operational briefing for rapid escalation of high-severity or urgent incidents to Tier-2/IR."
+applicableScenarios:
+  - "*"
+sections:
+  - id: header
+    title: "Escalation Header & Case Reference"
+    type: header
+    required: true
+    guidance: "Record the case ID, title, and initial classification."
+    fieldLimits:
+      titleMaxLength: 140
+
+  - id: executive_summary
+    title: "Tactical Situation Brief"
+    type: free_text
+    required: true
+    guidance: "Succinctly describe the active threat, immediate threat actor activity, and why rapid tier-2 intervention is required."
+    fieldLimits:
+      minLength: 30
+      maxLength: 600
+
+  - id: verdict_and_severity
+    title: "Preliminary Triage Verdict"
+    type: verdict
+    required: true
+    guidance: "State your current disposition, severity rating, and analytical confidence."
+    fieldLimits:
+      justificationMinLength: 20
+      justificationMaxLength: 500
+
+  - id: scope_and_impact
+    title: "Immediate Affected Systems & Users"
+    type: scope_picker
+    required: true
+    guidance: "List only the verified active endpoints and compromised identities requiring priority containment."
+    fieldLimits:
+      maxAssets: 10
+      maxUsers: 10
+
+  - id: indicators_of_compromise
+    title: "Key Indicators of Compromise (Priority IoCs)"
+    type: ioc_table
+    required: true
+    guidance: "Extract the critical actionable indicators (C2 IP, malware hash, phishing sender) that Tier-2 must immediately block or hunt for across the fleet."
+    fieldLimits:
+      minRows: 1
+      maxRows: 15
+
+  - id: response_actions
+    title: "Urgent Actions Taken / Recommended"
+    type: action_picker
+    required: true
+    guidance: "Identify containment actions already executed by L1 or urgent actions requested from L2/IR."
+    fieldLimits:
+      minActions: 1
+      maxActions: 6
+
+  - id: escalation_handoff
+    title: "Handoff Requirements & Next Steps"
+    type: escalation_form
+    required: true
+    guidance: "Specify receiving team, SLA urgency, and specific investigative or containment actions requested from the next tier."
+    fieldLimits:
+      handoffSummaryMaxLength: 500
