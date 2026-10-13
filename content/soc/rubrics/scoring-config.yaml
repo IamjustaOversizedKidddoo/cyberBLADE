@@ -1,0 +1,45 @@
+# Scoring configuration for the deterministic grading engine
+# All penalties and tolerances are tuned so that a naive dump-everything
+# strategy scores < 45% and a reference-quality report scores > 85%.
+version: "1.0.0"
+
+weights:
+  verdict_accuracy: 0.15
+  incident_scoping: 0.15
+  ioc_extraction: 0.20
+  timeline_accuracy: 0.15
+  evidence_support: 0.10
+  technique_mapping: 0.05
+  response_actions: 0.10
+  escalation_handoff: 0.05
+  report_hygiene: 0.05
+  narrative_quality: 0.00
+
+penalties:
+  paddingPenaltyPerItem: 0.5
+  fabricationPenaltyPerItem: 2.0
+  harmfulActionPenalty: 3.0
+  unorderedTimelinePenalty: 0.5
+  missingEvidencePenalty: 0.25
+  unsupportedClaimPenalty: 1.0
+
+tolerances:
+  timelineSeconds: 300
+  minNarrativeLength: 50
+  maxNarrativeLength: 5000
+  maxIocPaddingBeforePenalty: 3
+  maxTimelineRowsBeforePenalty: 30
+  minTimelineRows: 2
+  minIocRows: 1
+
+# IoC scoring uses recall-weighted F-measure:
+# Score = maxPoints × (0.7 × Recall + 0.3 × Precision) - padding_penalty
+iocScoring:
+  recallWeight: 0.7
+  precisionWeight: 0.3
+
+# Timeline scoring uses milestone coverage + Kendall-Tau ordering:
+# Score = maxPoints × (0.7 × MilestoneCoverage + 0.3 × OrderScore) - fabrication_penalty
+timelineScoring:
+  coverageWeight: 0.7
+  orderWeight: 0.3

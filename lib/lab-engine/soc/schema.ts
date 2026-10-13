@@ -131,6 +131,7 @@ export const socIncidentGroundTruthSchema = z.object({
   truePositiveAlertIds: z.array(z.string()).min(1),
   rootCause: z.string().min(1),
   mitre: z.array(z.string()).default([]),
+  reportGroundTruth: z.custom<import("./reports/types").SocReportGroundTruth>().optional(),
 });
 export type SocIncidentGroundTruth = z.infer<typeof socIncidentGroundTruthSchema>;
 
