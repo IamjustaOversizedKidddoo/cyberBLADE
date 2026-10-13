@@ -117,7 +117,16 @@ benignTemplates:
 ```
 
 ### Step 5: Construct Twin Lookalike Templates
-To test analyst discrimination, create paired twins where a benign operational event mirrors an attack technique.
+### Step 5: Construct Twin Lookalike Templates ("Twins")
+To test analyst discrimination and critical thinking, create paired twins where a benign operational event mirrors an attack technique.
+A good twin satisfies **Observational Symmetry**:
+1. **Identical Sensor & Event Type**: Both alerts come from the same detection tool (e.g., EDR, WAF, Mail Gateway).
+2. **Surface Lookalike Payload**: The benign payload looks superficially alarming (e.g., base64 PowerShell, automated database dump, admin curl request).
+3. **Forensic Discrepancy**: The ground truth diverges based on specific contextual signals:
+   - Parent process lineage (`ccmexec.exe` vs `word.exe`)
+   - User account context (`svc-backup` vs interactive employee user)
+   - Destination address / endpoint legitimacy (`corp.internal` vs untrusted external IP)
+   - Time of execution relative to approved maintenance windows
 
 ```yaml
 twinTemplates:
@@ -136,9 +145,18 @@ twinTemplates:
 
 ---
 
-## 3. Anti-Tell Engineering Checklist
+## 3. Anti-Tell Engineering & Practitioner Lessons Learned
 
-Accidental generator artifacts ("tells") destroy training fidelity by letting learners or machine learning models distinguish malicious alerts from noise without analyzing the evidence. The validation toolchain enforces strict invariance thresholds ($\le 72\%$ balanced accuracy).
+Accidental generator artifacts ("tells") destroy training fidelity by letting learners or naive heuristics distinguish malicious alerts from noise without analyzing the evidence. The validation toolchain enforces strict invariance thresholds ($\le 72\%$ balanced accuracy).
+
+### Key Authoring Lessons:
+1. **Summary Length Envelope (110–140 chars)**: The length tell detector flags alerts if malicious alert summaries are systematically longer or shorter than benign alerts. Always compose template summaries within a tight length band (~110–135 characters).
+2. **Matching Raw Field Counts & Keys**: If attack alerts include `commandLine`, `parentProcess`, and `hash`, but benign alerts only have `user` and `host`, a simple field-count heuristic can score 90%+. Ensure benign alerts populate realistic matching fields.
+3. **Realistic Sensor Noise (Severity Calibration)**: Real enterprise sensors generate false positives at `HIGH` and `MEDIUM` severities (e.g., vulnerability scans, mass backup syncs, admin script bursts). If all benign alerts are `LOW`, learners trivially filter by severity.
+4. **No Keyword Tells**: Never use words like "malicious", "exploit", or "attacker" in alert summaries unless real sensors emit those exact strings (and ensure benign alerts also use operational alert phrases like "suspicious activity detected").
+5. **RFC 5737 and Domain Enforcement**: Never use live public IPs, real corporate brand names, or active malware hashes.
+   - External IPs must be sampled exclusively from RFC 5737 blocks: `192.0.2.0/24` (TEST-NET-1), `198.51.100.0/24` (TEST-NET-2), or `203.0.113.0/24` (TEST-NET-3).
+   - Internal domains must end in `.corp.internal`, `.test`, or `.example`.
 
 | Check | Failure Cause | Correct Design Pattern |
 | :--- | :--- | :--- |
@@ -162,26 +180,33 @@ npm run check:soc:families -- --seeds 50
 ### 2. Inspect a Generated Scenario Variant
 Inspect both the client projection and server ground truth in a safe temp folder:
 ```bash
-npm run soc:gen -- --family soc-f-ransomware-triage-01 --seed 42 --difficulty intermediate --out .temp/soc-sample
+npm run soc:gen -- --family soc-f-phishing-cred-01 --seed 42 --difficulty intermediate --out .temp/soc-sample
 ```
 
-### 3. Generate Full 1,000-Seed Mathematical Proof Report
+### 3. Generate HTML Review Packs for Human Analysts
+Generate interactive HTML review packs with queue tables, raw event logs, and answer keys:
 ```bash
-npm run soc:family-report -- --family soc-f-ransomware-triage-01 --seeds 1000
+npm run soc:review-pack -- --family soc-f-phishing-cred-01 --count 3 --out .temp/review-packs
 ```
-This evaluates 3,000 scenario variants across Beginner, Intermediate, and Advanced profiles, verifying:
-- **100% Structural & Semantic Pass**
-- **100% Zero-Leak Client Projection**
-- **Reference Solver Accuracy $\ge 75\%$**
-- **Adversarial Naive Solver Ceilings $\le 70\%$**
-- **Discretion Margin $\ge +15\%$**
-- **Pairwise Distance $\ge 0.20$**
-- **Generation Time p95 $< 100$ ms**
+
+### 4. Planted Flaw Sensitivity Testing
+Before approving a family, verify that the proof toolchain catches injected flaws:
+```bash
+npx vitest run tests/unit/lib/lab-engine/soc/planted-flaws.test.ts
+```
+This suite verifies that if a family is mutated to have missing fields, ground-truth leaks, length tells, or broken logic, the validation toolchain immediately fails.
+
+### 5. Benchmark Performance
+Verify scenario generation executes within the 150ms latency budget:
+```bash
+npx tsx scripts/soc-library-benchmark.mts
+```
 
 ---
 
 ## 5. Review & Publication Gates
 
-1. **Draft Stage**: Author writes family YAML and satisfies `npm run check:soc:families`.
-2. **Practitioner Review**: A practicing SOC analyst conducts peer review against `docs/dev/soc-practitioner-review.md`.
-3. **Approval**: Review status is set to `approved` in YAML. The file content hash is locked in CI. Any subsequent edits require a version increment (`version: 2`).
+1. **Draft Stage**: Author writes family YAML with `reviewStatus: "draft"` and `published: false`. Automated proof tests and planted flaw suite pass.
+2. **Practitioner Review**: A practicing SOC analyst inspects generated review packs, audits realism against `docs/dev/soc-practitioner-review.md`, and adds sign-off notes in `reviewerNotes`.
+3. **Approval & Publication**: Status transitions to `reviewStatus: "approved"`. Once curriculum readiness is achieved, `published: true` is set.
+
