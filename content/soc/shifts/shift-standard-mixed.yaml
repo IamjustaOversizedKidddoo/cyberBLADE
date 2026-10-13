@@ -1,0 +1,47 @@
+id: "shift-standard-mixed"
+version: 1
+title: "Standard Mixed Shift: Multi-Vector Perimeter & Host Triage"
+level: "L1"
+description: "A standard weekday operations shift featuring multiple concurrent attack surfaces. Includes a multi-stage spearphishing to macro payload execution chain linked to the same victim host, alongside external web application scanning."
+estimatedMinutes:
+  min: 40
+  max: 65
+difficulty: "intermediate"
+shiftWindow: "day_shift"
+targetAlertCount:
+  min: 100
+  max: 135
+organizationArchetypes:
+  - "org-midmarket-saas"
+  - "org-health-network"
+  - "org-ecommerce-retail"
+incidentSelections:
+  - familyId: "soc-f-phishing-cred-01"
+    stageOffsetMinutes: 10
+    linkToPreviousVictim: false
+  - familyId: "soc-f-attachment-script-01"
+    stageOffsetMinutes: 35
+    linkToPreviousVictim: true
+  - familyId: "soc-f-web-attack-data-01"
+    stageOffsetMinutes: 70
+    linkToPreviousVictim: false
+skillsTested:
+  - "soc-sk-alert-triage"
+  - "soc-sk-fp-identification"
+  - "soc-sk-phishing-analysis"
+  - "soc-sk-endpoint-triage"
+  - "soc-sk-web-attacks"
+  - "soc-sk-correlation"
+  - "soc-sk-scope-impact"
+  - "soc-sk-escalation"
+  - "soc-sk-documentation"
+noiseMix:
+  alertFatigueRatio: 0.45
+  includeFamilyBenign: true
+  extraNoiseCount: 25
+telemetryGaps:
+  count: 1
+  hideAlertProbability: 0.2
+debrief:
+  briefingTemplate: "Active day shift at {orgName}. Alert volume is elevated at {alertCount} events. You are responsible for correlating inbound email telemetry with EDR process executions and monitoring public web application firewalls for exploit attempts."
+  guidanceTemplate: "Debrief for {orgName}: Key success depended on identifying the initial spearphishing attachment and linking it to the subsequent child PowerShell execution on the compromised host. Web application alerts required careful status code verification (HTTP 200 vs HTTP 403) to distinguish successful exploitation from blocked scanners."
