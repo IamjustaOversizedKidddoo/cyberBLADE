@@ -6,6 +6,8 @@ import { shiftProfileSchema } from "../lib/lab-engine/soc/shift-schema";
 import { generateSocVariant } from "../lib/lab-engine/soc/generator";
 import { loadFamilyCatalog, composeShiftScenario } from "../lib/lab-engine/soc/shift-composer";
 import { toClientView, type SocScenario } from "../lib/lab-engine/soc/schema";
+import { generateScenarioDataset } from "../lib/lab-engine/soc/query/dataset-generator";
+import { generateScenarioQuestions } from "../lib/lab-engine/soc/query/questions";
 
 async function main(): Promise<number> {
   const args = process.argv.slice(2);
@@ -83,15 +85,20 @@ async function main(): Promise<number> {
   }
   console.log("");
 
-  // 2. Output Variant Client Views (Redacted from ground truth)
+    // 2. Output Variant Client Views (Redacted from ground truth)
   for (let vIdx = 0; vIdx < sampleVariants.length; vIdx++) {
     const sc = sampleVariants[vIdx];
     const client = toClientView(sc);
+
+    // Dataset generation for review
+    const dataset = generateScenarioDataset(sc, sc.seed, 5000);
+    const { learnerQuestions, serverTruths } = generateScenarioQuestions(sc, sc.seed);
 
     console.log("--------------------------------------------------------------------------------");
     console.log(`SAMPLE VARIANT ${vIdx + 1} OF ${count} [Seed: ${sc.seed}]`);
     console.log(`Title: ${client.title}`);
     console.log(`Alerts in Queue: ${client.alerts.length} | Raw Events: ${client.rawEvents.length}`);
+    console.log(`Indexed Log Lake: ${dataset.eventCount} events across sources (${dataset.sources.join(", ")})`);
     console.log("Briefing: " + client.briefing);
     console.log("--------------------------------------------------------------------------------");
     console.log("QUEUE SAMPLE (First 6 alerts):");
@@ -107,6 +114,20 @@ async function main(): Promise<number> {
     }
     if (client.alerts.length > 6) {
       console.log(`  ... and ${client.alerts.length - 6} additional alerts in queue.`);
+    }
+
+    console.log("RAW LOG SAMPLES (First 3 events):");
+    for (const evt of dataset.events.slice(0, 3)) {
+      console.log(`  [${evt.source}] ${evt._raw}`);
+    }
+    console.log("");
+
+    console.log("INVESTIGATION QUESTIONS (Learner Stems):");
+    for (const q of learnerQuestions) {
+      console.log(`  [${q.id}] ${q.type.toUpperCase()} (${q.points} pts): ${q.stem}`);
+      if (q.options) {
+        console.log(`        Options: ${q.options.join(" | ")}`);
+      }
     }
     console.log("");
   }
@@ -128,6 +149,10 @@ async function main(): Promise<number> {
   console.log("[ ] 6. Benign-Twin Fairness: Twins share structure but differ in findable evidence.");
   console.log("    Notes: _____________________________________________________________________\n");
   console.log("[ ] 7. Debrief Accuracy: Debrief explanations teach correct analyst investigation steps.");
+  console.log("    Notes: _____________________________________________________________________\n");
+  console.log("[ ] 8. Log Format Realism: Headers, timestamps, and schemas match authentic telemetry.");
+  console.log("    Notes: _____________________________________________________________________\n");
+  console.log("[ ] 9. Investigation Questions: Stems are leak-free and verifiable with BladeQL queries.");
   console.log("    Notes: _____________________________________________________________________\n");
 
   console.log("PRACTITIONER SIGN-OFF:");
@@ -151,6 +176,8 @@ async function main(): Promise<number> {
 
   for (let vIdx = 0; vIdx < sampleVariants.length; vIdx++) {
     const sc = sampleVariants[vIdx];
+    const { serverTruths } = generateScenarioQuestions(sc, sc.seed);
+
     answerContent += `--- VARIANT ${vIdx + 1} OF ${count} [Seed: ${sc.seed}] ---\n`;
     answerContent += `Incidents Ground Truth (${sc.groundTruth.incidents.length} total):\n`;
     for (const inc of sc.groundTruth.incidents) {
@@ -164,6 +191,12 @@ async function main(): Promise<number> {
     for (const a of sc.alerts.filter((x) => x.groundTruth.kind === "true_positive")) {
       answerContent += `  [${a.id}] ${a.ruleName} -> Disposition: ${a.groundTruth.correctDisposition} | Severity: ${a.groundTruth.correctSeverity} | Escalate: ${a.groundTruth.correctEscalation}\n`;
       answerContent += `        Debrief: ${a.groundTruth.debrief}\n`;
+    }
+    answerContent += `\nInvestigation Questions Reference Answers & Queries:\n`;
+    for (const t of serverTruths) {
+      answerContent += `  [${t.id}] Answer: ${JSON.stringify(t.referenceAnswer)}\n`;
+      answerContent += `        Query:   ${t.referenceQuery}\n`;
+      answerContent += `        Debrief: ${t.debrief}\n`;
     }
     answerContent += "\n";
   }

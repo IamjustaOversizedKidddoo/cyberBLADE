@@ -1,0 +1,25 @@
+id: soc-query-practice-01
+title: "SOC Query Practice: BladeQL Hunting Drills"
+type: soc
+track: core
+rank: 1
+estimated_minutes: 20
+briefing: briefing.md
+dataset:
+  generator: soc_scenario
+  params:
+    scenarioId: soc-f-phishing-cred-01
+objectives:
+  - id: o1
+    prompt: "Complete the BladeQL query drills across authentication, firewall, and endpoint telemetry streams."
+    check:
+      kind: flag
+      answer_from: generator.shift_token
+hints:
+  o1:
+    - "Use the Language Reference panel in the search workspace for syntax examples."
+    - "Pipe commands sequentially using '|' to filter, aggregate, and project results."
+xp: 100
+mitre:
+  - "T1078"
+  - "T1059"

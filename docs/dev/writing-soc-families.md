@@ -236,3 +236,25 @@ Entities in families map to canonical roles:
 - **Latency Clamping**: Server execution clamps latency to a uniform window (35–55ms) to prevent side-channel timing attacks.
 - **Imperfect Truth Enforcement**: No single tool yields a 100% decisive verdict. Analysts must correlate at least two corroborating signals (e.g., header authentication failure + pDNS domain history) before drawing conclusions.
 
+---
+
+## 7. Investigation Dataset & Query Questions (Phase 3 Prompt 5)
+
+Scenario variants automatically produce high-fidelity synthetic log lakes (5,000–60,000 events) indexed across telemetry sources.
+
+### 1. Telemetry Stream Coverage
+Every family incorporates events across 9 primary streams:
+- `auth`: Interactive and network logon telemetry (EventCode 4624/4625, Kerberos/NTLM).
+- `firewall`: Egress/ingress flow logs with byte counters and stateful permit/deny actions.
+- `endpoint`: Process creation events (EventCode 4688) with parent process hierarchies and command lines.
+- `dns`: Internal resolver resolution streams with query types and response codes.
+- `proxy`: HTTP/HTTPS egress connections with URLs, status codes, and user-agent strings.
+
+### 2. Writing Investigation Question Templates
+When extending families with SAL1/BTL1-style questions:
+1. **Neutral Stems Only**: Ensure questions do not predetermine guilt or reveal attacker presence.
+2. **Deterministic Answerability**: Formulate a reference query in BladeQL that extracts the exact answer from client-visible fields.
+3. **Anti-Guessing Distractors**: Choice options must be sampled directly from real event values in the variant rather than hardcoded dummy values.
+4. **Leak-Free Hint Tiers**: Provide 2–3 tiered hints guiding analysts to appropriate sources and operators without revealing entity names.
+
+

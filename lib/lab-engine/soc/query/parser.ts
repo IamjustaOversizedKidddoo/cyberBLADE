@@ -272,18 +272,21 @@ export class Parser {
       };
     }
 
-    // Field in (...)
+    // Field in (...) or field in literal
     if (this.check("IDENTIFIER") && this.peek(1).type === "IN") {
       const fieldToken = this.advance();
       this.advance(); // consume IN
-      this.consume("LPAREN", "Expected '(' after 'IN'.");
       const values: LiteralNode[] = [];
-      if (!this.check("RPAREN")) {
-        do {
-          values.push(this.tokenToLiteral(this.advance()));
-        } while (this.match("COMMA"));
+      if (this.match("LPAREN")) {
+        if (!this.check("RPAREN")) {
+          do {
+            values.push(this.tokenToLiteral(this.advance()));
+          } while (this.match("COMMA"));
+        }
+        this.consume("RPAREN", "Expected ')' closing 'IN' list.");
+      } else {
+        values.push(this.tokenToLiteral(this.advance()));
       }
-      this.consume("RPAREN", "Expected ')' closing 'IN' list.");
       return {
         type: "FieldFilter",
         field: fieldToken.value,
