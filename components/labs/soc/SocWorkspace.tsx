@@ -16,13 +16,15 @@ import {
 } from "./enrichment/EnrichmentWorkbenchDrawer";
 import { Badge } from "@/components/ui/Badge";
 import { IconClock, IconShield } from "@/components/ui/icons";
+import { SocSearchTab } from "./search/SocSearchTab";
 
 type Props = {
   session: SocSessionClient;
   onExit?: () => void;
 };
 
-type MobileTab = "queue" | "detail" | "cases" | "tools";
+type WorkspaceView = "triage" | "search";
+type MobileTab = "queue" | "detail" | "cases" | "search" | "tools";
 
 export function SocWorkspace({ session, onExit }: Props) {
   const { scenario, attempt: initialAttempt } = session;
@@ -36,6 +38,7 @@ export function SocWorkspace({ session, onExit }: Props) {
     scenario.alerts.length > 0 ? scenario.alerts[0].id : "",
   );
 
+  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("triage");
   const [mobileTab, setMobileTab] = useState<MobileTab>("queue");
   const [isBriefingOpen, setIsBriefingOpen] = useState(false);
   const [isResultsOpen, setIsResultsOpen] = useState(Boolean(session.results));
@@ -211,6 +214,33 @@ export function SocWorkspace({ session, onExit }: Props) {
           <h1 className="text-xs font-semibold text-ink truncate max-w-xs sm:max-w-md">
             {scenario.title}
           </h1>
+
+          {/* Workspace View Switcher (Desktop) */}
+          <div className="hidden sm:flex items-center rounded-xs bg-surface-raised border border-line p-0.5 ml-2">
+            <button
+              type="button"
+              onClick={() => setWorkspaceView("triage")}
+              className={`px-2.5 py-1 text-xs font-bold rounded-xs transition-colors ${
+                workspaceView === "triage"
+                  ? "bg-cyan/20 text-cyan border border-cyan/40"
+                  : "text-muted hover:text-ink"
+              }`}
+            >
+              Triage ({scenario.alerts.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setWorkspaceView("search")}
+              className={`px-2.5 py-1 text-xs font-bold rounded-xs transition-colors flex items-center gap-1.5 ${
+                workspaceView === "search"
+                  ? "bg-cyan/20 text-cyan border border-cyan/40"
+                  : "text-muted hover:text-ink"
+              }`}
+            >
+              <span>Log Search</span>
+              <span className="text-[10px] font-mono px-1 py-0.2 bg-cyan/15 text-cyan rounded">BladeQL</span>
+            </button>
+          </div>
         </div>
 
         {/* Action Controls */}
@@ -281,9 +311,12 @@ export function SocWorkspace({ session, onExit }: Props) {
       <div className="md:hidden flex border-b border-line bg-surface p-1 gap-1 text-xs shrink-0">
         <button
           type="button"
-          onClick={() => setMobileTab("queue")}
+          onClick={() => {
+            setMobileTab("queue");
+            setWorkspaceView("triage");
+          }}
           className={`flex-1 py-2 text-center rounded-xs font-bold min-h-[44px] ${
-            mobileTab === "queue"
+            mobileTab === "queue" && workspaceView === "triage"
               ? "bg-cyan/15 text-cyan border border-cyan/40"
               : "text-muted hover:text-ink"
           }`}
@@ -292,25 +325,45 @@ export function SocWorkspace({ session, onExit }: Props) {
         </button>
         <button
           type="button"
-          onClick={() => setMobileTab("detail")}
+          onClick={() => {
+            setMobileTab("detail");
+            setWorkspaceView("triage");
+          }}
           className={`flex-1 py-2 text-center rounded-xs font-bold min-h-[44px] ${
-            mobileTab === "detail"
+            mobileTab === "detail" && workspaceView === "triage"
               ? "bg-cyan/15 text-cyan border border-cyan/40"
               : "text-muted hover:text-ink"
           }`}
         >
-          Alert ({activeAlert ? activeAlert.id : "—"})
+          Alert
         </button>
         <button
           type="button"
-          onClick={() => setMobileTab("cases")}
+          onClick={() => {
+            setMobileTab("cases");
+            setWorkspaceView("triage");
+          }}
           className={`flex-1 py-2 text-center rounded-xs font-bold min-h-[44px] ${
-            mobileTab === "cases"
+            mobileTab === "cases" && workspaceView === "triage"
               ? "bg-cyan/15 text-cyan border border-cyan/40"
               : "text-muted hover:text-ink"
           }`}
         >
           Cases ({cases.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMobileTab("search");
+            setWorkspaceView("search");
+          }}
+          className={`flex-1 py-2 text-center rounded-xs font-bold min-h-[44px] ${
+            workspaceView === "search"
+              ? "bg-cyan/15 text-cyan border border-cyan/40"
+              : "text-muted hover:text-ink"
+          }`}
+        >
+          Search
         </button>
         <button
           type="button"
@@ -329,63 +382,86 @@ export function SocWorkspace({ session, onExit }: Props) {
       </div>
 
       {/* Main Workspace Body */}
-      <main className="flex-1 flex overflow-hidden">
-        {/* Panel 1: Alert Queue (Left) */}
-        <div
-          className={`w-full md:w-[38%] lg:w-[34%] border-r border-line flex flex-col ${
-            mobileTab === "queue" ? "flex" : "hidden md:flex"
-          }`}
-        >
-          <AlertQueueTable
-            alerts={scenario.alerts}
-            decisions={decisions}
-            selectedAlertId={selectedAlertId}
-            onSelectAlert={(id) => {
-              setSelectedAlertId(id);
-              // Auto-switch tab on mobile for immediate triage ergonomics
-              setMobileTab("detail");
+      {workspaceView === "search" ? (
+        <main className="flex-1 flex overflow-hidden">
+          <SocSearchTab
+            scenario={scenario}
+            attemptId={session.attempt.id}
+            seed={session.attempt.seed}
+            onOpenEnrichment={(target) => {
+              setEnrichmentTarget(target);
+              setIsEnrichmentOpen(true);
+            }}
+            onAttachEvidence={(event) => {
+              handleManageCase({
+                action: "create",
+                title: `Evidence: ${event.source} ${event.action ?? ""} (${event.id})`,
+                severity: "medium",
+                notes: `Log evidence from BladeQL search:\n${event._raw ?? JSON.stringify(event)}`,
+              });
+              setActionAnnouncement(`Evidence event ${event.id} attached to new case.`);
             }}
           />
-        </div>
-
-        {/* Panel 2: Alert Detail & Evidence (Center) */}
-        <div
-          className={`w-full md:w-[62%] lg:w-[42%] flex flex-col border-r border-line ${
-            mobileTab === "detail" ? "flex" : "hidden md:flex"
-          }`}
-        >
-          {activeAlert ? (
-            <AlertDetailPanel
-              alert={activeAlert}
-              scenario={scenario}
-              existingDecision={decisions[activeAlert.id]}
-              onSelectRelatedAlert={(id) => setSelectedAlertId(id)}
-              onSaveDecision={handleSaveDecision}
-              onOpenEnrichment={(target) => {
-                setEnrichmentTarget(target);
-                setIsEnrichmentOpen(true);
+        </main>
+      ) : (
+        <main className="flex-1 flex overflow-hidden">
+          {/* Panel 1: Alert Queue (Left) */}
+          <div
+            className={`w-full md:w-[38%] lg:w-[34%] border-r border-line flex flex-col ${
+              mobileTab === "queue" ? "flex" : "hidden md:flex"
+            }`}
+          >
+            <AlertQueueTable
+              alerts={scenario.alerts}
+              decisions={decisions}
+              selectedAlertId={selectedAlertId}
+              onSelectAlert={(id) => {
+                setSelectedAlertId(id);
+                // Auto-switch tab on mobile for immediate triage ergonomics
+                setMobileTab("detail");
               }}
             />
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted text-xs">
-              Select an alert from the queue to inspect evidence.
-            </div>
-          )}
-        </div>
+          </div>
 
-        {/* Panel 3: Cases & Notes (Right, Desktop default, Mobile Tab) */}
-        <div
-          className={`w-full lg:w-[24%] flex flex-col ${
-            mobileTab === "cases" ? "flex" : "hidden lg:flex"
-          }`}
-        >
-          <CaseManagementPanel
-            cases={cases}
-            activeAlert={activeAlert}
-            onManageCase={handleManageCase}
-          />
-        </div>
-      </main>
+          {/* Panel 2: Alert Detail & Evidence (Center) */}
+          <div
+            className={`w-full md:w-[62%] lg:w-[42%] flex flex-col border-r border-line ${
+              mobileTab === "detail" ? "flex" : "hidden md:flex"
+            }`}
+          >
+            {activeAlert ? (
+              <AlertDetailPanel
+                alert={activeAlert}
+                scenario={scenario}
+                existingDecision={decisions[activeAlert.id]}
+                onSelectRelatedAlert={(id) => setSelectedAlertId(id)}
+                onSaveDecision={handleSaveDecision}
+                onOpenEnrichment={(target) => {
+                  setEnrichmentTarget(target);
+                  setIsEnrichmentOpen(true);
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-muted text-xs">
+                Select an alert from the queue to inspect evidence.
+              </div>
+            )}
+          </div>
+
+          {/* Panel 3: Cases & Notes (Right, Desktop default, Mobile Tab) */}
+          <div
+            className={`w-full lg:w-[24%] flex flex-col ${
+              mobileTab === "cases" ? "flex" : "hidden lg:flex"
+            }`}
+          >
+            <CaseManagementPanel
+              cases={cases}
+              activeAlert={activeAlert}
+              onManageCase={handleManageCase}
+            />
+          </div>
+        </main>
+      )}
 
       {/* Submit Confirmation Modal */}
       {isSubmitConfirmOpen && (
