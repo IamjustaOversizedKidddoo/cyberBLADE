@@ -237,7 +237,7 @@ export const ReferenceSolver: SocSolver = {
       }
 
       // 4. Insider Threat, Removable Media & Policy Violations
-      if (rule.includes("removable media") || rule.includes("usb") || rule.includes("insider") || summary.includes("usb") || summary.includes("removable storage") || summary.includes("mass export") || summary.includes("bulk cloud upload")) {
+      if (rule.includes("dlp") || rule.includes("bulk cloud") || rule.includes("off-hours") || rule.includes("removable media") || rule.includes("usb") || rule.includes("insider") || summary.includes("usb") || summary.includes("removable storage") || summary.includes("mass export") || summary.includes("bulk cloud upload")) {
         if (summary.includes("approved") || summary.includes("it technician") || summary.includes("hardware diagnostics") || user.includes("itadmin")) {
           decisions[alert.id] = {
             alertId: alert.id,
