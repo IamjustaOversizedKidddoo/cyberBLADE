@@ -151,10 +151,24 @@ describe("Security Part H: Privacy & Compliance Foundations (User Rights & Audit
       let socAttempts = await repo.listSocAttempts(op.id);
       expect(socAttempts).toHaveLength(1);
 
+      await repo.saveSocEnrichmentLookup({
+        attemptId: socAttempts[0].id,
+        userId: op.id,
+        tool: "reputation",
+        entityType: "ip",
+        entityValue: "198.51.100.12",
+        responseHash: "test-hash-123",
+      });
+
+      let lookups = await repo.listSocEnrichmentLookups(socAttempts[0].id);
+      expect(lookups).toHaveLength(1);
+
       // Purge all user data via deleteUserData
       await repo.deleteUserData(op.id);
       socAttempts = await repo.listSocAttempts(op.id);
       expect(socAttempts).toHaveLength(0);
+      lookups = await repo.listSocEnrichmentLookups(socAttempts[0]?.id ?? "deleted");
+      expect(lookups).toHaveLength(0);
     });
   });
 });

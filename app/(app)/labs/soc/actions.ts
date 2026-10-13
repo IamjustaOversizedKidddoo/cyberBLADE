@@ -24,6 +24,14 @@ import type {
   SocCaseRecord,
   SocEvaluationResult,
 } from "@/lib/lab-engine/soc/types";
+import { isSocEnrichmentEnabled } from "@/lib/config/env";
+import { executeEnrichmentLookup } from "@/lib/lab-engine/soc/enrichment/pipeline";
+import {
+  enrichmentLookupInputSchema,
+  type EnrichmentLookupInput,
+  type EnrichmentLookupResponse,
+  type SocEnrichmentLookupRecord,
+} from "@/lib/lab-engine/soc/enrichment/types";
 
 const scenarioIdSchema = z.string().min(1).max(64).regex(/^[a-z0-9_-]+$/);
 const attemptIdSchema = z.string().uuid();
@@ -144,4 +152,29 @@ export async function abandonSocAttemptAction(attemptId: string): Promise<void> 
   const operator = await requireOperator();
   const ctx = getCtx();
   return abandonSocAttempt(ctx, operator.id, cleanAttemptId);
+}
+
+export async function lookupSocEnrichmentAction(
+  input: EnrichmentLookupInput,
+): Promise<EnrichmentLookupResponse> {
+  if (!isSocEnrichmentEnabled()) {
+    throw new Error("Simulated enrichment investigation tools are currently disabled.");
+  }
+  const cleanInput = enrichmentLookupInputSchema.parse(input);
+  const operator = await requireOperator();
+  const ctx = getCtx();
+  return executeEnrichmentLookup(ctx, operator.id, cleanInput);
+}
+
+export async function listSocEnrichmentLookupsAction(
+  attemptId: string,
+): Promise<SocEnrichmentLookupRecord[]> {
+  const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  const operator = await requireOperator();
+  const ctx = getCtx();
+  const attempts = await ctx.repo.listSocAttempts(operator.id);
+  if (!attempts.some((a) => a.id === cleanAttemptId)) {
+    throw new Error("Attempt not found or access denied.");
+  }
+  return ctx.repo.listSocEnrichmentLookups(cleanAttemptId);
 }

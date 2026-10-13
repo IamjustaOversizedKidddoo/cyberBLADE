@@ -37,6 +37,18 @@ export function canonicalizeIndicator(val: string): string {
   return refanged.trim().toLowerCase();
 }
 
+/**
+ * Canonicalize an entity according to its specific EntityType
+ */
+export function canonicalizeEntity(type: EntityType, val: string): string {
+  if (!val) return "";
+  const refanged = refangIndicator(val).trim();
+  if (type === "ip" || type === "domain" || type === "hash" || type === "email") {
+    return refanged.toLowerCase();
+  }
+  return refanged;
+}
+
 const IPV4_REGEX = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 const IPV6_REGEX = /^(([0-9a-fA-F]{1,4}:){1,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|:(:[0-9a-fA-F]{1,4}){1,7}|::1|::|([0-9a-fA-F]{1,4}:)+(:[0-9a-fA-F]{1,4})+)$/;
 const SHA256_REGEX = /^[a-fA-F0-9]{64}$/;

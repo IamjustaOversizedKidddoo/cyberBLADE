@@ -21,6 +21,7 @@ import type {
   SocCaseRecord,
   SocEvaluationResult,
 } from "@/lib/lab-engine/soc/types";
+import type { SocEnrichmentLookupRecord } from "@/lib/lab-engine/soc/enrichment/types";
 
 export class SupabaseProgressRepo implements ProgressRepo {
   private async getClient() {
@@ -1008,11 +1009,71 @@ export class SupabaseProgressRepo implements ProgressRepo {
       });
   }
 
+  async saveSocEnrichmentLookup(lookup: Omit<SocEnrichmentLookupRecord, "id" | "createdAt">): Promise<SocEnrichmentLookupRecord> {
+    const client = await this.getClient();
+    const id = randomUUID();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_enrichment_lookups")
+      .insert({
+        id,
+        attempt_id: lookup.attemptId,
+        user_id: lookup.userId,
+        tool: lookup.tool,
+        entity_type: lookup.entityType,
+        entity_value: lookup.entityValue,
+        response_hash: lookup.responseHash,
+      })
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to save soc enrichment lookup: ${error?.message}`);
+    }
+
+    return {
+      id: data.id,
+      attemptId: data.attempt_id,
+      userId: data.user_id,
+      tool: data.tool,
+      entityType: data.entity_type,
+      entityValue: data.entity_value,
+      responseHash: data.response_hash,
+      createdAt: data.created_at,
+    };
+  }
+
+  async listSocEnrichmentLookups(attemptId: string): Promise<SocEnrichmentLookupRecord[]> {
+    const client = await this.getClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_enrichment_lookups")
+      .select("*")
+      .eq("attempt_id", attemptId)
+      .order("created_at", { ascending: false });
+
+    if (error || !data) return [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data as any[]).map((d) => ({
+      id: d.id,
+      attemptId: d.attempt_id,
+      userId: d.user_id,
+      tool: d.tool,
+      entityType: d.entity_type,
+      entityValue: d.entity_value,
+      responseHash: d.response_hash,
+      createdAt: d.created_at,
+    }));
+  }
+
   async deleteUserData(userId: string): Promise<void> {
     const client = await this.getClient();
     await client.from("soc_attempts").delete().eq("user_id", userId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (client as any).from("soc_used_seeds").delete().eq("user_id", userId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (client as any).from("soc_enrichment_lookups").delete().eq("user_id", userId);
     await client.from("exam_reports").delete().eq("user_id", userId);
     await client.from("review_items").delete().eq("user_id", userId);
   }

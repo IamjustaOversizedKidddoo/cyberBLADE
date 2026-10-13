@@ -24,10 +24,19 @@ const envSchema = z.object({
   HANDLER_MAX_GLOBAL_DAILY_BUDGET_USD: z.coerce.number().positive().default(10.0),
   // Phase 3 SOC Track Feature Flag
   SOC_WORKSPACE_ENABLED: z.string().optional(),
+  SOC_ENRICHMENT_ENABLED: z.string().optional(),
 });
 
 export function isSocWorkspaceEnabled(): boolean {
   const flag = process.env.SOC_WORKSPACE_ENABLED;
+  if (flag === "false" || flag === "0") return false;
+  if (flag === "true" || flag === "1") return true;
+  // Default on in development & test, off in production until reviewed
+  return process.env.NODE_ENV !== "production";
+}
+
+export function isSocEnrichmentEnabled(): boolean {
+  const flag = process.env.SOC_ENRICHMENT_ENABLED;
   if (flag === "false" || flag === "0") return false;
   if (flag === "true" || flag === "1") return true;
   // Default on in development & test, off in production until reviewed

@@ -17,6 +17,7 @@ import type {
   SocDecisionRecord,
   SocCaseRecord,
 } from "@/lib/lab-engine/soc/types";
+import type { SocEnrichmentLookupRecord } from "@/lib/lab-engine/soc/enrichment/types";
 
 /**
  * Progress storage. Every mutation is a single atomic operation (no read-then-write in callers),
@@ -80,6 +81,8 @@ export interface ProgressRepo {
   deleteSocCase(id: string): Promise<void>;
   listSocCases(attemptId: string): Promise<SocCaseRecord[]>;
   listSocAttempts(userId: string): Promise<SocAttemptRecord[]>;
+  saveSocEnrichmentLookup(lookup: Omit<SocEnrichmentLookupRecord, "id" | "createdAt">): Promise<SocEnrichmentLookupRecord>;
+  listSocEnrichmentLookups(attemptId: string): Promise<SocEnrichmentLookupRecord[]>;
   listUsedSeeds(userId: string, familyId: string): Promise<string[]>;
   recordUsedSeed(userId: string, familyId: string, seed: string): Promise<void>;
   deleteUserData(userId: string): Promise<void>;
@@ -437,6 +440,28 @@ export class StoreProgressRepo implements ProgressRepo {
     });
   }
 
+  async saveSocEnrichmentLookup(lookup: Omit<SocEnrichmentLookupRecord, "id" | "createdAt">): Promise<SocEnrichmentLookupRecord> {
+    const id = randomUUID();
+    const createdAt = new Date().toISOString();
+    const record: SocEnrichmentLookupRecord = {
+      ...lookup,
+      id,
+      createdAt,
+    };
+    await this.store.update((d) => {
+      d.socEnrichmentLookups ??= {};
+      d.socEnrichmentLookups[id] = record;
+    });
+    return record;
+  }
+
+  async listSocEnrichmentLookups(attemptId: string): Promise<SocEnrichmentLookupRecord[]> {
+    const data = await this.store.read();
+    return Object.values(data.socEnrichmentLookups ?? {})
+      .filter((l) => l.attemptId === attemptId)
+      .sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
+  }
+
   async deleteUserData(userId: string): Promise<void> {
     await this.store.update((d) => {
       for (const [k, v] of Object.entries(d.lessons)) {
@@ -488,6 +513,13 @@ export class StoreProgressRepo implements ProgressRepo {
       if (d.socUsedSeeds) {
         for (const k of Object.keys(d.socUsedSeeds)) {
           if (k.startsWith(`${userId}:`)) delete d.socUsedSeeds[k];
+        }
+      }
+      if (d.socEnrichmentLookups) {
+        for (const [k, v] of Object.entries(d.socEnrichmentLookups)) {
+          if (v.userId === userId || userSocAttemptIds.has(v.attemptId)) {
+            delete d.socEnrichmentLookups[k];
+          }
         }
       }
     });

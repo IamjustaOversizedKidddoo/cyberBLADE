@@ -277,9 +277,9 @@ export const urlAnalysisResultSchema = z.object({
   redirectChain: z.array(urlRedirectHopSchema),
   pageBehavior: z.object({
     title: z.string(),
-    hasLoginForm: boolean(),
-    requestsCredentials: boolean(),
-    triggersScriptDownload: boolean(),
+    hasLoginForm: z.boolean(),
+    requestsCredentials: z.boolean(),
+    triggersScriptDownload: z.boolean(),
     abstractSummary: z.string(),
     wireframePlaceholder: z.enum(["login_form", "cloud_download", "error_page", "blank_page", "corporate_portal"]),
   }),
@@ -541,6 +541,14 @@ export type EnrichmentResultPayload =
   | { tool: "cmdb"; data: CmdbResult }
   | { tool: "tickets"; data: TicketHistoryResult };
 
+export const enrichmentLookupInputSchema = z.object({
+  attemptId: z.string().uuid(),
+  tool: enrichmentToolSchema,
+  entityType: entityTypeSchema,
+  entityValue: z.string().min(1).max(256),
+});
+export type EnrichmentLookupInput = z.infer<typeof enrichmentLookupInputSchema>;
+
 /** Client response format returned by API */
 export const enrichmentLookupResponseSchema = z.object({
   lookupId: z.string(),
@@ -558,6 +566,7 @@ export type EnrichmentLookupResponse = z.infer<typeof enrichmentLookupResponseSc
 export type SocEnrichmentLookupRecord = {
   id: string;
   attemptId: string;
+  userId: string;
   tool: EnrichmentTool;
   entityType: EntityType;
   entityValue: string;
