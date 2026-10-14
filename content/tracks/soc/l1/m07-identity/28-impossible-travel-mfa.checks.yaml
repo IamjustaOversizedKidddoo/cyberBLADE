@@ -1,0 +1,82 @@
+lesson: soc-l1-impossible-travel-mfa-01
+questions:
+  - id: q1
+    prompt: "What is the most common innocent cause of an impossible-travel alert?"
+    objectives: ["soc:soc_cloud_identity"]
+    options:
+      - text: "A VPN, mobile network or cloud service making the user appear far from their real location."
+        correct: true
+        explanation: "Correct. IP geolocation reflects networks, not people."
+      - text: "The user travelling by plane at record speed."
+        correct: false
+        explanation: "The point of 'impossible' is that no real journey fits."
+      - text: "A broken clock on the user's laptop."
+        correct: false
+        explanation: "Sign-in times come from the identity provider, not the laptop."
+      - text: "The user changing their password."
+        correct: false
+        explanation: "Password changes do not move sign-in locations."
+  - id: q2
+    prompt: "Which pattern is the signature of an MFA fatigue attack?"
+    objectives: ["soc:soc_credential_attacks"]
+    options:
+      - text: "Many push prompts in a short time, mostly refused, followed by one approval."
+        correct: true
+        explanation: "Correct. The attacker already has the password and is wearing the user down."
+      - text: "One prompt, approved immediately during office hours."
+        correct: false
+        explanation: "That is a normal sign-in."
+      - text: "Many failed passwords and no MFA prompts."
+        correct: false
+        explanation: "That is password guessing; fatigue happens after the password works."
+      - text: "A sign-in with number matching from the user's own phone."
+        correct: false
+        explanation: "That is how a normal, well-protected sign-in looks."
+  - id: q3
+    prompt: "How does number matching help against MFA fatigue?"
+    objectives: ["soc:soc_credential_attacks"]
+    options:
+      - text: "The user must type a number shown on the sign-in screen, so blind approvals do not work."
+        correct: true
+        explanation: "Correct. The user cannot see the attacker's screen, so they cannot approve by accident."
+      - text: "It blocks all sign-ins from abroad."
+        correct: false
+        explanation: "It is about the approval step, not location."
+      - text: "It changes the password every hour."
+        correct: false
+        explanation: "It does not touch the password."
+      - text: "It limits the number of emails a user receives."
+        correct: false
+        explanation: "It concerns MFA prompts, not email."
+  - id: q4
+    prompt: "An account's existing session is suddenly used from a new address and device, with no new sign-in or MFA prompt. What should you suspect?"
+    objectives: ["soc:soc_cloud_identity"]
+    options:
+      - text: "Session hijacking with a stolen session cookie or token."
+        correct: true
+        explanation: "Correct. Revoke the sessions and look for the phishing that stole it."
+      - text: "MFA fatigue."
+        correct: false
+        explanation: "Fatigue involves many prompts; here there were none."
+      - text: "Password spraying."
+        correct: false
+        explanation: "No password attempts are involved."
+      - text: "Normal behaviour of all browsers."
+        correct: false
+        explanation: "Sessions do not normally jump to unknown devices."
+  - id: q5
+    prompt: "An account is confirmed compromised after an MFA fatigue attack. Which response is complete?"
+    objectives: ["soc:soc_cloud_identity"]
+    options:
+      - text: "Reset the password, revoke all sessions, review MFA methods and look for new inbox rules or other changes."
+        correct: true
+        explanation: "Correct. Each step closes a different way the attacker could stay in."
+      - text: "Reset the password only."
+        correct: false
+        explanation: "Existing sessions and added MFA methods would still work."
+      - text: "Tell the user to deny future prompts."
+        correct: false
+        explanation: "Advice helps, but the attacker is already in."
+      - text: "Disable MFA for the account to stop the prompts."
+        correct: false
+        explanation: "That removes protection and makes the next attack easier."

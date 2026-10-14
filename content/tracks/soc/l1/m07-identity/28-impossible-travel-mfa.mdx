@@ -1,0 +1,159 @@
+---
+id: soc-l1-impossible-travel-mfa-01
+title: "Impossible Travel and MFA Fatigue"
+track: soc
+rank: 1
+module: identity
+order: 28
+estimated_minutes: 16
+objectives_covered: ["soc:soc_credential_attacks", "soc:soc_cloud_identity"]
+mitre: ["T1621", "T1078", "T1539"]
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-credential-attacks-01"]
+skills: ["soc_credential_attacks", "soc_cloud_identity"]
+practice: ["family:soc-f-cloud-identity-01"]
+---
+
+> **Outcome:** you can check an impossible-travel alert properly, recognise an MFA fatigue attack, and know what to do when either one is real.
+
+## Why this matters on shift
+
+Multi-factor authentication (MFA) stops most password attacks, so attackers have learned to work around it: by pestering users with prompts until someone taps "approve", or by stealing the session after the user has signed in. Identity alerts such as "impossible travel" are some of the most common in any SOC, and some of the most often wrong. Knowing which details settle them quickly is a core L1 skill.
+
+## Before you start
+
+You should already know:
+
+- Password attacks and what to do after a success: [Password Guessing and Spraying](/learn/soc-l1-credential-attacks-01).
+- Why IP location is approximate: [Anatomy of an Alert](/learn/soc-l1-alert-anatomy-01).
+
+## Core ideas
+
+### Impossible travel
+
+**Impossible travel** is when two sign-ins for the same account come from places too far apart for one person to travel between in the time between them.
+
+Think of a passport stamped in Lisbon at 09:00 and in Singapore at 10:30 on the same day. No plane is that fast. Either the stamps are wrong, or two different people are using the passport.
+
+To check one, work out the speed it implies: the distance between the two locations divided by the time between the sign-ins. Anything well above airliner speed (roughly 900 km/h) is impossible for one traveller.
+
+But the locations come from IP geolocation, which you already know is approximate. Common innocent causes:
+
+- **VPNs and corporate gateways**, which make the user appear wherever the exit point is.
+- **Mobile networks**, which can route traffic through a distant city.
+- **Cloud services acting for the user**, such as a mail app syncing from the provider's data centre.
+- **Two legitimate devices**, such as a laptop on a VPN and a phone on mobile data, signing in minutes apart.
+
+So the question is not "is it impossible on the map?" but "is there an explanation, and do the details match the user's normal devices and apps?"
+
+### MFA fatigue
+
+**MFA fatigue** (also called push bombing) is when an attacker who already has the password triggers MFA push prompts again and again, hoping the user approves one to make them stop or by mistake (ATT&CK T1621, Multi-Factor Authentication Request Generation).
+
+Signs in identity logs:
+
+- Many MFA prompts for one account in a short time, especially at night.
+- A string of denied or ignored prompts followed by one approval.
+- The approval coming from an address or location different from the user's usual one.
+
+**Number matching** is a defence: the sign-in screen shows a number that the user must type into the MFA app, so an approval only works if the user can see the attacker's screen. Fatigue attacks largely stop working when it is enforced.
+
+### Session hijacking
+
+Some phishing kits sit between the user and the real sign-in page, pass the user's password and MFA through, and keep the session cookie that comes back. The attacker then uses that **session hijacking** cookie to act as the user without signing in again (ATT&CK T1539, Steal Web Session Cookie). In logs this can look like the same session suddenly being used from a new address or device, without a fresh sign-in or MFA prompt.
+
+<FlowDiagram
+  title="Checking an identity alert"
+  description="For impossible travel, compute the implied speed, then check for VPN, mobile or cloud explanations and the devices and apps involved. For MFA, count the prompts, look for denials before an approval, and compare the approval's location with normal. Contact the user through a known channel. If it is real, secure the account and its sessions."
+  steps={[
+    { label: "Get the facts", detail: "Times, addresses, locations, devices, apps, MFA results." },
+    { label: "Test the innocent explanations", detail: "VPN, mobile network, cloud sync, two own devices." },
+    { label: "Look for attack shapes", detail: "Prompt storms, denial then approval, new device using an old session." },
+    { label: "Ask the user safely", detail: "Through a known channel, not the alerting app." },
+    { label: "If real, secure it", detail: "Reset the password, revoke sessions, review MFA methods." },
+  ]}
+/>
+
+In plain English: try the boring explanations first, then look for the shapes attackers leave, and confirm with the user through a channel the attacker cannot control.
+
+## Worked example
+
+Two identity alerts reach the Larkspur Freight queue at 02:30 UTC.
+
+**Alert 1: impossible travel for g.santos.**
+
+<LogBlock
+  title="g.santos sign-ins (synthetic)"
+  lines={[
+    "01:52  success  ip 172.16.40.6 (Larkspur VPN, exit shown as head-office country)  device: corporate laptop  app: desktop mail",
+    "02:05  success  ip 192.0.2.12 (geo: another continent)  device: g.santos's registered phone  app: mobile mail  mfa: number match approved",
+  ]}
+/>
+
+The geo results imply thousands of kilometres in 13 minutes. But the first sign-in is the corporate VPN, whose exit point is at head office wherever the user really is. The second is from g.santos's own registered phone, with number-matched MFA. The travel calendar shows g.santos at a customer site on that other continent this week. Both sign-ins are the same person, on two of their own devices. Benign true positive.
+
+**Alert 2: MFA activity for l.oyelaran.**
+
+<LogBlock
+  title="l.oyelaran identity log (synthetic)"
+  lines={[
+    "02:11-02:24  mfa_prompt x17  ip 192.0.2.15  result: 16 denied or timed out",
+    "02:24:40     mfa approved    ip 192.0.2.15",
+    "02:25:02     sign-in success ip 192.0.2.15  device: unknown  app: browser",
+    "02:27:15     new inbox rule  'move messages containing invoice to RSS Feeds folder'",
+  ]}
+/>
+
+Seventeen prompts at 2 a.m., sixteen refused, then one approval: an MFA fatigue attack that worked. Push approval without number matching was still allowed for this account. Within three minutes the attacker created an inbox rule hiding invoice emails, a common step before payment fraud. The analyst escalates as a compromised account, recommends revoking sessions, resetting the password and removing the rule, and flags that number matching is not enforced for this user.
+
+## Try it
+
+<MicroExercise id="identity-calls" />
+
+## Common mistakes
+
+- **Escalating every impossible-travel alert.** VPNs, mobile networks and two own devices explain most of them.
+- **Trusting the map.** IP geolocation is approximate.
+- **Missing the denials before the approval.** A prompt storm then one approval is the fatigue signature.
+- **Resetting the password only.** Stolen sessions survive; revoke them.
+- **Asking the user through the account that may be compromised.** Use a known phone number or the service desk.
+
+## What good looks like
+
+A strong analyst gathers devices, apps and MFA details before judging, tests the innocent explanations, recognises prompt storms and session reuse, confirms through a safe channel, and secures both the password and the sessions when an account is compromised.
+
+## In the real world
+
+Identity providers raise risk-based alerts for impossible travel, unfamiliar locations and MFA anomalies, and many let you require number matching or phishing-resistant methods such as security keys. Inbox rules that hide or forward mail are a common follow-up to account takeover, so mailbox audit logs belong in every identity investigation.
+
+In the simulator, the brute-force scenario family's identity records include MFA push prompts with attempt counts and results, and successful sign-ins with the MFA method used. The cloud-identity family mixes harmless and harmful cloud audit events.
+
+## Remember it like this
+
+Impossible on the map is not impossible in life: check VPN, phone and cloud. But many prompts, many refusals, one approval is an attack.
+
+## Interview answer
+
+"For impossible travel I work out the implied speed, then test innocent explanations: VPN exits, mobile routing, cloud apps acting for the user, or two of the user's own devices. I check the device and app details and confirm through a known channel. For MFA fatigue I look for a burst of prompts, especially at night, with denials followed by an approval from an unusual address. If an account is compromised I revoke sessions as well as resetting the password, and check for new inbox rules or MFA methods. Number matching is the main defence against fatigue."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Impossible travel", definition: "Two sign-ins for one account from places too far apart for one person to travel between in the time between them." },
+    { term: "MFA fatigue", definition: "An attacker with the password triggering MFA prompts repeatedly until the user approves one (ATT&CK T1621)." },
+    { term: "Number matching", definition: "An MFA setting where the user must type a number shown on the sign-in screen, so blind approvals do not work." },
+    { term: "Session hijacking", definition: "Using a stolen session cookie or token to act as a user without signing in again (ATT&CK T1539)." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

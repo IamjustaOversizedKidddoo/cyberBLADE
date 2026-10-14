@@ -1,0 +1,155 @@
+---
+id: soc-l1-cloud-logs-01
+title: "Cloud Sign-In and Audit Logs"
+track: soc
+rank: 1
+module: identity
+order: 29
+estimated_minutes: 16
+objectives_covered: ["soc:soc_cloud_identity"]
+mitre: ["T1078.004", "T1098.001", "T1098.003", "T1562.008"]
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-impossible-travel-mfa-01"]
+skills: ["soc_cloud_identity"]
+practice: ["family:soc-f-cloud-identity-01"]
+---
+
+> **Outcome:** you can read a cloud audit log entry, recognise the actions attackers take after taking over a cloud account, and tell them apart from routine automation.
+
+## Why this matters on shift
+
+More and more of an organisation's systems live in cloud platforms, where there are no servers to log in to in the usual sense. Everything is done by calling the platform's management interface: creating users, granting permissions, starting machines, opening storage. Each call is recorded in an audit log. When a cloud account is taken over, that log is often the only place the attacker's actions appear.
+
+## Before you start
+
+You should already know:
+
+- Identity attacks such as MFA fatigue and session theft: [Impossible Travel and MFA Fatigue](/learn/soc-l1-impossible-travel-mfa-01).
+
+You do not need to know any particular cloud provider. The ideas are the same across all of them; only the names differ.
+
+## Core ideas
+
+### Everything is an API call
+
+The **control plane** is a cloud platform's management layer: the interface used to create, change and delete resources and permissions, whether through a web console, a command-line tool or automation. A **cloud audit log** records each control-plane call: who made it, what they asked for, on which resource, from where, and whether it worked.
+
+Think of a bank where every instruction, from opening an account to changing who can sign cheques, must be written on a form, and every form is filed with the name of the person who handed it in and the counter they used. You can reconstruct everything that changed by reading the forms in order.
+
+A typical audit entry contains:
+
+- the time,
+- the action name (for example a console sign-in, creating an access key, or attaching a permission policy),
+- the caller: a person's account, a role, or a service,
+- the source address and user agent (which tool made the call),
+- the request details (which user, which policy, which resource),
+- the result, or an error code if it was refused.
+
+### Identities and permissions
+
+**Identity and access management (IAM)** is the part of a cloud platform that defines who exists (users, roles, service identities) and what each may do (policies). Many attacks are not about malware at all, but about changing IAM: giving an account more power, or adding a new way in.
+
+An **access key** is a long-lived credential (an ID and a secret) that lets a program call the cloud's management interface without a person signing in. Attackers love creating new access keys: they survive password resets and MFA changes (ATT&CK T1098.001, Additional Cloud Credentials).
+
+### What attackers do after taking over a cloud account
+
+Common actions, roughly in the order they happen:
+
+1. **Look around:** list users, roles, storage and machines.
+2. **Add a way back in:** create an access key, a new user, or a new trust for an outside account.
+3. **Raise privileges:** attach an administrator policy to the account or a role (T1098.003, Additional Cloud Roles).
+4. **Blind the defenders:** stop or delete audit logging (T1562.008, Disable or Modify Cloud Logs).
+5. **Act on goals:** copy data out of storage, make storage public, or start expensive machines for cryptocurrency mining.
+
+### Humans versus automation
+
+Much of a cloud audit log is written by automation: deployment pipelines, infrastructure tools and monitoring services. Those identities make many changes, but in recognisable ways: from known addresses, with a known tool's user agent, often during scheduled deployments tied to change records. A human account doing the same thing from a new address at 3 a.m. is very different.
+
+<FlowDiagram
+  title="Judging a cloud audit event"
+  description="Identify the caller and whether it is a person or automation. Check the source address and tool against that caller's normal. Read the action and its target. Look at what happened just before (a sign-in?) and just after. Check whether a change record explains it."
+  steps={[
+    { label: "Who called?", detail: "A person, a role, or an automation identity?" },
+    { label: "From where, with what?", detail: "Usual address and tool for this caller?" },
+    { label: "What action, on what?", detail: "New keys, new admins, logging changes, public storage?" },
+    { label: "Before and after", detail: "A suspicious sign-in before? More changes after?" },
+    { label: "Explained?", detail: "Change record, deployment window, owner confirmation." },
+  ]}
+/>
+
+In plain English: who did it, from where, what they changed, and whether anything ordinary explains it.
+
+## Worked example
+
+Larkspur Freight's cloud audit log raises an alert: "Administrator policy attached". The analyst finds two such events in the last day:
+
+<LogBlock
+  title="Cloud audit log (synthetic)"
+  lines={[
+    "10:00:14  caller=ops-pipeline (automation)  src=172.16.40.80  agent=infrastructure tool",
+    "          action=AttachRolePolicy  role=app-deploy  policy=AdministratorAccess  result=success",
+    "03:41:02  caller=w.nakashima (person)  src=192.0.2.21  agent=web browser",
+    "          action=ConsoleLogin  result=success  mfa=yes",
+    "03:44:30  caller=w.nakashima  src=192.0.2.21  action=CreateAccessKey  user=w.nakashima  result=success",
+    "03:45:10  caller=w.nakashima  src=192.0.2.21  action=AttachUserPolicy  user=w.nakashima  policy=AdministratorAccess  result=success",
+    "03:46:55  caller=w.nakashima  src=192.0.2.21  action=StopLogging  result=AccessDenied",
+  ]}
+/>
+
+**The false lead.** The 10:00 event is the same alert type, but the caller is the deployment pipeline, from its usual internal address, with its usual tool, during the release covered by change CHG-4630. Granting broad rights to a deployment role is a risk worth raising with the cloud team, but it is not an attack.
+
+**The real one.** At 03:41 a person's account signed in from an address never seen for w.nakashima. Within five minutes it created a new access key for itself, gave itself administrator rights, and tried to stop audit logging, which a guardrail refused. That is the classic takeover sequence: a way back in, more privilege, then blinding the defenders.
+
+The analyst escalates immediately and recommends disabling the new access key, removing the administrator policy, revoking w.nakashima's sessions and resetting the credentials, while noting the logging-stop attempt as a sign of intent.
+
+## Try it
+
+<MicroExercise id="cloud-audit" />
+
+## Common mistakes
+
+- **Treating every permission change as an attack.** Automation changes permissions all day.
+- **Resetting the password and forgetting access keys.** Keys survive password resets.
+- **Ignoring refused actions.** A denied attempt to stop logging still shows what the caller wanted.
+- **Reading one event alone.** The sequence (sign-in, new key, new privilege) tells the story.
+- **Assuming data access is logged.** Reading data from storage is often logged separately, or not at all, unless it was turned on.
+
+## What good looks like
+
+A strong analyst separates people from automation, compares each caller with its normal addresses and tools, recognises the takeover sequence, checks for new keys and new privileges after any suspicious sign-in, and treats attempts to disable logging as urgent.
+
+## In the real world
+
+Every major cloud platform has an audit log for control-plane actions, often with a separate, optional log for data access. Names differ between providers, but the core actions do not: sign-ins, new credentials, permission changes, logging changes and storage exposure. Many teams protect audit logs by sending them to a separate account that ordinary administrators cannot change.
+
+The simulator's cloud-identity scenario family uses audit entries with an event source, an event name, a caller and a source address, and mixes routine administrative actions with harmful ones.
+
+## Remember it like this
+
+In the cloud, the audit log is the crime scene: who called, from where, and did they add a key, add power, or try to blind you?
+
+## Interview answer
+
+"Cloud platforms record every management call in an audit log: the caller, action, target, source address, tool and result. After an account takeover I look for the typical sequence: a sign-in from a new address, then a new access key or user, then administrator policies, and attempts to stop logging. I separate people from automation, since pipelines change permissions constantly from known addresses. If it's real, I make sure new access keys are disabled as well as resetting the password and revoking sessions."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Control plane", definition: "A cloud platform's management layer, used to create, change and delete resources and permissions." },
+    { term: "Cloud audit log", definition: "The record of every control-plane call: who made it, what they asked for, from where, and whether it worked." },
+    { term: "IAM", definition: "Identity and access management: the part of a cloud platform that defines users, roles and services and what each may do." },
+    { term: "Access key", definition: "A long-lived credential that lets a program call a cloud's management interface without a person signing in." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

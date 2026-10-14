@@ -1,0 +1,14 @@
+lesson: soc-l1-web-logs-01
+cards:
+  - id: fc-soc-l1-web-logs-01
+    front: "What do status codes 403, 404, 500 and 200 suggest in a web attack?"
+    back: "403: often blocked. 404: path does not exist (scanning). 500: something broke (probing). 200: answered; compare the size."
+  - id: fc-soc-l1-web-logs-02
+    front: "What is %27 when URL-decoded?"
+    back: "A single quote ('), common in injection attempts and in ordinary names."
+  - id: fc-soc-l1-web-logs-03
+    front: "How do you spot a probably successful injection in an access log?"
+    back: "An injection string answered with 200 and a response much larger than normal for that page."
+  - id: fc-soc-l1-web-logs-04
+    front: "What does a .php file in an upload folder with a cmd= parameter suggest?"
+    back: "A web shell running commands the attacker sends (ATT&CK T1505.003)."

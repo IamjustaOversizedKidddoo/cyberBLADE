@@ -1,0 +1,14 @@
+lesson: soc-l1-impossible-travel-mfa-01
+cards:
+  - id: fc-soc-l1-impossible-travel-mfa-01
+    front: "What are the common innocent causes of impossible travel?"
+    back: "VPN exits, mobile network routing, cloud services acting for the user, and two of the user's own devices."
+  - id: fc-soc-l1-impossible-travel-mfa-02
+    front: "What is the signature of MFA fatigue?"
+    back: "Many push prompts in a short time, mostly refused, then one approval, often at night."
+  - id: fc-soc-l1-impossible-travel-mfa-03
+    front: "Which defence makes MFA fatigue largely ineffective?"
+    back: "Number matching: the user must type the number shown on the sign-in screen."
+  - id: fc-soc-l1-impossible-travel-mfa-04
+    front: "Why revoke sessions as well as resetting the password?"
+    back: "A stolen session cookie or token can keep working after the password changes."

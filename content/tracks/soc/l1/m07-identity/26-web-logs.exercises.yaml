@@ -1,0 +1,48 @@
+lesson: soc-l1-web-logs-01
+exercises:
+  - id: web-success
+    title: "Decide which attempts worked"
+    kind: log-reading
+    instructions: >-
+      These requests hit Larkspur's supplier portal. A normal response for /invoice?id= is about 3 KB.
+    blocks:
+      - type: log
+        title: "Supplier portal access log (synthetic)"
+        lines:
+          - "R1  192.0.2.40   GET /wp-login.php                                     404    210"
+          - "R2  192.0.2.41   GET /invoice?id=77%27%20OR%20%271%27%3D%271            403    180"
+          - "R3  192.0.2.42   GET /invoice?id=77%27%20UNION%20SELECT%20...--        200 74,600"
+          - "R4  172.16.40.31 GET /search?supplier=O%27Hara%20Logistics             200  2,950"
+    questions:
+      - id: worked
+        prompt: "Which request most likely returned data it should not have? (Type its ID.)"
+        answer_type: text
+        accept: ["R3"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Which request was answered (200) with a size far from normal for its page?"
+        explanation: >-
+          R3 is an injection string answered with 200 and about 25 times the normal size, so extra data
+          probably came back. R2 was blocked (403) and R1 was a scanner's 404.
+      - id: decode
+        prompt: "What is %27 decoded?"
+        answer_type: choice
+        options: ["A single quote (')", "A space", "An equals sign (=)", "A slash (/)"]
+        accept: ["A single quote (')"]
+        hints:
+          - "Check the URL encoding table in the lesson."
+        explanation: >-
+          %27 is the single quote character, which injection attempts use to break out of a text value.
+      - id: benign
+        prompt: "Is R4 an attack?"
+        answer_type: choice
+        options:
+          - "No, it is a search for a company name containing an apostrophe"
+          - "Yes, any quote in a URL is SQL injection"
+          - "Yes, because it came from an internal address"
+        accept: ["No, it is a search for a company name containing an apostrophe"]
+        hints:
+          - "Decode the whole parameter and read it as text."
+        explanation: >-
+          Decoded, R4 searches for "O'Hara Logistics", with a normal-sized answer. A quote in a real name
+          is not an attack.

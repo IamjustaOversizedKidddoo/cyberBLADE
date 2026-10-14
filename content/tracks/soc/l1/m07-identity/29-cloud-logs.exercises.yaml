@@ -1,0 +1,53 @@
+lesson: soc-l1-cloud-logs-01
+exercises:
+  - id: cloud-audit
+    title: "Read a cloud audit sequence"
+    kind: log-reading
+    instructions: >-
+      Read the audit entries for the account r.dlamini, a finance analyst who normally only views
+      billing reports from the office (172.16.40.0/24).
+    blocks:
+      - type: log
+        title: "Cloud audit log for r.dlamini (synthetic)"
+        lines:
+          - "22:10:05  ConsoleLogin          src=192.0.2.22  result=success"
+          - "22:11:40  ListUsers             src=192.0.2.22  result=success"
+          - "22:13:02  CreateUser            src=192.0.2.22  user=backup-sync  result=success"
+          - "22:13:30  CreateAccessKey       src=192.0.2.22  user=backup-sync  result=success"
+          - "22:14:12  AttachUserPolicy      src=192.0.2.22  user=backup-sync  policy=AdministratorAccess  result=success"
+    questions:
+      - id: persistence
+        prompt: "Which two actions give the attacker a way back in that survives a reset of r.dlamini's password?"
+        answer_type: choice
+        options:
+          - "CreateUser and CreateAccessKey"
+          - "ConsoleLogin and ListUsers"
+          - "ListUsers and AttachUserPolicy"
+        accept: ["CreateUser and CreateAccessKey"]
+        hints:
+          - "Which actions create a new identity or credential that does not depend on r.dlamini?"
+        explanation: >-
+          A new user with its own access key works regardless of what happens to r.dlamini's password or
+          sessions.
+      - id: privilege
+        prompt: "Which action raised privileges? (Type the action name.)"
+        answer_type: text
+        accept: ["AttachUserPolicy"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Which action gives an identity more power?"
+        explanation: >-
+          Attaching an administrator policy to backup-sync gave the new user full control (T1098.003).
+      - id: first-clue
+        prompt: "What was the first sign something was wrong?"
+        answer_type: choice
+        options:
+          - "A console sign-in from an outside address, out of hours, for an account that normally works from the office"
+          - "The account viewing billing reports"
+          - "The use of a web browser"
+        accept: ["A console sign-in from an outside address, out of hours, for an account that normally works from the office"]
+        hints:
+          - "Compare the first entry with the account's normal behaviour described above."
+        explanation: >-
+          The sign-in came from an outside address at night for an account that normally works from the
+          office network, followed immediately by actions this role never performs.

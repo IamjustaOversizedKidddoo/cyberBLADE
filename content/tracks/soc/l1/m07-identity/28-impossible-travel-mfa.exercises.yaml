@@ -1,0 +1,46 @@
+lesson: soc-l1-impossible-travel-mfa-01
+exercises:
+  - id: identity-calls
+    title: "Judge three identity alerts"
+    kind: triage-queue
+    instructions: >-
+      Each alert below has been looked into. Decide what the evidence shows.
+    blocks:
+      - type: table
+        title: "Identity alerts (synthetic)"
+        columns: ["ID", "Alert", "What the logs show"]
+        rows:
+          - ["I1", "Impossible travel: k.adeyemi", "Sign-in via the Larkspur VPN, then 9 minutes later from k.adeyemi's registered phone on a mobile network abroad; number-matched MFA; travel booked."]
+          - ["I2", "Unusual MFA activity: f.horvath", "23 push prompts between 01:40 and 01:58 from 192.0.2.18; 22 denied; 1 approved at 01:58; then a sign-in from an unknown browser."]
+          - ["I3", "Session used from new address: m.ruiz", "No new sign-in or MFA prompt; the existing session suddenly used from 192.0.2.19 on an unknown device, 20 minutes after m.ruiz clicked a link in a 'document shared' email."]
+    questions:
+      - id: i1
+        prompt: "What is I1 most likely?"
+        answer_type: choice
+        options: ["Benign: VPN plus the user's own phone", "MFA fatigue", "Session hijacking", "Password spraying"]
+        accept: ["Benign: VPN plus the user's own phone"]
+        hints:
+          - "Which innocent explanations from the lesson apply here?"
+        explanation: >-
+          The VPN exit explains the first location, the second is the user's registered phone with
+          number-matched MFA, and travel is booked. Same person, two devices.
+      - id: i2
+        prompt: "What is I2 most likely?"
+        answer_type: choice
+        options: ["Benign: VPN plus the user's own phone", "MFA fatigue", "Session hijacking", "Password spraying"]
+        accept: ["MFA fatigue"]
+        hints:
+          - "Look at the number of prompts, how many were refused, and what followed."
+        explanation: >-
+          A storm of prompts at night, almost all refused, then one approval and a sign-in from an
+          unknown browser: the attacker had the password and wore the user down.
+      - id: i3
+        prompt: "What is I3 most likely?"
+        answer_type: choice
+        options: ["Benign: VPN plus the user's own phone", "MFA fatigue", "Session hijacking", "Password spraying"]
+        accept: ["Session hijacking"]
+        hints:
+          - "Was there a new sign-in at all? How could someone act as the user without one?"
+        explanation: >-
+          The session was reused from a new address and device without any new sign-in or MFA, shortly
+          after a phishing click: consistent with a stolen session cookie (T1539).

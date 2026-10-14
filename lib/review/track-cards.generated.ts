@@ -810,5 +810,133 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "category": "soc",
     "front": "Why is shell history only a hint?",
     "back": "It can be disabled or edited and is written only when a shell exits."
+  },
+  {
+    "id": "fc-soc-l1-web-logs-01",
+    "lessonId": "soc-l1-web-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What do status codes 403, 404, 500 and 200 suggest in a web attack?",
+    "back": "403: often blocked. 404: path does not exist (scanning). 500: something broke (probing). 200: answered; compare the size."
+  },
+  {
+    "id": "fc-soc-l1-web-logs-02",
+    "lessonId": "soc-l1-web-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is %27 when URL-decoded?",
+    "back": "A single quote ('), common in injection attempts and in ordinary names."
+  },
+  {
+    "id": "fc-soc-l1-web-logs-03",
+    "lessonId": "soc-l1-web-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "How do you spot a probably successful injection in an access log?",
+    "back": "An injection string answered with 200 and a response much larger than normal for that page."
+  },
+  {
+    "id": "fc-soc-l1-web-logs-04",
+    "lessonId": "soc-l1-web-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does a .php file in an upload folder with a cmd= parameter suggest?",
+    "back": "A web shell running commands the attacker sends (ATT&CK T1505.003)."
+  },
+  {
+    "id": "fc-soc-l1-credential-attacks-01",
+    "lessonId": "soc-l1-credential-attacks-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Brute force vs spraying vs credential stuffing?",
+    "back": "Brute force: many passwords, one account. Spraying: few passwords, many accounts. Stuffing: leaked user and password pairs from other breaches."
+  },
+  {
+    "id": "fc-soc-l1-credential-attacks-02",
+    "lessonId": "soc-l1-credential-attacks-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which counts reveal quiet password attacks?",
+    "back": "Distinct accounts per source, distinct sources per account, and failures for unknown user names."
+  },
+  {
+    "id": "fc-soc-l1-credential-attacks-03",
+    "lessonId": "soc-l1-credential-attacks-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is a low-and-slow attack?",
+    "back": "One spread over time and sources so that no counter crosses an alert or lockout threshold."
+  },
+  {
+    "id": "fc-soc-l1-credential-attacks-04",
+    "lessonId": "soc-l1-credential-attacks-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is the most important step after detecting a password attack?",
+    "back": "Searching for any successful sign-in from the attacking sources, then securing and following that account."
+  },
+  {
+    "id": "fc-soc-l1-impossible-travel-mfa-01",
+    "lessonId": "soc-l1-impossible-travel-mfa-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the common innocent causes of impossible travel?",
+    "back": "VPN exits, mobile network routing, cloud services acting for the user, and two of the user's own devices."
+  },
+  {
+    "id": "fc-soc-l1-impossible-travel-mfa-02",
+    "lessonId": "soc-l1-impossible-travel-mfa-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is the signature of MFA fatigue?",
+    "back": "Many push prompts in a short time, mostly refused, then one approval, often at night."
+  },
+  {
+    "id": "fc-soc-l1-impossible-travel-mfa-03",
+    "lessonId": "soc-l1-impossible-travel-mfa-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which defence makes MFA fatigue largely ineffective?",
+    "back": "Number matching: the user must type the number shown on the sign-in screen."
+  },
+  {
+    "id": "fc-soc-l1-impossible-travel-mfa-04",
+    "lessonId": "soc-l1-impossible-travel-mfa-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why revoke sessions as well as resetting the password?",
+    "back": "A stolen session cookie or token can keep working after the password changes."
+  },
+  {
+    "id": "fc-soc-l1-cloud-logs-01",
+    "lessonId": "soc-l1-cloud-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What fields does a cloud audit entry usually contain?",
+    "back": "Time, action, caller, source address, user agent (tool), request details (target), and the result or error."
+  },
+  {
+    "id": "fc-soc-l1-cloud-logs-02",
+    "lessonId": "soc-l1-cloud-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is the typical cloud takeover sequence?",
+    "back": "Unusual sign-in, discovery, new access key or user, administrator policy, then attempts to disable logging."
+  },
+  {
+    "id": "fc-soc-l1-cloud-logs-03",
+    "lessonId": "soc-l1-cloud-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why must new access keys be disabled during cloud account recovery?",
+    "back": "They keep working after the password is reset and sessions are revoked."
+  },
+  {
+    "id": "fc-soc-l1-cloud-logs-04",
+    "lessonId": "soc-l1-cloud-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "How do you tell automation from a person in cloud audit logs?",
+    "back": "Automation calls from known addresses with a known tool, often during deployments tied to change records."
   }
 ];
