@@ -4,7 +4,7 @@ cards:
     front: "What are the three layers of an alert?"
     back: "Written in advance (title, description, severity), what happened (raw events), and added afterwards (enrichment)."
   - id: fc-soc-l1-alert-anatomy-02
-    front: "Convert 14:05+02:00 to UTC."
+    front: "What is 14:05+02:00 in UTC?"
     back: "12:05 UTC. For a zone ahead of UTC, subtract the offset."
   - id: fc-soc-l1-alert-anatomy-03
     front: "Why can't IP location be trusted as the person's location?"

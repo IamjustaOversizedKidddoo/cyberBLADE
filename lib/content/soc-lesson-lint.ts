@@ -203,6 +203,8 @@ export function lintSocLesson(input: SocLintInput): { errors: string[]; warnings
   // Cards
   if (!cards?.length) err(`no flashcards (.cards.yaml)`);
   for (const c of cards ?? []) {
+    // The review library requires question-form fronts (tests/unit/lib/review/flashcards.test.ts).
+    if (!c.front.trim().endsWith("?")) err(`card ${c.id} front must end with a question mark`);
     if (!c.id.startsWith(`fc-${id.replace(/-\d{2}$/, "")}`)) err(`card ${c.id} must start with fc-${id.replace(/-\d{2}$/, "")}`);
   }
 
