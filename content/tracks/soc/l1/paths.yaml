@@ -1,0 +1,44 @@
+# SOC L1 practice paths: short, ordered routes through lessons and practice for one job skill.
+# Lesson minutes are the lessons' computed times; family and shift ranges come from their own
+# metadata; other practice targets count as DEFAULT_PRACTICE_MINUTES (lib/content/soc-curriculum.ts).
+paths:
+  - id: phishing
+    title: "Handle a reported phishing email"
+    description: "From reading the headers to finding every recipient and securing exposed accounts."
+    steps:
+      - lesson: soc-l1-how-email-travels-01
+      - lesson: soc-l1-email-headers-01
+      - lesson: soc-l1-links-attachments-01
+      - practice: "tool:email_headers"
+      - lesson: soc-l1-phishing-response-01
+      - practice: "family:soc-f-phishing-cred-01"
+  - id: brute-force
+    title: "Investigate password attacks"
+    description: "Read sign-in events, count the right things, and find the attempt that got in."
+    steps:
+      - lesson: soc-l1-windows-auth-events-01
+      - lesson: soc-l1-credential-attacks-01
+      - practice: "drill:drill-12"
+      - practice: "drill:drill-14"
+      - lesson: soc-l1-impossible-travel-mfa-01
+      - practice: "family:soc-f-brute-force-auth-01"
+  - id: endpoint-triage
+    title: "Triage a suspicious process"
+    description: "Judge a process tree, find persistence, and tell admin tools from attacks."
+    steps:
+      - lesson: soc-l1-process-creation-01
+      - lesson: soc-l1-persistence-01
+      - lesson: soc-l1-timelines-trees-01
+      - lesson: soc-l1-lotl-01
+      - practice: "tool:endpoint_timeline"
+      - practice: "family:soc-f-attachment-script-01"
+  - id: first-shift
+    title: "Your first full shift"
+    description: "The core habits of a shift: triage, prioritise, escalate, and hand over cleanly."
+    steps:
+      - lesson: soc-l1-triage-loop-01
+      - lesson: soc-l1-prioritisation-01
+      - lesson: soc-l1-rationale-escalation-01
+      - lesson: soc-l1-queue-handover-01
+      - practice: "shift:shift-quiet-day"
+      - practice: "shift:shift-standard-mixed"
