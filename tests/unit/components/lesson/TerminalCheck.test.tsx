@@ -76,3 +76,16 @@ test("exposes attempt count and result for automation", async () => {
   expect(q1).toHaveAttribute("data-attempts", "1");
   expect(q1).toHaveAttribute("data-result", "wrong");
 });
+
+test("default variant keeps the uppercase terminal legend (core lessons unchanged)", () => {
+  render(<TerminalCheck questions={questions} initialPassed={[]} answer={vi.fn()} />);
+  const legend = screen.getByText("What does a CPU do?");
+  expect(legend.className).toContain("uppercase");
+});
+
+test("readable variant uses sentence-case legends (SOC track)", () => {
+  render(<TerminalCheck questions={questions} initialPassed={[]} answer={vi.fn()} variant="readable" />);
+  const legend = screen.getByText("What does a CPU do?");
+  expect(legend.className).not.toContain("uppercase");
+  expect(legend.className).toContain("font-sans");
+});

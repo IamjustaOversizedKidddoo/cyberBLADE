@@ -94,7 +94,7 @@ export default async function SocModulePage({ params }: { params: Promise<{ modu
             <p className="mt-1 font-sans text-sm text-muted">
               {questions.length} questions drawn from this module&apos;s lessons. Use it to check what has stuck; answers are not saved and earn no XP.
             </p>
-            <TerminalCheck questions={questions} initialPassed={[]} answer={answerCheckpointAction.bind(null, mod.key)} />
+            <TerminalCheck questions={questions} initialPassed={[]} answer={answerCheckpointAction.bind(null, mod.key)} variant="readable" />
           </section>
         )}
 

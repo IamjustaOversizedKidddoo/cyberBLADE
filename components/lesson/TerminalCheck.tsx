@@ -6,10 +6,19 @@ import { IconCheck, IconAlertTriangle, IconRotateCcw } from "@/components/ui/ico
 
 export type CheckResult = { correct: boolean; explanations: string[]; lessonCompleted: boolean };
 
+/** "terminal" (default, core lessons) uses uppercase legends; "readable" (opt-in, SOC track) uses sentence case. */
+export type CheckVariant = "terminal" | "readable";
+
 type Props = {
   questions: PublicQuestion[];
   initialPassed: string[];
   answer: (questionId: string, optionIndex: number) => Promise<CheckResult>;
+  variant?: CheckVariant;
+};
+
+const LEGEND_CLASS: Record<CheckVariant, string> = {
+  terminal: "px-2 font-ui text-sm font-semibold tracking-wide text-ink uppercase",
+  readable: "px-2 font-sans text-[15px] font-semibold leading-snug text-ink",
 };
 
 function Question({
@@ -17,11 +26,13 @@ function Question({
   passed,
   answer,
   onResult,
+  variant,
 }: {
   q: PublicQuestion;
   passed: boolean;
   answer: Props["answer"];
   onResult: (r: CheckResult) => void;
+  variant: CheckVariant;
 }) {
   const [choice, setChoice] = useState<number | null>(null);
   const [result, setResult] = useState<CheckResult | null>(null);
@@ -60,7 +71,7 @@ function Question({
       data-attempts={attempts}
       data-result={pending ? "pending" : result ? (result.correct ? "correct" : "wrong") : "idle"}
     >
-      <legend className="px-2 font-ui text-sm font-semibold tracking-wide text-ink uppercase">
+      <legend className={LEGEND_CLASS[variant]}>
         {q.prompt}
       </legend>
 
@@ -204,7 +215,7 @@ function Question({
 }
 
 /** Terminal Check: answers are graded on the server; the browser never has the answer key. */
-export function TerminalCheck({ questions, initialPassed, answer }: Props) {
+export function TerminalCheck({ questions, initialPassed, answer, variant = "terminal" }: Props) {
   const [passed, setPassed] = useState(() => new Set(initialPassed));
   const [completed, setCompleted] = useState(false);
 
@@ -223,6 +234,7 @@ export function TerminalCheck({ questions, initialPassed, answer }: Props) {
           q={q}
           passed={passed.has(q.id)}
           answer={answer}
+          variant={variant}
           onResult={(r) => {
             if (r.correct) setPassed((s) => new Set(s).add(q.id));
             if (r.lessonCompleted) setCompleted(true);
