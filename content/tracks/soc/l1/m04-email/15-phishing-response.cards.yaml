@@ -1,0 +1,14 @@
+lesson: soc-l1-phishing-response-01
+cards:
+  - id: fc-soc-l1-phishing-response-01
+    front: "What are the four phases of phishing response?"
+    back: "Confirm, scope, contain, follow up."
+  - id: fc-soc-l1-phishing-response-02
+    front: "What does a message trace tell you?"
+    back: "Every copy of a message in the mail system: who received it and whether it was delivered or blocked."
+  - id: fc-soc-l1-phishing-response-03
+    front: "A user typed their password on a phishing page. What three things do you do?"
+    back: "Reset the password, revoke the account's sessions, and check for attacker changes such as new mailbox rules or MFA devices, then escalate."
+  - id: fc-soc-l1-phishing-response-04
+    front: "Why is a link visit seconds after delivery often not a person?"
+    back: "Mail security services follow links automatically to check them on arrival."

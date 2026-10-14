@@ -1,0 +1,82 @@
+lesson: soc-l1-links-attachments-01
+questions:
+  - id: q1
+    prompt: "What is the registered domain of https://larkspur.example.account-verify.example/login?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "account-verify.example"
+        correct: true
+        explanation: "Correct. Read the host from the right; larkspur.example is a subdomain chosen by the owner of account-verify.example."
+      - text: "larkspur.example"
+        correct: false
+        explanation: "That is the classic trap: the trusted name appears at the start as a subdomain."
+      - text: "login"
+        correct: false
+        explanation: "login is part of the path, after the host."
+      - text: "example"
+        correct: false
+        explanation: "That is only the top-level part; the registered domain includes the name before it."
+  - id: q2
+    prompt: "A URL reputation check on a link says 'no known detections'. What does that mean?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "Nobody has reported it yet; new domains often have no history at all."
+        correct: true
+        explanation: "Correct. Unknown is not the same as safe."
+      - text: "The link is safe to click."
+        correct: false
+        explanation: "Phishing domains are often only hours or days old and have no reputation yet."
+      - text: "The link is definitely malicious."
+        correct: false
+        explanation: "It means neither; you need other evidence."
+      - text: "The reputation service is broken."
+        correct: false
+        explanation: "It is working; it simply has no data on this domain."
+  - id: q3
+    prompt: "Why do attackers put malicious files in password-protected archives and write the password in the email?"
+    objectives: ["soc:soc_malware_triage"]
+    options:
+      - text: "Most filters cannot open the archive to scan it, but the reader can."
+        correct: true
+        explanation: "Correct. The password in the body is what gives it away."
+      - text: "To make the file smaller."
+        correct: false
+        explanation: "Compression does that with or without a password; the password is about avoiding scanning."
+      - text: "Because email cannot carry unencrypted files."
+        correct: false
+        explanation: "Email carries ordinary attachments every day."
+      - text: "To meet data protection rules."
+        correct: false
+        explanation: "Legitimate senders sometimes do that, but sending the password in the same email defeats the purpose."
+  - id: q4
+    prompt: "A sandbox report on an attachment shows no suspicious behaviour. What is the right conclusion?"
+    objectives: ["soc:soc_malware_triage"]
+    options:
+      - text: "A useful signal, but not proof: some malware waits, needs a click, or detects sandboxes."
+        correct: true
+        explanation: "Correct. Combine the report with the other evidence before deciding."
+      - text: "The file is definitely safe."
+        correct: false
+        explanation: "Sandbox evasion is common enough that a clean report is not a guarantee."
+      - text: "The sandbox is broken."
+        correct: false
+        explanation: "Most files really are harmless; the point is only that 'clean' is not proof."
+      - text: "Open the file on your own laptop to double-check."
+        correct: false
+        explanation: "Never open suspicious files on your own machine."
+  - id: q5
+    prompt: "How should a suspicious link be written in a ticket?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "Defanged, such as hxxps://portal-check[.]example/login."
+        correct: true
+        explanation: "Correct. Defanging stops anyone clicking it by accident while keeping it readable."
+      - text: "Exactly as it appeared, so others can click it to check."
+        correct: false
+        explanation: "A live link in a ticket is an accident waiting to happen."
+      - text: "Left out, for safety."
+        correct: false
+        explanation: "The link is key evidence; record it safely instead."
+      - text: "As a screenshot only."
+        correct: false
+        explanation: "Screenshots cannot be searched or compared; defanged text can."

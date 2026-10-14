@@ -1,0 +1,161 @@
+---
+id: soc-l1-how-email-travels-01
+title: "How Email Travels"
+track: soc
+rank: 1
+module: email
+order: 12
+estimated_minutes: 16
+objectives_covered: ["soc:soc_phishing_analysis"]
+mitre: []
+xp: 90
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["core-r1-net-dns-01", "core-r1-net-tcpudp-01"]
+skills: ["soc_phishing_analysis"]
+practice: ["tool:email_headers"]
+---
+
+> **Outcome:** you can describe the path an email takes from sender to inbox, name the systems along the way, and say where each one leaves evidence.
+
+## Why this matters on shift
+
+When a phishing email is reported, every useful question depends on its path. Where did it come from? Which of our systems saw it? Did our filters check it? Where could we search for other copies? If you know the route an email takes, you know where the evidence lives and which parts of the message you can trust.
+
+## Before you start
+
+You should already know:
+
+- How DNS turns names into records: [DNS — The Internet's Phonebook](/learn/core-r1-net-dns-01).
+- What TCP ports and connections are: [TCP, UDP and Ports](/learn/core-r1-net-tcpudp-01).
+
+## Core ideas
+
+### Email is passed from server to server
+
+Email is not sent straight from your computer to the recipient's computer. It is handed from one mail server to the next until it reaches the recipient's mailbox.
+
+Think of a letter in the post. You drop it in a postbox. Your local sorting office reads the address, sends it to the sorting office in the recipient's town, which passes it to the local delivery round, which puts it through the right door. Each office stamps the envelope as it passes.
+
+For email, the "sorting offices" are mail servers, and the stamps are `Received:` header lines, which you will read in detail in the next lesson.
+
+### The protocol: SMTP
+
+**SMTP** (Simple Mail Transfer Protocol) is the protocol mail servers use to send email to each other. It is a simple text conversation over TCP. The sending server says who the message is from and who it is for, then sends the message itself.
+
+Two ports matter:
+
+- **Port 25** is used between mail servers.
+- **Port 587** is the usual port for a mail program or app to submit a new message to its own provider's server, after signing in.
+
+People read their mail with other protocols (IMAP, or a web or app interface), but those only fetch mail that has already arrived. They are not part of the delivery path.
+
+### Finding the next server: MX records
+
+How does a sending server know where to deliver mail for `larkspur.example`? It asks DNS for the domain's **MX record** (mail exchanger record), which lists the servers that accept mail for that domain. Each entry has a preference number: **lower numbers are tried first**, and higher ones are backups.
+
+### The systems along the way
+
+A **mail transfer agent** (MTA) is any server that receives email and passes it on towards its destination. A typical path into a company passes through:
+
+<FlowDiagram
+  title="The path of an inbound email"
+  description="The sender's mail program submits the message to the sender's provider. The provider looks up the recipient domain's MX record and connects to the recipient's email security gateway. The gateway filters the message and passes it to the mailbox server, where the recipient reads it."
+  steps={[
+    { label: "Sender's mail program", detail: "Submits the message to its own provider, usually on port 587 after signing in." },
+    { label: "Sender's mail server", detail: "Looks up the recipient domain's MX record in DNS." },
+    { label: "Recipient's email security gateway", detail: "Receives on port 25, checks for spam, malware and spoofing, adds headers." },
+    { label: "Recipient's mailbox server", detail: "Stores the message in the right mailbox." },
+    { label: "Recipient's mail program", detail: "Shows the message to the reader." },
+  ]}
+/>
+
+In plain English: the message is submitted, routed by DNS to the recipient's front door, inspected there, and then filed in the mailbox.
+
+An **email security gateway** is the recipient side's front door for mail: a service that receives inbound email, filters out spam, malware and spoofing, and records what it did. For a SOC, its logs are one of the most valuable sources: they record every message that arrived, the decision taken (delivered, quarantined, rejected) and why.
+
+### Where the evidence lives
+
+| System | What it can tell you |
+|---|---|
+| Email security gateway logs | Every inbound message: sender, recipients, subject, sending server's address, verdict and reason |
+| Message headers | The path, as stamped by each server (only your own servers' stamps can be trusted) |
+| Mailbox server or mail platform audit logs | Delivery to mailboxes, mailbox rules, who read or moved messages |
+| Endpoint and proxy logs | What happened after a user opened an attachment or clicked a link |
+
+### Encryption in transit
+
+Many servers encrypt the connection between them using **STARTTLS**, which upgrades a plain SMTP connection to an encrypted one. This protects messages from being read on the way. It says nothing about whether the sender is honest: phishing arrives over encrypted connections every day.
+
+## Worked example
+
+A Larkspur Freight manager reports at 09:15 UTC: "A supplier says they sent me an invoice at 08:30 and it never arrived. Is someone intercepting our email?"
+
+**A dead end first.** Interception sounds serious, so the analyst starts by checking the manager's mailbox for suspicious forwarding or deletion rules. There are none, and the audit log shows no other sign-ins. That rules out one fear, but it does not find the email.
+
+**Follow the path instead.** The message should have passed through Larkspur's gateway. The analyst searches the gateway logs for mail from the supplier's domain this morning:
+
+<LogBlock
+  title="Gateway log (synthetic)"
+  lines={[
+    "08:30:41  from=accounts@supplier-one.example  to=d.walsh@larkspur.example",
+    "          relay=mail.supplier-one.example [192.0.2.104]  tls=yes",
+    "          subject='Invoice 4471'  attachment=Invoice_4471.zip (contains .js file)",
+    "          verdict=quarantined  reason=blocked attachment type (script in archive)",
+  ]}
+/>
+
+The message arrived at the gateway, over an encrypted connection, from the supplier's real mail server. The gateway quarantined it because the archive contained a script file, a type Larkspur blocks for everyone.
+
+**What it means.** There was no interception. The gateway did its job. The next question is whether the supplier really sent a script inside an invoice archive. That is unusual for a genuine invoice, and could mean the supplier's own account has been compromised. The analyst does not release the message; they open a phishing triage instead and contact the supplier through a known phone number, not by replying to the email.
+
+## Try it
+
+<MicroExercise id="mail-path" />
+
+## Common mistakes
+
+- **Assuming email goes straight from sender to recipient.** Several servers handle it, and each leaves evidence.
+- **Forgetting the gateway logs.** They are usually the fastest way to answer "did it arrive, and what happened to it?"
+- **Reading the MX preference backwards.** Lower numbers are tried first.
+- **Treating TLS as proof of honesty.** Encryption protects the message in transit; it does not vouch for the sender.
+- **Releasing quarantined mail to make a user happy.** Find out why it was quarantined first.
+
+## What good looks like
+
+A strong analyst can sketch the mail path for their organisation from memory, knows which system's logs answer which question, and starts any email investigation at the gateway.
+
+## In the real world
+
+Many organisations use a cloud email platform with built-in filtering, sometimes with a separate security gateway in front. The names differ, but the roles are the same: something receives mail from the internet and filters it, something stores it in mailboxes, and both keep logs. Most platforms offer a "message trace" search that follows a message through these systems.
+
+The simulator shows a simplified gateway log. Real gateway logs often split one message across several lines and use internal message IDs to connect them.
+
+## Remember it like this
+
+Submit, look up MX, hand to the gateway, filter, file: and every hop leaves a stamp.
+
+## Interview answer
+
+"Email moves server to server using SMTP. The sender's server looks up the recipient domain's MX records in DNS, lowest preference first, and connects on port 25 to the recipient's email security gateway, which filters it and passes it to the mailbox server. For an investigation, I usually start with the gateway logs, because they show every inbound message, where it came from, and what was done with it, then use headers and mailbox audit logs for the rest."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "SMTP", definition: "Simple Mail Transfer Protocol: the text-based protocol mail servers use to send email to each other." },
+    { term: "MX record", definition: "A DNS record listing the servers that accept email for a domain; lower preference numbers are tried first." },
+    { term: "Mail transfer agent", definition: "Any server that receives email and passes it on towards its destination (often shortened to MTA)." },
+    { term: "Email security gateway", definition: "The service at an organisation's mail front door that filters inbound email for spam, malware and spoofing and logs its decisions." },
+    { term: "STARTTLS", definition: "A command that upgrades a plain SMTP connection to an encrypted one; it protects messages in transit but does not prove the sender is honest." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

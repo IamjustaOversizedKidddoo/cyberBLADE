@@ -1,0 +1,55 @@
+lesson: soc-l1-how-email-travels-01
+exercises:
+  - id: mail-path
+    title: "Follow an email to its destination"
+    kind: log-reading
+    instructions: >-
+      A server wants to deliver a message to someone at northwind-depot.example. Use the DNS answer
+      and the gateway log below.
+    blocks:
+      - type: log
+        title: "DNS answer for the MX records of northwind-depot.example (synthetic)"
+        lines:
+          - "northwind-depot.example.  3600  IN  MX  20  backup-mx.northwind-depot.example."
+          - "northwind-depot.example.  3600  IN  MX  10  gw1.northwind-depot.example."
+      - type: log
+        title: "Larkspur gateway log for one inbound message (synthetic)"
+        lines:
+          - "11:02:07  from=orders@northwind-depot.example  to=e.santos@larkspur.example"
+          - "          relay=gw1.northwind-depot.example [192.0.2.126]  tls=yes"
+          - "          verdict=delivered  spam_score=1.2"
+    questions:
+      - id: first-server
+        prompt: "Which server will a sender try first for northwind-depot.example?"
+        answer_type: text
+        accept: ["gw1.northwind-depot.example"]
+        normalize: ["case", "whitespace", "trailing-dot", "refang"]
+        hints:
+          - "Compare the two preference numbers. Which way round is the rule?"
+        explanation: >-
+          gw1 has preference 10 and backup-mx has 20. Lower numbers are tried first, so gw1 is the
+          primary server.
+      - id: port
+        prompt: "On which TCP port would a sending mail server normally connect to gw1?"
+        answer_type: choice
+        options: ["25", "587", "443", "993"]
+        accept: ["25"]
+        hints:
+          - "Is this a mail program submitting a new message, or one server delivering to another?"
+        explanation: >-
+          Server-to-server delivery uses port 25. Port 587 is for a mail program submitting new mail to
+          its own provider.
+      - id: tls-meaning
+        prompt: "The gateway log shows tls=yes. What does that tell you?"
+        answer_type: choice
+        options:
+          - "The connection between the servers was encrypted"
+          - "The sender is who they claim to be"
+          - "The message contains no malware"
+          - "The message was signed by the sender"
+        accept: ["The connection between the servers was encrypted"]
+        hints:
+          - "What does encryption in transit protect against, and what does it not?"
+        explanation: >-
+          TLS protects the message while it travels between servers. It says nothing about the sender's
+          honesty or the content; that is what filtering and authentication checks are for.

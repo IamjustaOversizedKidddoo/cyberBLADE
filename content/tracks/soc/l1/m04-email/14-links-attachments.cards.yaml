@@ -1,0 +1,14 @@
+lesson: soc-l1-links-attachments-01
+cards:
+  - id: fc-soc-l1-links-attachments-01
+    front: "Which end of a host name holds the registered domain?"
+    back: "The right-hand end. Everything to its left is a subdomain chosen by the owner."
+  - id: fc-soc-l1-links-attachments-02
+    front: "Where does https://trusted.example@other.example/ actually go?"
+    back: "To other.example. Everything before the @ is treated as a user name."
+  - id: fc-soc-l1-links-attachments-03
+    front: "Which attachment types should be treated as risky?"
+    back: "Programs and scripts, macro-enabled Office files, archives and disk images containing them, HTML files, shortcut (.lnk) files and double extensions."
+  - id: fc-soc-l1-links-attachments-04
+    front: "Is a clean sandbox report proof that a file is safe?"
+    back: "No. Some malware waits, needs a click, or detects that it is in a sandbox."
