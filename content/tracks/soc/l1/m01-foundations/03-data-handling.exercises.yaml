@@ -1,0 +1,58 @@
+lesson: soc-l1-data-handling-01
+exercises:
+  - id: data-calls
+    title: "Make four data-handling calls"
+    kind: report-section
+    instructions: >-
+      You are investigating alert ALR-8120: account j.osei signed in from an unusual address at 03:12.
+      Decide what is appropriate for each situation.
+    blocks:
+      - type: table
+        title: "Situations (synthetic)"
+        columns: ["ID", "Situation"]
+        rows:
+          - ["S1", "You check j.osei's sign-in history for the last 7 days."]
+          - ["S2", "While searching, you notice your friend's account also signed in at 03:00 and you are curious why."]
+          - ["S3", "A draft note says: \"j.osei's browsing shows several job-search sites and a medical forum; sign-in from 192.0.2.188 at 03:12.\""]
+          - ["S4", "A colleague suggests uploading an attachment j.osei received to a public analysis website."]
+    questions:
+      - id: s1
+        prompt: "S1: is checking j.osei's sign-in history appropriate?"
+        answer_type: choice
+        options: ["Yes, it is needed for this alert", "No, never without HR approval", "Only if j.osei agrees"]
+        accept: ["Yes, it is needed for this alert"]
+        hints:
+          - "Is this data directly related to the alert you are investigating?"
+        explanation: >-
+          The alert is about j.osei's sign-ins, so their recent sign-in history is exactly what the task
+          needs.
+      - id: s2
+        prompt: "S2: what should you do about your friend's sign-in?"
+        answer_type: choice
+        options: ["Look it up quickly", "Leave it alone", "Ask your friend about it"]
+        accept: ["Leave it alone"]
+        hints:
+          - "Does your current task give you a reason to look at that account?"
+        explanation: >-
+          Curiosity is not a reason. Nothing in ALR-8120 involves that account, so looking it up would be
+          a misuse of access.
+      - id: s3
+        prompt: "S3: which part of the draft note should be removed?"
+        answer_type: choice
+        options: ["The browsing details", "The sign-in time", "The source address", "Nothing"]
+        accept: ["The browsing details"]
+        hints:
+          - "Which details help answer the question 'was this sign-in legitimate'?"
+        explanation: >-
+          The job-search and medical browsing has nothing to do with the sign-in alert and is sensitive
+          personal data. Keep the sign-in time and address; remove the rest.
+      - id: s4
+        prompt: "S4: what should happen before anything is uploaded?"
+        answer_type: choice
+        options: ["Check the team's approved tools and rules first", "Upload it, since analysis is urgent", "Email it to j.osei to ask"]
+        accept: ["Check the team's approved tools and rules first"]
+        hints:
+          - "Who else might see a file uploaded to a public website?"
+        explanation: >-
+          Public analysis services can share uploaded files and reports. Use the team's approved tools
+          and follow its rules for files that may contain company or personal data.

@@ -153,3 +153,17 @@ Fixes on the way:
 **Gates (2026-10-14):** lint 0 errors · typecheck ✓ · check:content ✓ (2 warnings: pilots are 19 and 21 min, over the 15-min split threshold) · check:soc ✓ · unit 1678/1678 · security 158/158 · build ✓ · scan:bundle ✓ · e2e 137 passed / 1 failed / 24 skipped. The failure is the known `rank-2-web` capstone load flake; it passes alone (2/2).
 
 **Next:** Part 4 (remaining ~40 lessons, track pages, glossary page, practice paths, module checkpoints) ONLY after owner approval of the pilots.
+
+### Entry 11: Prompt A Part 4 — remaining SOC L1 modules (in progress)
+Owner approved the pilots on 2026-10-14. The owner's pilot-feedback field was left as the template placeholder, so it was treated as "none".
+
+Decisions applied:
+- Lessons may run up to about 20 min; over 25 min fails the linter.
+- New additive drill page `/practice/drills` (`3361fe0`).
+- Focusable lesson tables, and a Rank 0–3 promotion test (`1f83482`).
+
+Prerequisite changes from the plan: the plan's Rank 2 core prerequisites for lessons 9, 26 and 31 would be unreachable at the track gate (Rank 1), so they are replaced with Rank 0–1 core lessons, as each module lands.
+
+| Module | Lessons | check:content | Targeted tests | Commit |
+|---|---|---|---|---|
+| M1 SOC foundations | soc-roles, alert-lifecycle, data-handling | ✓ | content + review 106/106 | (this commit) |

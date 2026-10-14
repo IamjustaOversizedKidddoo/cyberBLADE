@@ -1,0 +1,58 @@
+lesson: soc-l1-soc-roles-01
+exercises:
+  - id: who-handles-it
+    title: "Route four items to the right place"
+    kind: triage-queue
+    instructions: >-
+      You are the Tier 1 analyst on shift at Larkspur Freight. For each item, choose who should own
+      the next step.
+    blocks:
+      - type: table
+        title: "Items waiting (synthetic)"
+        columns: ["ID", "Item"]
+        rows:
+          - ["W1", "A user calls: they forgot their password and are locked out. No security alerts on the account."]
+          - ["W2", "You triaged a sign-in alert and found the account also created a new mail forwarding rule to an outside address. You cannot explain either."]
+          - ["W3", "Rule 'Admin tool used outside hours' fired 25 times this week, every time for the same approved overnight maintenance job."]
+          - ["W4", "Tier 2 has confirmed that an attacker controls a server and is copying files from it right now."]
+    questions:
+      - id: w1
+        prompt: "Who owns the next step for W1?"
+        answer_type: choice
+        options: ["Tier 1 analyst", "Tier 2 analyst", "Incident responder", "Detection engineer", "IT service desk"]
+        accept: ["IT service desk"]
+        hints:
+          - "Is there anything here that suggests an attack?"
+        explanation: >-
+          A forgotten password with no security signals is a normal support request. Route it to the IT
+          service desk; the SOC would only look again if lockouts started appearing across many accounts.
+      - id: w2
+        prompt: "Who owns the next step for W2?"
+        answer_type: choice
+        options: ["Tier 1 analyst", "Tier 2 analyst", "Incident responder", "Detection engineer", "IT service desk"]
+        accept: ["Tier 2 analyst"]
+        hints:
+          - "You have finished triage and found something you cannot explain. What happens to unexplained, possibly real activity?"
+        explanation: >-
+          An unexplained sign-in plus a new forwarding rule to an outside address looks like a possible
+          account takeover. Triage is done; the in-depth investigation belongs to Tier 2, with your summary.
+      - id: w3
+        prompt: "Who owns the next step for W3?"
+        answer_type: choice
+        options: ["Tier 1 analyst", "Tier 2 analyst", "Incident responder", "Detection engineer", "IT service desk"]
+        accept: ["Detection engineer"]
+        hints:
+          - "The activity is approved every time. What needs to change so these alerts stop wasting time?"
+        explanation: >-
+          The alerts are correct but expected every night. Tier 1 closes them with a reason; changing the
+          rule (for example an exception for the approved job) is a detection engineering task.
+      - id: w4
+        prompt: "Who owns the next step for W4?"
+        answer_type: choice
+        options: ["Tier 1 analyst", "Tier 2 analyst", "Incident responder", "Detection engineer", "IT service desk"]
+        accept: ["Incident responder"]
+        hints:
+          - "The attack is confirmed and still happening. What is the priority now: understanding it, or stopping it?"
+        explanation: >-
+          A confirmed, active compromise needs containment and coordination now. That is incident response
+          (in small teams, the same people as Tier 2, wearing the response role).

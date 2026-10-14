@@ -4,6 +4,102 @@ import type { FlashCard } from "./flashcards";
 
 export const TRACK_FLASHCARDS: FlashCard[] = [
   {
+    "id": "fc-soc-l1-soc-roles-01",
+    "lessonId": "soc-l1-soc-roles-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does a Tier 1 SOC analyst do?",
+    "back": "Watches the alert queue, triages each alert, closes harmless ones with a written reason, and escalates real or unclear ones."
+  },
+  {
+    "id": "fc-soc-l1-soc-roles-02",
+    "lessonId": "soc-l1-soc-roles-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Who fixes a detection rule that keeps firing on harmless activity?",
+    "back": "A detection engineer. Tier 1 closes the alerts with a reason and reports the pattern clearly."
+  },
+  {
+    "id": "fc-soc-l1-soc-roles-03",
+    "lessonId": "soc-l1-soc-roles-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is a playbook (runbook)?",
+    "back": "A written, step-by-step procedure for a common situation, so the important checks happen every time."
+  },
+  {
+    "id": "fc-soc-l1-soc-roles-04",
+    "lessonId": "soc-l1-soc-roles-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What must an escalation include?",
+    "back": "A clear summary of what you checked and found, so the next person does not start from zero."
+  },
+  {
+    "id": "fc-soc-l1-alert-lifecycle-01",
+    "lessonId": "soc-l1-alert-lifecycle-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the stages of an alert's life?",
+    "back": "Created, queued, assigned, triaged, then closed with a reason or escalated into a case."
+  },
+  {
+    "id": "fc-soc-l1-alert-lifecycle-02",
+    "lessonId": "soc-l1-alert-lifecycle-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Alert vs case: what is the difference?",
+    "back": "An alert is one rule match. A case groups related alerts and the investigation around them."
+  },
+  {
+    "id": "fc-soc-l1-alert-lifecycle-03",
+    "lessonId": "soc-l1-alert-lifecycle-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is alert fatigue, and what is the fix?",
+    "back": "Lost attention from handling many harmless alerts. The fix is tuning noisy rules, backed by clear closing reasons, not working faster."
+  },
+  {
+    "id": "fc-soc-l1-alert-lifecycle-04",
+    "lessonId": "soc-l1-alert-lifecycle-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What must every alert have before it leaves the queue?",
+    "back": "One owner and a written reason: a disposition with a rationale, or an escalation summary."
+  },
+  {
+    "id": "fc-soc-l1-data-handling-01",
+    "lessonId": "soc-l1-data-handling-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does 'need to know' mean for a SOC analyst?",
+    "back": "Look only at the data your current task requires, even when your tools could show you more."
+  },
+  {
+    "id": "fc-soc-l1-data-handling-02",
+    "lessonId": "soc-l1-data-handling-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is data minimisation in a case note?",
+    "back": "Recording only the personal data that answers the security question, and leaving out everything unrelated."
+  },
+  {
+    "id": "fc-soc-l1-data-handling-03",
+    "lessonId": "soc-l1-data-handling-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "You suspect a specific employee of taking data. What do you do?",
+    "back": "Raise it with your shift lead so it follows the authorised process (HR, legal), rather than investigating the person on your own."
+  },
+  {
+    "id": "fc-soc-l1-data-handling-04",
+    "lessonId": "soc-l1-data-handling-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Three questions before looking at someone's data?",
+    "back": "Does my task need it? Am I authorised for this kind of look? How little can I record?"
+  },
+  {
     "id": "fc-soc-l1-triage-loop-01",
     "lessonId": "soc-l1-triage-loop-01",
     "rank": 1,
