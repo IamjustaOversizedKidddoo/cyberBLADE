@@ -7,11 +7,26 @@ import { parse as parseYaml } from "yaml";
 import { parseChecks, type CheckSet } from "@/lib/content/checks";
 import { consoleCommands, consoleExamples, outputMismatches, runConsoleCommands } from "@/lib/content/lesson-commands";
 import { loadLessons } from "@/lib/content/lessons";
+import { parseExercises } from "@/lib/content/exercises";
+import { resolvePracticeTarget } from "@/lib/content/practice";
+import { keyTermsOf, lintSocLesson, prerequisiteGraphErrors } from "@/lib/content/soc-lesson-lint";
+import { loadGeneratorMarkers } from "@/lib/content/soc-markers";
+import { loadLessonCards, loadSocCoverage, loadTrackConfig, renderTrackCardsModule, socCoverageErrors } from "@/lib/content/soc-track";
 import { coverageSchema, validateContent } from "@/lib/content/validate";
 import { GENERATORS } from "@/lib/generators";
 import { generateLab } from "@/lib/lab-engine/checks";
 import { listLabs } from "@/lib/lab-engine/labs";
 import { demoWorld } from "@/lib/lab-engine/terminal/demo-world";
+
+async function loadExercisesFile(lessonFile: string) {
+  const file = lessonFile.replace(/\.mdx$/, ".exercises.yaml");
+  try {
+    return parseExercises(await fs.readFile(file, "utf8"), file);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw err;
+  }
+}
 
 async function main(): Promise<number> {
   const errors: string[] = [];
@@ -30,12 +45,14 @@ async function main(): Promise<number> {
   }
 
   const coverage = coverageSchema.parse(parseYaml(await fs.readFile("content/coverage/core.yaml", "utf8")));
+  const socCoverage = loadSocCoverage();
 
   const result = await validateContent({
     lessons,
     checks,
     labs,
     coverage,
+    extraObjectiveIds: new Set(socCoverage.skills.map((s) => `soc:${s.id}`)),
     generators: Object.keys(GENERATORS),
     runLessonCommands: (lesson) => {
       const lab = lesson.lab ? labsById.get(lesson.lab) : undefined;
@@ -95,7 +112,67 @@ async function main(): Promise<number> {
 
   errors.push(...result.errors);
 
-  for (const w of result.warnings) console.warn(`warning: ${w}`);
+  // SOC L1 track lessons: template, leak scan, indicators, time, prerequisites, coverage, cards.
+  const socWarnings: string[] = [];
+  const socLessons = lessons.filter((l) => l.track === "soc");
+  if (socLessons.length) {
+    const track = loadTrackConfig();
+    const skillsDoc = parseYaml(await fs.readFile("content/soc/skills.yaml", "utf8")) as { skills: Array<{ id: string }> };
+    const skillIds = new Set(skillsDoc.skills.map((s) => s.id));
+    const titles = new Map(lessons.map((l) => [l.id, l.title]));
+    const practiceError = (t: string) => {
+      const r = resolvePracticeTarget(t, (id) => titles.get(id) ?? null);
+      return typeof r === "string" ? r : null;
+    };
+    const markers = loadGeneratorMarkers();
+    const cardEntries = [];
+    const termOwner = new Map<string, { lesson: string; definition: string }>();
+    for (const lesson of socLessons) {
+      let exercises = null;
+      let cards = null;
+      try {
+        exercises = await loadExercisesFile(lesson.filePath);
+      } catch (err) {
+        errors.push((err as Error).message);
+      }
+      try {
+        const c = loadLessonCards(lesson.filePath);
+        if (c) {
+          if (c.lesson !== lesson.id) errors.push(`${lesson.id}: cards file says lesson ${c.lesson}`);
+          cards = c.cards;
+          cardEntries.push({ lessonId: lesson.id, rank: track.min_core_rank, cards: c.cards });
+        }
+      } catch (err) {
+        errors.push((err as Error).message);
+      }
+      const r = lintSocLesson({
+        lesson,
+        checks: checks.get(lesson.id),
+        exercises,
+        cards,
+        skillIds,
+        moduleKeys: new Set(track.modules.map((m) => m.key)),
+        minCoreRank: track.min_core_rank,
+        practiceError,
+        markers,
+      });
+      errors.push(...r.errors);
+      socWarnings.push(...r.warnings);
+      for (const t of keyTermsOf(lesson.body)) {
+        const key = t.term.toLowerCase();
+        const prev = termOwner.get(key);
+        if (prev) errors.push(`${lesson.id}: key term "${t.term}" is already defined in ${prev.lesson}; link to it instead of redefining`);
+        else termOwner.set(key, { lesson: lesson.id, definition: t.definition });
+      }
+    }
+    errors.push(...prerequisiteGraphErrors(lessons, track.min_core_rank));
+    errors.push(...socCoverageErrors(socCoverage, socLessons, skillIds, practiceError));
+    const expectedCards = renderTrackCardsModule(cardEntries);
+    const actualCards = await fs.readFile("lib/review/track-cards.generated.ts", "utf8").catch(() => "");
+    if (actualCards.replace(/\r\n/g, "\n") !== expectedCards) errors.push("lib/review/track-cards.generated.ts is out of date: run npm run soc:curriculum -- cards");
+  }
+
+  for (const w of [...result.warnings, ...socWarnings]) console.warn(`warning: ${w}`);
   for (const e of errors) console.error(`error: ${e}`);
   if (errors.length) {
     console.error(`\n✗ content check failed: ${errors.length} error(s)`);

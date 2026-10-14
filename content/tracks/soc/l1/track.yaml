@@ -1,0 +1,25 @@
+# SOC L1 track configuration. Gating is config-only: lessons carry rank == min_core_rank and the
+# existing rank access check applies. Disable the whole track with enabled: false.
+id: soc-l1
+title: "SOC Analyst: Level 1"
+enabled: true
+min_core_rank: 1
+# Synthetic world for lesson examples (never shared with the scenario generator; leak-scanned).
+lesson_world:
+  organisation: "Larkspur Freight"
+  domain: "larkspur.example"
+  external_range: "192.0.2.0/24"
+  internal_range: "172.16.40.0/24"
+modules:
+  - { id: m01-foundations, key: ops, order: 1, title: "SOC foundations" }
+  - { id: m02-triage, key: triage, order: 2, title: "Alert triage" }
+  - { id: m03-detection, key: detect, order: 3, title: "Detection and frameworks" }
+  - { id: m04-email, key: email, order: 4, title: "Phishing and email" }
+  - { id: m05-network, key: net, order: 5, title: "Network evidence" }
+  - { id: m06-endpoint, key: endpoint, order: 6, title: "Windows and Linux telemetry" }
+  - { id: m07-identity, key: identity, order: 7, title: "Web and identity" }
+  - { id: m08-intel, key: intel, order: 8, title: "Malware and threat intel" }
+  - { id: m09-siem, key: siem, order: 9, title: "Investigating with the SIEM" }
+  - { id: m10-ir, key: ir, order: 10, title: "Tier-1 incident response" }
+  - { id: m11-reporting, key: report, order: 11, title: "Reporting" }
+  - { id: m12-shift, key: shift, order: 12, title: "Working the shift" }

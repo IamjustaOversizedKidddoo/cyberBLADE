@@ -1,0 +1,122 @@
+# SOC L1 skills coverage (docs/design/soc-curriculum.md §4). Additive: separate from content/coverage/core.yaml.
+# Objectives are internal skill ids from content/soc/skills.yaml, never cert objective numbers.
+# planned = lesson numbers from the plan; lessons = built lesson ids (the linter checks both directions);
+# practice = typed targets (resolved by lib/content/practice.ts). "Covered" means taught AND practised.
+# gap: stated openly, never hidden.
+version: 1
+skills:
+  - id: soc_alert_triage
+    planned: "1, 2, 4, 5, 6, 41, 42"
+    lessons: [soc-l1-triage-loop-01]
+    practice: ["family:soc-f-mixed-signal-01", "shift:shift-quiet-day"]
+    gap: null
+  - id: soc_false_positive_id
+    planned: "5, 7"
+    lessons: [soc-l1-triage-loop-01]
+    practice: ["family:soc-f-alert-fatigue-01"]
+    gap: null
+  - id: soc_phishing_analysis
+    planned: "12-15"
+    lessons: [soc-l1-email-headers-01]
+    practice: ["family:soc-f-phishing-cred-01", "tool:email_headers"]
+    gap: null
+  - id: soc_credential_attacks
+    planned: "20, 27, 28"
+    lessons: []
+    practice: ["family:soc-f-brute-force-auth-01", "family:soc-f-cloud-identity-01"]
+    gap: null
+  - id: soc_endpoint_triage
+    planned: "21-24"
+    lessons: []
+    practice: ["family:soc-f-attachment-script-01", "tool:endpoint_timeline"]
+    gap: null
+  - id: soc_network_indicators
+    planned: "17, 18"
+    lessons: []
+    practice: ["family:soc-f-outbound-exfil-01", "tool:pdns"]
+    gap: null
+  - id: soc_network_traffic
+    planned: "16"
+    lessons: []
+    practice: ["tool:pcap_flows"]
+    gap: "thin: no packet-heavy scenario family yet"
+  - id: soc_network_monitoring
+    planned: "19"
+    lessons: []
+    practice: []
+    gap: "thin: practised only in query drills (no drill page yet)"
+  - id: soc_web_attacks
+    planned: "26"
+    lessons: []
+    practice: ["family:soc-f-web-attack-data-01"]
+    gap: null
+  - id: soc_web_log_analysis
+    planned: "26"
+    lessons: []
+    practice: ["family:soc-f-web-attack-data-01"]
+    gap: null
+  - id: soc_data_exfiltration
+    planned: "18"
+    lessons: []
+    practice: ["family:soc-f-outbound-exfil-01"]
+    gap: null
+  - id: soc_insider_policy
+    planned: "3"
+    lessons: []
+    practice: ["family:soc-f-insider-policy-01"]
+    gap: "thin: one lesson"
+  - id: soc_cloud_identity
+    planned: "28, 29"
+    lessons: []
+    practice: ["family:soc-f-cloud-identity-01"]
+    gap: null
+  - id: soc_windows_logs
+    planned: "20"
+    lessons: []
+    practice: ["family:soc-f-brute-force-auth-01"]
+    gap: null
+  - id: soc_linux_logs
+    planned: "25"
+    lessons: []
+    practice: []
+    gap: "gap: no Linux-centred scenario family; drills only"
+  - id: soc_malware_triage
+    planned: "14, 30, 32"
+    lessons: []
+    practice: ["tool:sandbox", "family:soc-f-attachment-script-01"]
+    gap: null
+  - id: soc_threat_intel
+    planned: "10, 31, 32"
+    lessons: []
+    practice: ["tool:reputation", "tool:whois"]
+    gap: null
+  - id: soc_siem_correlation
+    planned: "11, 33-36"
+    lessons: []
+    practice: ["shift:shift-quiet-day"]
+    gap: null
+  - id: soc_scope_assessment
+    planned: "6, 9, 23, 36"
+    lessons: []
+    practice: ["report:scope_and_impact"]
+    gap: null
+  - id: soc_escalation_handoff
+    planned: "8, 38, 40"
+    lessons: []
+    practice: ["report:escalation_handoff"]
+    gap: null
+  - id: soc_documentation
+    planned: "3, 8, 39, 40"
+    lessons: []
+    practice: ["report:verdict_and_severity"]
+    gap: null
+  - id: soc_incident_response
+    planned: "15, 37"
+    lessons: []
+    practice: ["report:response_actions"]
+    gap: null
+  - id: soc_case_management
+    planned: "2, 38, 41"
+    lessons: []
+    practice: ["family:soc-f-mixed-signal-01"]
+    gap: null

@@ -195,3 +195,19 @@ describe("concurrency", () => {
     expect((await getRankSummary(ctx, USER, 0)).challenge.kind).toBe("cooldown");
   });
 });
+
+describe("rank challenge ignores non-core track lessons", () => {
+  test("a SOC L1 lesson at the same rank does not block promotion", async () => {
+    const { ctx, operators } = makeCtx(T0);
+    await operators.create({ handle: "ghost", ethicsAcceptedAt: T0.toISOString() });
+    await completeLessons(ctx);
+    const core = ctx.content.getLessons.bind(ctx.content);
+    ctx.content.getLessons = async (filter) => [
+      ...(await core(filter)),
+      { ...LESSONS[0], id: "soc-l1-triage-loop-01", track: "soc", slug: "x", filePath: "x", body: "" },
+    ];
+    const summary = await getRankSummary(ctx, USER, 0);
+    expect(summary.lessons.map((l) => l.id)).not.toContain("soc-l1-triage-loop-01");
+    expect(summary.challenge).toEqual({ kind: "ready" });
+  });
+});

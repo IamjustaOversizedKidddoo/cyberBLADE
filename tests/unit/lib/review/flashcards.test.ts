@@ -7,7 +7,7 @@ import {
 } from "@/lib/review/flashcards";
 
 describe("Flashcard Library Integrity", () => {
-  const VALID_CATEGORIES = new Set(["linux", "network", "windows", "web", "defense"]);
+  const VALID_CATEGORIES = new Set(["linux", "network", "windows", "web", "defense", "soc"]);
   const VALID_RANKS = new Set([0, 1, 2]);
 
   it("contains at least 15 curated flashcards", () => {
