@@ -192,6 +192,7 @@ import {
 } from "@/lib/lab-engine/soc/report-engine";
 import type { SocReportData, GradingResult } from "@/lib/lab-engine/soc/reports/types";
 import type { SocReportSubmissionRecord } from "@/lib/lab-engine/soc/types";
+import { enqueueAiGradingAfterSubmit } from "./ai-schedule";
 
 export async function saveSocReportDraftAction(
   attemptId: string,
@@ -220,7 +221,10 @@ export async function submitSocReportAction(
     throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
   }
   const ctx = getCtx();
-  return submitSocReport(ctx, operator.id, cleanAttemptId, reportData, templateId);
+  const result = await submitSocReport(ctx, operator.id, cleanAttemptId, reportData, templateId);
+  // Prompt 7: optional AI feedback on communication criteria (no-op while mode is off).
+  await enqueueAiGradingAfterSubmit(result.submissionId);
+  return result;
 }
 
 export async function getSocReportDraftAction(

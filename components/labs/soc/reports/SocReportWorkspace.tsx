@@ -8,6 +8,7 @@ import { ReportEditor } from "./ReportEditor";
 import { GradedResultsScorecard } from "./GradedResultsScorecard";
 import { ModelReportComparison } from "./ModelReportComparison";
 import { ReportExport } from "./ReportExport";
+import { AiFeedbackSection } from "./ai/AiFeedbackSection";
 import {
   saveSocReportDraftAction,
   submitSocReportAction,
@@ -101,11 +102,11 @@ export function SocReportWorkspace({ session }: Props) {
   }
 
   return (
-    <div className="flex h-full flex-col font-mono text-xs bg-canvas text-ink">
+    <div className="flex h-full min-w-0 w-full flex-col font-mono text-xs bg-canvas text-ink">
       {/* Sub-navigation bar when evaluated */}
       {gradingResult && (
-        <div className="flex items-center justify-between border-b border-line bg-surface px-4 py-2">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-surface px-4 py-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => setViewMode("scorecard")}
@@ -152,7 +153,7 @@ export function SocReportWorkspace({ session }: Props) {
       )}
 
       {/* Main Panel Routing */}
-      <div className="flex-1 overflow-hidden">
+      <div className="min-w-0 flex-1 overflow-hidden">
         {viewMode === "editor" && (
           <ReportEditor
             initialReport={report}
@@ -170,6 +171,9 @@ export function SocReportWorkspace({ session }: Props) {
               onViewComparison={() => setViewMode("comparison")}
               onExportReport={() => setIsExportOpen(true)}
             />
+            <div className="mt-6">
+              <AiFeedbackSection submissionId={gradingResult.submissionId} report={report} />
+            </div>
           </div>
         )}
 

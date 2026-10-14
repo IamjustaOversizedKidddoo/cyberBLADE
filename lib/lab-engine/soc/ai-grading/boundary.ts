@@ -28,7 +28,8 @@ const FIELD_TO_TEMPLATE_SECTION: Record<AiReportField, string> = {
   handoffSummary: "escalation_handoff",
 };
 
-function rawFieldText(report: SocReportData, field: AiReportField): string {
+/** The learner-visible text of one report field, as graded (also used client-side to highlight quotes). */
+export function reportFieldText(report: SocReportData, field: AiReportField): string {
   switch (field) {
     case "executiveSummary":
       return report.executiveSummary ?? "";
@@ -96,7 +97,7 @@ export function buildAiGradingInput(
   let removed = 0;
 
   for (const field of Object.keys(FIELD_TO_TEMPLATE_SECTION) as AiReportField[]) {
-    const c = clean(rawFieldText(report, field), handles);
+    const c = clean(reportFieldText(report, field), handles);
     removed += c.removed;
     fields[field] = c.text;
   }

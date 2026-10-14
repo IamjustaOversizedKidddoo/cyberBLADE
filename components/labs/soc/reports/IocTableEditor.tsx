@@ -93,7 +93,13 @@ export function IocTableEditor({ iocs, onChange, disabled }: Props) {
       </div>
 
       {/* Existing IoCs Table */}
-      <div className="overflow-x-auto rounded-xs border border-line bg-surface">
+      <div
+        className="overflow-x-auto rounded-xs border border-line bg-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
+        // Scrollable table: focusable so keyboard users can scroll it (WCAG 2.1.1).
+        tabIndex={0}
+        role="region"
+        aria-label="Indicators of compromise table (scrolls sideways)"
+      >
         <table className="w-full text-left border-collapse min-w-[600px]">
           <thead>
             <tr className="border-b border-line bg-surface-raised text-[10px] uppercase tracking-wider text-muted">
