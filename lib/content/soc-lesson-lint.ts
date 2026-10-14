@@ -149,6 +149,9 @@ export function lintSocLesson(input: SocLintInput): { errors: string[]; warnings
     else if (!lesson.skills?.includes(m[1])) err(`objective ${o} is not one of the lesson's skills`);
   }
   if (!lesson.practice?.length) err(`practice must list at least one target`);
+  // Drill pages sit behind SOC_QUERY_ENABLED; "Practice this" must never be empty when they are off.
+  else if (lesson.practice.every((t) => t.startsWith("drill:"))) err(`practice needs at least one non-drill target (drills can be switched off)`);
+  if (/\bdrills? linked below\b/i.test(lesson.body)) err(`do not refer to drills as "linked below": drill links are hidden when drills are switched off`);
   for (const t of lesson.practice ?? []) {
     const problem = input.practiceError(t);
     if (problem) err(`practice ${t}: ${problem}`);

@@ -104,7 +104,9 @@ export default async function SocTrackPage() {
           </p>
           <ul className="grid gap-4 md:grid-cols-2">
             {paths.map((p) => {
-              const t = pathMinutes(p.steps, lessons);
+              // With drills switched off, drill steps are hidden and must not count towards the time either.
+              const steps = drillsOn ? p.steps : p.steps.filter((st) => !("practice" in st && st.practice.startsWith("drill:")));
+              const t = pathMinutes(steps, lessons);
               return (
                 <li key={p.id} className="rounded-sm border border-line bg-surface p-4">
                   <h3 className="font-sans text-[16px] font-semibold text-ink">{p.title}</h3>
@@ -113,7 +115,7 @@ export default async function SocTrackPage() {
                     <IconClock className="h-3 w-3" aria-hidden="true" /> about {t.min === t.max ? t.min : `${t.min}-${t.max}`} min
                   </p>
                   <ol className="mt-3 space-y-1.5">
-                    {p.steps.map((s, i) => {
+                    {steps.map((s, i) => {
                       if ("lesson" in s) {
                         return (
                           <li key={i} className="flex items-start gap-2 font-sans text-sm">

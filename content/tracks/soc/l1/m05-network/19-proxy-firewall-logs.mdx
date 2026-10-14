@@ -14,7 +14,7 @@ review_status: agent-checked
 last_reviewed: null
 prerequisites: ["soc-l1-flow-vs-packet-01", "core-r1-net-routing-fw-01"]
 skills: ["soc_network_monitoring"]
-practice: ["drill:drill-03", "drill:drill-07"]
+practice: ["family:soc-f-outbound-exfil-01", "drill:drill-03", "drill:drill-07"]
 ---
 
 > **Outcome:** you can read firewall and web proxy logs, tell blocked attempts from successful connections, and find the internal machine behind a translated address.
@@ -125,7 +125,7 @@ A strong analyst treats a deny as the start of a question, searches all traffic 
 
 Firewall and proxy logs come in many formats, often one line per decision, sometimes with separate start and end records. Cloud platforms add their own network flow logs. Teams usually alert on outbound denies to known-bad destinations, connections to newly registered or uncategorised domains, and direct-to-internet traffic from servers that should use the proxy.
 
-The query drills linked below use firewall events with an action field and a bytes-sent field, so you can practise finding denies and large transfers.
+Where the query drills are enabled, two of them use firewall events with an action field and a bytes-sent field, so you can practise finding denies and large transfers.
 
 ## Remember it like this
 

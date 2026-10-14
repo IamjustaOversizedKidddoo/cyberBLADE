@@ -14,7 +14,7 @@ review_status: agent-checked
 last_reviewed: null
 prerequisites: ["soc-l1-alert-anatomy-01"]
 skills: ["soc_siem_correlation"]
-practice: ["drill:drill-01", "drill:drill-02"]
+practice: ["shift:shift-standard-mixed", "drill:drill-01", "drill:drill-02"]
 ---
 
 > **Outcome:** you can turn an investigation question into a SIEM query, step by step, and know why a query that returns nothing might be wrong rather than reassuring.
@@ -29,7 +29,7 @@ You should already know:
 
 - The parts of an alert, including raw events and entities: [Anatomy of an Alert](/learn/soc-l1-alert-anatomy-01).
 
-The examples use BladeQL, the simulator's query language, and all of them run on the practice dataset of the query drills. Other SIEMs have different syntax for the same ideas.
+The examples use BladeQL, the simulator's query language, and all of them run on one small, fixed practice dataset (the same one the query drills use, where they are enabled). Other SIEMs have different syntax for the same ideas.
 
 ## Core ideas
 
@@ -140,7 +140,7 @@ A strong analyst writes the question in plain words, builds the query one condit
 
 Every SIEM has its own query language, but the same building blocks appear everywhere: filter by field, pipe into commands, select fields, sort, count. Normalisation is often done by the SIEM or by a shared data model, and its quality varies: some sources may still use their own field names, so reading a raw event to check the field names is always worth the ten seconds.
 
-The query drills linked below use the same practice dataset as these examples.
+Where the query drills are enabled, they use the same practice dataset as these examples.
 
 ## Remember it like this
 
