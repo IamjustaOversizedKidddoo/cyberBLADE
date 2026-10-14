@@ -11,6 +11,7 @@ import { DRILL_MIN_RANK } from "@/app/(app)/practice/drills/rank";
 import { parseExercises } from "@/lib/content/exercises";
 import { resolvePracticeTarget } from "@/lib/content/practice";
 import { keyTermsOf, lintSocLesson, prerequisiteGraphErrors } from "@/lib/content/soc-lesson-lint";
+import { loadPracticePaths } from "@/lib/content/soc-curriculum";
 import { loadGeneratorMarkers } from "@/lib/content/soc-markers";
 import { loadLessonCards, loadSocCoverage, loadTrackConfig, renderTrackCardsModule, socCoverageErrors } from "@/lib/content/soc-track";
 import { coverageSchema, validateContent } from "@/lib/content/validate";
@@ -169,6 +170,20 @@ async function main(): Promise<number> {
     errors.push(...prerequisiteGraphErrors(lessons, track.min_core_rank));
     if (DRILL_MIN_RANK !== track.min_core_rank) errors.push(`practice/drills/rank.ts DRILL_MIN_RANK ${DRILL_MIN_RANK} must equal track min_core_rank ${track.min_core_rank}`);
     errors.push(...socCoverageErrors(socCoverage, socLessons, skillIds, practiceError));
+    try {
+      const socIds = new Set(socLessons.map((l) => l.id));
+      for (const pth of loadPracticePaths().paths) {
+        for (const step of pth.steps) {
+          if ("lesson" in step && !socIds.has(step.lesson)) errors.push(`paths.yaml ${pth.id}: unknown SOC lesson ${step.lesson}`);
+          if ("practice" in step) {
+            const problem = practiceError(step.practice);
+            if (problem) errors.push(`paths.yaml ${pth.id}: practice ${step.practice}: ${problem}`);
+          }
+        }
+      }
+    } catch (err) {
+      errors.push(`paths.yaml: ${(err as Error).message}`);
+    }
     const expectedCards = renderTrackCardsModule(cardEntries);
     const actualCards = await fs.readFile("lib/review/track-cards.generated.ts", "utf8").catch(() => "");
     if (actualCards.replace(/\r\n/g, "\n") !== expectedCards) errors.push("lib/review/track-cards.generated.ts is out of date: run npm run soc:curriculum -- cards");

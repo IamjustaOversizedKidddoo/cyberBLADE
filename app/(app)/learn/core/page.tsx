@@ -12,7 +12,8 @@ import { nextMission } from "@/lib/progress/next-mission";
 import type { LessonProgress } from "@/lib/progress/types";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { RankBadge } from "@/components/ui/Badge";
-import { IconCheck, IconLock, IconPlay, IconClock, IconTerminal } from "@/components/ui/icons";
+import { IconCheck, IconChevronRight, IconLock, IconPlay, IconClock, IconTerminal } from "@/components/ui/icons";
+import { loadTrackConfig } from "@/lib/content/soc-track";
 
 export const metadata: Metadata = { title: "Curriculum Roadmap · CyberBLADE" };
 
@@ -221,6 +222,7 @@ export default async function CoreMapPage(props: PageProps<"/learn/core">) {
   ).length;
 
   const next = nextMission(operator.rank, current.lessons, progress);
+  const socTrack = loadTrackConfig();
 
   return (
     <main className="min-h-screen bg-canvas text-ink pb-20">
@@ -234,6 +236,22 @@ export default async function CoreMapPage(props: PageProps<"/learn/core">) {
           <div role="status" className="rounded-sm border border-danger/40 bg-danger/10 px-4 py-3 text-xs font-ui text-danger">
             {lockedNotice(lockedRank)}
           </div>
+        )}
+
+        {/* SOC Analyst L1 track (config-gated, additive) */}
+        {socTrack.enabled && canAccessRank(operator.rank, socTrack.min_core_rank) && (
+          <Link
+            href="/learn/soc-l1"
+            className="flex min-h-[44px] flex-wrap items-center justify-between gap-3 rounded-sm border border-line bg-surface p-4 transition-colors duration-150 hover:border-cyan/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
+          >
+            <span>
+              <span className="block font-mono text-[11px] font-bold uppercase tracking-wider text-cyan">Job track</span>
+              <span className="block font-sans text-[16px] font-semibold text-ink">SOC Analyst L1</span>
+            </span>
+            <span className="inline-flex items-center gap-1 font-ui text-sm text-cyan">
+              Open track <IconChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+          </Link>
         )}
 
         {/* ── PROMINENT CONTINUE WHERE YOU LEFT OFF BANNER ──────────────────── */}

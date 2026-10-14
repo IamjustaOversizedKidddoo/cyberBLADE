@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { isSocQueryEnabled } from "@/lib/config/env";
+import { GlossaryTerm } from "@/components/lesson/GlossaryTerm";
+import { buildGlossary, groupModules, SOC_TRACK_BASE, tooltipTerms } from "@/lib/content/soc-curriculum";
+import { keyTermsOf } from "@/lib/content/soc-lesson-lint";
+import { loadTrackConfig } from "@/lib/content/soc-track";
+import { remarkGlossary } from "@/lib/content/remark-glossary";
 import { HandlerDrawer } from "@/components/handler/HandlerDrawer";
 import { Callout } from "@/components/lesson/Callout";
 import { DraftBanner } from "@/components/lesson/DraftBanner";
@@ -14,7 +19,7 @@ import { HeroBand } from "@/components/theme/HeroBand";
 import { toPublicChecks } from "@/lib/content/checks";
 import { loadChecks } from "@/lib/content/checks-server";
 import { getLesson, getLessons } from "@/lib/content/lessons";
-import { renderMdx } from "@/lib/content/mdx";
+import { renderMdx, type PluggableList } from "@/lib/content/mdx";
 import { requireOperator } from "@/lib/identity/session";
 import { canAccessRank } from "@/lib/progress/access";
 import { getCtx } from "@/lib/progress/context";
@@ -48,7 +53,7 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
     ctx.repo.getLessonProgress(operator.id, lesson.id),
     getLessons({ rank: lesson.rank, track: lesson.track }),
     loadExercises(lesson.id),
-    lesson.practice?.length ? getLessons() : Promise.resolve([]),
+    lesson.practice?.length || lesson.track === "soc" ? getLessons() : Promise.resolve([]),
   ]);
   // Track lessons (SOC L1): exercises are checked server-side; practice targets resolve to real pages.
   const exercises = exerciseSet ? toPublicExercises(exerciseSet) : {};
@@ -60,12 +65,31 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
   const labDone = lesson.lab ? await ctx.repo.hasCompletedAttempt(operator.id, lesson.lab, "practice") : false;
   const completed = progress?.status === "completed";
 
+  // SOC track: first-use glossary tooltips for terms defined in other lessons, and module breadcrumbs.
+  const isSoc = lesson.track === "soc";
+  const ownTerms = new Set(keyTermsOf(lesson.body).map((t) => t.term.toLowerCase()));
+  const glossaryPlugins: PluggableList = isSoc
+    ? [
+        [
+          remarkGlossary,
+          {
+            terms: tooltipTerms(buildGlossary(allLessons))
+              .filter((g) => !ownTerms.has(g.term.toLowerCase()))
+              .map((g) => ({ term: g.term, definition: g.definition, href: `${SOC_TRACK_BASE}/glossary#${g.anchor}` })),
+          },
+        ],
+      ]
+    : [];
+  const socModule = isSoc ? groupModules(loadTrackConfig(), allLessons).find((m) => m.key === lesson.module) : undefined;
+  const socIndex = socModule ? socModule.lessons.findIndex((l) => l.id === lesson.id) : -1;
+
   const body = await renderMdx(lesson.body, {
     ...proseComponents,
     Callout,
     LogBlock,
     FlowDiagram,
     KeyTerms,
+    GlossaryTerm,
     PracticeThis: () => <PracticeThis cards={practiceCards} />,
     MicroExercise: ({ id }: { id: string }) =>
       exercises[id] ? <MicroExercise exercise={exercises[id]} check={checkLessonExerciseAction.bind(null, lesson.id)} /> : null,
@@ -109,7 +133,7 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
           </div>
         </div>
       ) : null,
-  });
+  }, "mdx", glossaryPlugins);
 
   return (
     <main className="min-h-screen bg-canvas text-ink pb-24">
@@ -145,6 +169,27 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
       {/* Main content grid: Article + Sticky Table of Contents */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 flex flex-col xl:flex-row xl:justify-center gap-8 xl:gap-12">
         <article className="w-full min-w-0 max-w-[70ch] leading-relaxed">
+          {socModule && (
+            <nav aria-label="Breadcrumb" className="mb-6 font-ui text-xs text-muted">
+              <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <li>
+                  <Link href={SOC_TRACK_BASE} className="text-cyan underline-offset-4 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan">
+                    SOC Analyst L1
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li>
+                  <Link href={`${SOC_TRACK_BASE}/${socModule.key}`} className="text-cyan underline-offset-4 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan">
+                    {socModule.title}
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li aria-current="page">
+                  Lesson {socIndex + 1} of {socModule.lessons.length}
+                </li>
+              </ol>
+            </nav>
+          )}
           {body}
           <LessonNav lessons={siblings} currentId={lesson.id} />
         </article>
