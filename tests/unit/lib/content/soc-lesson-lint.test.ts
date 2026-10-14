@@ -189,3 +189,17 @@ describe("prerequisite graph", () => {
     expect(errs).toContain("cycle");
   });
 });
+
+describe("drills can be switched off", () => {
+  it("rejects a lesson whose only practice targets are drills", async () => {
+    const input = await pilotInput();
+    const lesson = { ...input.lesson, practice: ["drill:drill-01"] };
+    expect(lintSocLesson({ ...input, lesson }).errors.some((e) => e.includes("non-drill target"))).toBe(true);
+  });
+
+  it("rejects prose that refers to drills as linked below", async () => {
+    const input = await pilotInput();
+    const errs = lintSocLesson(withBody(input, `${input.lesson.body}\nThe query drills linked below help.`)).errors;
+    expect(errs.some((e) => e.includes("linked below"))).toBe(true);
+  });
+});
