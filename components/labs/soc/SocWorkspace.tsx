@@ -427,7 +427,6 @@ export function SocWorkspace({ session, onExit }: Props) {
           <SocSearchTab
             scenario={scenario}
             attemptId={session.attempt.id}
-            seed={(scenario as { seed?: string }).seed ?? "scenario-seed"}
             onOpenEnrichment={(target) => {
               setEnrichmentTarget(target);
               setIsEnrichmentOpen(true);

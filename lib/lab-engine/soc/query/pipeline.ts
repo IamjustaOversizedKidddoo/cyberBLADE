@@ -6,7 +6,7 @@ import { resolveScenarioForAttempt } from "../engine";
 import { executeBladeQL } from "./engine";
 import { BLADEQL_VERSION } from "./ast";
 import type { BladeQLEvent, QueryExecutionResult } from "./types";
-import { generateScenarioDataset } from "./dataset-generator";
+import { investigationDataset } from "./investigation-dataset";
 
 export const queryInputSchema = z.object({
   attemptId: z.string().min(1),
@@ -55,7 +55,7 @@ export async function executeInvestigationQuery(
   const scenario = await resolveScenarioForAttempt(attempt);
 
   // 4. Generate or retrieve cached dataset for this scenario variant
-  const dataset = generateScenarioDataset(scenario, attempt.seed);
+  const dataset = investigationDataset(scenario, attempt.seed);
 
   // 5. Build static asset & identity context for lookup command
   const assets = scenario.environment.assets.map((a) => ({
@@ -75,7 +75,9 @@ export async function executeInvestigationQuery(
   }));
 
   // 6. Execute BladeQL
-  const nowMs = new Date(scenario.rawEvents[0]?.timestamp ?? "2026-10-12T08:00:00Z").getTime();
+  // "Now" is the end of the investigated window (the latest event), so relative time ranges
+  // cover the shift. Using the FIRST event here hid almost every event from server-side queries.
+  const nowMs = datasetEndMs(dataset.events);
 
   const executionResult = executeBladeQL(input.query, dataset.events as BladeQLEvent[], {
     attemptId: attempt.id,
@@ -109,4 +111,13 @@ export async function executeInvestigationQuery(
     result: executionResult,
     logId,
   };
+}
+
+export function datasetEndMs(events: Array<{ timestamp?: unknown }>): number {
+  let max = 0;
+  for (const e of events) {
+    const t = Date.parse(String(e.timestamp ?? ""));
+    if (Number.isFinite(t) && t > max) max = t;
+  }
+  return max || Date.parse("2026-10-12T16:00:00Z");
 }
