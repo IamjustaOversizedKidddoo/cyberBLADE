@@ -18,6 +18,14 @@ vi.mock("@/app/(app)/labs/soc/actions", () => ({
   abandonSocAttemptAction: (...args: unknown[]) => mockAbandonAttempt(...args),
 }));
 
+// Server actions for AI writing feedback (Prompt 7) are server-only; the workspace never calls them here.
+vi.mock("@/app/(app)/labs/soc/ai-actions", () => ({
+  getSocAiResultAction: vi.fn(),
+  requestSocAiHumanReviewAction: vi.fn(),
+  getSocAiConsentAction: vi.fn(),
+  setSocAiConsentAction: vi.fn(),
+}));
+
 const mockSession: SocSessionClient = {
   attempt: {
     id: "test-attempt-uuid-1",

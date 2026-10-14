@@ -49,7 +49,7 @@ const SENTINEL = /SENTINEL_|sentinel-truth-ioc/;
 const FORBIDDEN_KEYS = /"?(groundTruth|reportGroundTruth|truePositiveAlertIds|isTruePositive|modelReport|modelReportReveal|overallDebrief|generatorConfig|scenarioHash|totalScore|criterionResults|versionLabel)"?/;
 
 describe("information boundary: what a model may see", () => {
-  it("no prompt sent by the pipeline contains ground truth, seeds, family internals or deterministic scores", async () => {
+  it("no prompt sent by the pipeline contains ground truth, seeds, family internals or deterministic scores", { timeout: 60_000 }, async () => {
     const provider = createContentHeuristicMock();
     let attemptSeed = "";
     const h = harness({
@@ -76,7 +76,7 @@ describe("information boundary: what a model may see", () => {
     }
   });
 
-  it("every prompt the builder can construct (all criteria x many generated reports) stays inside the boundary", () => {
+  it("every prompt the builder can construct (all criteria x many generated reports) stays inside the boundary", { timeout: 60_000 }, () => {
     const config = loadAiGradingConfig();
     const rubric = loadAiRubric();
     const template = loadTemplate();

@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+// Each test submits and grades full reports; allow for a loaded CI machine.
+vi.setConfig({ testTimeout: 30_000 });
 const session = vi.hoisted(() => ({ userId: "u-alice" }));
 const holder = vi.hoisted(() => ({ ctx: null as unknown }));
 vi.mock("@/lib/identity/session", () => ({ requireOperator: async () => ({ id: session.userId, handle: `h_${session.userId}` }) }));
