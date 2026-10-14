@@ -19,6 +19,15 @@ import { canAccessRank } from "@/lib/progress/access";
 import { getCtx } from "@/lib/progress/context";
 import { IconCheck, IconTerminal } from "@/components/ui/icons";
 import { answerCheckAction } from "../actions";
+import { checkLessonExerciseAction } from "../exercise-actions";
+import { FlowDiagram } from "@/components/lesson/FlowDiagram";
+import { KeyTerms } from "@/components/lesson/KeyTerms";
+import { LogBlock } from "@/components/lesson/LogBlock";
+import { MicroExercise } from "@/components/lesson/MicroExercise";
+import { PracticeThis } from "@/components/lesson/PracticeThis";
+import { loadExercises } from "@/lib/content/exercises-server";
+import { toPublicExercises } from "@/lib/content/exercises";
+import { resolvePracticeTarget, type PracticeCard } from "@/lib/content/practice";
 
 export async function generateMetadata(props: PageProps<"/learn/[lessonId]">): Promise<Metadata> {
   const lesson = await getLesson((await props.params).lessonId);
@@ -33,17 +42,30 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
   const operator = await requireOperator();
   if (!canAccessRank(operator.rank, lesson.rank)) redirect(`/learn/core?locked=${lesson.rank}`);
   const ctx = getCtx();
-  const [checks, progress, siblings] = await Promise.all([
+  const [checks, progress, siblings, exerciseSet, allLessons] = await Promise.all([
     loadChecks(lesson.id),
     ctx.repo.getLessonProgress(operator.id, lesson.id),
     getLessons({ rank: lesson.rank, track: lesson.track }),
+    loadExercises(lesson.id),
+    lesson.practice?.length ? getLessons() : Promise.resolve([]),
   ]);
+  // Track lessons (SOC L1): exercises are checked server-side; practice targets resolve to real pages.
+  const exercises = exerciseSet ? toPublicExercises(exerciseSet) : {};
+  const practiceCards = (lesson.practice ?? [])
+    .map((t) => resolvePracticeTarget(t, (id) => allLessons.find((l) => l.id === id)?.title ?? null))
+    .filter((c): c is PracticeCard => typeof c !== "string");
   const labDone = lesson.lab ? await ctx.repo.hasCompletedAttempt(operator.id, lesson.lab, "practice") : false;
   const completed = progress?.status === "completed";
 
   const body = await renderMdx(lesson.body, {
     ...proseComponents,
     Callout,
+    LogBlock,
+    FlowDiagram,
+    KeyTerms,
+    PracticeThis: () => <PracticeThis cards={practiceCards} />,
+    MicroExercise: ({ id }: { id: string }) =>
+      exercises[id] ? <MicroExercise exercise={exercises[id]} check={checkLessonExerciseAction.bind(null, lesson.id)} /> : null,
     TerminalCheck: () => (
       <TerminalCheck
         questions={toPublicChecks(checks, operator.id)}
@@ -93,7 +115,11 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
 
       <HeroBand
         title={lesson.title}
-        kicker={`> rank_${lesson.rank} · ${lesson.module} · ${lesson.estimated_minutes} min`}
+        kicker={
+          lesson.track === "soc"
+            ? `> soc_l1 · ${lesson.module} · ${lesson.estimated_minutes} min`
+            : `> rank_${lesson.rank} · ${lesson.module} · ${lesson.estimated_minutes} min`
+        }
       >
         <div className="flex flex-wrap items-center gap-3">
           <span
