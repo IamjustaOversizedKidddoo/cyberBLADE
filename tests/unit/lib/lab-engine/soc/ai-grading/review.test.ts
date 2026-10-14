@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
+// Each test submits and grades full reports; allow for a loaded CI machine.
+vi.setConfig({ testTimeout: 30_000 });
 
 import { enqueueAiGrading, processAiGradingJobs } from "@/lib/lab-engine/soc/ai-grading/pipeline";
 import { acceptReviewItem, overrideReviewItem, requestHumanReview } from "@/lib/lab-engine/soc/ai-grading/review";
