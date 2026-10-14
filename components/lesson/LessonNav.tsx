@@ -26,7 +26,7 @@ export function LessonNav({ lessons, currentId }: Props) {
               <span className="truncate">← {prev.title}</span>
             </Link>
           ) : (
-            <span className="text-muted/40 font-ui text-xs">First lesson in module</span>
+            <span className="text-muted font-ui text-xs">First lesson in module</span>
           )}
         </div>
 
@@ -54,7 +54,7 @@ export function LessonNav({ lessons, currentId }: Props) {
               <IconChevronRight className="h-3.5 w-3.5 shrink-0" />
             </Link>
           ) : (
-            <span className="text-muted/40 font-ui text-xs">Module complete</span>
+            <span className="text-muted font-ui text-xs">Module complete</span>
           )}
         </div>
       </div>

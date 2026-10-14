@@ -114,7 +114,7 @@ export function TableOfContents() {
           <button
             type="button"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="text-muted/60 hover:text-cyan font-ui text-[11px] tracking-wider transition-colors flex items-center gap-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+            className="text-muted hover:text-cyan font-ui text-[11px] tracking-wider transition-colors flex items-center gap-1 focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
           >
             <span>↑ BACK TO TOP</span>
           </button>
