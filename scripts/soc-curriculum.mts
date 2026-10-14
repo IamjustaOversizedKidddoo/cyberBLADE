@@ -1,5 +1,6 @@
 /**
- * SOC L1 curriculum helpers. `npm run soc:curriculum -- times` prints computed lesson times;
+ * SOC L1 curriculum helpers. `npm run soc:curriculum -- times` prints computed lesson times
+ * (add `--write` to set each lesson's estimated_minutes to its computed time);
  * `npm run soc:curriculum -- cards` regenerates lib/review/track-cards.generated.ts from the .cards.yaml files.
  */
 import fs from "node:fs";
@@ -18,7 +19,12 @@ async function main(): Promise<number> {
       const file = l.filePath.replace(/\.mdx$/, ".checks.yaml");
       const checks = fs.existsSync(file) ? parseChecks(fs.readFileSync(file, "utf8"), file) : undefined;
       const t = computeLessonTime(l, checks);
-      const flag = t.minutes === l.estimated_minutes ? "ok" : `MISMATCH (frontmatter ${l.estimated_minutes})`;
+      let flag = t.minutes === l.estimated_minutes ? "ok" : `MISMATCH (frontmatter ${l.estimated_minutes})`;
+      if (flag !== "ok" && process.argv.includes("--write")) {
+        const src = fs.readFileSync(l.filePath, "utf8");
+        fs.writeFileSync(l.filePath, src.replace(/^estimated_minutes: \d+$/m, `estimated_minutes: ${t.minutes}`));
+        flag = `written (was ${l.estimated_minutes})`;
+      }
       console.log(`${l.id}: ${t.minutes} min = ${t.words} words/200 + ${t.exercises}×3 + ${t.checks}×1 + ${t.diagrams}×0.5 — ${flag}`);
     }
     return 0;

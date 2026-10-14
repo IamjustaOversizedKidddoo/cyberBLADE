@@ -1,0 +1,14 @@
+lesson: soc-l1-alert-lifecycle-01
+cards:
+  - id: fc-soc-l1-alert-lifecycle-01
+    front: "What are the stages of an alert's life?"
+    back: "Created, queued, assigned, triaged, then closed with a reason or escalated into a case."
+  - id: fc-soc-l1-alert-lifecycle-02
+    front: "Alert vs case: what is the difference?"
+    back: "An alert is one rule match. A case groups related alerts and the investigation around them."
+  - id: fc-soc-l1-alert-lifecycle-03
+    front: "What is alert fatigue, and what is the fix?"
+    back: "Lost attention from handling many harmless alerts. The fix is tuning noisy rules, backed by clear closing reasons, not working faster."
+  - id: fc-soc-l1-alert-lifecycle-04
+    front: "What must every alert have before it leaves the queue?"
+    back: "One owner and a written reason: a disposition with a rationale, or an escalation summary."

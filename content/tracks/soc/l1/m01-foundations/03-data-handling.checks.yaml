@@ -1,0 +1,82 @@
+lesson: soc-l1-data-handling-01
+questions:
+  - id: q1
+    prompt: "Your tool lets you search any employee's browsing history. When are you entitled to look at a particular person's history?"
+    objectives: ["soc:soc_insider_policy"]
+    options:
+      - text: "When the alert or case you are working needs it, within your team's rules."
+        correct: true
+        explanation: "Correct. The task gives the reason; the tool's access alone does not."
+      - text: "Whenever the tool allows it, since access was granted on purpose."
+        correct: false
+        explanation: "Access is granted for a purpose. Using it outside that purpose is misuse, even if the tool allows it."
+      - text: "Only when the person gives written consent."
+        correct: false
+        explanation: "Security monitoring usually has its own legal and policy basis; consent is not the usual test. The task and the rules are."
+      - text: "Never; analysts may not look at browsing history."
+        correct: false
+        explanation: "Browsing history can be legitimate evidence, for example when investigating a malicious download."
+  - id: q2
+    prompt: "Which case note shows good data minimisation?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "\"2 GB copied from the finance share at 17:40, outside the user's usual pattern.\""
+        correct: true
+        explanation: "Correct. It answers the security question and includes nothing unrelated."
+      - text: "\"User's browsing shows dating and medical sites, then the 2 GB copy.\""
+        correct: false
+        explanation: "The browsing details are sensitive and unrelated to the copy; they should not be in the note."
+      - text: "\"Copied files, details withheld for privacy.\""
+        correct: false
+        explanation: "Too little: the note must still contain the evidence needed to check the decision."
+      - text: "\"See attached full mailbox export.\""
+        correct: false
+        explanation: "Attaching a full mailbox spreads far more personal data than the task needs."
+  - id: q3
+    prompt: "During triage you start to suspect that a specific employee is deliberately taking company data. What is the right next step?"
+    objectives: ["soc:soc_insider_policy"]
+    options:
+      - text: "Raise it with your shift lead so it follows the authorised process with HR or legal."
+        correct: true
+        explanation: "Correct. Investigating a person needs proper authorisation and handling."
+      - text: "Read their emails to confirm your suspicion before raising it."
+        correct: false
+        explanation: "Reading message contents without authorisation can breach policy and law, and can damage the case."
+      - text: "Message the employee to ask what they are doing."
+        correct: false
+        explanation: "Contacting them could tip them off and is not your decision to make."
+      - text: "Close the alert to avoid getting involved."
+        correct: false
+        explanation: "Closing a possible insider concern without raising it fails the organisation and the process."
+  - id: q4
+    prompt: "Why can uploading a file to a public analysis website be a problem?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "The service, and sometimes its other users, may be able to see the file's contents."
+        correct: true
+        explanation: "Correct. That can expose company or personal data, so check your team's approved tools first."
+      - text: "Public services never give accurate results."
+        correct: false
+        explanation: "Many give useful results. The concern is who else sees what you upload."
+      - text: "It always alerts the attacker."
+        correct: false
+        explanation: "It can sometimes reveal that you are investigating, but the main concern here is exposing data."
+      - text: "It is always illegal."
+        correct: false
+        explanation: "It depends on the data, the service and your organisation's rules; that is why you check first."
+  - id: q5
+    prompt: "What is personal data?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "Any information about an identifiable person, including email addresses, locations and browsing history."
+        correct: true
+        explanation: "Correct. Logs are full of it, which is why minimisation matters."
+      - text: "Only passwords and bank details."
+        correct: false
+        explanation: "Those are sensitive, but personal data is much broader."
+      - text: "Only information a person marks as private."
+        correct: false
+        explanation: "Whether data is personal does not depend on someone labelling it."
+      - text: "Information stored on personal devices only."
+        correct: false
+        explanation: "Company systems hold large amounts of personal data too."

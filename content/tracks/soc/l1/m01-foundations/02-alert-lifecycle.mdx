@@ -1,0 +1,154 @@
+---
+id: soc-l1-alert-lifecycle-01
+title: "The Life of an Alert"
+track: soc
+rank: 1
+module: ops
+order: 2
+estimated_minutes: 16
+objectives_covered: ["soc:soc_alert_triage", "soc:soc_case_management"]
+mitre: []
+xp: 80
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-soc-roles-01"]
+skills: ["soc_alert_triage", "soc_case_management"]
+practice: ["family:soc-f-alert-fatigue-01"]
+---
+
+> **Outcome:** you can follow an alert from the moment a rule fires to the moment it is closed, and spot when an alert's record is incomplete.
+
+## Why this matters on shift
+
+Every alert you touch leaves a record. Your shift lead, the next shift and sometimes an auditor will read it. If the record shows an alert sat unowned for hours, or was closed with no reason, that is a problem even if the alert was harmless. Knowing the stages an alert passes through helps you keep each one moving and leave a record someone else can trust.
+
+## Before you start
+
+You should already know:
+
+- What a SOC does and how work moves between roles: [What a SOC Does and Who Works There](/learn/soc-l1-soc-roles-01).
+
+You do not need to know any ticketing or case management product. The stages are the same everywhere; the button names differ.
+
+## Core ideas
+
+### What an alert is
+
+An **alert** is a message from a detection rule saying that some activity matched a pattern that might be malicious.
+
+Think of a smoke detector. It does not know whether there is a fire or someone burnt the toast. It knows only that it sensed smoke, so it beeps and someone has to look. An alert is the same: a signal that something matched, not a verdict.
+
+In practice an alert is a record in a SIEM or alert management tool. It holds the rule that fired, the time, the systems and accounts involved, and the raw events that matched.
+
+### Why alerts need a lifecycle
+
+Hundreds of alerts can arrive in a day. Without agreed stages, nobody knows which ones have been looked at, who is working on what, or why something was closed. Alerts would be lost, or two analysts would work the same one while another waits untouched.
+
+A lifecycle is the set of stages every alert passes through, with a clear owner at each stage.
+
+### The stages
+
+Exact names vary between tools, but the stages look like this:
+
+<FlowDiagram
+  title="The life of an alert"
+  description="An alert is created by a rule, waits in the queue, is assigned to an analyst, is triaged, and then is either closed with a reason or escalated into a case. Closed alerts and finished cases feed back into rule tuning."
+  steps={[
+    { label: "Created", detail: "A rule matches and the SIEM raises the alert." },
+    { label: "Queued", detail: "It waits, ordered by severity and age, until someone picks it up." },
+    { label: "Assigned", detail: "One analyst owns it, so nobody else duplicates the work." },
+    { label: "Triaged", detail: "The analyst decides what it is, using the triage loop." },
+    { label: "Closed or escalated", detail: "Closed with a disposition and reason, or turned into a case." },
+  ]}
+  loopBackLabel="What closed alerts reveal about noisy or missing rules feeds back into tuning."
+/>
+
+In plain English: every alert should always have an owner and a status, and it should never leave the queue without a written reason.
+
+- The **queue** is the list of alerts waiting for an analyst, usually sorted so the most urgent and the oldest come first.
+- Assignment means one named person owns the alert. Taking ownership before you start stops two people working the same alert.
+- A **case** (also called an incident ticket) is a record that groups related alerts and the investigation around them. Alerts that are real or need deeper work are escalated into a case, or linked to an existing one if they are part of something already being investigated.
+
+### Alert fatigue and tuning
+
+When most alerts turn out to be harmless, analysts can start to skim, trust titles, or close alerts in bulk. This is **alert fatigue**, and it is dangerous: the one real alert looks just like the hundred harmless ones before it.
+
+The cure is not to work faster. It is **tuning**: changing rules so they fire less on known harmless activity, for example by excluding an approved scanner. Tier 1's part is to close each alert with a clear reason and report repeating noise, so detection engineers have the evidence they need to tune safely.
+
+### Time matters
+
+Many SOCs measure how long alerts wait before someone triages them, and how long incidents take to resolve. Those numbers exist because waiting gives attackers time. Treat a growing queue as something to raise with your shift lead, not something to hide by closing alerts without looking.
+
+## Worked example
+
+Larkspur Freight's shift lead reviews one alert record from yesterday:
+
+<LogBlock
+  title="Alert ALR-7310 history (synthetic)"
+  lines={[
+    "02:14  Created     Rule: 'New admin account created' on srv-app03",
+    "02:14  Queued      Severity: high",
+    "06:05  Assigned    t.brennan",
+    "06:11  Note        Account 'svc-deploy2' created by user k.ito",
+    "06:12  Note        Reputation lookup on srv-app03: no results",
+    "06:20  Note        Change CHG-3108 approved: deployment account for new release, owner k.ito",
+    "06:21  Closed      Disposition: benign true positive. Created under CHG-3108 by its owner.",
+  ]}
+/>
+
+**Read the stages.** Created and queued at 02:14, assigned at 06:05, closed at 06:21 with a disposition and a reason. The record is complete.
+
+**A false lead in the notes.** At 06:12 the analyst ran a reputation lookup on the internal server name. Reputation services hold data about public addresses and domains; an internal server will almost never appear in one. "No results" here tells you nothing. It cost only a minute, but the note could mislead the next reader into thinking the server had been checked for something. Notes should record checks that answered the question.
+
+**The real issue.** The decision was right: the account was created under an approved change by its owner. But a high-severity alert waited almost four hours before anyone owned it. The shift lead raises this, not to blame t.brennan, who started at 06:00, but because the night shift had no analyst covering the queue. That is a staffing gap to fix, and the record is what made it visible.
+
+## Try it
+
+<MicroExercise id="alert-record" />
+
+## Common mistakes
+
+- **Working an alert without taking ownership.** Assign it to yourself first, so nobody duplicates your work.
+- **Closing without a reason.** "Closed" with no disposition and rationale leaves nothing to check.
+- **Bulk-closing by title.** Similar titles can hide different activity. Bulk actions need a check that every alert really matches.
+- **Opening a new case for something already being investigated.** Link related alerts to the existing case so the full picture stays in one place.
+- **Recording checks that could not answer the question.** They make the record look thorough while adding nothing.
+
+## What good looks like
+
+Every alert in a strong analyst's queue has an owner and a current status. Each closed alert has a disposition and a reason someone else can verify. Related alerts are linked to one case. Repeating noise is reported for tuning with examples.
+
+## In the real world
+
+Alert and case records live in a SIEM, a dedicated case management tool, or an IT ticketing system. Some teams use automation to enrich alerts or close well-understood ones; when that happens, the automation should also leave a clear reason. Status names differ ("new", "in progress", "resolved"), but the questions are the same: who owns it, what stage is it in, and why was it closed?
+
+The simulator shows each alert's state for you. Real tools may let alerts sit "unassigned" without warning, so checking the queue's oldest items is a habit worth building.
+
+## Remember it like this
+
+Every alert: one owner, one status, one written reason before it leaves the queue.
+
+## Interview answer
+
+"An alert is created when a rule matches, waits in a queue, gets assigned to one analyst, and is triaged. It then leaves the queue in one of two ways: closed with a disposition and a written reason, or escalated into a case, or linked to an existing case. Throughout, it should have one owner and a clear status, and repeating noise should be reported so the rule can be tuned instead of feeding alert fatigue."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Alert", definition: "A message from a detection rule saying that some activity matched a pattern that might be malicious." },
+    { term: "Queue", definition: "The list of alerts waiting for an analyst, usually sorted by urgency and age." },
+    { term: "Case", definition: "A record that groups related alerts and the investigation around them; also called an incident ticket." },
+    { term: "Alert fatigue", definition: "The loss of attention that comes from handling many harmless alerts, which makes real ones easier to miss." },
+    { term: "Tuning", definition: "Changing a detection rule so it fires less on known harmless activity without missing what it is meant to catch." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

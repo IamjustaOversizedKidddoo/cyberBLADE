@@ -1,0 +1,14 @@
+lesson: soc-l1-data-handling-01
+cards:
+  - id: fc-soc-l1-data-handling-01
+    front: "What does 'need to know' mean for a SOC analyst?"
+    back: "Look only at the data your current task requires, even when your tools could show you more."
+  - id: fc-soc-l1-data-handling-02
+    front: "What is data minimisation in a case note?"
+    back: "Recording only the personal data that answers the security question, and leaving out everything unrelated."
+  - id: fc-soc-l1-data-handling-03
+    front: "You suspect a specific employee of taking data. What do you do?"
+    back: "Raise it with your shift lead so it follows the authorised process (HR, legal), rather than investigating the person on your own."
+  - id: fc-soc-l1-data-handling-04
+    front: "Three questions before looking at someone's data?"
+    back: "Does my task need it? Am I authorised for this kind of look? How little can I record?"

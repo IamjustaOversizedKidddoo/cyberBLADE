@@ -1,0 +1,154 @@
+---
+id: soc-l1-soc-roles-01
+title: "What a SOC Does and Who Works There"
+track: soc
+rank: 1
+module: ops
+order: 1
+estimated_minutes: 17
+objectives_covered: ["soc:soc_alert_triage"]
+mitre: []
+xp: 80
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["core-r0-mind-attacker-defender-01", "core-r0-career-ethics-law-01"]
+skills: ["soc_alert_triage"]
+practice: ["shift:shift-quiet-day"]
+---
+
+> **Outcome:** you can explain what a SOC is for, name the main roles in it, and say which role should handle a given situation.
+
+## Why this matters on shift
+
+On your first shift you will see dozens of alerts, messages and requests. Some are yours to handle, some belong to a colleague with a different job, and some are not security work at all. Knowing who does what lets you act quickly on your own work and pass the rest to the right person without delay. Sending a problem to the wrong place wastes time that an attacker can use.
+
+## Before you start
+
+You should already know:
+
+- What attackers and defenders each try to do: [Thinking Like a Defender vs an Attacker](/learn/core-r0-mind-attacker-defender-01).
+- Why authorization and ethics matter in security work: [Careers, Ethics and the Law](/learn/core-r0-career-ethics-law-01).
+
+You do not need any experience in a SOC. This lesson describes a typical team; real teams vary in size and shape.
+
+## Core ideas
+
+### What a SOC is
+
+A **Security Operations Center (SOC)** is the team that watches an organisation's systems for signs of attack and responds when it finds them.
+
+Think of the control room of a large building. Cameras, door sensors and fire alarms all report to one room. The people in that room do not build the doors or fix the wiring. They watch, decide what each signal means, and call the right people when something is wrong.
+
+A SOC does the same with computers. Systems produce logs: records of sign-ins, programs starting, network connections and emails. A **SIEM** (Security Information and Event Management system) collects those logs in one place and runs **detection rules** against them. A rule is a saved pattern, such as "ten failed sign-ins for one account within a minute". When a pattern matches, the SIEM raises an alert, and a person in the SOC looks at it.
+
+### Why a SOC exists
+
+Tools can collect and match, but they cannot judge. A rule cannot tell whether a sign-in from a new country is an attacker or an employee at a conference. Somebody has to read the evidence, decide, and act.
+
+Without a SOC, alerts pile up unread, or each system owner checks only their own logs and nobody sees an attack that crosses several systems. Attackers count on that: the longer nobody looks, the longer they stay.
+
+### The roles, and who handles what
+
+Many SOCs organise work in **tiers**: levels of depth, where harder work moves up to more experienced people.
+
+- **Tier 1 analyst.** Watches the alert queue, triages each alert, closes what is harmless with a written reason, and escalates what is real or unclear. This is the role this track prepares you for.
+- **Tier 2 analyst.** Takes escalated alerts and investigates them in depth: how far did the activity spread, what else did the account or machine do?
+- **Incident responder.** Leads the response to a confirmed incident: containing it, removing the attacker and coordinating recovery. In small teams, Tier 2 analysts do this too.
+- **Detection engineer.** Writes and tunes detection rules. When Tier 1 reports a rule that fires on harmless activity again and again, this is who fixes it.
+- **Threat intelligence analyst.** Tracks what attackers are doing elsewhere and turns it into indicators and advice the SOC can use.
+- **SOC manager or shift lead.** Plans the shifts, watches the workload and makes the calls that need authority, such as waking up a system owner at night.
+
+Moving work to the next level is called **escalation**: handing an alert or case to someone with more depth or authority, with a clear summary of what you found. Escalation is not failure. Escalating the right things quickly is one of the most valuable things a Tier 1 analyst does.
+
+<FlowDiagram
+  title="How work moves through a SOC"
+  description="Logs reach the SIEM, rules raise alerts, Tier 1 triages them, real or unclear alerts escalate to Tier 2, confirmed incidents go to incident response, and what was learned goes back to detection engineering to improve the rules."
+  steps={[
+    { label: "Detection", detail: "The SIEM matches logs against rules and raises an alert." },
+    { label: "Tier 1 triage", detail: "Decide what the alert is; close it with a reason or escalate it." },
+    { label: "Tier 2 investigation", detail: "Find the scope: which accounts, machines and data are involved." },
+    { label: "Incident response", detail: "Contain, remove the attacker, recover." },
+    { label: "Improve detection", detail: "Feed lessons back so rules catch more and fire less on noise." },
+  ]}
+  loopBackLabel="Lessons from every incident and every noisy rule feed back into detection."
+/>
+
+In plain English: alerts flow upward only as far as they need to, and everything the team learns flows back to make the next detection better.
+
+### Not everything is security work
+
+Some alerts and requests belong elsewhere. A server that has stopped responding is usually an IT operations problem, not an attack. A user who forgot their password needs the IT service desk. A SOC that tries to do everything does nothing well. Part of your job is to route those items quickly and politely, and to notice when an "IT problem" has a security cause. For example, many account lockouts at once may mean someone is guessing passwords.
+
+### Playbooks
+
+A **playbook** (also called a runbook) is a written, step-by-step procedure for a common situation, such as "user reports a suspicious email". Playbooks make sure the important checks happen every time, even at 3 a.m. They do not replace thinking: when the evidence does not fit the playbook, say so and escalate.
+
+## Worked example
+
+It is 14:00 UTC at Larkspur Freight, a fictional logistics company. Three items reach the Tier 1 queue in ten minutes.
+
+<LogBlock
+  title="Tier 1 queue (synthetic)"
+  lines={[
+    "14:01  Monitoring: file server fs02.larkspur.example not responding to health checks",
+    "14:04  Rule: 'Encoded PowerShell command' on workstation ws-114 (user m.okafor)",
+    "14:09  Detection team note: rule 'Large upload to cloud storage' fired 40 times today, all from the backup server",
+  ]}
+/>
+
+**The first item looks urgent, but it is a false lead for the SOC.** A file server going offline could be ransomware, so the analyst checks quickly: are there any security alerts on fs02 in the last hour? There are none, and the IT operations channel already shows a planned restart that overran. The analyst routes it to IT operations with a one-line note, asking them to report back if the restart reveals anything unusual. That took two minutes, not twenty.
+
+**The second item is security work.** PowerShell is a built-in Windows tool for automation. Encoded commands hide their text and are often used by attackers, though some admin tools use them too. The analyst triages it, cannot find an approved reason, and escalates it to Tier 2 with what they have checked so far.
+
+**The third item belongs to detection engineering.** The analyst confirms the 40 alerts all come from the backup server during its scheduled window, closes them as benign, and sends the pattern to the detection engineers so the rule can be tuned. Fixing the rule is their job; reporting the noise clearly is the analyst's.
+
+## Try it
+
+<MicroExercise id="who-handles-it" />
+
+## Common mistakes
+
+- **Treating escalation as failure.** A fast, clear escalation is good work.
+- **Trying to fix everything yourself.** Changing rules, rebuilding servers and resetting passwords usually belong to other roles.
+- **Ignoring "IT problems" completely.** Route them, but notice when many small problems point to one security cause.
+- **Following a playbook past the point where it fits.** When the evidence does not match the steps, stop and escalate.
+
+## What good looks like
+
+A strong Tier 1 analyst knows the map of the team. They handle their own queue calmly, route other work within minutes with a short note, and escalate with a summary the next person can act on straight away.
+
+## In the real world
+
+SOCs range from two people covering business hours to large teams working around the clock. Some organisations use an external provider, called a managed security service provider (MSSP), instead of or alongside their own team. Titles vary: some teams have no tiers at all and every analyst does everything. The responsibilities in this lesson still exist; they are just shared differently.
+
+The simulator gives you a tidy queue and clear roles. Real queues mix security alerts, IT noise and questions from colleagues, and the "right person" is sometimes asleep or on holiday. Your shift lead decides what happens then.
+
+## Remember it like this
+
+Watch, decide, route: Tier 1 decides what an alert is and sends it to the right place with a clear reason.
+
+## Interview answer
+
+"A SOC watches the organisation's logs for signs of attack and responds when it finds them. As a Tier 1 analyst I triage the alert queue: I close harmless alerts with a written reason, escalate real or unclear ones to Tier 2 with a clear summary, route non-security issues to IT, and report noisy rules to detection engineering so they can be tuned."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Security Operations Center (SOC)", definition: "The team that watches an organisation's systems for signs of attack and responds when it finds them." },
+    { term: "SIEM", definition: "Security Information and Event Management: a system that collects logs in one place and runs detection rules against them." },
+    { term: "Detection rule", definition: "A saved pattern the SIEM checks logs against; when it matches, an alert is raised." },
+    { term: "Tier 1 analyst", definition: "The analyst who watches the alert queue, triages each alert, and closes or escalates it with a written reason." },
+    { term: "Escalation", definition: "Handing an alert or case to someone with more depth or authority, with a clear summary of what was found." },
+    { term: "Playbook", definition: "A written, step-by-step procedure for a common situation, also called a runbook." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

@@ -1,0 +1,163 @@
+---
+id: soc-l1-data-handling-01
+title: "Handling Data Ethically on Shift"
+track: soc
+rank: 1
+module: ops
+order: 3
+estimated_minutes: 16
+objectives_covered: ["soc:soc_documentation", "soc:soc_insider_policy"]
+mitre: []
+xp: 80
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-soc-roles-01"]
+skills: ["soc_documentation", "soc_insider_policy"]
+practice: ["family:soc-f-insider-policy-01"]
+---
+
+> **Outcome:** you can decide what you are allowed to look at during an investigation, what belongs in a ticket, and when you need someone else's authorisation first.
+
+## Why this matters on shift
+
+A SOC analyst can often see far more than anyone else in the company: who signed in where, which websites people visited, sometimes the contents of emails. That access exists to protect the organisation. Using it out of curiosity, copying private details into tickets, or uploading a colleague's document to a public website can break the law, break trust, and end a career. Handling data well is part of doing the job, not an extra.
+
+## Before you start
+
+You should already know:
+
+- What a SOC does and who works in it: [What a SOC Does and Who Works There](/learn/soc-l1-soc-roles-01).
+- Why authorisation and ethics matter in security work: [Careers, Ethics and the Law](/learn/core-r0-career-ethics-law-01).
+
+This lesson gives general principles, not legal advice. Your organisation's policies and the law where you work decide the details.
+
+## Core ideas
+
+### Access is for a purpose
+
+**Need to know** means you look only at the information your current task requires.
+
+Think of a hospital. A nurse can open patient records because care requires it. Opening a neighbour's record because they are curious is a serious breach, even though the system lets them do it. The system's permission is not the same as a reason.
+
+In the SOC, your tools may let you search any user's sign-ins or browsing. Your task decides what you search. Investigating an alert about account p.varga gives you a reason to look at p.varga's sign-ins around that time. It does not give you a reason to read their email history or look up a colleague you dislike.
+
+### Personal data
+
+**Personal data** is any information about an identifiable person: names, email addresses, IP addresses tied to a person, locations, browsing history, message contents. Logs are full of it.
+
+Data protection laws in many countries, such as the GDPR in the European Union, limit how personal data may be collected, used and kept. Security monitoring is usually allowed for clear purposes, but the rules on how much you collect and who sees it still apply.
+
+### Data minimisation
+
+**Data minimisation** means recording and sharing only the personal data the task needs.
+
+Tickets and case notes are read by many people and kept for a long time. Compare:
+
+- Too much: "User's browsing shows medical sites, a dating site and job applications, then the download from the file share."
+- Enough: "User downloaded 2 GB from the finance file share at 17:40, outside their usual pattern. Other browsing not relevant to this alert."
+
+The second note answers the security question and exposes nothing else.
+
+### When you need authorisation first
+
+Some steps change what you are allowed to do:
+
+- **Investigating a specific employee because of their behaviour** (an insider concern) usually needs a documented request from an authorised party, such as HR, legal or a named manager, depending on policy. You do not open one on your own suspicion; you raise it with your shift lead.
+- **Reading message contents** is often restricted to specific roles and approvals, even when the tool allows it.
+- **Uploading files or data to outside services** (for example a public file-analysis website) can share the contents with the service and sometimes with other users. Check your team's rules on approved tools before uploading anything that might contain company or personal data.
+
+The **acceptable use policy** is the company document that says what employees may and may not do with company systems. Insider investigations usually test behaviour against it, so know where yours is.
+
+<FlowDiagram
+  title="Before you look: three questions"
+  description="Ask whether the task needs this data, whether you are authorised for this kind of look, and how little of it you can record. If the answer to the first two is no or unsure, stop and ask your shift lead."
+  steps={[
+    { label: "Does my task need this?", detail: "Tie every search to the alert or case you are working." },
+    { label: "Am I authorised for this kind of look?", detail: "Employee investigations and message contents may need approval." },
+    { label: "How little can I record?", detail: "Write what answers the security question, nothing more." },
+  ]}
+  loopBackLabel="If you are unsure at any step, stop and ask before you look."
+/>
+
+In plain English: check the reason, check the permission, then write down as little as possible.
+
+### Evidence handling
+
+When something may become evidence, for HR, legal or the police, how you handle it matters. Keep originals unchanged, note where each item came from and when you collected it, and store it where your team's procedure says. Later lessons cover evidence in more depth.
+
+## Worked example
+
+At 17:45 UTC an alert fires at Larkspur Freight:
+
+<LogBlock
+  title="Alert: Large download from file share (synthetic)"
+  lines={[
+    "rule:     Download over 1 GB from a restricted share in one hour",
+    "user:     a.novak (Finance)",
+    "share:    \\\\fs-fin01\\month-end",
+    "volume:   2.1 GB between 17:20 and 17:41",
+    "device:   ws-208 (company laptop assigned to a.novak)",
+  ]}
+/>
+
+**A tempting wrong turn.** The analyst's tool can show a.novak's recent emails, and it would be quick to read them to "see why". That is not a check this alert needs, and reading message contents is restricted at Larkspur. The analyst does not open them.
+
+**The checks the alert does need.** Is this a known business activity? The share is the finance month-end folder, and today is the second working day of the month. The analyst checks a.novak's past activity on the share: similar downloads in the first days of the last three months. The analyst asks a.novak's manager through the documented channel, and the manager confirms the month-end export.
+
+**The record.**
+
+> 2.1 GB download from the finance month-end share by a.novak on the company laptop. Matches the previous three months' month-end pattern; manager confirmed the month-end export. Benign true positive.
+
+The note contains no browsing history, no message contents and no opinion about the person. It answers the security question and stops.
+
+**What would have changed it?** If the files had gone to a personal cloud account, or the manager knew nothing about it, the analyst would raise a possible insider concern with the shift lead. The shift lead would bring in HR or legal under the company's process, instead of the analyst digging through the employee's data alone.
+
+## Try it
+
+<MicroExercise id="data-calls" />
+
+## Common mistakes
+
+- **Treating tool access as permission.** "I can see it" is not "I should look at it".
+- **Over-documenting.** Copying private details into tickets "just in case" spreads them to everyone who reads the ticket.
+- **Starting an insider investigation alone.** Raise it; the authorised process decides.
+- **Uploading files to public services without checking.** You may be publishing the contents.
+- **Looking up people you know.** Even a quick look out of curiosity is a breach of trust and often of policy.
+
+## What good looks like
+
+A strong analyst can explain why they looked at every piece of data in a case. Their notes answer the security question in plain words and leave out everything else. When an investigation turns towards a person, they stop and bring in the right authority.
+
+## In the real world
+
+Most SOCs record who searched what, so an analyst's own access is reviewed too. Rules on monitoring employees differ a great deal between countries and between organisations: some require works council agreement or specific notices, and some restrict access to message contents to named roles. Ask about your team's rules in your first week.
+
+The simulator's people are fictional, so you can practise freely. The habits you build there, such as tying each search to the alert and keeping notes lean, are the same ones that protect real people.
+
+## Remember it like this
+
+Need it, allowed it, minimise it: check the reason and the permission, then record as little as possible.
+
+## Interview answer
+
+"I tie every search to the alert or case I'm working, and I don't treat tool access as permission. In notes I record what answers the security question and leave out unrelated personal data. If an investigation turns towards a specific employee, or needs message contents, I raise it with my lead so it goes through the authorised process with HR or legal, rather than investigating on my own."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Need to know", definition: "Looking only at the information your current task requires, even when your tools could show you more." },
+    { term: "Personal data", definition: "Any information about an identifiable person, such as names, email addresses, locations, browsing history or message contents." },
+    { term: "Data minimisation", definition: "Recording and sharing only the personal data a task actually needs." },
+    { term: "Acceptable use policy", definition: "The company document that says what employees may and may not do with company systems." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

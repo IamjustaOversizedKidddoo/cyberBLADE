@@ -1,0 +1,54 @@
+lesson: soc-l1-alert-lifecycle-01
+exercises:
+  - id: alert-record
+    title: "Review an alert record and a small queue"
+    kind: log-reading
+    instructions: >-
+      Read the alert record and the queue below. Case CASE-118 is already open for suspicious sign-ins
+      on the account p.varga.
+    blocks:
+      - type: log
+        title: "Alert ALR-7402 history (synthetic)"
+        lines:
+          - "09:30  Created     Rule: 'Multiple failed sign-ins' for account p.varga"
+          - "09:30  Queued      Severity: medium"
+          - "09:52  Note        12 failures from 192.0.2.164 between 09:25 and 09:29"
+          - "09:58  Closed"
+      - type: table
+        title: "Queue at 10:00 (synthetic)"
+        columns: ["Alert", "Rule", "Account or host"]
+        rows:
+          - ["ALR-7405", "Password changed", "d.mensah"]
+          - ["ALR-7406", "Successful sign-in from new address", "p.varga"]
+          - ["ALR-7407", "Disk almost full", "srv-file01"]
+    questions:
+      - id: missing-owner
+        prompt: "Which stage never appears in ALR-7402's history?"
+        answer_type: choice
+        options: ["Created", "Queued", "Assigned", "Closed"]
+        accept: ["Assigned"]
+        hints:
+          - "Look for the line that would tell you who owned the alert."
+        explanation: >-
+          Nobody was ever assigned, so the record does not show who worked the alert or who closed it.
+          Take ownership before you start working an alert.
+      - id: missing-reason
+        prompt: "What else is missing from the closing line?"
+        answer_type: choice
+        options: ["A disposition and a written reason", "The severity", "The rule name", "The source address"]
+        accept: ["A disposition and a written reason"]
+        hints:
+          - "Compare the closing line with the closing line in the lesson's worked example."
+        explanation: >-
+          The alert was closed with no disposition and no reason, so nobody can check whether closing it
+          was right.
+      - id: link-to-case
+        prompt: "Which alert in the queue should be linked to CASE-118? (Type its ID.)"
+        answer_type: text
+        accept: ["ALR-7406"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Which account is CASE-118 about?"
+        explanation: >-
+          ALR-7406 is a successful sign-in for p.varga, the account already under investigation in
+          CASE-118. Linking it keeps the evidence together; a separate case would split the picture.

@@ -1,0 +1,82 @@
+lesson: soc-l1-soc-roles-01
+questions:
+  - id: q1
+    prompt: "What is the main purpose of a SOC?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "To watch the organisation's systems for signs of attack and respond when it finds them."
+        correct: true
+        explanation: "Correct. Monitoring, deciding and responding are the core of SOC work."
+      - text: "To build and maintain the company's servers and networks."
+        correct: false
+        explanation: "That is IT operations or engineering. The SOC watches and responds; it does not usually build the systems."
+      - text: "To write the company's security policies."
+        correct: false
+        explanation: "Policy is usually a governance or risk team's job. The SOC follows policy and may suggest changes."
+      - text: "To test systems by attacking them with permission."
+        correct: false
+        explanation: "That describes penetration testing, which is a different, offensive role."
+  - id: q2
+    prompt: "Why can a SIEM not replace analysts?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Rules can match patterns, but they cannot judge whether the matching activity is harmless or an attack."
+        correct: true
+        explanation: "Correct. Judgment about context (travel, approved changes, normal behaviour) still needs a person."
+      - text: "SIEMs cannot collect logs from more than one system."
+        correct: false
+        explanation: "Collecting logs from many systems is exactly what a SIEM is for."
+      - text: "SIEMs are too slow to raise alerts."
+        correct: false
+        explanation: "Speed is not the issue; deciding what an alert means is."
+      - text: "Analysts are cheaper than software."
+        correct: false
+        explanation: "Cost is not the reason. The reason is that matching is not the same as judging."
+  - id: q3
+    prompt: "A rule fires dozens of times a day, always on the same approved backup job. What should the Tier 1 analyst do?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Close the alerts with a reason and report the pattern to detection engineering so the rule can be tuned."
+        correct: true
+        explanation: "Correct. Tier 1 handles the queue and reports noise clearly; changing the rule is the detection engineers' job."
+      - text: "Turn the rule off so the queue is quieter."
+        correct: false
+        explanation: "Disabling rules is not Tier 1's call, and it could hide a real attack that matches the same rule."
+      - text: "Escalate every alert to Tier 2."
+        correct: false
+        explanation: "The activity is understood and approved. Escalating it wastes Tier 2's time."
+      - text: "Ignore the alerts without closing them."
+        correct: false
+        explanation: "Unclosed alerts hide real ones in a growing queue, and leave no record of why they were harmless."
+  - id: q4
+    prompt: "What does escalation mean in a SOC?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Handing an alert to someone with more depth or authority, with a clear summary of what you found."
+        correct: true
+        explanation: "Correct. The summary is part of the escalation: the next person should not have to start from zero."
+      - text: "Admitting you could not do your job."
+        correct: false
+        explanation: "Escalating the right things quickly is good Tier 1 work, not a failure."
+      - text: "Raising the alert's severity to critical."
+        correct: false
+        explanation: "Severity and escalation are different. A medium-severity alert can be escalated, and a high one can be closed with a reason."
+      - text: "Sending the alert to every team at once."
+        correct: false
+        explanation: "Escalation goes to the right next owner, not to everyone."
+  - id: q5
+    prompt: "A file server stops responding. You find no security alerts on it, and IT operations reports an overrunning planned restart. What is the best action?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Route it to IT operations with a short note, and ask them to report anything unusual they find."
+        correct: true
+        explanation: "Correct. It is most likely an IT issue; a quick check and a clear handoff keeps the SOC's time for security work."
+      - text: "Declare a ransomware incident immediately."
+        correct: false
+        explanation: "Nothing points to an attack yet. Declaring an incident without evidence wastes many people's time."
+      - text: "Spend an hour investigating the server's logs yourself."
+        correct: false
+        explanation: "A quick check is reasonable; a long investigation of an explained outage takes you away from the alert queue."
+      - text: "Ignore it because it is not security work."
+        correct: false
+        explanation: "Route it rather than ignore it, so the owner knows and can tell you if they find something suspicious."

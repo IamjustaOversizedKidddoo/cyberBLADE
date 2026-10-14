@@ -1,0 +1,82 @@
+lesson: soc-l1-alert-lifecycle-01
+questions:
+  - id: q1
+    prompt: "What does an alert tell you on its own?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "That some activity matched a rule's pattern, which might or might not be malicious."
+        correct: true
+        explanation: "Correct. An alert is a signal that something matched, not a verdict."
+      - text: "That an attack has definitely happened."
+        correct: false
+        explanation: "Most alerts turn out to be harmless. Deciding which are real is the analyst's job."
+      - text: "That the affected system must be shut down."
+        correct: false
+        explanation: "Response actions come after triage and investigation, not from the alert alone."
+      - text: "Nothing useful until a case is opened."
+        correct: false
+        explanation: "The alert holds the rule, time, systems and raw events: the starting evidence for triage."
+  - id: q2
+    prompt: "Why should you assign an alert to yourself before working it?"
+    objectives: ["soc:soc_case_management"]
+    options:
+      - text: "So nobody else duplicates the work, and the record shows who owns it."
+        correct: true
+        explanation: "Correct. Ownership prevents duplicate work and makes the record accountable."
+      - text: "Because assigned alerts are automatically less severe."
+        correct: false
+        explanation: "Assignment does not change severity."
+      - text: "Because unassigned alerts cannot be closed."
+        correct: false
+        explanation: "Some tools allow it, as the lesson's exercise shows, and that is exactly the problem."
+      - text: "So that the alert earns you points."
+        correct: false
+        explanation: "Ownership is about accountability and avoiding duplicate work."
+  - id: q3
+    prompt: "A new alert concerns an account that already has an open case for suspicious activity. What should you do?"
+    objectives: ["soc:soc_case_management"]
+    options:
+      - text: "Link the alert to the existing case so all the evidence stays together."
+        correct: true
+        explanation: "Correct. One case per investigation keeps the full picture in one place."
+      - text: "Open a new case so each alert has its own."
+        correct: false
+        explanation: "Separate cases for the same activity split the evidence and can lead to two people investigating in parallel."
+      - text: "Close the alert as a duplicate without telling anyone."
+        correct: false
+        explanation: "The new alert may add important evidence. Link it, and note what is new."
+      - text: "Leave it in the queue until the case is finished."
+        correct: false
+        explanation: "New evidence about an open investigation is time-sensitive."
+  - id: q4
+    prompt: "Which response to alert fatigue is the right one?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Close noisy alerts with clear reasons and report the pattern so the rule can be tuned."
+        correct: true
+        explanation: "Correct. Clear reasons and reported patterns give detection engineers what they need to tune safely."
+      - text: "Bulk-close all alerts with the same title."
+        correct: false
+        explanation: "Same title does not mean same activity; a real alert can hide among similar ones."
+      - text: "Read only the alert titles to save time."
+        correct: false
+        explanation: "Titles are written in advance and can be misleading. That habit is how real alerts get missed."
+      - text: "Ask for the noisy rules to be deleted."
+        correct: false
+        explanation: "Deleting a rule removes its value entirely. Tuning keeps the detection while cutting known noise."
+  - id: q5
+    prompt: "A high-severity alert waited four hours before anyone was assigned, and the decision was correct. Why is the record still worth raising?"
+    objectives: ["soc:soc_case_management"]
+    options:
+      - text: "The delay itself is a risk, and the record shows a coverage gap the team can fix."
+        correct: true
+        explanation: "Correct. Waiting gives attackers time, even when this particular alert was harmless."
+      - text: "It is not worth raising, because the outcome was fine."
+        correct: false
+        explanation: "The next delayed alert might not be harmless. Fixing the gap is the point."
+      - text: "To find out who to blame for the delay."
+        correct: false
+        explanation: "The aim is to find and fix the cause, such as no analyst covering the night queue."
+      - text: "Because high-severity alerts must always be escalated."
+        correct: false
+        explanation: "Severity sets priority; a correct triage can still close a high-severity alert as benign."

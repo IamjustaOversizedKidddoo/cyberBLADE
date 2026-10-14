@@ -1,0 +1,14 @@
+lesson: soc-l1-soc-roles-01
+cards:
+  - id: fc-soc-l1-soc-roles-01
+    front: "What does a Tier 1 SOC analyst do?"
+    back: "Watches the alert queue, triages each alert, closes harmless ones with a written reason, and escalates real or unclear ones."
+  - id: fc-soc-l1-soc-roles-02
+    front: "Who fixes a detection rule that keeps firing on harmless activity?"
+    back: "A detection engineer. Tier 1 closes the alerts with a reason and reports the pattern clearly."
+  - id: fc-soc-l1-soc-roles-03
+    front: "What is a playbook (runbook)?"
+    back: "A written, step-by-step procedure for a common situation, so the important checks happen every time."
+  - id: fc-soc-l1-soc-roles-04
+    front: "What must an escalation include?"
+    back: "A clear summary of what you checked and found, so the next person does not start from zero."

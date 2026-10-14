@@ -7,7 +7,7 @@ version: 1
 skills:
   - id: soc_alert_triage
     planned: "1, 2, 4, 5, 6, 41, 42"
-    lessons: [soc-l1-triage-loop-01]
+    lessons: [soc-l1-triage-loop-01, soc-l1-soc-roles-01, soc-l1-alert-lifecycle-01]
     practice: ["family:soc-f-mixed-signal-01", "shift:shift-quiet-day"]
     gap: null
   - id: soc_false_positive_id
@@ -62,7 +62,7 @@ skills:
     gap: null
   - id: soc_insider_policy
     planned: "3"
-    lessons: []
+    lessons: [soc-l1-data-handling-01]
     practice: ["family:soc-f-insider-policy-01"]
     gap: "thin: one lesson"
   - id: soc_cloud_identity
@@ -107,7 +107,7 @@ skills:
     gap: null
   - id: soc_documentation
     planned: "3, 8, 39, 40"
-    lessons: []
+    lessons: [soc-l1-data-handling-01]
     practice: ["report:verdict_and_severity"]
     gap: null
   - id: soc_incident_response
@@ -117,6 +117,6 @@ skills:
     gap: null
   - id: soc_case_management
     planned: "2, 38, 41"
-    lessons: []
+    lessons: [soc-l1-alert-lifecycle-01]
     practice: ["family:soc-f-mixed-signal-01"]
     gap: null
