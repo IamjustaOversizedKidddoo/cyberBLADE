@@ -25,3 +25,20 @@ test("wide lesson tables sit in a labelled, keyboard-focusable scroll region", a
   await userEvent.tab();
   expect(region).toHaveFocus();
 });
+
+const Pre = proseComponents.pre as (p: { children: React.ReactNode }) => React.ReactElement;
+
+test("code blocks are labelled, keyboard-focusable scroll regions", async () => {
+  render(
+    <>
+      <button type="button">start</button>
+      <Pre>
+        <code>source="auth" | stats count by user</code>
+      </Pre>
+    </>,
+  );
+  const region = screen.getByRole("region", { name: /code/i });
+  await userEvent.click(screen.getByRole("button", { name: "start" }));
+  await userEvent.tab();
+  expect(region).toHaveFocus();
+});

@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { onboard, promoteToRank } from "./helpers/rank0";
@@ -88,4 +90,31 @@ test("a rank 0 learner is redirected away from a SOC L1 lesson", async ({ page }
   await onboard(page);
   await page.goto("/learn/soc-l1-triage-loop-01");
   await expect(page).toHaveURL(/\/learn\/core\?locked=1$/);
+});
+
+// Every SOC L1 lesson (not just the pilots): renders its template, fits the viewport, passes axe.
+test.describe("all SOC L1 lessons", () => {
+  const ids: string[] = [];
+  const walk = (dir: string) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith(".mdx")) ids.push(/^id: (.+)$/m.exec(fs.readFileSync(p, "utf8"))![1].trim());
+    }
+  };
+  walk("content/tracks/soc/l1");
+
+  test(`all ${ids.length} lessons render, fit the viewport and pass axe`, async ({ page }) => {
+    test.setTimeout(600_000);
+    await promoteToRank(page, 1);
+    for (const id of ids) {
+      await page.goto(`/learn/${id}`);
+      await expect(page.getByRole("heading", { level: 2, name: "Check your understanding" }), id).toBeVisible();
+      await expect(page.locator("[data-exercise]").first(), id).toBeVisible();
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      expect(overflow, `${id} scrolls sideways`).toBeLessThanOrEqual(1);
+      const violations = await seriousAxe(page);
+      expect(violations, `${id}: ${JSON.stringify(violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) })))}`).toEqual([]);
+    }
+  });
 });

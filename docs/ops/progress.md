@@ -177,4 +177,5 @@ Prerequisite changes from the plan: the plan's Rank 2 core prerequisites for les
 | M9 SIEM | thinking-in-queries, stats-timechart, sessions-correlation, hunting (every lesson query is executed by a new snippet test; drill links verified) | ✓ | content + review + snippets 125/125 | `2de3d36` |
 | M10 Tier-1 incident response | ir-lifecycle, evidence-handoff | ✓ | content + review 125/125 | `aec57a8` |
 | M11 Reporting | report-anatomy, report-summaries (craft only; no grading specifics) | ✓ | content + review 125/125 | `0fa2b49` |
-| M12 Working the shift | queue-handover, judgment-career (all 42 lessons written; every skill has ≥1 lesson) | ✓ | content + review 125/125 | (this commit) |
+| M12 Working the shift | queue-handover, judgment-career (all 42 lessons written; every skill has ≥1 lesson) | ✓ | content + review 125/125 | `0352a8b` |
+| Track build | landing, module pages + checkpoints, glossary + first-use tooltips, practice paths, core-page card | ✓ | unit 9/9, e2e track 10/10, all-lessons sweep 2/2 | `c91da33` + next |

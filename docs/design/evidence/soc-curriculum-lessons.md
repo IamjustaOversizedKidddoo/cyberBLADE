@@ -77,3 +77,45 @@
   - The results region was first labelled "Your query results", which clashed with the "Your query" textbox label. Renamed to "Results of your query".
   - Backticks in the drill prompts are stripped for display; inline code styling is left for later.
 - **Verification:** `tests/e2e/soc-drills.spec.ts`, 4 of 4 on desktop and mobile. It covers axe (0 serious or critical), the keyboard run, no reference query in the HTML, no sideways page scroll, and the rank 0 redirect.
+
+## Track pages, glossary tooltips and checkpoints, added 2026-10-15
+
+- **Screens:**
+  - `/learn/soc-l1` (track landing: progress, curriculum map, practice paths, skills coverage);
+  - `/learn/soc-l1/[module]` (lessons, prerequisites, module checkpoint, previous and next module);
+  - `/learn/soc-l1/glossary` (A–Z, with anchors);
+  - first-use glossary tooltips in SOC lessons;
+  - a module breadcrumb in the lesson reader;
+  - an additive "Job track" card on `/learn/core`.
+- **Screenshots** in `D:\CYBER-PLATFORM-evidence\soc-curriculum\`: `{track,module,glossary}-<width>-{top,full}.png`, `checkpoint-<width>.png` and `tooltip-<width>.png` at 390, 768 and 1440 px.
+- **Rules applied:** the same ones as the lesson reader above.
+  - Status shown as icon plus word ("Complete", "3 of 5 done").
+  - 44 px targets on every link card and letter index.
+  - Focus rings everywhere; semantic `ol`/`dl`, `nav` with `aria-label`, and breadcrumbs with `aria-current`.
+  - Tables in labelled, focusable scroll regions.
+  - No new motion.
+- **Glossary tooltip:** a toggletip pattern.
+  - The term is a real `<button>` with `aria-expanded`/`aria-controls`.
+  - The definition sits in a polite live region with a link to the glossary.
+  - It opens on Enter or click and on hover. It stays open while the pointer is over the term or the bubble, and closes on Escape or an outside press (WCAG 1.4.13).
+  - Common single words (alert, case, queue, …) are excluded so ordinary sentences are not littered with tooltips; only the first use per lesson is wrapped.
+- **Self-critique and fixes:**
+  1. **Skills coverage table at 390 px:** four columns squeezed the "Note" column into a tall strip. Phones now get one card per skill, and the table appears from the `sm` breakpoint up.
+  2. **All-lessons axe sweep:** the new sweep (42 lessons × desktop and mobile) found `scrollable-region-focusable` failures on fenced code blocks, which come from the shared `prose.tsx`, the same issue class as the table fix the owner approved. Code blocks are now labelled, keyboard-focusable scroll regions, with a unit test.
+  3. **Known and left as is (shared component):** the existing `TerminalCheck` renders question text as uppercase legends, which is harder to read for long checkpoint questions. Changing it would alter every core lesson, so it is listed as an owner decision.
+- **Verification:**
+  - `tests/e2e/soc-l1-track.spec.ts`: 10/10 on desktop and mobile. It covers the core-page link, 12 modules, axe on the landing, module and glossary pages, no sideways scroll, the keyboard tooltip (Enter, then Escape), a keyboard checkpoint answer, the breadcrumb, and the rank 0 redirect.
+  - All-lessons sweep: 2/2. All 42 lessons render, fit 390 px and have no serious or critical axe violations.
+- **Performance** (`scripts/visual/soc-perf.shoot.ts`; the repo baseline method plus LCP and CLS; Lighthouse is not installed), at 390 px on a cold load:
+
+| Route | First-load JS (KB) | LCP (ms) | CLS |
+|---|---|---|---|
+| core lesson (baseline route) | 149.1 | 396 | 0.001 |
+| SOC lesson (triage loop) | 149.1 | 420 | 0.001 |
+| SOC lesson with code blocks | 149.1 | 348 | 0.001 |
+| `/learn/soc-l1` | 141.7 | 300 | 0.001 |
+| `/learn/soc-l1/triage` | 143.6 | 160 | 0.001 |
+| `/learn/soc-l1/glossary` | 141.7 | 172 | 0 |
+| `/practice/drills/drill-07` | 143.0 | 156 | 0.001 |
+
+SOC lessons add +0 KB of first-load JS over a core lesson. The core lesson itself is 149.1 KB today, against the 136.3 KB recorded in `docs/visual/baseline.md` on 2026-10-08; that growth predates this work.
