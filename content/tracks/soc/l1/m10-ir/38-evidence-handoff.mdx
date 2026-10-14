@@ -1,0 +1,153 @@
+---
+id: soc-l1-evidence-handoff-01
+title: "Evidence, Communication and the Escalation Handoff"
+track: soc
+rank: 1
+module: ir
+order: 38
+estimated_minutes: 16
+objectives_covered: ["soc:soc_escalation_handoff", "soc:soc_case_management"]
+mitre: []
+xp: 120
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-ir-lifecycle-01", "soc-l1-rationale-escalation-01"]
+skills: ["soc_escalation_handoff", "soc_case_management"]
+practice: ["report:escalation_handoff"]
+---
+
+> **Outcome:** you can preserve the evidence you touch without spoiling it, communicate during an incident through the right channels, and hand an incident to the next team in a form they can act on at once.
+
+## Why this matters on shift
+
+During an incident, two things are easy to get wrong under pressure. Evidence gets lost or changed: a log export without a source, a screenshot without a time, a machine switched off. And messages go to the wrong place: details of the compromise emailed to the very mailbox the attacker controls. Neither needs deep forensic skill to prevent, just habits.
+
+## Before you start
+
+You should already know:
+
+- The incident lifecycle and containment trade-offs: [The Incident Lifecycle and Containment Trade-offs](/learn/soc-l1-ir-lifecycle-01).
+- How to write an escalation note: [Writing Rationales and Knowing When to Escalate](/learn/soc-l1-rationale-escalation-01).
+
+## Core ideas
+
+### Evidence an L1 analyst handles
+
+You will not usually image disks or analyse memory. But you will collect evidence: log exports, query results, the original phishing email with full headers, screenshots of a console. Handle it so that someone else can trust it later:
+
+- **Record the source and time** of everything you collect: which system, which query, when, and in which time zone.
+- **Keep originals unchanged.** Work on copies; never edit an exported file.
+- **Record a hash** (SHA-256) of exported files, so anyone can later prove the file has not changed. That is **evidence integrity**: being able to show that evidence is exactly as collected.
+- **Store it in the case**, not on your desktop or in a chat thread.
+
+**Chain of custody** is the record of who collected each piece of evidence, when, and everyone who has handled it since. It matters most if the incident ends up with HR, lawyers or the police, but the habit helps every investigation.
+
+Think of a parcel signed for at every stage of delivery. If something is missing at the end, the signatures show exactly where it was and who had it.
+
+### Volatile evidence first
+
+Some evidence disappears on its own. The **order of volatility** ranks evidence by how quickly it is lost, from most to least volatile: what is in memory, network connections and running processes, temporary files, then disk contents, logs held elsewhere, and finally backups and archives. Responders try to collect the most volatile evidence first.
+
+The practical L1 rule: do not switch off or reboot an affected machine unless your playbook or the incident lead says so. Switching off loses memory, and with it running processes and network connections. Isolation keeps the machine on but cut off.
+
+### Communicating during an incident
+
+- **Use the right channel.** If an account or mailbox may be compromised, do not discuss the incident through it. Use the phone, a known chat channel, or the incident's agreed channel.
+- **Need to know.** Share details with the people who need them for their part of the work, through the incident lead.
+- **Regular, structured updates.** A short **status update** covers what we know, what we are doing, what we need, and when the next update will be. It saves everyone from interrupting the responders.
+
+<FlowDiagram
+  title="Handing an incident to the next team"
+  description="Collect and label evidence with source, time and hash. Write the handoff: summary, scope, actions already taken, open questions, urgency and the receiving team. Send it through the agreed channel. Confirm the receiving team has taken ownership. Keep the case updated."
+  steps={[
+    { label: "Collect and label", detail: "Source, time (UTC), hash; originals unchanged." },
+    { label: "Write the handoff", detail: "Summary, scope, actions taken, open questions, urgency, receiving team." },
+    { label: "Use the right channel", detail: "Not through a possibly compromised account." },
+    { label: "Confirm ownership", detail: "The receiving team says it has the case." },
+    { label: "Keep the case current", detail: "Everything new goes in the case, not in side messages." },
+  ]}
+/>
+
+In plain English: label everything, write a handoff that needs no follow-up questions, send it safely, and make sure someone has picked it up.
+
+### The incident handoff
+
+An incident handoff builds on the escalation note you already know (what, where, when, evidence, checked, not checked, ask) and adds:
+
+- **Actions already taken**, with times: isolated, disabled, blocked, and by whom.
+- **Scope so far:** which hosts, accounts and data are involved, and which are cleared.
+- **The receiving team and urgency.**
+- **The next steps you recommend**, in order.
+
+The simulator's incident report has an escalation and handoff section that asks for these elements: whether escalation is needed, the receiving group, the urgency and the next steps, with a short summary.
+
+## Worked example
+
+At Larkspur Freight, the account of a finance manager, e.ahmadi, is confirmed compromised: an attacker created an inbox rule hiding payment emails. The analyst has isolated nothing yet and is preparing the handoff to the incident response team.
+
+**A mistake caught in time.** The analyst's first instinct is to email e.ahmadi: "Your account has been compromised; do not approve any payments; we are resetting your password at 15:00." But the attacker is reading that mailbox, and the email would warn them of the reset time. The analyst deletes the draft and asks the service desk to phone e.ahmadi on the number in the directory instead.
+
+**Evidence.** The analyst exports the inbox rule details and the sign-in log lines from the identity provider, notes the system, query and UTC time of each export, records SHA-256 hashes of both files, and attaches them to the case.
+
+**The handoff:**
+
+<LogBlock
+  title="Incident handoff (synthetic)"
+  lines={[
+    "Summary: e.ahmadi's mailbox taken over; rule hides messages containing 'payment' (created 13:42 UTC from 192.0.2.83).",
+    "Scope so far: 1 account. No other accounts signed in from 192.0.2.83 in 7 days. Mailbox content accessed: unknown.",
+    "Actions taken: none on the account yet (awaiting IR); user contacted by phone at 14:20 UTC.",
+    "Evidence: rule export and sign-in log export attached, with SHA-256 hashes and source and time noted.",
+    "Open questions: were any payment emails sent or altered? Were MFA methods added?",
+    "Receiving team: incident response. Urgency: high (payment fraud risk).",
+    "Recommended next steps: 1) revoke sessions and reset the password; 2) remove the rule; 3) review MFA methods; 4) alert finance to hold payments to changed bank details.",
+  ]}
+/>
+
+## Try it
+
+<MicroExercise id="handoff-calls" />
+
+## Common mistakes
+
+- **Communicating through a compromised channel.** Phone or a known channel instead.
+- **Collecting evidence without source and time.** It becomes impossible to verify.
+- **Editing exported files.** Work on copies; hash the originals.
+- **Switching a machine off "to be safe".** It loses memory; isolate instead, unless told otherwise.
+- **Handing off without actions taken and open questions.** The next team repeats your work or misses gaps.
+
+## What good looks like
+
+A strong analyst labels every piece of evidence with source, time and hash, keeps it in the case, chooses safe channels, sends regular structured updates, and hands off incidents with scope, actions taken, open questions and recommended next steps, then confirms the receiving team owns it.
+
+## In the real world
+
+Incident response teams usually run a dedicated channel or bridge call for each major incident, and keep a running log of decisions and actions with times. Forensic collection is done by trained responders with specialised tools; L1's job is to avoid destroying evidence and to hand over what they have collected cleanly. Legal and HR involvement brings stricter evidence rules, which is why good habits from the start matter.
+
+## Remember it like this
+
+Label it, hash it, keep it in the case; talk through safe channels; hand off with scope, actions and open questions.
+
+## Interview answer
+
+"For evidence, I record the source, query and UTC time of everything I collect, keep originals unchanged, record SHA-256 hashes of exports and store them in the case, which keeps a chain of custody. I don't power off affected machines unless the playbook says so, because volatile evidence in memory is lost; isolation is usually better. I communicate through safe channels, never through a possibly compromised mailbox, and my handoff covers scope, actions already taken, open questions, urgency and recommended next steps, and I confirm the receiving team has it."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Evidence integrity", definition: "Being able to show that evidence is exactly as it was collected, for example by recording its hash." },
+    { term: "Chain of custody", definition: "The record of who collected each piece of evidence, when, and everyone who has handled it since." },
+    { term: "Order of volatility", definition: "The ranking of evidence by how quickly it is lost, from memory and network state down to logs and backups." },
+    { term: "Status update", definition: "A short, regular incident message covering what is known, what is being done, what is needed and when the next update will be." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

@@ -102,7 +102,7 @@ skills:
     gap: null
   - id: soc_escalation_handoff
     planned: "8, 38, 40"
-    lessons: [soc-l1-rationale-escalation-01]
+    lessons: [soc-l1-rationale-escalation-01, soc-l1-evidence-handoff-01]
     practice: ["report:escalation_handoff"]
     gap: null
   - id: soc_documentation
@@ -112,11 +112,11 @@ skills:
     gap: null
   - id: soc_incident_response
     planned: "15, 37"
-    lessons: [soc-l1-phishing-response-01]
+    lessons: [soc-l1-phishing-response-01, soc-l1-ir-lifecycle-01]
     practice: ["report:response_actions"]
     gap: null
   - id: soc_case_management
     planned: "2, 38, 41"
-    lessons: [soc-l1-alert-lifecycle-01]
+    lessons: [soc-l1-alert-lifecycle-01, soc-l1-evidence-handoff-01]
     practice: ["family:soc-f-mixed-signal-01"]
     gap: null

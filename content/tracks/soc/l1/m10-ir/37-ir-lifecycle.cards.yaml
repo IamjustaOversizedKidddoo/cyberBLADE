@@ -1,0 +1,14 @@
+lesson: soc-l1-ir-lifecycle-01
+cards:
+  - id: fc-soc-l1-ir-lifecycle-01
+    front: "What are the phases of the NIST-style incident response lifecycle?"
+    back: "Preparation; detection and analysis; containment, eradication and recovery; post-incident activity."
+  - id: fc-soc-l1-ir-lifecycle-02
+    front: "What are the three containment principles?"
+    back: "Scope before you clean, preserve evidence before destructive steps, and contain at the right level (often the identity)."
+  - id: fc-soc-l1-ir-lifecycle-03
+    front: "Containment vs eradication vs recovery?"
+    back: "Containment limits the damage; eradication removes the attacker's access and tools; recovery restores normal, trusted operation."
+  - id: fc-soc-l1-ir-lifecycle-04
+    front: "What does reimaging a machine first cost?"
+    back: "The evidence on it, and it does nothing about other compromised machines or stolen credentials."
