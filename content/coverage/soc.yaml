@@ -43,8 +43,8 @@ skills:
   - id: soc_network_monitoring
     planned: "19"
     lessons: []
-    practice: []
-    gap: "thin: practised only in query drills (no drill page yet)"
+    practice: ["drill:drill-07", "drill:drill-16"]
+    gap: "thin: practised only in query drills on a small generic dataset"
   - id: soc_web_attacks
     planned: "26"
     lessons: []
@@ -79,7 +79,7 @@ skills:
     planned: "25"
     lessons: []
     practice: []
-    gap: "gap: no Linux-centred scenario family; drills only"
+    gap: "gap: no Linux-centred scenario family, and the drill dataset has no Linux logs"
   - id: soc_malware_triage
     planned: "14, 30, 32"
     lessons: []
@@ -93,7 +93,7 @@ skills:
   - id: soc_siem_correlation
     planned: "11, 33-36"
     lessons: []
-    practice: ["shift:shift-quiet-day"]
+    practice: ["shift:shift-quiet-day", "drill:drill-12", "drill:drill-14"]
     gap: null
   - id: soc_scope_assessment
     planned: "6, 9, 23, 36"

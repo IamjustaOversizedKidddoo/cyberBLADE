@@ -5,6 +5,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
+import { BLADEQL_DRILLS } from "@/lib/lab-engine/soc/query/drills";
 
 export interface PracticeCard {
   target: string;
@@ -72,8 +73,14 @@ export function resolvePracticeTarget(target: string, lessonTitle: (id: string) 
       const title = lessonTitle(id);
       return title ? { target, kind, title, href: `/learn/${id}`, instruction: "Revisit this lesson." } : `unknown lesson ${id}`;
     }
+    case "drill": {
+      const d = BLADEQL_DRILLS.find((x) => x.id === id);
+      return d
+        ? { target, kind, title: `Query drill: ${d.title.replace(/^\d+\.\s*/, "")}`, href: `/practice/drills/${id}`, instruction: "Write the query and check it on the practice dataset." }
+        : `unknown drill ${id}`;
+    }
     default:
-      // drill and skill targets have no page of their own yet (see docs/ops/pilot-lesson-review.md).
+      // skill targets have no page of their own yet (see docs/ops/pilot-lesson-review.md).
       return `practice kind "${kind}" has no page yet`;
   }
 }

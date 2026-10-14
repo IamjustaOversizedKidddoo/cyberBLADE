@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { isSocQueryEnabled } from "@/lib/config/env";
 import { HandlerDrawer } from "@/components/handler/HandlerDrawer";
 import { Callout } from "@/components/lesson/Callout";
 import { DraftBanner } from "@/components/lesson/DraftBanner";
@@ -53,7 +54,9 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
   const exercises = exerciseSet ? toPublicExercises(exerciseSet) : {};
   const practiceCards = (lesson.practice ?? [])
     .map((t) => resolvePracticeTarget(t, (id) => allLessons.find((l) => l.id === id)?.title ?? null))
-    .filter((c): c is PracticeCard => typeof c !== "string");
+    .filter((c): c is PracticeCard => typeof c !== "string")
+    // Drill pages sit behind the query feature flag; hide their cards rather than link to a 404.
+    .filter((c) => c.kind !== "drill" || isSocQueryEnabled());
   const labDone = lesson.lab ? await ctx.repo.hasCompletedAttempt(operator.id, lesson.lab, "practice") : false;
   const completed = progress?.status === "completed";
 
