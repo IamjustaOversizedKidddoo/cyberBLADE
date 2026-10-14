@@ -130,6 +130,6 @@ Standing rules saved to `docs/ops/standing-rules.md`. Audit and corrections in `
 
 **Prompt 7 final gates (2026-10-14):** lint 0 errors · typecheck ✓ · check:content ✓ · check:soc ✓ · unit 1562/1562 · security 142/142 · build ✓ · e2e 125 passed / 0 failed / 23 intentional per-viewport skips.
 
-**Not done / open:** migration not executed against a database (no Postgres available; PGlite would need a dependency install); no real-provider run (tests mock only); no human calibration data; S1–S3, S5–S7 from  still open (S4 fixed here; S8 fixed in Step 0).
+**Not done / open:** migration not executed against a database (no Postgres available; PGlite would need a dependency install); no real-provider run (tests mock only); no human calibration data; S1–S3, S5–S7 from `handoff-status.md` still open (S4 fixed here; S8 fixed in Step 0).
 
-**Human verification list (owner):** recruit 2–3 pseudonymous graders and score 60+ opted-in reports; run  and read 20+ outputs; try your own injections (incl. Hinglish); spot-check paired dialect outputs; confirm Groq/Gemini data-retention terms before any learner text is sent; review the gate file numbers before signing; confirm the UI copy reads well on a real Android phone.
+**Human verification list (owner):** recruit 2–3 pseudonymous graders and score 60+ opted-in reports; run `npm run soc:ai:eval-real` and read 20+ outputs; try your own injections (incl. Hinglish); spot-check paired dialect outputs; confirm Groq/Gemini data-retention terms before any learner text is sent; review the gate file numbers before signing; confirm the UI copy reads well on a real Android phone.
