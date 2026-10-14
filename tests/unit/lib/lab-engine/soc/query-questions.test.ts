@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+vi.mock("server-only", () => ({}));
 import fs from "node:fs";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
@@ -8,7 +9,6 @@ import {
   generateScenarioQuestions,
   normalizeAnswer,
   verifyAnswer,
-  submitQuestionAnswer,
   type ServerQuestionTruth,
 } from "@/lib/lab-engine/soc/query/questions";
 
@@ -41,8 +41,9 @@ describe("BladeQL Part E: Investigation Questions & Server Verification", () => 
 
       // Verify ground truth fields are NOT present
       expect((q as unknown as Record<string, unknown>).referenceAnswer).toBeUndefined();
-      expect((q as unknown as Record<string, unknown>).referenceQuery).toBeUndefined();
-      expect((q as unknown as Record<string, unknown>).debrief).toBeUndefined();
+      expect((q as unknown as Record<string, unknown>).referenceQuery).toBeNull();
+      // Uniform shape (S7): the key exists but holds nothing until solved or locked.
+      expect((q as unknown as Record<string, unknown>).debrief).toBeNull();
     }
   });
 
@@ -104,53 +105,6 @@ describe("BladeQL Part E: Investigation Questions & Server Verification", () => 
     expect(verifyAnswer("2026-10-12T08:20:00.000Z", truthTs).isCorrect).toBe(false); // +4.5m (outside)
   });
 
-  it("enforces attempt lockout after 5 incorrect submissions", async () => {
-    const family = loadFamily("soc-f-phishing-cred-01");
-    const { scenario } = generateSocVariant(family, "seed-lockout-test", "beginner");
-    generateScenarioQuestions(scenario, "seed-lockout-test");
-
-    const attemptId = "att-lockout-" + Date.now();
-    const questionId = "q-top-source-ip";
-
-    // Attempt 1
-    let res = await submitQuestionAnswer({
-      attemptId,
-      scenarioId: scenario.id,
-      seed: "seed-lockout-test",
-      questionId,
-      submittedAnswer: "0.0.0.0",
-    });
-    expect(res.isCorrect).toBe(false);
-    expect(res.attemptsLeft).toBe(4);
-    expect(res.status).toBe("incorrect");
-
-    // Rapid submission fails rate limit
-    await expect(
-      submitQuestionAnswer({
-        attemptId,
-        scenarioId: scenario.id,
-        seed: "seed-lockout-test",
-        questionId,
-        submittedAnswer: "0.0.0.0",
-      }),
-    ).rejects.toThrow(/Rate limit/);
-
-    // Wait past rate limit window
-    await new Promise((r) => setTimeout(r, 1600));
-
-    // Exhaust attempts
-    for (let i = 0; i < 4; i++) {
-      await new Promise((r) => setTimeout(r, 1600));
-      res = await submitQuestionAnswer({
-        attemptId,
-        scenarioId: scenario.id,
-        seed: "seed-lockout-test",
-        questionId,
-        submittedAnswer: `wrong-${i}`,
-      });
-    }
-
-    expect(res.attemptsLeft).toBe(0);
-    expect(res.status).toBe("locked");
-  }, 15000);
+  // The lockout/rate-limit test moved to question-service.test.ts: answers are now checked
+  // server-side with persisted attempts (S7), not by an in-memory browser function.
 });

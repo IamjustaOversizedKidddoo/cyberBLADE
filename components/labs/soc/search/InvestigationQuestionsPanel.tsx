@@ -1,16 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { LearnerQuestion, QuestionSubmissionResult } from "@/lib/lab-engine/soc/query/questions";
-import { submitQuestionAnswer } from "@/lib/lab-engine/soc/query/questions";
-
-type AnswerValue = string | number | string[];
+import type { AnswerValue, LearnerQuestion, QuestionSubmissionResult } from "@/lib/lab-engine/soc/query/question-model";
+import { submitSocQuestionAnswerAction } from "@/app/(app)/labs/soc/query-actions";
 
 export interface InvestigationQuestionsPanelProps {
   questions: LearnerQuestion[];
   attemptId: string;
-  scenarioId: string;
-  seed: string;
   onQuestionAnswered?: (result: QuestionSubmissionResult) => void;
   onApplyReferenceQuery?: (query: string) => void;
 }
@@ -18,8 +14,6 @@ export interface InvestigationQuestionsPanelProps {
 export function InvestigationQuestionsPanel({
   questions: initialQuestions,
   attemptId,
-  scenarioId,
-  seed,
   onQuestionAnswered,
   onApplyReferenceQuery,
 }: InvestigationQuestionsPanelProps) {
@@ -86,13 +80,8 @@ export function InvestigationQuestionsPanel({
     setErrorMessages((prev) => ({ ...prev, [q.id]: "" }));
 
     try {
-      const res = await submitQuestionAnswer({
-        attemptId,
-        scenarioId,
-        seed,
-        questionId: q.id,
-        submittedAnswer: payload,
-      });
+      // Checked on the server against the attempt-pinned dataset (S7).
+      const res = await submitSocQuestionAnswerAction(attemptId, q.id, payload);
 
       // Update question state
       setQuestions((prev) =>
@@ -102,7 +91,6 @@ export function InvestigationQuestionsPanel({
               ...item,
               status: res.status,
               attemptsLeft: res.attemptsLeft,
-              submittedAnswer: payload,
               debrief: res.debrief,
               referenceQuery: res.referenceQuery,
             };

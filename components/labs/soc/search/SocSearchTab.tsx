@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import type { SocScenario, SocScenarioClient } from "@/lib/lab-engine/soc/schema";
+import { useState, useCallback, useEffect } from "react";
+import type { SocScenarioClient } from "@/lib/lab-engine/soc/schema";
 import type { BladeQLEvent, QueryExecutionResult } from "@/lib/lab-engine/soc/query/types";
-import { executeBladeQL } from "@/lib/lab-engine/soc/query/engine";
-import { generateScenarioDataset, type ScenarioDataset } from "@/lib/lab-engine/soc/query/dataset-generator";
-import { generateScenarioQuestions, type LearnerQuestion } from "@/lib/lab-engine/soc/query/questions";
+import type { QueryWorkspaceView } from "@/lib/lab-engine/soc/query/question-model";
+import { getSocQueryWorkspaceAction, runSocQueryAction } from "@/app/(app)/labs/soc/query-actions";
 
 import { BladeQLEditor } from "./BladeQLEditor";
 import { QueryTimeControls, type TimeRangeConfig } from "./QueryTimeControls";
@@ -18,21 +17,22 @@ import type { InvestigationTarget } from "../enrichment/EnrichmentWorkbenchDrawe
 export interface SocSearchTabProps {
   scenario: SocScenarioClient;
   attemptId: string;
-  seed?: string;
   onOpenEnrichment?: (target: InvestigationTarget) => void;
   onAttachEvidence?: (event: BladeQLEvent) => void;
 }
 
+const DEFAULT_QUERY = 'source="auth" | stats count by outcome';
+
 export function SocSearchTab({
   scenario,
   attemptId,
-  seed = "demo-seed-1",
   onOpenEnrichment,
   onAttachEvidence,
 }: SocSearchTabProps) {
-  const [query, setQuery] = useState('source="auth" | stats count by outcome');
+  const [query, setQuery] = useState(DEFAULT_QUERY);
   const [queryHistory, setQueryHistory] = useState<string[]>([]);
-  const [queriedResult, setSearchResult] = useState<QueryExecutionResult | null>(null);
+  const [searchResult, setSearchResult] = useState<QueryExecutionResult | null>(null);
+  const [workspace, setWorkspace] = useState<QueryWorkspaceView | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isTeachingOpen, setIsTeachingOpen] = useState(false);
@@ -45,58 +45,39 @@ export function SocSearchTab({
     useUtc: true,
   });
 
-  const scenarioNowIso = scenario.rawEvents[scenario.rawEvents.length - 1]?.timestamp ?? "2026-10-12T16:00:00Z";
+  const scenarioNowIso =
+    workspace?.scenarioNowIso ?? scenario.rawEvents[scenario.rawEvents.length - 1]?.timestamp ?? "2026-10-12T16:00:00Z";
+  const fields = workspace?.fields ?? [];
+  const questions = workspace?.questions ?? [];
 
-  // Dataset, questions and the default query result are pure functions of (scenario, seed).
-  const initial = useMemo((): {
-    dataset: ScenarioDataset;
-    questions: LearnerQuestion[];
-    result: QueryExecutionResult;
-  } | null => {
-    try {
-      // shortcut: generates from the client view in the browser, so question truths ship to the client
-      // (handoff-status S7); move dataset + questions server-side before beta.
-      const full = scenario as unknown as SocScenario;
-      const ds = generateScenarioDataset(full, seed, 5000);
-      const qs = generateScenarioQuestions(full, seed);
-      const initialRes = executeBladeQL('source="auth" | stats count by outcome', ds.events);
-      return { dataset: ds, questions: qs.learnerQuestions, result: initialRes };
-    } catch (err) {
-      console.error("Failed to initialize BladeQL log search:", err);
-      return null;
-    }
-  }, [scenario, seed]);
-  const dataset = initial?.dataset ?? null;
-  const questions = useMemo(() => initial?.questions ?? [], [initial]);
-
-  // A new (scenario, seed) resets the shown result back to the default query.
-  const [prevInitial, setPrevInitial] = useState(initial);
-  if (initial !== prevInitial) {
-    setPrevInitial(initial);
-    setSearchResult(null);
-  }
-  const searchResult = queriedResult ?? initial?.result ?? null;
+  // Questions, field list and the default query all come from the server (S7): the dataset,
+  // its seed and every reference answer stay there.
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const [ws, first] = await Promise.all([getSocQueryWorkspaceAction(attemptId), runSocQueryAction(attemptId, DEFAULT_QUERY)]);
+        if (cancelled) return;
+        setWorkspace(ws);
+        setSearchResult(first);
+      } catch (err) {
+        if (!cancelled) setQueryError((err as Error).message || "Log search could not be loaded.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [attemptId]);
 
   // Execute current query
-  const handleExecuteQuery = useCallback(() => {
-    if (!dataset) return;
+  const handleExecuteQuery = useCallback(async () => {
     setIsLoading(true);
     setQueryError(null);
-
     try {
-      // Filter by time config if specified
-      let eventsToScan = dataset.events;
-      if (timeConfig.earliestEpochMs !== undefined) {
-        eventsToScan = eventsToScan.filter((e) => {
-          const t = new Date(String(e.timestamp)).getTime();
-          return t >= timeConfig.earliestEpochMs!;
-        });
-      }
-
-      const res = executeBladeQL(query, eventsToScan, {
-        scenarioNowEpochMs: new Date(scenarioNowIso).getTime(),
+      const res = await runSocQueryAction(attemptId, query, {
+        earliestEpochMs: timeConfig.earliestEpochMs,
+        latestEpochMs: timeConfig.latestEpochMs,
       });
-
       setSearchResult(res);
       setQueryHistory((prev) => (prev.includes(query) ? prev : [...prev, query]));
     } catch (err) {
@@ -104,7 +85,7 @@ export function SocSearchTab({
     } finally {
       setIsLoading(false);
     }
-  }, [dataset, query, timeConfig, scenarioNowIso]);
+  }, [attemptId, query, timeConfig]);
 
   // Add field filter to query string
   const handleAddFilter = useCallback((field: string, value: string, negate = false) => {
@@ -128,7 +109,7 @@ export function SocSearchTab({
         <div className="flex items-center gap-2">
           <span className="font-bold text-cyan">BladeQL Hunting Engine</span>
           <span className="text-muted text-[11px] hidden sm:inline">
-            ({dataset?.eventCount.toLocaleString() ?? "..."} raw events indexed)
+            ({workspace ? `${workspace.eventCount.toLocaleString()} raw events indexed` : "loading..."})
           </span>
         </div>
 
@@ -184,7 +165,7 @@ export function SocSearchTab({
             setTeachingTab("explain");
             setIsTeachingOpen(true);
           }}
-          availableFields={dataset?.fields || []}
+          availableFields={fields}
           isLoading={isLoading}
           error={queryError}
           history={queryHistory}
@@ -209,7 +190,7 @@ export function SocSearchTab({
             mobileSubTab === "fields" ? "bg-cyan/15 text-cyan" : "text-muted"
           }`}
         >
-          Fields ({dataset?.fields.length ?? 0})
+          Fields ({fields.length})
         </button>
         <button
           type="button"
@@ -228,7 +209,7 @@ export function SocSearchTab({
         <div className={`md:flex ${mobileSubTab === "fields" ? "flex w-full" : "hidden md:flex"}`}>
           <FieldSidebar
             events={searchResult?.events || []}
-            availableFields={dataset?.fields || []}
+            availableFields={fields}
             onAddFilter={handleAddFilter}
           />
         </div>
@@ -262,8 +243,6 @@ export function SocSearchTab({
             <InvestigationQuestionsPanel
               questions={questions}
               attemptId={attemptId}
-              scenarioId={scenario.id}
-              seed={seed}
               onApplyReferenceQuery={(refQ) => setQuery(refQ)}
             />
           </div>

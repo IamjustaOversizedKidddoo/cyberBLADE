@@ -6,17 +6,15 @@
  * strict answer normalization, anti-guessing protections, and debrief templates.
  */
 
+// Reference answers are computed here. Never importable from client code (S7).
+import "server-only";
 import { executeBladeQL } from "./engine";
-import { generateScenarioDataset, type ScenarioDataset } from "./dataset-generator";
+import { type ScenarioDataset } from "./dataset-generator";
+import { investigationDataset } from "./investigation-dataset";
 import type { SocScenario } from "../schema";
+import { MAX_QUESTION_ATTEMPTS, type LearnerQuestion, type QuestionType } from "./question-model";
 
-export type QuestionType =
-  | "numeric"
-  | "entity"
-  | "timestamp"
-  | "single_choice"
-  | "multi_select"
-  | "ordering";
+export type { LearnerQuestion, QuestionType };
 
 export interface InvestigationQuestionTemplate {
   id: string;
@@ -37,24 +35,6 @@ export interface InvestigationQuestionTemplate {
   };
 }
 
-export interface LearnerQuestion {
-  id: string;
-  stem: string;
-  type: QuestionType;
-  options?: string[];
-  skillTags: string[];
-  difficulty: "beginner" | "intermediate" | "advanced";
-  points: number;
-  hintCount: number;
-  maxAttempts: number;
-  attemptsLeft: number;
-  status: "unanswered" | "correct" | "incorrect" | "locked";
-  submittedAnswer?: string | number | string[];
-  // Debrief and reference query are only populated AFTER submission / completion
-  debrief?: string;
-  referenceQuery?: string;
-}
-
 export interface ServerQuestionTruth {
   id: string;
   scenarioId: string;
@@ -65,19 +45,6 @@ export interface ServerQuestionTruth {
   debrief: string;
   type: QuestionType;
 }
-
-// In-memory server truth cache keyed by `${scenarioId}:${seed}`
-const QUESTION_TRUTH_CACHE = new Map<string, ServerQuestionTruth[]>();
-
-// In-memory attempt tracker per attempt / question
-interface QuestionAttemptRecord {
-  attemptsLeft: number;
-  status: "unanswered" | "correct" | "incorrect" | "locked";
-  lastSubmittedAnswer?: string | number | string[];
-  lastSubmittedAt: number;
-}
-
-const ATTEMPTS_STORE = new Map<string, QuestionAttemptRecord>();
 
 // ============================================================================
 // ANSWER NORMALIZATION & EVALUATION
@@ -222,20 +189,24 @@ export function verifyAnswer(
 /**
  * Builds server question truths and client learner questions for a scenario
  */
+/**
+ * Server only. Builds the questions and their reference answers from the attempt-pinned seed,
+ * over the same dataset the learner's server-side queries run against.
+ */
 export function generateScenarioQuestions(
   scenario: SocScenario,
   seed: string,
+  familyId?: string,
 ): {
   learnerQuestions: LearnerQuestion[];
   serverTruths: ServerQuestionTruth[];
 } {
-  const cacheKey = `${scenario.id}:${seed}`;
-  const dataset = generateScenarioDataset(scenario, seed, 5000);
+  const dataset = investigationDataset(scenario, seed);
 
   // Pick question templates for this scenario's family
   // Generated variants carry familyId/scenarioId beyond the static schema.
   const loose = scenario as SocScenario & { familyId?: string; scenarioId?: string };
-  const famId = loose.familyId ?? loose.scenarioId ?? "soc-f-phishing-cred-01";
+  const famId = familyId ?? loose.familyId ?? loose.scenarioId ?? "soc-f-phishing-cred-01";
   const templates = getFamilyQuestionTemplates(famId);
 
   const learnerQuestions: LearnerQuestion[] = [];
@@ -263,13 +234,13 @@ export function generateScenarioQuestions(
       difficulty: tpl.difficulty,
       points: tpl.points,
       hintCount: tpl.hints.length,
-      maxAttempts: 5,
-      attemptsLeft: 5,
+      maxAttempts: MAX_QUESTION_ATTEMPTS,
+      attemptsLeft: MAX_QUESTION_ATTEMPTS,
       status: "unanswered",
+      debrief: null,
+      referenceQuery: null,
     });
   }
-
-  QUESTION_TRUTH_CACHE.set(cacheKey, serverTruths);
 
   return { learnerQuestions, serverTruths };
 }
@@ -469,120 +440,4 @@ export function getFamilyQuestionTemplates(familyId: string): InvestigationQuest
       },
     },
   ];
-}
-
-// ============================================================================
-// SERVER EVALUATION & RATE LIMITING
-// ============================================================================
-
-export interface SubmitQuestionAnswerParams {
-  attemptId: string;
-  scenarioId: string;
-  seed: string;
-  questionId: string;
-  submittedAnswer: string | number | string[];
-}
-
-export interface QuestionSubmissionResult {
-  questionId: string;
-  isCorrect: boolean;
-  attemptsLeft: number;
-  status: "correct" | "incorrect" | "locked";
-  pointsAwarded: number;
-  debrief?: string;
-  referenceQuery?: string;
-}
-
-/**
- * Server-verified submission handler with anti-guessing and uniform timing
- */
-export async function submitQuestionAnswer(
-  params: SubmitQuestionAnswerParams,
-): Promise<QuestionSubmissionResult> {
-  const startTime = Date.now();
-  const storeKey = `${params.attemptId}:${params.questionId}`;
-
-  let record = ATTEMPTS_STORE.get(storeKey);
-  if (!record) {
-    record = {
-      attemptsLeft: 5,
-      status: "unanswered",
-      lastSubmittedAt: 0,
-    };
-    ATTEMPTS_STORE.set(storeKey, record);
-  }
-
-  // Rate limiting: 1 submission per 2000ms
-  const now = Date.now();
-  if (now - record.lastSubmittedAt < 1500) {
-    throw new Error("Rate limit exceeded: Please wait before submitting another answer.");
-  }
-  record.lastSubmittedAt = now;
-
-  // Check if locked
-  if (record.status === "locked" || record.attemptsLeft <= 0) {
-    return {
-      questionId: params.questionId,
-      isCorrect: false,
-      attemptsLeft: 0,
-      status: "locked",
-      pointsAwarded: 0,
-    };
-  }
-
-  // Already correct
-  if (record.status === "correct") {
-    return {
-      questionId: params.questionId,
-      isCorrect: true,
-      attemptsLeft: record.attemptsLeft,
-      status: "correct",
-      pointsAwarded: 10,
-    };
-  }
-
-  // Retrieve server truth
-  const cacheKey = `${params.scenarioId}:${params.seed}`;
-  let truths = QUESTION_TRUTH_CACHE.get(cacheKey);
-
-  if (!truths) {
-    // Generate truths on-demand if needed
-    // In production, scenarios are reconstituted from database
-    truths = [];
-  }
-
-  const truth = truths.find((t) => t.id === params.questionId);
-
-  let isCorrect = false;
-  if (truth) {
-    const evalRes = verifyAnswer(params.submittedAnswer, truth);
-    isCorrect = evalRes.isCorrect;
-  }
-
-  record.attemptsLeft -= 1;
-  record.lastSubmittedAnswer = params.submittedAnswer;
-
-  if (isCorrect) {
-    record.status = "correct";
-  } else if (record.attemptsLeft <= 0) {
-    record.status = "locked";
-  } else {
-    record.status = "incorrect";
-  }
-
-  // Enforce uniform timing window (minimum 150ms) to defeat side-channel timing attacks
-  const elapsed = Date.now() - startTime;
-  if (elapsed < 150) {
-    await new Promise((r) => setTimeout(r, 150 - elapsed));
-  }
-
-  return {
-    questionId: params.questionId,
-    isCorrect,
-    attemptsLeft: record.attemptsLeft,
-    status: record.status,
-    pointsAwarded: isCorrect ? 10 : 0,
-    debrief: isCorrect || record.status === "locked" ? truth?.debrief : undefined,
-    referenceQuery: isCorrect || record.status === "locked" ? truth?.referenceQuery : undefined,
-  };
 }
