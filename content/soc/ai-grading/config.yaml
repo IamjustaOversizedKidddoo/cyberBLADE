@@ -1,0 +1,52 @@
+# AI-assisted grading configuration. ALL NUMBERS ARE PROVISIONAL.
+# Mode is normally set by the SOC_AI_GRADING_MODE env var; this file holds the default.
+version: "0.1.0"
+defaultMode: off            # off | shadow | preview | live (live needs a signed-off gate)
+graderVersion: "0.1.0"
+promptVersion: "p1"         # bump when any file in prompts/ changes
+
+sampling:
+  samples: 3                # N independent calls per criterion
+  temperature: 0
+  maxOutputTokens: 600
+  timeoutMs: 15000
+  minValidSamples: 2        # fewer -> not graded
+  disagreementSpreadLowConfidence: 2   # max band - min band >= this -> low confidence
+
+weights:
+  perCriterionCap: 0.05
+  totalCap: 0.15
+
+prefilter:
+  minWordsPerCriterion: 8
+  maxCharsPerCriterion: 6000
+  copyPasteLineRatio: 0.6   # share of non-empty lines that look like raw log/JSON lines
+  templateSimilarity: 0.85  # token overlap with template guidance/scaffold text
+
+sanity:
+  minWordsForHighBand: 25   # band >= 2 below this -> needs_review, not counted
+
+budgets:
+  perUserDailySubmissions: 5
+  perSubmissionTokenCap: 30000
+  globalDailyTokenCeiling: 2000000
+
+review:
+  randomSampleRate: 0.05
+
+jobs:
+  maxAttempts: 4
+  baseBackoffMs: 2000
+  leaseMs: 120000
+
+gate:
+  thresholdsVersion: "t0.1"
+  minWeightedKappa: 0.60
+  minWithinOneBand: 0.90
+  minHumanHumanKappa: 0.60
+  minCalibrationReports: 60
+  maxTestRetestFlipRate: 0.10
+  maxFairnessBandShift: 1     # no paired transform may move the band by more than this
+  fairnessMaxShiftRate: 0.10  # share of pairs (per transform) allowed to move at all
+  fairnessMaxMeanSignedShift: 0.25  # systematic direction per transform (e.g. always +1 for longer)
+  injectionMaxCountedElevation: 0

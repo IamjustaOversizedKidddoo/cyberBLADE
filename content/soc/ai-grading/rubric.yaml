@@ -1,0 +1,196 @@
+# AI-assisted communication rubric for SOC L1 incident reports.
+# PROVISIONAL: not calibrated against human graders. Original wording; anchors are
+# synthetic (fictional people, reserved domains, documentation IP ranges).
+# Published versions are immutable: change wording -> bump version.
+rubricId: incident-report-l1-ai
+version: "0.1.0"
+appliesTo:
+  rubricId: incident-report-l1-rubric
+  rubricVersion: "1.0.0"
+
+criteria:
+  - id: narrative_quality
+    title: "Narrative Quality & Synthesis"
+    weight: 0.025
+    fields: [executiveSummary, attackNarrative]
+    question: "Does the writing turn the evidence into a clear story of what happened, in order, at the right level of detail?"
+    bands:
+      - band: 0
+        label: "Missing or unusable"
+        descriptor: "No real story. Text is absent, a list of raw facts with no connection, or so vague that a reader cannot tell what happened."
+        anchors:
+          - "Bad stuff happened on the network. We looked at alerts. It was malicious."
+          - "alert 1. alert 4. alert 9. ip 203.0.113.45. user."
+      - band: 1
+        label: "Fragmented"
+        descriptor: "Some events are described, but the order, cause and effect, or who-did-what is unclear. The reader must reconstruct the story themselves."
+        anchors:
+          - "There was a phishing email and also a login. The host ws-fin-07 had a process. Then data maybe went out."
+          - "User clicked something. Later there were failed logins and a new task was created on a server."
+      - band: 2
+        label: "Clear but thin"
+        descriptor: "A readable sequence with the main steps in order, but key links are missing or the summary mixes detail and conclusion."
+        anchors:
+          - "A user received a fake invoice email, opened the link and entered credentials. Two hours later the same account signed in from an unfamiliar address."
+          - "The attacker brute-forced the VPN account, logged in, then created a scheduled task on the file server."
+      - band: 3
+        label: "Synthesized"
+        descriptor: "A concise, ordered story that states what happened, how, to whom and the current state, with the summary readable on its own by a non-specialist."
+        anchors:
+          - "At 09:12 UTC user a.mehta opened a lure from billing-notice.example.net and submitted credentials. At 11:40 the account signed in from 198.51.100.23 and created a mailbox forwarding rule. The account is now disabled; no other users are affected so far."
+          - "An external host guessed the svc-backup password over 40 minutes, then used it to run a script on fs-02. The script copied finance shares to a staging folder; outbound transfer was blocked at the proxy."
+
+  - id: reasoning_evidence_linkage
+    title: "Reasoning–Evidence Linkage"
+    weight: 0.025
+    fields: [verdictJustification, attackNarrative, timelineDescriptions, iocNotes]
+    question: "Is each conclusion tied to specific evidence, so a reader can see why the analyst believes it?"
+    bands:
+      - band: 0
+        label: "Unsupported"
+        descriptor: "Conclusions are asserted with no reference to any alert, event, log or lookup."
+        anchors:
+          - "This is definitely a true positive and very critical."
+          - "I think it is malware because it looks bad."
+      - band: 1
+        label: "Loosely supported"
+        descriptor: "Evidence is mentioned in general terms ('the logs show') but not tied to the specific claim it supports."
+        anchors:
+          - "The logs show it was malicious, and the alerts confirm it."
+          - "Based on the evidence, the account was compromised."
+      - band: 2
+        label: "Mostly linked"
+        descriptor: "Most key claims cite a specific alert, event or lookup, but some conclusions rest on assumption or the reasoning step is skipped."
+        anchors:
+          - "The sign-in is suspicious because alert alt-014 shows a new country. The account was then used for forwarding."
+          - "Reputation lookup for 203.0.113.45 shows prior scanning reports, so the connection is likely hostile."
+      - band: 3
+        label: "Explicitly reasoned"
+        descriptor: "Every main conclusion names its evidence and states the reasoning step, including what would have changed the conclusion."
+        anchors:
+          - "I rated this a true positive because alt-021 (new inbox rule) follows alt-019 (sign-in from 198.51.100.23) within four minutes on the same account, and the user confirmed they did not create the rule."
+          - "The scanner alert is benign: the source 10.0.4.15 matches the approved vulnerability scanner in the asset directory and the scan falls inside change ticket CHG-1182."
+
+  - id: coherence
+    title: "Coherence & Consistency"
+    weight: 0.025
+    fields: [executiveSummary, verdictJustification, attackNarrative, lessonsLearned]
+    question: "Do the sections agree with each other and read as one consistent account?"
+    bands:
+      - band: 0
+        label: "Contradictory"
+        descriptor: "Sections contradict each other on key facts (verdict, affected user, order of events) or read as unrelated notes."
+        anchors:
+          - "Summary: false positive, no impact. Narrative: the attacker stole the finance data."
+          - "Summary says the user is j.osei; justification says the compromised user is a different person."
+      - band: 1
+        label: "Inconsistent"
+        descriptor: "No direct contradiction, but sections disagree on emphasis or detail, or leave gaps the reader must bridge."
+        anchors:
+          - "The summary describes phishing; the narrative mostly describes an unrelated scan and never returns to the email."
+          - "Severity is called medium in one section and 'serious breach' in another without explanation."
+      - band: 2
+        label: "Consistent"
+        descriptor: "Sections agree on the facts and verdict; minor repetition or small gaps in flow."
+        anchors:
+          - "Summary, verdict and narrative all describe the same credential theft, though the lessons section repeats the summary."
+          - "Facts line up across sections; the transition from timeline to actions is abrupt."
+      - band: 3
+        label: "Unified"
+        descriptor: "Each section builds on the previous one; terminology, entities and verdict are identical throughout, with no redundant restatement."
+        anchors:
+          - "The summary's 'credential phishing with mailbox persistence' is the same chain the narrative walks through and the actions then contain, step for step."
+          - "Every entity named in the summary appears with the same name in the timeline and the handoff."
+
+  - id: recommendation_quality
+    title: "Recommendation Quality"
+    weight: 0.025
+    fields: [actions, lessonsLearned]
+    question: "Are the recommended actions specific, prioritized and justified for this incident?"
+    bands:
+      - band: 0
+        label: "Absent or generic"
+        descriptor: "No recommendations, or only generic advice that would apply to any incident."
+        anchors:
+          - "Improve security. Train users."
+          - "Follow best practices."
+      - band: 1
+        label: "Generic list"
+        descriptor: "Relevant actions are listed, but without priority, owner or link to what was found."
+        anchors:
+          - "Reset passwords, block IPs, scan hosts, update antivirus."
+          - "Contain, eradicate, recover."
+      - band: 2
+        label: "Relevant and ordered"
+        descriptor: "Actions fit this incident and are roughly ordered, but some lack a reason or the containment-before-cleanup logic is implicit."
+        anchors:
+          - "1) Disable a.mehta's account. 2) Remove the forwarding rule. 3) Block billing-notice.example.net at the mail gateway."
+          - "First isolate fs-02, then collect the staging folder for review, then rotate svc-backup."
+      - band: 3
+        label: "Specific, prioritized, justified"
+        descriptor: "Each action names its target and reason, the order protects evidence and limits spread, and follow-up prevention is tied to the root cause."
+        anchors:
+          - "Disable a.mehta first to stop ongoing access (the session is still active), then export the inbox rule before removing it so Tier-2 keeps the evidence, then block the lure domain so other recipients are protected."
+          - "Isolate fs-02 rather than reimage it, because the staging folder is still needed to measure what was copied."
+
+  - id: handoff_usefulness
+    title: "Handoff Usefulness"
+    weight: 0.025
+    fields: [escalationTeam, escalationUrgency, handoffSummary]
+    question: "Could the receiving team act on this handoff without redoing the investigation?"
+    bands:
+      - band: 0
+        label: "No usable handoff"
+        descriptor: "Missing, or only says 'please investigate' with no facts."
+        anchors:
+          - "Escalating to Tier 2, please check."
+          - "See above."
+      - band: 1
+        label: "Partial"
+        descriptor: "Names the problem but omits key items such as affected assets, what was already done, or what is needed next."
+        anchors:
+          - "Phishing incident on a user account, needs review."
+          - "Possible exfiltration from a server."
+      - band: 2
+        label: "Actionable"
+        descriptor: "States what happened, what is affected and what was done; the next step is implied rather than requested."
+        anchors:
+          - "Account a.mehta compromised via phishing; sign-in from 198.51.100.23; account disabled at 11:55 UTC."
+          - "fs-02 ran an unknown script under svc-backup; host isolated; staging folder preserved."
+      - band: 3
+        label: "Ready to act"
+        descriptor: "States what happened, scope, containment status, open questions and a specific request, with urgency that matches the evidence."
+        anchors:
+          - "Priority: a.mehta credentials phished and used from 198.51.100.23; forwarding rule exported then removed; account disabled. Open question: other recipients of the same lure. Request: search all mailboxes for the sender domain within the next hour."
+          - "Immediate: svc-backup brute-forced and used on fs-02; host isolated, staging folder kept. Unknown: whether data left before the proxy block. Request: review proxy logs 10:00–11:00 UTC for fs-02."
+
+  - id: tone_concision
+    title: "Tone & Concision"
+    weight: 0.025
+    fields: [executiveSummary, handoffSummary, verdictJustification]
+    question: "Is the writing professional, plain and free of padding, speculation or blame?"
+    bands:
+      - band: 0
+        label: "Unprofessional"
+        descriptor: "Blaming, emotional, joking, or so padded that the point is lost."
+        anchors:
+          - "The user was really stupid to click this, as usual!!!"
+          - "OMG this is a huge hack, the worst ever, everyone is doomed."
+      - band: 1
+        label: "Wordy or informal"
+        descriptor: "Understandable, but repetitive, informal or filled with filler phrases."
+        anchors:
+          - "So basically what happened is that basically a user kind of clicked a link and then stuff happened, basically."
+          - "In conclusion, to conclude, the incident, which was an incident, was concluded to be an incident."
+      - band: 2
+        label: "Professional"
+        descriptor: "Neutral and readable, with occasional filler or hedging."
+        anchors:
+          - "It appears that the user may have possibly opened the email, which then likely led to the sign-in."
+          - "The account was compromised. The account was then disabled. The account owner was informed."
+      - band: 3
+        label: "Crisp"
+        descriptor: "Neutral, specific and short; every sentence carries information; uncertainty is stated once, precisely."
+        anchors:
+          - "a.mehta's credentials were phished and used once from 198.51.100.23. The account is disabled; scope beyond this user is not yet confirmed."
+          - "Benign: approved scanner 10.0.4.15 inside change window CHG-1182. No action needed."
