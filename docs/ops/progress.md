@@ -109,3 +109,21 @@
   - `tests/security/soc-report-security.test.ts`: 10 adversarial security tests covering unauthenticated access, IDOR protection, input sanitization, one-shot replay, race conditions, ground truth secrecy, and SQL `SECURITY DEFINER` auditing.
   - `tests/e2e/soc-report.spec.ts`: End-to-end Playwright test covering drafting, linting, submitting, scorecard inspection, model comparison, and automated Axe accessibility analysis.
 - **Part I (Documentation)**: Authored `docs/dev/soc-report-grading.md`, `docs/dev/writing-soc-report-truth.md`, and updated `docs/dev/soc-practitioner-review.md` and `docs/design/soc-workspace.md`.
+
+---
+
+### Entry 8: Phase 3 Prompt 7 — AI-assisted grading (in progress)
+Standing rules saved to `docs/ops/standing-rules.md`. Audit and corrections in `docs/ops/handoff-status.md` (adds S7 critical: question truths verified client-side; S8 fixed).
+
+**Step 0 (done, `33305f5`):** lint gate fixed (46 errors → 0); typing exposed and fixed broken Explain-query AST reads; `/labs/soc/[id]` now serves shift/family labs (was 404); triage decisions on generated attempts fixed (regression test); SOC e2e 16/16 after selector/a11y fixes (labelled lookup input, 24px mobile targets). Known flake: `rank-2-web` capstone times out under full-suite load, passes alone.
+
+| Part | Scope | Status | Commit |
+| :--- | :--- | :---: | :--- |
+| A | Design brief, AI rubric (6 criteria, original bands + synthetic anchors), prompts p1, config | ✅ | `8cd12c7`, `4abb838` |
+| B | Handler provider `complete()` (no heuristic fallback, usage, JSON mode); Handler tests unchanged (139) + 7 new | ✅ | `b6eb5ba` |
+| C | Boundary, sanitizer/PII, pre-filter, injection signals, prompt builder, output validation, aggregation, feedback tone filter, gradeCriterion, mocks; 63 unit tests | ✅ | `78d00c5` |
+| D | Store, migration, job pipeline, quotas, modes/gate enforcement, score composition | ⏳ | — |
+| E | Injection corpus (100+) and defence proof | ⬜ | — |
+| F | Calibration harness, metrics, fairness, gate CLI, drift, synthetic demo, real-provider script | ⬜ | — |
+| G | Review queue, human-review request, UI + design evidence | ⬜ | — |
+| H | Deletion/export, adversarial API tests, e2e preview + axe, docs, full gates | ⬜ | — |
