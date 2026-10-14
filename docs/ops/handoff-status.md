@@ -128,3 +128,17 @@ Found by reading the migrations. None of these has been run against Postgres yet
 | S6 deletion/export gaps | **Partly fixed**: AI tables covered; older SOC tables still missing from the RPC/export |
 | S7 question truths verified client-side | **Open, critical**, needs server-side questions (`serverTruths` still in `.next/static`) |
 | S8 decisions on generated attempts + 404 routes | **Fixed** (`33305f5`) |
+
+## 8. Status after the security-closure prompt (2026-10-14)
+
+| Finding | Status | Commit | Regression test |
+|---|---|---|---|
+| S7 question truths client-side | **Fixed** | `2a2e2e3` | `tests/unit/lib/lab-engine/soc/question-service.test.ts`; `tests/security/bundle-scan.test.ts`; `tests/e2e/soc-no-leaks.spec.ts` |
+| S2 seeds readable / passed to client | **Fixed** | `2a2e2e3` (client prop), `2a9ead8` (DB), `60b62de` (scan) | `tests/db/access-hardening.test.ts` (secrets block); e2e live seed check |
+| S1 learners write grading data | **Fixed** (incl. Phase 2 lab/lesson/XP/challenge tables) | `2a9ead8` | `tests/db/access-hardening.test.ts` (17 write refusals) |
+| S3 submitted reports editable | **Fixed** (trigger, every role) | `2a9ead8` | same file |
+| S5 report migration not re-runnable | **Fixed** (unexecuted migration edited per owner instruction) | `2a9ead8` | re-run of all post-Phase-2 migrations |
+| S6 erasure/export gaps | **Fixed** | `2a9ead8`, `faf51cf` | `tests/security/learner-export-privacy.test.ts`; PGlite erasure check |
+| S4 function security modes | **Fixed** (2 allowlisted DEFINER functions) | `2a9ead8` | static audit + PGlite `pg_proc` check |
+
+Holes found by the PGlite checks: column-level `REVOKE SELECT (seed)` was a no-op (S2b confirmed); learners could insert `is_correct=true` question attempts (would have defeated S7); Phase 2 `lab_attempts.objectives_solved`, `lesson_progress`, `rank_challenges` were learner-writable; `20261010000000` (Phase 2 initial schema) is not re-runnable (left unedited: possibly applied in a hosted project).
