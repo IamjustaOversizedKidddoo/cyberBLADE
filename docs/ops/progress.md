@@ -136,3 +136,20 @@ Standing rules saved to `docs/ops/standing-rules.md`. Audit and corrections in `
 
 ### Entry 9: Security closure S1–S7 (2026-10-14)
 All seven audit findings closed; see `docs/ops/handoff-status.md` §8 for commits and regression tests. New: `tests/db` (PGlite, Supabase-like roles, all migrations executed locally, 55 two-user checks), `npm run scan:bundle` (post-build leak gate, in CI), live e2e response leak check. Latent fix found on the way: the server query pipeline used the FIRST event as "now", hiding most events from server-side queries.
+
+### Entry 10: Prompt A — SOC L1 curriculum, Parts 1–2 (pilots) — STOPPED for owner approval (2026-10-14)
+Plan: `docs/design/soc-curriculum.md` (`26b8b2e`). Two pilot lessons to the full L1 standard under `content/tracks/soc/l1/` — the triage loop (conceptual) and email header analysis (hands-on) — each with a diagram, a server-checked micro-exercise, 5 checks with per-option rationales, flashcards and practice links. Owner guide: `docs/ops/pilot-lesson-review.md`; claims log: `docs/ops/soc-curriculum-claims.md`; design evidence: `docs/design/evidence/soc-curriculum-lessons.md` (screenshots outside the repo in `D:\CYBER-PLATFORM-evidence\soc-curriculum\`).
+
+Built:
+- **Reader components:** MicroExercise (server action, answer keys never sent), FlowDiagram, LogBlock, KeyTerms and PracticeThis.
+- **SOC L1 linter** (`lib/content/soc-lesson-lint.ts`): template, generator-vocabulary leak scan, reserved IPs and domains, cert names and hype, computed time, prerequisite graph, coverage (`content/coverage/soc.yaml`) and generated track flashcards (category `soc`).
+- **Bundle leak rule** `exercise-keys`.
+
+Fixes on the way:
+- Rank promotion now counts core lessons only.
+- 390 px fieldset overflow.
+- Two pre-existing reader contrast failures (`LessonNav`, `TableOfContents`).
+
+**Gates (2026-10-14):** lint 0 errors · typecheck ✓ · check:content ✓ (2 warnings: pilots are 19 and 21 min, over the 15-min split threshold) · check:soc ✓ · unit 1678/1678 · security 158/158 · build ✓ · scan:bundle ✓ · e2e 137 passed / 1 failed / 24 skipped. The failure is the known `rank-2-web` capstone load flake; it passes alone (2/2).
+
+**Next:** Part 4 (remaining ~40 lessons, track pages, glossary page, practice paths, module checkpoints) ONLY after owner approval of the pilots.

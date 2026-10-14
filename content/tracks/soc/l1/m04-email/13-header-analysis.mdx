@@ -1,0 +1,207 @@
+---
+id: soc-l1-email-headers-01
+title: "Reading Email Headers: Who Really Sent This?"
+track: soc
+rank: 1
+module: email
+order: 13
+estimated_minutes: 21
+objectives_covered: ["soc:soc_phishing_analysis"]
+mitre: ["T1566"]
+xp: 120
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["core-r1-net-dns-01", "core-r1-net-tcpudp-01"]
+skills: ["soc_phishing_analysis"]
+practice: ["tool:email_headers", "family:soc-f-phishing-cred-01"]
+---
+
+> **Outcome:** you can read an email's headers, find where it really came from, and explain what the SPF, DKIM and DMARC results do and do not prove.
+
+## Why this matters on shift
+
+Phishing (fake emails designed to trick people into giving away passwords, money or access) is one of the most common reasons an investigation starts. When a user reports a suspicious email, or an email security rule fires, you will be asked one question first: is this email really from who it says it is?
+
+The parts of an email that people see, the sender's name and the subject, are easy to fake. The **headers** are the technical record that travels with the message. Some header lines are just as easy to fake, but others are added by mail servers along the way, including your own company's. Knowing which is which is the core skill of this lesson.
+
+## Before you start
+
+You should already know:
+
+- What DNS is and that it can store text records for a domain: [DNS — The Internet's Phonebook](/learn/core-r1-net-dns-01).
+- What an IP address and a server are, and that services listen on ports: [TCP, UDP and Ports](/learn/core-r1-net-tcpudp-01).
+
+You do not need to know how to configure a mail server.
+
+## Core ideas
+
+### What email headers are
+
+Email headers are the lines at the top of a message that describe where it came from and how it travelled.
+
+Think of a parcel. The label on the box says who sent it, but anyone can write any name on a label. The stamps added at each depot along the route are harder to fake, because the depots add them, not the sender. Email works the same way: some header lines are written by the sender (the label), and some are added by each mail server that handles the message (the depot stamps).
+
+Technically, headers are lines in the form `Name: value` at the start of the message, before the body. Your mail program hides most of them. You can usually see them all with an option such as "show original" or "view source".
+
+### Two kinds of "sender": the envelope and the letter
+
+Email has two sender addresses, and phishing analysis depends on knowing both.
+
+- The **envelope sender** is the address the sending server gives to the receiving server during delivery. It is where bounce messages go. Your server records it in the `Return-Path:` header when it delivers the message.
+- The **header From** is the address in the `From:` line, the one the reader sees. The sender writes it, so it can say anything.
+
+A real letter has the same split. The address on the envelope is used by the postal service. The name printed at the top of the letter inside is just text the writer chose. They usually match, but nothing forces them to.
+
+Two more headers matter here. `Reply-To:` tells mail programs where replies should go if it differs from `From:`. That is common in newsletters and support systems, and also a favourite phishing trick: the email looks like it is from your company, but replies go to the attacker. `Message-ID:` is a unique identifier created by the sending system. It often contains a hostname from that system, which can be a useful clue, but the sender can also write it.
+
+### The path: Received lines, read from the bottom up
+
+Each mail server that handles a message adds a `Received:` line **at the top** of the headers. So the newest line is at the top and the oldest is at the bottom. To follow the journey in order, read the `Received:` lines from the bottom up.
+
+<FlowDiagram
+  title="How Received lines stack up"
+  description="A message travels from the sender's system, to the sender's outgoing server, to your incoming mail gateway, to your mailbox server. Each server adds a Received line on top of the previous ones, so the headers show the journey in reverse order."
+  steps={[
+    { label: "Sender's system", detail: "Writes From, To, Subject and Message-ID. Can write anything." },
+    { label: "Sender's outgoing server", detail: "Adds a Received line. You do not control this server." },
+    { label: "Your mail gateway", detail: "Adds a Received line saying which address handed it the message. You can trust this one." },
+    { label: "Your mailbox server", detail: "Adds the newest Received line, at the top of the headers." },
+  ]}
+/>
+
+In plain English: the first line your eye lands on is the last stop. The most important line is the one where **your own** gateway says which address it received the message from. Everything below that line was written by systems outside your company, so treat it as a claim, not a fact.
+
+A common `Received:` format looks like this (the exact wording varies between mail server products):
+
+<LogBlock
+  title="One Received: line (synthetic)"
+  lines={[
+    "Received: from out3.example (out3.example [192.0.2.150])",
+    "        by mx2.larkspur.example with ESMTPS; Tue, 13 Oct 2026 08:14:07 +0000",
+  ]}
+/>
+
+Read it as: "Server `mx2.larkspur.example` received this message from a system at address `192.0.2.150` that called itself `out3.example`, using encrypted SMTP, at this time." The address in square brackets is what your server actually saw on the network connection. The name before it is what the other system claimed, so trust the address over the name.
+
+### Authentication results: SPF, DKIM and DMARC
+
+Your incoming mail server checks the message and writes a summary in an `Authentication-Results:` header. You will see three checks.
+
+**SPF (Sender Policy Framework)** asks: "Is the server that delivered this message allowed to send mail for the envelope sender's domain?" The domain owner publishes a list of allowed servers in a DNS record. Results include `pass`, `fail`, `softfail` (probably not allowed, but the owner asked receivers not to reject outright), `neutral` and `none` (no SPF record).
+
+**DKIM (DomainKeys Identified Mail)** asks: "Did a domain digitally sign this message, and is the signature still valid?" The signing domain is shown as `header.d=`. A valid signature shows that domain took responsibility for the message and that the signed parts were not changed on the way.
+
+**DMARC (Domain-based Message Authentication, Reporting and Conformance)** asks the question that matters most for phishing: "Does the domain in the visible `From:` line match a domain that passed SPF or DKIM?" That match is called **alignment**. The `From:` domain's owner also publishes a policy saying what receivers should do on failure: `none` (just report), `quarantine` (treat as suspicious) or `reject`.
+
+What each pass does and does not prove:
+
+- **SPF** looks at the envelope sender's domain and the delivering server's address.
+  - A pass proves: that server may send mail for that envelope domain.
+  - It does NOT prove: anything about the `From:` address the user sees.
+- **DKIM** looks at the signature and its signing domain (`header.d`).
+  - A pass proves: that domain signed the message and the signed parts are intact.
+  - It does NOT prove: that the signing domain is the one the user sees.
+- **DMARC** looks at whether the `From:` domain aligns with a domain that passed SPF or DKIM.
+  - A pass proves: the visible sender's domain is authenticated.
+  - It does NOT prove: that the email is safe or that the domain's owner is honest.
+
+The key insight: SPF and DKIM can both pass for an email that is still a phishing email, because they may pass for the attacker's own domain or for a bulk mailing service. DMARC links the checks to the address the user actually sees.
+
+Also note that `Authentication-Results:` lines are only trustworthy when your own server added them; it names itself at the start of the header. A line claiming to come from some other server, lower in the headers, could have been written by the sender.
+
+## Worked example
+
+T. Nakamura in Larkspur Freight's finance team reports this email. It asks her to "confirm bank details before Friday's payroll run".
+
+<LogBlock title="Reported email: headers (synthetic)">
+{`Return-Path: <bounce-7731@mail.newsflow.example>
+Received: from mx2.larkspur.example (mx2.larkspur.example [172.16.40.25])
+        by mbox1.larkspur.example with ESMTP; Tue, 13 Oct 2026 08:14:09 +0000
+Authentication-Results: mx2.larkspur.example;
+        spf=pass smtp.mailfrom=mail.newsflow.example;
+        dkim=pass header.d=newsflow.example;
+        dmarc=fail (p=none) header.from=larkspur-payroll.example
+Received: from out3.newsflow.example (out3.newsflow.example [192.0.2.150])
+        by mx2.larkspur.example with ESMTPS; Tue, 13 Oct 2026 08:14:07 +0000
+Received: from [10.9.8.7] (unknown [192.0.2.200])
+        by out3.newsflow.example with ESMTPSA; Tue, 13 Oct 2026 08:14:05 +0000
+From: "Larkspur Payroll" <payroll@larkspur-payroll.example>
+Reply-To: payroll-desk@freemailbox.example
+To: t.nakamura@larkspur.example
+Subject: Action needed: confirm your bank details before Friday's run
+Date: Tue, 13 Oct 2026 08:14:03 +0000
+Message-ID: <a81f.3c2e@out3.newsflow.example>`}
+</LogBlock>
+
+**Read the visible parts.** The display name says "Larkspur Payroll", but the address is `larkspur-payroll.example`. Larkspur's real domain is `larkspur.example`. The extra `-payroll` makes a **lookalike domain**: one built to look like a trusted name at a glance.
+
+**Follow the path, bottom up.** The bottom line was written by `out3.newsflow.example`, a server outside Larkspur, so it is only a claim. It says a client at `192.0.2.200` submitted the message. In many mail systems, `ESMTPSA` means the client logged in to send. The next line up is the trustworthy one: Larkspur's own gateway `mx2` says it received the message from `192.0.2.150`, a server calling itself `out3.newsflow.example`. The top line is Larkspur's internal hand-off from gateway to mailbox server.
+
+**A tempting dead end.** SPF passed and DKIM passed. A beginner might stop here and call the email legitimate. But look at *which* domains passed: `mail.newsflow.example` for SPF and `newsflow.example` for DKIM. Those belong to a bulk mailing service, not to Larkspur and not to the domain in the `From:` line. The passes only prove that the bulk service sent it. That is true and harmless on its own, and says nothing about whether the sender is honest.
+
+**The result that matters.** DMARC failed for `header.from=larkspur-payroll.example`: neither passing check aligns with the visible sender. The policy is only `none`, so nothing was blocked automatically. That is why it reached the inbox.
+
+**Other signals.** `Reply-To:` sends answers to a free mailbox service instead of the sender's domain. The timestamps run in order, which is normal and tells you nothing either way.
+
+**Conclusion.** A lookalike sender domain, failed DMARC alignment, replies redirected to an outside mailbox, and a payment-detail request with a deadline. This is very likely a phishing attempt. The triage disposition would be true positive, and the next steps (searching for other recipients, blocking the sender and checking whether anyone replied) are covered in the phishing response lesson.
+
+**Where a false positive hides.** If the same headers showed `From: payroll@larkspur.example` with `dmarc=pass` aligned through DKIM, and the payroll team confirmed they use that mailing service, the email would likely be legitimate even though it came through a third party. Also remember that forwarding often breaks SPF (the forwarder is not on the original domain's list), while a DKIM signature usually survives. An SPF failure on a forwarded message is therefore not proof of fraud by itself.
+
+## Try it
+
+<MicroExercise id="header-check" />
+
+## Common mistakes
+
+- **Trusting the display name.** "Larkspur Payroll" is text the sender typed.
+- **Reading Received lines top-down.** The bottom line is the oldest; the top line is the last stop.
+- **Treating any `pass` as "safe".** Ask which domain passed and whether it aligns with the visible `From:` domain.
+- **Trusting lines added outside your company.** Only the lines your own servers added are facts; everything below them is a claim.
+- **Calling every SPF failure fraud.** Forwarding and some mailing lists break SPF on legitimate mail. Check DKIM and DMARC alignment before deciding.
+
+## What good looks like
+
+A strong analyst writes something like this in the case note:
+
+> Delivered to our gateway from 192.0.2.150 (out3.newsflow.example). SPF and DKIM pass for newsflow.example only; DMARC fails for From domain larkspur-payroll.example (lookalike of larkspur.example). Reply-To points to an external free mailbox. Assessed as phishing; escalating for recipient search and sender block.
+
+Every claim names the header it came from, and the note separates what the headers prove from what you concluded.
+
+## In the real world
+
+Mail security gateways, mailbox platforms and SOC tools all display headers, but the layout, extra `X-` headers and the exact `Authentication-Results:` wording vary by product. Some services also add an ARC (Authenticated Received Chain) header set to preserve authentication results across forwarding. Read the product's documentation for its own headers.
+
+The simulator's header analyzer shows clean, consistent headers. Real messages can carry dozens of lines, duplicated headers and badly formatted dates, so practise finding the trustworthy `Received:` line quickly.
+
+## Remember it like this
+
+Read Received lines bottom-up, trust only your own servers' lines, and ask whether the passing domain matches the From the user sees.
+
+## Interview answer
+
+"I start with the Received lines from the bottom up and find the first one my own gateway added. That gives the real address that delivered the message. Then I read Authentication-Results: SPF and DKIM tell me which domains passed, and DMARC tells me whether those align with the visible From domain. A pass for some other domain does not make the email legitimate. I also check Reply-To and lookalike domains, and I write down which header supports each conclusion."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Email header", definition: "A Name: value line at the top of a message describing where it came from and how it travelled." },
+    { term: "Envelope sender", definition: "The address given to the receiving server during delivery, recorded in Return-Path; bounces go there." },
+    { term: "Header From", definition: "The sender address the reader sees in the From: line. The sender writes it, so it can say anything." },
+    { term: "Received line", definition: "A trace line each mail server adds at the top of the headers; read them bottom-up to follow the path." },
+    { term: "SPF", definition: "A check that the delivering server is allowed to send for the envelope sender's domain, using a DNS record." },
+    { term: "DKIM", definition: "A digital signature by a domain (header.d) showing it took responsibility and the signed content was not changed." },
+    { term: "DMARC", definition: "A check that the visible From domain aligns with a domain that passed SPF or DKIM, plus the owner's failure policy." },
+    { term: "Alignment", definition: "The visible From domain matching the domain that passed SPF or DKIM." },
+    { term: "Lookalike domain", definition: "A domain made to resemble a trusted one, such as adding a word or swapping a character." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

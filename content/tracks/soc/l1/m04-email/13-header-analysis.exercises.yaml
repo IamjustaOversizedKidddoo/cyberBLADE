@@ -1,0 +1,84 @@
+lesson: soc-l1-email-headers-01
+exercises:
+  - id: header-check
+    title: "Read a reported 'file shared with you' email"
+    kind: header-analysis
+    instructions: >-
+      J. Mensah reported this email. Larkspur's own mail gateway is mx2.larkspur.example and its
+      mailbox server is mbox1.larkspur.example. Answer from the headers only.
+    blocks:
+      - type: log
+        title: "Reported email: headers (synthetic)"
+        lines:
+          - "Return-Path: <notices@docshare.example.net>"
+          - "Received: from mx2.larkspur.example (mx2.larkspur.example [172.16.40.25])"
+          - "        by mbox1.larkspur.example with ESMTP; Wed, 14 Oct 2026 10:02:51 +0000"
+          - "Authentication-Results: mx2.larkspur.example;"
+          - "        spf=softfail smtp.mailfrom=docshare.example.net;"
+          - "        dkim=none;"
+          - "        dmarc=fail (p=quarantine) header.from=docshare.example.net"
+          - "Received: from relay.cheapvps.example (relay.cheapvps.example [192.0.2.58])"
+          - "        by mx2.larkspur.example with ESMTP; Wed, 14 Oct 2026 10:02:49 +0000"
+          - "From: \"DocShare\" <notices@docshare.example.net>"
+          - "To: j.mensah@larkspur.example"
+          - "Subject: J. Mensah shared \"Q4 rates.xlsx\" with you"
+          - "Date: Wed, 14 Oct 2026 10:02:44 +0000"
+          - "Message-ID: <20261014100244.5521@relay.cheapvps.example>"
+    questions:
+      - id: delivering-ip
+        prompt: "Which IP address handed this message to Larkspur's mail gateway?"
+        answer_type: text
+        accept: ["192.0.2.58"]
+        normalize: ["case", "whitespace", "refang"]
+        hints:
+          - "Read the Received lines from the bottom up."
+          - "Find the line where Larkspur's gateway says it received the message 'by mx2.larkspur.example'. The address it saw is in square brackets."
+        explanation: >-
+          The line "Received: from relay.cheapvps.example (... [192.0.2.58]) by mx2.larkspur.example"
+          was added by Larkspur's own gateway, so 192.0.2.58 is the address it actually saw. Defanged
+          in a report: 192.0.2[.]58.
+      - id: spf-result
+        prompt: "What did the SPF check return?"
+        answer_type: choice
+        options: ["pass", "fail", "softfail", "neutral", "none"]
+        accept: ["softfail"]
+        hints:
+          - "Look in the Authentication-Results header added by mx2.larkspur.example."
+        explanation: >-
+          spf=softfail: the domain owner's SPF record says this server is probably not allowed to send
+          for docshare.example.net, but asked receivers not to reject outright.
+      - id: spf-domain
+        prompt: "Which domain did SPF check?"
+        answer_type: text
+        accept: ["docshare.example.net"]
+        normalize: ["case", "whitespace", "refang", "trailing-dot"]
+        hints:
+          - "SPF checks the envelope sender's domain. Which field names it in Authentication-Results?"
+        explanation: >-
+          smtp.mailfrom=docshare.example.net: SPF checked the envelope sender's domain, which also
+          appears in Return-Path.
+      - id: dmarc-result
+        prompt: "What did DMARC return for the visible From domain?"
+        answer_type: choice
+        options: ["pass", "fail", "none"]
+        accept: ["fail"]
+        hints:
+          - "DMARC needs SPF or DKIM to pass AND align with the From domain. Did either pass?"
+        explanation: >-
+          dmarc=fail: SPF only softfailed and there was no DKIM signature, so nothing authenticated
+          the From domain. The domain owner's policy is quarantine.
+      - id: first-trusted-line
+        prompt: "Which header line is the first one added by Larkspur's own servers (the oldest trustworthy line)?"
+        answer_type: choice
+        options:
+          - "Received: from relay.cheapvps.example ... by mx2.larkspur.example"
+          - "Received: from mx2.larkspur.example ... by mbox1.larkspur.example"
+          - "Message-ID: <20261014100244.5521@relay.cheapvps.example>"
+          - "From: \"DocShare\" <notices@docshare.example.net>"
+        accept: ["Received: from relay.cheapvps.example ... by mx2.larkspur.example"]
+        hints:
+          - "Which lines were written by Larkspur's servers rather than by the sender?"
+          - "Of those, which is lowest in the headers?"
+        explanation: >-
+          The gateway's line ("by mx2.larkspur.example") is the lowest line Larkspur's servers added,
+          so it is the first trustworthy fact. Message-ID and From were written by the sender.

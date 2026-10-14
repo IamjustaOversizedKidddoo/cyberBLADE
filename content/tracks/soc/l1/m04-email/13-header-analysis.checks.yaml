@@ -1,0 +1,82 @@
+lesson: soc-l1-email-headers-01
+questions:
+  - id: q1
+    prompt: "In what order should you read Received: lines to follow an email's journey from the sender to you?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "From the bottom up, because each server adds its line at the top."
+        correct: true
+        explanation: "Correct. The newest line is at the top, so the oldest hop is at the bottom."
+      - text: "From the top down, because the first line is the first server."
+        correct: false
+        explanation: "The top line is the last server that handled the message, not the first."
+      - text: "Order does not matter; every line contains the full path."
+        correct: false
+        explanation: "Each Received line records one hop only, so order is how you rebuild the path."
+      - text: "Alphabetically by server name."
+        correct: false
+        explanation: "Server names say nothing about order; position in the headers does."
+  - id: q2
+    prompt: "An email shows spf=pass and dkim=pass, both for a bulk mailing service's domain, and dmarc=fail for the From domain. What can you conclude?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "The mailing service sent it, but nothing authenticates the sender domain the user sees."
+        correct: true
+        explanation: "Correct. SPF and DKIM passed for another domain; DMARC shows they do not align with the visible From domain."
+      - text: "The email is legitimate because two of three checks passed."
+        correct: false
+        explanation: "Counting passes is misleading. What matters is which domain passed and whether it aligns with From."
+      - text: "The email is definitely malicious because DMARC failed."
+        correct: false
+        explanation: "A DMARC failure is a strong signal, not proof. Legitimate senders misconfigure it too, so combine it with other evidence."
+      - text: "The mailing service has been hacked."
+        correct: false
+        explanation: "Nothing in these results says the service was compromised; it simply delivered mail for a customer."
+  - id: q3
+    prompt: "Which header address can the sender set to any value they like?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "The address in the From: line."
+        correct: true
+        explanation: "Correct. The From: line is written by the sender, which is why DMARC exists to check it."
+      - text: "The address your own gateway recorded in square brackets in its Received: line."
+        correct: false
+        explanation: "That address is what your server saw on the network connection, so the sender cannot simply write it."
+      - text: "The authserv-id at the start of your own server's Authentication-Results: header."
+        correct: false
+        explanation: "Your own server writes that header. Lines claiming to be from other servers are the ones to doubt."
+      - text: "None of them; all header addresses are verified."
+        correct: false
+        explanation: "Many header fields are plain text the sender chooses. Only some are added by servers you trust."
+  - id: q4
+    prompt: "A legitimate company newsletter is forwarded through a colleague's personal account and arrives with spf=fail but a valid DKIM signature for the sender's domain. What is the most likely explanation?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "Forwarding changed the delivering server, which breaks SPF, while the DKIM signature survived."
+        correct: true
+        explanation: "Correct. The forwarder is not on the original domain's SPF list, but the signature on the unchanged content is still valid."
+      - text: "The newsletter is a spoof because SPF failed."
+        correct: false
+        explanation: "SPF failure alone is weak evidence on forwarded mail. The valid, aligned DKIM signature points the other way."
+      - text: "DKIM is broken whenever SPF fails."
+        correct: false
+        explanation: "SPF and DKIM are independent checks; one can fail while the other passes."
+      - text: "The colleague's account is compromised."
+        correct: false
+        explanation: "Ordinary forwarding explains these results; there is no evidence here of a compromised account."
+  - id: q5
+    prompt: "A reported email says From: \"IT Service Desk\" <helpdesk@larkspur-support.example>, while the company's real domain is larkspur.example. What should you write in your note?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "The From domain is a lookalike of larkspur.example; check DMARC alignment and the delivering address before concluding."
+        correct: true
+        explanation: "Correct. Name the concrete observation (lookalike domain) and the next evidence to check, rather than jumping to a verdict."
+      - text: "The email is internal because it contains the company name."
+        correct: false
+        explanation: "Containing the company name is exactly what a lookalike domain is designed to do."
+      - text: "The display name says IT Service Desk, so it is trustworthy."
+        correct: false
+        explanation: "The display name is free text chosen by the sender."
+      - text: "Nothing can be concluded from the From line, so ignore it."
+        correct: false
+        explanation: "The From domain is useful evidence. It just needs to be checked against authentication results and the delivering address."
