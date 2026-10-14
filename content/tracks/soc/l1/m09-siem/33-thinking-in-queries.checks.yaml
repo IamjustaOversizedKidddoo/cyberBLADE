@@ -1,0 +1,82 @@
+lesson: soc-l1-thinking-in-queries-01
+questions:
+  - id: q1
+    prompt: "What is normalisation in a SIEM?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "Converting events from different sources into shared field names and formats."
+        correct: true
+        explanation: "Correct. It lets one query search firewall, proxy and endpoint events alike."
+      - text: "Deleting unusual events."
+        correct: false
+        explanation: "Normalisation renames and reformats; it does not delete."
+      - text: "Making every alert the same severity."
+        correct: false
+        explanation: "Severity is unrelated."
+      - text: "Encrypting logs."
+        correct: false
+        explanation: "Encryption is a separate concern."
+  - id: q2
+    prompt: "A query returns zero results. What should you do first?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "Check field names, source, time range and spelling, loosening the query until results appear."
+        correct: true
+        explanation: "Correct. Many zeros are query mistakes."
+      - text: "Report that nothing happened."
+        correct: false
+        explanation: "Only after you have confirmed the query could have found it."
+      - text: "Restart the SIEM."
+        correct: false
+        explanation: "The SIEM is most likely fine; the query is the usual suspect."
+      - text: "Add more conditions."
+        correct: false
+        explanation: "More conditions can only reduce results further."
+  - id: q3
+    prompt: "Why build a query one condition at a time?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "So you can check the result count after each step and spot where something goes wrong."
+        correct: true
+        explanation: "Correct. Each step is small enough to check."
+      - text: "Because SIEMs accept only one condition."
+        correct: false
+        explanation: "They accept many; building gradually is about checking your work."
+      - text: "To make the query run slower."
+        correct: false
+        explanation: "Speed is not the aim."
+      - text: "It does not matter how you build it."
+        correct: false
+        explanation: "Writing it all at once hides which part is wrong."
+  - id: q4
+    prompt: "In BladeQL, what does `source=\"auth\" user=\"admin\"` match?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "Authentication events where the user is admin (both conditions must be true)."
+        correct: true
+        explanation: "Correct. Adjacent conditions are combined with AND."
+      - text: "Any authentication event, or any event for admin."
+        correct: false
+        explanation: "That would be OR; adjacent conditions are AND."
+      - text: "Only events whose text contains the word auth."
+        correct: false
+        explanation: "The condition tests the source field, not free text."
+      - text: "Nothing, because two conditions are not allowed."
+        correct: false
+        explanation: "Several conditions are normal."
+  - id: q5
+    prompt: "Why paste your final query into the case?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "So others can rerun and check exactly what you searched."
+        correct: true
+        explanation: "Correct. A query is evidence of how you reached your answer."
+      - text: "Because the SIEM deletes queries after one use."
+        correct: false
+        explanation: "The reason is checkability, not storage."
+      - text: "To make the case longer."
+        correct: false
+        explanation: "Length is not the goal."
+      - text: "It is not useful to others."
+        correct: false
+        explanation: "It is one of the most useful things in a case note."

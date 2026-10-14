@@ -1,0 +1,155 @@
+---
+id: soc-l1-hunting-01
+title: "Hunting and Validating Hypotheses"
+track: soc
+rank: 1
+module: siem
+order: 36
+estimated_minutes: 15
+objectives_covered: ["soc:soc_siem_correlation", "soc:soc_scope_assessment"]
+mitre: ["T1059.001", "T1033"]
+xp: 120
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-sessions-correlation-01"]
+skills: ["soc_siem_correlation", "soc_scope_assessment"]
+practice: ["drill:drill-17", "shift:shift-standard-mixed"]
+---
+
+> **Outcome:** you can turn a suspicion into a testable hunting hypothesis, search for it with stacking and targeted queries, and record a useful result whether or not you find anything.
+
+## Why this matters on shift
+
+Alerts only catch what someone wrote a rule for. Some attacks raise no alert at all, the false negatives you met earlier. **Threat hunting** means proactively searching the data for signs of attacks that did not trigger alerts. L1 analysts often help with hunts, or run small ones during quiet shifts, and a good hunt improves detection even when it finds nothing.
+
+## Before you start
+
+You should already know:
+
+- How to correlate events across sources: [Sessions and Correlation](/learn/soc-l1-sessions-correlation-01).
+- What a false negative and a coverage gap are: [Detection Types and Telemetry Blind Spots](/learn/soc-l1-detection-blind-spots-01).
+
+## Core ideas
+
+### Start with a hypothesis
+
+A hunt starts with a **hypothesis**: a specific, testable statement about attacker behaviour that might be present in your data. Good hypotheses come from threat intelligence, ATT&CK techniques, recent incidents, or something odd you noticed.
+
+Think of a doctor who suspects a particular illness. They do not run every test there is. They order the specific tests that would confirm or rule out that illness, and a negative result is still useful information.
+
+Compare:
+
+- Too vague: "Look for hackers."
+- Testable: "A script interpreter on a workstation starting system discovery commands such as `whoami`, as attackers do after gaining execution (ATT&CK T1059.001 and T1033)."
+
+The testable version tells you which data to search, what a match looks like, and what would count as "not found".
+
+### Stacking and the long tail
+
+**Stacking** means counting how often each value (or combination of values) appears across many hosts or events, then studying the rarest ones. The many rare values at the bottom of the list are the **long tail**. Attackers' tools and odd parent-child pairs often hide there, because they appear on few machines.
+
+```bladeql
+source="endpoint" | stats count by parent_process, process | sort count
+```
+
+BladeQL's `rare` command does a simple version directly:
+
+```bladeql
+source="endpoint" | rare 3 command_line
+```
+
+Rare is not the same as bad. A one-off admin tool or a new software version is rare too. Stacking gives you candidates to examine, not answers. It also needs enough data: across six events everything is rare, and across six thousand machines the oddities stand out.
+
+### Targeted searches
+
+The hypothesis also tells you exactly what to look for:
+
+```bladeql
+source="endpoint" | where contains(command_line, "whoami") | table timestamp, host, user, parent_process, command_line
+```
+
+### Outcomes of a hunt
+
+<FlowDiagram
+  title="A hunt from start to finish"
+  description="Write a testable hypothesis. List the data it needs and check that data exists for the period. Search with stacking and targeted queries. Examine the candidates. Record one of three outcomes: found (escalate), not found (with coverage stated), or could not test (a gap). Turn useful searches into detections."
+  steps={[
+    { label: "Hypothesis", detail: "Specific, testable, tied to a behaviour." },
+    { label: "Data check", detail: "Which source is needed, and is it collected for this period?" },
+    { label: "Search", detail: "Stacking for the long tail; targeted queries for the behaviour." },
+    { label: "Examine candidates", detail: "Rare is not bad: check each one's context." },
+    { label: "Record and improve", detail: "Found, not found (with coverage), or gap; turn it into a detection." },
+  ]}
+/>
+
+In plain English: say exactly what you are looking for, make sure you could see it, look, and write down what you learned.
+
+There are three honest outcomes:
+
+- **Found:** escalate it like any true positive.
+- **Not found:** state the coverage, such as "searched all workstation endpoint events for the last 30 days; endpoint agent coverage 97%".
+- **Could not test:** the data does not exist. That is a coverage gap worth reporting.
+
+A useful search from a hunt can become a new detection rule, so the next occurrence raises an alert on its own.
+
+## Worked example
+
+Hypothesis, on the practice dataset: "A script interpreter on a workstation started discovery commands."
+
+**Data check.** Process-creation events from endpoints, with parent process and command line. The practice dataset has them for the period.
+
+**A dead end first.** The analyst stacks command lines with `rare`. Every command line appears exactly once: the dataset holds only six endpoint events, so everything is rare and nothing stands out. Stacking needs volume; here it gives no signal.
+
+**Targeted search.** The analyst searches for the discovery command named in the hypothesis and finds one event: `cmd.exe /c whoami` on ws-01, user jdoe, at 08:23, with parent `powershell.exe`. The parent-child stack confirms it: the pair `powershell.exe → cmd.exe` appears once, and the PowerShell event before it (08:22) has an encoded command, started from `explorer.exe`.
+
+**Outcome.** Found: an encoded PowerShell command followed by `whoami` on ws-01. The analyst escalates it, links the earlier correlation findings for jdoe, and suggests a detection: "script interpreter starting discovery commands within 2 minutes of an encoded command". The hunt note records the hypothesis, the data used, both queries and the result.
+
+## Try it
+
+<MicroExercise id="hunt-plan" />
+
+## Common mistakes
+
+- **Hunting without a hypothesis.** "Look for anything weird" rarely finds anything and cannot be finished.
+- **Treating rare as malicious.** Rare values are candidates; check their context.
+- **Reporting "nothing found" without coverage.** Say what you searched and what you could see.
+- **Forgetting the data check.** You cannot find what is not collected.
+- **Not turning hunts into detections.** Repeat hunts are a sign a rule is missing.
+
+## What good looks like
+
+A strong analyst writes a specific, testable hypothesis, confirms the data exists, combines stacking with targeted searches, examines candidates in context, and records the outcome with coverage, whether found, not found or not testable.
+
+## In the real world
+
+Hunting teams keep a library of hypotheses, often mapped to ATT&CK techniques, and track which have been tested and when. Hunts run on SIEMs, EDR data or dedicated data platforms. Many organisations measure hunting by the detections and coverage improvements it produces, not only by the incidents it finds.
+
+The query drill linked below practises finding rare values, and the standard mixed shift is a good place to practise spotting what the alerts missed.
+
+## Remember it like this
+
+Hypothesis, data check, search, examine, record: and "not found" only counts with coverage.
+
+## Interview answer
+
+"Threat hunting is proactively searching for attacks that didn't trigger alerts. I start from a specific, testable hypothesis, often based on an ATT&CK technique or intelligence, check that the data I need is collected, then use stacking to look at the long tail of rare values alongside targeted queries for the behaviour. Rare isn't automatically bad, so I check each candidate's context. I record one of three outcomes: found, not found with the coverage stated, or not testable because of a data gap, and I turn useful searches into new detections."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Threat hunting", definition: "Proactively searching data for signs of attacks that did not trigger alerts." },
+    { term: "Hypothesis", definition: "A specific, testable statement about attacker behaviour that might be present in your data." },
+    { term: "Stacking", definition: "Counting how often each value appears across many hosts or events and studying the rarest ones." },
+    { term: "Long tail", definition: "The many rare values at the bottom of a frequency list, where unusual tools and behaviour often hide." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

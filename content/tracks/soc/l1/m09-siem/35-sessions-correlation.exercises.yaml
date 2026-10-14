@@ -1,0 +1,52 @@
+lesson: soc-l1-sessions-correlation-01
+exercises:
+  - id: correlate
+    title: "Join three sources correctly"
+    kind: timeline
+    instructions: >-
+      All times are UTC. 172.16.40.6 is the VPN gateway: every remote user's traffic appears to come
+      from it. ws-262 is n.ferreira's laptop, with internal address 172.16.40.162.
+    blocks:
+      - type: log
+        title: "Events from three sources (synthetic)"
+        lines:
+          - "E1  14:02  identity  sign-in success  user=n.ferreira@larkspur.example  src=192.0.2.76"
+          - "E2  14:05  endpoint  ws-262  user=nferreira  process=archiver.exe  created C:\\Temp\\out.7z"
+          - "E3  14:07  firewall  172.16.40.162 -> 192.0.2.77:443  sent 610 MB"
+          - "E4  14:07  firewall  172.16.40.6 -> 192.0.2.77:443  sent 12 KB"
+    questions:
+      - id: same-person
+        prompt: "E1 and E2 show different user name formats. Can they be the same person?"
+        answer_type: choice
+        options:
+          - "Yes, n.ferreira@larkspur.example and nferreira are formats of the same identity"
+          - "No, different strings always mean different people"
+        accept: ["Yes, n.ferreira@larkspur.example and nferreira are formats of the same identity"]
+        hints:
+          - "How do identity logs and endpoint logs often write the same user's name?"
+        explanation: >-
+          Identity logs often use the email-style name, and endpoints the short account name. Map them
+          to one person before correlating, ideally with the user directory.
+      - id: upload-host
+        prompt: "Which firewall event can be linked to ws-262 by address? (Type its ID.)"
+        answer_type: text
+        accept: ["E3"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Which event's source address is ws-262's internal address?"
+        explanation: >-
+          E3 comes from 172.16.40.162, ws-262's address, two minutes after the archive was created. E4
+          comes from the shared VPN gateway, so joining it to ws-262 by address would be unsafe.
+      - id: why-not-e4
+        prompt: "Why should E4 not be joined to n.ferreira by address alone?"
+        answer_type: choice
+        options:
+          - "It comes from a shared gateway address used by many users"
+          - "It happened at a different time"
+          - "Firewall events cannot be correlated"
+        accept: ["It comes from a shared gateway address used by many users"]
+        hints:
+          - "Who else's traffic appears to come from 172.16.40.6?"
+        explanation: >-
+          Every remote user's traffic leaves through the VPN gateway, so its address does not identify
+          one person.

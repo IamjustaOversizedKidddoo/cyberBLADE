@@ -1,0 +1,169 @@
+---
+id: soc-l1-stats-timechart-01
+title: "From Search to Stats and Timechart"
+track: soc
+rank: 1
+module: siem
+order: 34
+estimated_minutes: 15
+objectives_covered: ["soc:soc_siem_correlation"]
+mitre: []
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-thinking-in-queries-01"]
+skills: ["soc_siem_correlation"]
+practice: ["drill:drill-12", "drill:drill-15"]
+---
+
+> **Outcome:** you can summarise thousands of events into a small table or a timeline of counts, choose the right measure (count, distinct count, sum), and avoid misleading summaries.
+
+## Why this matters on shift
+
+Lists of events are fine when there are ten of them. When there are ten thousand, you need summaries: how many per user, how much data per host, how activity changed over the hour. Summaries reveal patterns that no one could see by scrolling, such as one account with fifty times more failures than the rest, or a sudden spike at 03:00. Choosing the wrong summary, though, can hide exactly what you are looking for.
+
+## Before you start
+
+You should already know:
+
+- How to build a query step by step: [Normalisation and Thinking in Queries](/learn/soc-l1-thinking-in-queries-01).
+- Why distinct counts matter for password attacks: [Password Guessing and Spraying](/learn/soc-l1-credential-attacks-01).
+
+## Core ideas
+
+### Aggregation
+
+**Aggregation** means combining many events into summary numbers, such as a count, a sum or an average. **Grouping** splits the events into groups by a field before aggregating, so you get one row per user, per host or per outcome.
+
+Think of a shop's daily takings. Nobody reads every receipt. The manager wants totals per till, per hour, per product. Same receipts, summarised so the unusual stands out: one till took twice its normal amount.
+
+In BladeQL, `stats` does both. One row per user, with how many authentication events each had:
+
+```bladeql
+source="auth" | stats count by user
+```
+
+### Choosing the measure
+
+Different questions need different measures:
+
+| Question | Measure |
+|---|---|
+| How many events? | `count` |
+| How many different values? | `dc(field)` (distinct count) |
+| How much in total? | `sum(field)` |
+| What is typical? | `avg(field)` or `median(field)` |
+| What is the largest? | `max(field)` |
+
+Several measures can go in one `stats`. For failed sign-ins, the number of failures and the number of different source addresses per user tell different stories:
+
+```bladeql
+source="auth" outcome="failure" | stats count, dc(src_ip) by user
+```
+
+For data movement, the total bytes per source address, largest first:
+
+```bladeql
+source="firewall" | stats sum(bytes_out) as total_out by src_ip | sort -total_out
+```
+
+### Time buckets with timechart
+
+A **time bucket** is a fixed slice of time, such as one minute or one hour, into which events are counted. `timechart` counts or sums events per bucket, so you can see how activity changes over time:
+
+```bladeql
+source="auth" | timechart span=1m count by outcome
+```
+
+The `span=` value sets the bucket size. Small buckets show bursts; large buckets show trends.
+
+<FlowDiagram
+  title="Choosing a summary"
+  description="Decide what you are counting, choose count, distinct count or sum, choose what to group by, and decide whether time matters. If it does, use time buckets. Then check the summary against a few raw events."
+  steps={[
+    { label: "What are you measuring?", detail: "Events, different values, or a total?" },
+    { label: "Grouped by what?", detail: "User, host, source address, outcome?" },
+    { label: "Does time matter?", detail: "If so, use time buckets with a sensible span." },
+    { label: "Check a few raw events", detail: "Does the summary match what the events say?" },
+  ]}
+/>
+
+In plain English: pick the right number, group it sensibly, and look at the raw events behind any surprising row.
+
+### How summaries mislead
+
+- **Count hides size.** Two connections can be 1 KB and 800 MB. For data movement, sum the bytes.
+- **Totals hide timing.** A user's 30 failures over a month is normal; 30 in a minute is not. Use time buckets.
+- **Averages hide outliers.** One huge value disappears into an average. Look at the maximum too.
+- **Grouping by the wrong field hides the pattern.** Spraying is invisible when grouped by user and obvious when grouped by source with a distinct count of users.
+
+## Worked example
+
+On the practice dataset, the question is: "Which internal host sent the most data out through the firewall?"
+
+**A misleading first summary.** The analyst counts firewall events per source address:
+
+```bladeql
+source="firewall" | stats count by src_ip
+```
+
+Two addresses tie at the top with two events each: an internal workstation, 192.168.1.50, and an outside address, 198.51.100.99, whose two events were both denied. Counting suggests they are equally important. It also mixes in inbound traffic.
+
+**The right measure.** The question was about data volume, so the analyst sums the bytes instead and sorts:
+
+```bladeql
+source="firewall" | stats sum(bytes_out) as total_out by src_ip | sort -total_out
+```
+
+Now 192.168.1.50 stands out with about 850,000 bytes, more than eighteen times the next host. The outside address sent nothing, because its connections were denied.
+
+**Check the raw events.** One allowed connection from 192.168.1.50 to 198.51.100.22 on port 443 carried 840,000 bytes on its own. That single connection is the thing to explain, and the summary pointed straight at it.
+
+## Try it
+
+<MicroExercise id="read-stats" />
+
+## Common mistakes
+
+- **Counting when you should be summing.** Volume questions need sums.
+- **Using one big time range.** Bursts vanish; use time buckets.
+- **Trusting an average.** Check the maximum and the distribution.
+- **Grouping by the wrong field.** Ask which field the pattern lives in.
+- **Never looking at the raw events behind a surprising row.**
+
+## What good looks like
+
+A strong analyst picks the measure that matches the question, groups by the field where the pattern lives, uses time buckets when timing matters, and checks every surprising number against a few raw events before writing it in a case.
+
+## In the real world
+
+Every SIEM has commands for aggregation and time series, often with charts. Dashboards are built from these same summaries. Large summaries can be slow on big datasets, so analysts usually narrow the time range and source first, then aggregate.
+
+The query drills linked below practise counting by a field and computing several measures at once.
+
+## Remember it like this
+
+Count events, distinct-count values, sum sizes, bucket time, and always check the raw events behind the surprise.
+
+## Interview answer
+
+"I use aggregation to turn thousands of events into a small table: count for how many events, distinct count for how many different values, sum for totals like bytes, and averages with care because they hide outliers. I group by the field where the pattern lives, for example by source address with a distinct count of users for spraying. When timing matters I use time buckets with a timechart. Then I check a few raw events behind any surprising row before I report it."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Aggregation", definition: "Combining many events into summary numbers, such as a count, sum or average." },
+    { term: "Grouping", definition: "Splitting events into groups by a field before aggregating, giving one row per value of that field." },
+    { term: "Time bucket", definition: "A fixed slice of time, such as one minute, into which events are counted to show change over time." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

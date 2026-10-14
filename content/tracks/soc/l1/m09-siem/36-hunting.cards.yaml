@@ -1,0 +1,14 @@
+lesson: soc-l1-hunting-01
+cards:
+  - id: fc-soc-l1-hunting-01
+    front: "What makes a hunting hypothesis testable?"
+    back: "It names a specific behaviour, the data and period to search, and what a match looks like."
+  - id: fc-soc-l1-hunting-02
+    front: "What is stacking?"
+    back: "Counting how often each value appears across many hosts or events, then studying the rare long tail."
+  - id: fc-soc-l1-hunting-03
+    front: "What are the three honest outcomes of a hunt?"
+    back: "Found (escalate), not found (with coverage stated), or could not test (a data gap)."
+  - id: fc-soc-l1-hunting-04
+    front: "Is a rare value malicious?"
+    back: "Not necessarily. Rare values are candidates; check each one's context."

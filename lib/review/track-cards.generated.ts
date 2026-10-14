@@ -1034,5 +1034,133 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "category": "soc",
     "front": "In what order should you enrich an alert?",
     "back": "State the question, check internal context first, then only the external lookups you need, and stop when it is answered."
+  },
+  {
+    "id": "fc-soc-l1-thinking-in-queries-01",
+    "lessonId": "soc-l1-thinking-in-queries-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is normalisation?",
+    "back": "Converting events from different sources into shared field names and formats, so one query can search them all."
+  },
+  {
+    "id": "fc-soc-l1-thinking-in-queries-02",
+    "lessonId": "soc-l1-thinking-in-queries-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the five steps for building a query?",
+    "back": "Plain-words question, pick the source, add filters one at a time, shape the output, sanity-check the result."
+  },
+  {
+    "id": "fc-soc-l1-thinking-in-queries-03",
+    "lessonId": "soc-l1-thinking-in-queries-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the common reasons a query returns zero results by mistake?",
+    "back": "Wrong field name, wrong or missing source, wrong time range or zone, or a value spelled differently."
+  },
+  {
+    "id": "fc-soc-l1-thinking-in-queries-04",
+    "lessonId": "soc-l1-thinking-in-queries-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does the | (pipe) do in a query?",
+    "back": "Passes the results of one step into the next command."
+  },
+  {
+    "id": "fc-soc-l1-stats-timechart-01",
+    "lessonId": "soc-l1-stats-timechart-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which measure answers 'how many', 'how many different' and 'how much'?",
+    "back": "count, distinct count (dc), and sum."
+  },
+  {
+    "id": "fc-soc-l1-stats-timechart-02",
+    "lessonId": "soc-l1-stats-timechart-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why use time buckets?",
+    "back": "Totals hide timing; buckets show bursts and quiet periods."
+  },
+  {
+    "id": "fc-soc-l1-stats-timechart-03",
+    "lessonId": "soc-l1-stats-timechart-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the four ways summaries mislead?",
+    "back": "Count hides size, totals hide timing, averages hide outliers, and the wrong grouping hides the pattern."
+  },
+  {
+    "id": "fc-soc-l1-stats-timechart-04",
+    "lessonId": "soc-l1-stats-timechart-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What do you check before reporting a surprising summary row?",
+    "back": "A few of the raw events behind it."
+  },
+  {
+    "id": "fc-soc-l1-sessions-correlation-01",
+    "lessonId": "soc-l1-sessions-correlation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the four classic correlation traps?",
+    "back": "Shared addresses (proxy, VPN, NAT), different identity formats, clock differences, and ignoring the order of events."
+  },
+  {
+    "id": "fc-soc-l1-sessions-correlation-02",
+    "lessonId": "soc-l1-sessions-correlation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does session reconstruction give you?",
+    "back": "One entity's activity grouped into sessions, each with a start, end, duration and event count."
+  },
+  {
+    "id": "fc-soc-l1-sessions-correlation-03",
+    "lessonId": "soc-l1-sessions-correlation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Can a later event cause an earlier one?",
+    "back": "No. Check the order before linking events as cause and effect."
+  },
+  {
+    "id": "fc-soc-l1-sessions-correlation-04",
+    "lessonId": "soc-l1-sessions-correlation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is a correlation rule?",
+    "back": "A detection that fires on a sequence or combination of events rather than a single event."
+  },
+  {
+    "id": "fc-soc-l1-hunting-01",
+    "lessonId": "soc-l1-hunting-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What makes a hunting hypothesis testable?",
+    "back": "It names a specific behaviour, the data and period to search, and what a match looks like."
+  },
+  {
+    "id": "fc-soc-l1-hunting-02",
+    "lessonId": "soc-l1-hunting-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is stacking?",
+    "back": "Counting how often each value appears across many hosts or events, then studying the rare long tail."
+  },
+  {
+    "id": "fc-soc-l1-hunting-03",
+    "lessonId": "soc-l1-hunting-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the three honest outcomes of a hunt?",
+    "back": "Found (escalate), not found (with coverage stated), or could not test (a data gap)."
+  },
+  {
+    "id": "fc-soc-l1-hunting-04",
+    "lessonId": "soc-l1-hunting-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Is a rare value malicious?",
+    "back": "Not necessarily. Rare values are candidates; check each one's context."
   }
 ];

@@ -1,0 +1,82 @@
+lesson: soc-l1-stats-timechart-01
+questions:
+  - id: q1
+    prompt: "Which measure answers 'how many different users did this address try'?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "A distinct count of user, grouped by source address."
+        correct: true
+        explanation: "Correct. dc(user) by src_ip."
+      - text: "A count of events."
+        correct: false
+        explanation: "Count includes repeats against the same user."
+      - text: "A sum of bytes."
+        correct: false
+        explanation: "Bytes say nothing about how many users were tried."
+      - text: "The average timestamp."
+        correct: false
+        explanation: "That is not a meaningful measure here."
+  - id: q2
+    prompt: "Why can a count of connections mislead when investigating data theft?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "It treats a tiny connection and a huge one the same; volume needs a sum of bytes."
+        correct: true
+        explanation: "Correct. Choose the measure that matches the question."
+      - text: "Counts are always wrong."
+        correct: false
+        explanation: "Counts are right for 'how many', just not for 'how much'."
+      - text: "Connections cannot be counted."
+        correct: false
+        explanation: "They can; it is just the wrong measure for volume."
+      - text: "Because counts ignore denied connections."
+        correct: false
+        explanation: "Counts include whatever the search matched."
+  - id: q3
+    prompt: "What does `timechart span=1m count` show?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "The number of events in each one-minute bucket over the time range."
+        correct: true
+        explanation: "Correct. It reveals bursts and quiet periods."
+      - text: "The total number of events, once."
+        correct: false
+        explanation: "That would be stats count."
+      - text: "The one-minute average of bytes."
+        correct: false
+        explanation: "It counts events unless you ask for a different measure."
+      - text: "Only events from the last minute."
+        correct: false
+        explanation: "span sets the bucket size, not the time range."
+  - id: q4
+    prompt: "A user had 30 failed sign-ins this month. When does that matter?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "It depends on timing: spread over a month is normal; 30 in one minute is not. Check with time buckets."
+        correct: true
+        explanation: "Correct. Totals hide timing."
+      - text: "Always: 30 failures is an attack."
+        correct: false
+        explanation: "Spread out, it may be ordinary mistyping."
+      - text: "Never: failures are always harmless."
+        correct: false
+        explanation: "A burst of failures can be an attack."
+      - text: "Only if the user is an administrator."
+        correct: false
+        explanation: "Privilege affects priority, but timing decides whether it is unusual."
+  - id: q5
+    prompt: "A summary row looks surprising. What should you do before reporting it?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "Look at a few of the raw events behind it."
+        correct: true
+        explanation: "Correct. The raw events confirm the number means what you think."
+      - text: "Report it straight away."
+        correct: false
+        explanation: "A wrong field or grouping can produce surprising but meaningless numbers."
+      - text: "Round it to make it look neater."
+        correct: false
+        explanation: "Changing numbers does not check them."
+      - text: "Delete the row."
+        correct: false
+        explanation: "Surprising rows are often the most important."

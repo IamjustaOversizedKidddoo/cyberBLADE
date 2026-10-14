@@ -1,0 +1,45 @@
+lesson: soc-l1-stats-timechart-01
+exercises:
+  - id: read-stats
+    title: "Read and choose summaries"
+    kind: query
+    instructions: >-
+      This table is the output of a query that summarises one day of failed sign-ins by source address.
+    blocks:
+      - type: table
+        title: "source=\"auth\" outcome=\"failure\" | stats count, dc(user) by src_ip (synthetic)"
+        columns: ["src_ip", "count", "dc(user)"]
+        rows:
+          - ["172.16.40.6", "62", "48"]
+          - ["192.0.2.70", "57", "57"]
+          - ["192.0.2.71", "44", "1"]
+    questions:
+      - id: spray
+        prompt: "Which source looks like password spraying? (Type the address.)"
+        answer_type: text
+        accept: ["192.0.2.70"]
+        normalize: ["whitespace", "refang"]
+        hints:
+          - "Spraying tries a few passwords against many accounts. Compare count with dc(user)."
+        explanation: >-
+          192.0.2.70 failed once against each of 57 different users: count equals the distinct count.
+          172.16.40.6 is the VPN gateway, which carries many users' normal failures.
+      - id: brute
+        prompt: "Which source looks like brute force against one account? (Type the address.)"
+        answer_type: text
+        accept: ["192.0.2.71"]
+        normalize: ["whitespace", "refang"]
+        hints:
+          - "Which row has many failures but only one distinct user?"
+        explanation: >-
+          44 failures against a single user is the brute-force shape.
+      - id: measure
+        prompt: "To find which host uploaded the most data, which measure should you use?"
+        answer_type: choice
+        options: ["sum(bytes_out)", "count", "dc(dest_ip)", "avg(bytes_out)"]
+        accept: ["sum(bytes_out)"]
+        hints:
+          - "Is the question about how many connections, or how much data?"
+        explanation: >-
+          The question is about volume, so sum the bytes. A count treats a 1 KB and an 800 MB
+          connection the same, and an average hides the total.

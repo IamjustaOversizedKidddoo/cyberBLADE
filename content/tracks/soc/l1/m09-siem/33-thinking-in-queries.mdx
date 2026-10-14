@@ -1,0 +1,169 @@
+---
+id: soc-l1-thinking-in-queries-01
+title: "Normalisation and Thinking in Queries"
+track: soc
+rank: 1
+module: siem
+order: 33
+estimated_minutes: 15
+objectives_covered: ["soc:soc_siem_correlation"]
+mitre: []
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-alert-anatomy-01"]
+skills: ["soc_siem_correlation"]
+practice: ["drill:drill-01", "drill:drill-02"]
+---
+
+> **Outcome:** you can turn an investigation question into a SIEM query, step by step, and know why a query that returns nothing might be wrong rather than reassuring.
+
+## Why this matters on shift
+
+Alerts tell you where to start; queries let you answer the questions that follow. "Did this account fail anywhere else?", "Which machines talked to this address?", "What did this process start?" The SIEM holds the answers, but only if you ask in a way it understands. Thinking in queries is less about memorising syntax and more about breaking a question into small, checkable steps.
+
+## Before you start
+
+You should already know:
+
+- The parts of an alert, including raw events and entities: [Anatomy of an Alert](/learn/soc-l1-alert-anatomy-01).
+
+The examples use BladeQL, the simulator's query language, and all of them run on the practice dataset of the query drills. Other SIEMs have different syntax for the same ideas.
+
+## Core ideas
+
+### Normalisation
+
+Every system names things differently. A firewall may call the source address `src`, a proxy `client_ip`, and Windows `IpAddress`. **Normalisation** means converting events from different sources into a shared set of field names and formats, so one query can search them all.
+
+Think of a library where every publisher printed the author's name in a different place: on the spine, inside the cover, on the back. The librarian copies each book's author onto a standard index card. Now one card drawer answers "every book by this author".
+
+In the practice dataset, events share normalised fields such as `source` (which kind of log), `user`, `src_ip`, `dest_ip`, `action`, `outcome`, `process` and `bytes_out`. A **field** is one named value in an event, such as `user="admin"`.
+
+### From question to query
+
+Good queries are built in small steps, each checkable:
+
+<FlowDiagram
+  title="Building a query"
+  description="Write the question in plain words. Choose the log source. Add filters one at a time and check the count after each. Shape the output with only the fields you need. Sanity-check the result against what you expect."
+  steps={[
+    { label: "Plain-words question", detail: "Which accounts failed to sign in from outside today?" },
+    { label: "Pick the source", detail: "Authentication events." },
+    { label: "Filter one step at a time", detail: "Add one condition, check the count, then the next." },
+    { label: "Shape the output", detail: "Keep only the fields that answer the question." },
+    { label: "Sanity-check", detail: "Do the numbers make sense? Could zero be a mistake?" },
+  ]}
+/>
+
+In plain English: say it in words, narrow it down one step at a time, and check every step.
+
+### The basic pieces in BladeQL
+
+A search starts with field conditions. Conditions next to each other must all be true:
+
+```bladeql
+source="firewall" action="deny"
+```
+
+The **pipe** character `|` passes the results of one step into the next command. Here the `table` command keeps only the fields you need:
+
+```bladeql
+source="auth" user="admin" | table timestamp, src_ip, outcome
+```
+
+`where` filters with comparisons and functions, and `sort` with a minus sign sorts largest first:
+
+```bladeql
+source="firewall" | where bytes_out > 10000 | sort -bytes_out
+```
+
+Conditions can test any normalised field, such as the parent of a process:
+
+```bladeql
+source="endpoint" parent_process="powershell.exe" | table timestamp, host, process, command_line
+```
+
+### Zero results is a result to check
+
+A query that returns nothing is either good news or a mistake. Common mistakes:
+
+- **The wrong field name.** If the normalised field is `user`, a query on `username` finds nothing.
+- **The wrong source**, or a source that is not collected.
+- **The wrong time range or time zone.**
+- **A value spelled differently**, such as a domain with or without a prefix.
+
+When you get zero, loosen the query one step at a time until you get results, then tighten again. You met this idea in [Detection Types and Telemetry Blind Spots](/learn/soc-l1-detection-blind-spots-01): "nothing found" only counts if you could have found it.
+
+## Worked example
+
+A Tier 2 analyst asks: "Did the admin account fail to sign in from any address outside our network today?"
+
+**Plain words:** authentication events, account admin, outcome failure, source address not internal.
+
+**First attempt, and a dead end:**
+
+```text
+source="auth" username="admin" outcome="failure"
+```
+
+Zero results. It is tempting to answer "no failures". But the analyst loosens the query and runs `source="auth"` alone, which returns events, and reads one: the field is called `user`, not `username`. The zero was a field-name mistake.
+
+**Second attempt:**
+
+```bladeql
+source="auth" user="admin" outcome="failure" | table timestamp, src_ip, outcome
+```
+
+This returns three failures, all from 198.51.100.99, an address outside the internal ranges.
+
+**Sanity check.** Three failures in under two minutes from one outside address, for an account called admin, fits automated guessing. The analyst answers Tier 2 with the query and the three events, so they can rerun it themselves.
+
+## Try it
+
+<MicroExercise id="pick-query" />
+
+## Common mistakes
+
+- **Writing the whole query at once.** Build it step by step and check counts as you go.
+- **Trusting zero.** Check field names, source, time range and spelling first.
+- **Returning every field.** Use `table` to keep only what answers the question.
+- **Forgetting that adjacent conditions are combined with AND.** Each one narrows the results.
+- **Not sharing the query.** Paste it into the case, so others can rerun and check it.
+
+## What good looks like
+
+A strong analyst writes the question in plain words, builds the query one condition at a time, checks the count at each step, distrusts unexpected zeros, and records the final query in the case.
+
+## In the real world
+
+Every SIEM has its own query language, but the same building blocks appear everywhere: filter by field, pipe into commands, select fields, sort, count. Normalisation is often done by the SIEM or by a shared data model, and its quality varies: some sources may still use their own field names, so reading a raw event to check the field names is always worth the ten seconds.
+
+The query drills linked below use the same practice dataset as these examples.
+
+## Remember it like this
+
+Words first, one filter at a time, and treat zero as a question, not an answer.
+
+## Interview answer
+
+"I start with the question in plain words, pick the right log source, then add filters one at a time, checking the result count at each step. Normalisation lets me use the same field names across sources, but I always read a raw event to confirm them. If a query returns nothing, I check the field names, source, time range and spelling before I accept that nothing happened, and I record the final query in the case so others can rerun it."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Normalisation", definition: "Converting events from different sources into a shared set of field names and formats, so one query can search them all." },
+    { term: "Field", definition: "One named value in an event, such as the user or the number of bytes sent." },
+    { term: "Pipe", definition: "The | character in a query, which passes the results of one step into the next command." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />
