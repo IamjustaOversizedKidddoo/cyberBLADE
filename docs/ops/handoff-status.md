@@ -121,10 +121,10 @@ Found by reading the migrations. None of these has been run against Postgres yet
 | Finding | Status |
 |---|---|
 | S1 learner can write own SOC scores (hosted RLS) | **Open**, needs a policy-tightening migration |
-| S2 seeds readable (, column REVOKE ineffective) | **Open**, needs a migration + seed-free projections |
+| S2 seeds readable (`soc_used_seeds`, column REVOKE ineffective) | **Open**, needs a migration + seed-free projections |
 | S3 submitted reports editable via direct client access | **Open** |
-| S4 SQL audit rule backwards / broken regex | **Fixed** (): pinned search_path + explicit mode required; DEFINER allowlisted |
+| S4 SQL audit rule backwards / broken regex | **Fixed** (`1225980`): pinned search_path + explicit mode required; DEFINER allowlisted |
 | S5 report migration not idempotent | **Open** (applied migrations must not be edited; fix with a follow-up migration) |
 | S6 deletion/export gaps | **Partly fixed**: AI tables covered; older SOC tables still missing from the RPC/export |
-| S7 question truths verified client-side | **Open, critical**, needs server-side questions ( still in ) |
-| S8 decisions on generated attempts + 404 routes | **Fixed** () |
+| S7 question truths verified client-side | **Open, critical**, needs server-side questions (`serverTruths` still in `.next/static`) |
+| S8 decisions on generated attempts + 404 routes | **Fixed** (`33305f5`) |
