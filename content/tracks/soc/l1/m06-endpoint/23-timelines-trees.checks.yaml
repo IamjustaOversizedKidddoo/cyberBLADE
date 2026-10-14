@@ -1,0 +1,82 @@
+lesson: soc-l1-timelines-trees-01
+questions:
+  - id: q1
+    prompt: "What must you do before merging events from different sources into one timeline?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "Convert every time to one time zone, usually UTC."
+        correct: true
+        explanation: "Correct. Otherwise events appear in the wrong order."
+      - text: "Delete events that do not match the alert."
+        correct: false
+        explanation: "Events outside the alert are often the start or the impact."
+      - text: "Sort each source alphabetically."
+        correct: false
+        explanation: "Timelines are ordered by time, not text."
+      - text: "Nothing; sources always agree on time."
+        correct: false
+        explanation: "Sources often use different zones and can have clock drift."
+  - id: q2
+    prompt: "A child process's parent PID matches a process that ended an hour earlier. What should you conclude?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "Probably nothing: PIDs are reused, so find the process with that PID that was running at the time."
+        correct: true
+        explanation: "Correct. Match parents by PID and time, not PID alone."
+      - text: "The old process started the child."
+        correct: false
+        explanation: "A process that had already ended cannot start a new one."
+      - text: "The logs are corrupt."
+        correct: false
+        explanation: "PID reuse is normal operating-system behaviour."
+      - text: "The child is masquerading."
+        correct: false
+        explanation: "PID reuse says nothing about masquerading."
+  - id: q3
+    prompt: "What is pivoting?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "Taking a value from one event, such as a hash or address, and searching other sources for it."
+        correct: true
+        explanation: "Correct. Each pivot expands the timeline or shows a source has nothing."
+      - text: "Rotating a chart in the SIEM."
+        correct: false
+        explanation: "In investigations, pivoting means searching on a value across sources."
+      - text: "Switching to a different alert."
+        correct: false
+        explanation: "Pivoting stays on the same incident and widens the evidence."
+      - text: "Escalating to Tier 2."
+        correct: false
+        explanation: "That is escalation."
+  - id: q4
+    prompt: "Which timeline entry is written correctly?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "\"10:47:15 UTC: winword.exe started cmd.exe on ws-158 (endpoint event).\""
+        correct: true
+        explanation: "Correct. Time with zone, a factual sentence, and the source."
+      - text: "\"Around lunchtime the attacker got in.\""
+        correct: false
+        explanation: "No exact time, no source, and interpretation instead of fact."
+      - text: "\"10:47: bad stuff happened.\""
+        correct: false
+        explanation: "Vague, no zone, no source."
+      - text: "\"cmd.exe started (source unknown).\""
+        correct: false
+        explanation: "No time, and no source to check."
+  - id: q5
+    prompt: "The proxy has no records for a host during the period you are investigating. What do you do with that?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "Note the gap in the timeline; it may mean the traffic bypassed the proxy or the source failed."
+        correct: true
+        explanation: "Correct. Silence where you expected evidence is information."
+      - text: "Leave it out, since there is nothing to show."
+        correct: false
+        explanation: "Hiding a gap misleads the next reader."
+      - text: "Assume the host made no connections."
+        correct: false
+        explanation: "No records is not the same as no activity."
+      - text: "Copy records from another host to fill the gap."
+        correct: false
+        explanation: "Never invent or borrow evidence."

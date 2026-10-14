@@ -1,0 +1,82 @@
+lesson: soc-l1-lotl-01
+questions:
+  - id: q1
+    prompt: "Why do attackers use built-in system tools?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "They are already installed and trusted, so their use blends in with normal administration."
+        correct: true
+        explanation: "Correct. That is the whole point of living off the land."
+      - text: "They are faster than any other software."
+        correct: false
+        explanation: "Speed is not the reason; blending in is."
+      - text: "Built-in tools cannot be logged."
+        correct: false
+        explanation: "They can be logged; the challenge is telling normal from abnormal use."
+      - text: "They are illegal to block."
+        correct: false
+        explanation: "Many can be restricted; it is just disruptive, because IT needs them."
+  - id: q2
+    prompt: "A built-in download tool runs on 200 machines at once. What is the best first check?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "What started it and where it downloads from, for example a deployment agent and the company's own server."
+        correct: true
+        explanation: "Correct. Mass use is typical of deployment tools; context decides."
+      - text: "Isolate all 200 machines immediately."
+        correct: false
+        explanation: "Without context, that could shut down the company because of a software update."
+      - text: "Nothing; built-in tools are always safe."
+        correct: false
+        explanation: "They are misused often enough that each use needs context."
+      - text: "Check whether the tool is signed."
+        correct: false
+        explanation: "Built-in tools are signed whether misused or not."
+  - id: q3
+    prompt: "Which context makes a built-in tool's use most suspicious?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "Started by a mail client, fetching from a new domain into the Public folder."
+        correct: true
+        explanation: "Correct. Unusual parent, unusual destination, user-writable target."
+      - text: "Started by a deployment agent, fetching from the company's server."
+        correct: false
+        explanation: "That is routine software deployment."
+      - text: "Run by an IT admin during a ticketed change."
+        correct: false
+        explanation: "That is expected admin work."
+      - text: "Run by a scheduled job that runs every day."
+        correct: false
+        explanation: "Regular and expected, unless something else about it changed."
+  - id: q4
+    prompt: "What is a LOLBin?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "A built-in, trusted program that can be misused to download files, run code or bypass controls."
+        correct: true
+        explanation: "Correct. LOLBAS documents many for Windows."
+      - text: "A type of malware that deletes itself."
+        correct: false
+        explanation: "LOLBins are legitimate programs."
+      - text: "A recycle bin for logs."
+        correct: false
+        explanation: "The name stands for living-off-the-land binary."
+      - text: "A firewall rule."
+        correct: false
+        explanation: "It is a program, not a rule."
+  - id: q5
+    prompt: "A file is downloaded as k.dat but saved as k.exe. Why does that matter?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "Renaming a download into a program is a common way to sneak executables past filters."
+        correct: true
+        explanation: "Correct. It is a strong signal in context."
+      - text: "It does not matter; extensions are cosmetic."
+        correct: false
+        explanation: "Extensions decide how Windows treats a file; changing one is deliberate."
+      - text: "It proves the file is a document."
+        correct: false
+        explanation: "Saving it as .exe means it will be treated as a program."
+      - text: "It means the download failed."
+        correct: false
+        explanation: "The rename happened because the download succeeded."

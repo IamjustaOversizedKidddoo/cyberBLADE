@@ -618,5 +618,197 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "category": "soc",
     "front": "What does 'default deny' mean?",
     "back": "Anything not explicitly allowed by a firewall rule is blocked."
+  },
+  {
+    "id": "fc-soc-l1-windows-auth-events-01",
+    "lessonId": "soc-l1-windows-auth-events-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What do Windows events 4624, 4625, 4720 and 4740 mean?",
+    "back": "4624 successful sign-in, 4625 failed sign-in, 4720 account created, 4740 account locked out."
+  },
+  {
+    "id": "fc-soc-l1-windows-auth-events-02",
+    "lessonId": "soc-l1-windows-auth-events-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which logon types are 2, 3 and 10?",
+    "back": "2 interactive (keyboard), 3 network (shares, services), 10 Remote Desktop."
+  },
+  {
+    "id": "fc-soc-l1-windows-auth-events-03",
+    "lessonId": "soc-l1-windows-auth-events-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What do 4625 codes 0xC000006A and 0xC0000064 mean?",
+    "back": "0xC000006A: wrong password for a real account. 0xC0000064: the user name does not exist."
+  },
+  {
+    "id": "fc-soc-l1-windows-auth-events-04",
+    "lessonId": "soc-l1-windows-auth-events-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Brute force vs password spraying?",
+    "back": "Brute force: many passwords against one account. Spraying: a few passwords against many accounts, slowly."
+  },
+  {
+    "id": "fc-soc-l1-process-creation-01",
+    "lessonId": "soc-l1-process-creation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What five things do you check in a process-creation event?",
+    "back": "Parent and child pair, path, user and integrity level, the full command line, and what the process did next."
+  },
+  {
+    "id": "fc-soc-l1-process-creation-02",
+    "lessonId": "soc-l1-process-creation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which Windows sources record process creation?",
+    "back": "Security event 4688 (command line only if enabled) and Sysmon event ID 1 (with command line, parent and hashes)."
+  },
+  {
+    "id": "fc-soc-l1-process-creation-03",
+    "lessonId": "soc-l1-process-creation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Where does the real svchost.exe live, and what starts it?",
+    "back": "C:\\Windows\\System32, started by services.exe."
+  },
+  {
+    "id": "fc-soc-l1-process-creation-04",
+    "lessonId": "soc-l1-process-creation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which parent-child pairs are suspicious?",
+    "back": "Office apps or browsers starting shells or script interpreters, and script interpreters starting programs from temp or download folders."
+  },
+  {
+    "id": "fc-soc-l1-persistence-01",
+    "lessonId": "soc-l1-persistence-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are five common Windows persistence locations?",
+    "back": "Scheduled tasks, services, Run keys, the Startup folder, and new accounts."
+  },
+  {
+    "id": "fc-soc-l1-persistence-02",
+    "lessonId": "soc-l1-persistence-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are four common Linux persistence locations?",
+    "back": "Cron jobs, systemd services, SSH authorized_keys, and shell start-up files such as ~/.bashrc."
+  },
+  {
+    "id": "fc-soc-l1-persistence-03",
+    "lessonId": "soc-l1-persistence-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which event IDs record a new service and a new scheduled task on Windows?",
+    "back": "7045 for a service (System log); 4698 for a scheduled task (Security log, when auditing is on)."
+  },
+  {
+    "id": "fc-soc-l1-persistence-04",
+    "lessonId": "soc-l1-persistence-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What three questions judge an autostart entry?",
+    "back": "What does it run, from where, and who (which process) put it there?"
+  },
+  {
+    "id": "fc-soc-l1-timelines-trees-01",
+    "lessonId": "soc-l1-timelines-trees-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What makes a good timeline entry?",
+    "back": "A time with time zone, one factual sentence, the source, and a pointer to the evidence."
+  },
+  {
+    "id": "fc-soc-l1-timelines-trees-02",
+    "lessonId": "soc-l1-timelines-trees-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why can't you match a parent process by PID alone?",
+    "back": "PIDs are reused after a process ends; match the parent that was running at that time."
+  },
+  {
+    "id": "fc-soc-l1-timelines-trees-03",
+    "lessonId": "soc-l1-timelines-trees-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is an anchor event?",
+    "back": "The event a timeline starts from, usually the alert or first confirmed event; you expand backwards and forwards from it."
+  },
+  {
+    "id": "fc-soc-l1-timelines-trees-04",
+    "lessonId": "soc-l1-timelines-trees-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which values make good pivots?",
+    "back": "Users, hosts, process IDs, file hashes, IP addresses and domains that are specific to the incident."
+  },
+  {
+    "id": "fc-soc-l1-lotl-01",
+    "lessonId": "soc-l1-lotl-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does 'living off the land' mean?",
+    "back": "An attacker using legitimate tools already on the system instead of their own malware, so the activity blends in."
+  },
+  {
+    "id": "fc-soc-l1-lotl-02",
+    "lessonId": "soc-l1-lotl-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What five questions judge a built-in tool's use?",
+    "back": "Who ran it? What started it? Which arguments? Where did it reach and write? Is this normal here?"
+  },
+  {
+    "id": "fc-soc-l1-lotl-03",
+    "lessonId": "soc-l1-lotl-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which ATT&CK techniques cover proxy execution and tool downloads?",
+    "back": "T1218 System Binary Proxy Execution, and T1105 Ingress Tool Transfer."
+  },
+  {
+    "id": "fc-soc-l1-lotl-04",
+    "lessonId": "soc-l1-lotl-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Does a valid operating-system signature make a tool's use safe?",
+    "back": "No. Built-in tools are always signed, which is exactly why attackers misuse them."
+  },
+  {
+    "id": "fc-soc-l1-linux-telemetry-01",
+    "lessonId": "soc-l1-linux-telemetry-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Where is the Linux authentication log on Ubuntu and on Red Hat-family systems?",
+    "back": "/var/log/auth.log on Debian and Ubuntu; /var/log/secure on Red Hat-family systems."
+  },
+  {
+    "id": "fc-soc-l1-linux-telemetry-02",
+    "lessonId": "soc-l1-linux-telemetry-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What do sshd's 'Invalid user', 'Failed password' and 'Accepted' lines mean?",
+    "back": "Invalid user: the name does not exist. Failed password: a real account, wrong password. Accepted: a successful sign-in (password or key)."
+  },
+  {
+    "id": "fc-soc-l1-linux-telemetry-03",
+    "lessonId": "soc-l1-linux-telemetry-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does a sudo log line show?",
+    "back": "Who ran it, the terminal and directory, which user it ran as (usually root), and the exact command."
+  },
+  {
+    "id": "fc-soc-l1-linux-telemetry-04",
+    "lessonId": "soc-l1-linux-telemetry-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why is shell history only a hint?",
+    "back": "It can be disabled or edited and is written only when a shell exits."
   }
 ];

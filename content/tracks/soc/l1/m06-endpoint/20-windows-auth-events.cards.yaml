@@ -1,0 +1,14 @@
+lesson: soc-l1-windows-auth-events-01
+cards:
+  - id: fc-soc-l1-windows-auth-events-01
+    front: "What do Windows events 4624, 4625, 4720 and 4740 mean?"
+    back: "4624 successful sign-in, 4625 failed sign-in, 4720 account created, 4740 account locked out."
+  - id: fc-soc-l1-windows-auth-events-02
+    front: "Which logon types are 2, 3 and 10?"
+    back: "2 interactive (keyboard), 3 network (shares, services), 10 Remote Desktop."
+  - id: fc-soc-l1-windows-auth-events-03
+    front: "What do 4625 codes 0xC000006A and 0xC0000064 mean?"
+    back: "0xC000006A: wrong password for a real account. 0xC0000064: the user name does not exist."
+  - id: fc-soc-l1-windows-auth-events-04
+    front: "Brute force vs password spraying?"
+    back: "Brute force: many passwords against one account. Spraying: a few passwords against many accounts, slowly."

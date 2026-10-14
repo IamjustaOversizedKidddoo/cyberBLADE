@@ -1,0 +1,14 @@
+lesson: soc-l1-linux-telemetry-01
+cards:
+  - id: fc-soc-l1-linux-telemetry-01
+    front: "Where is the Linux authentication log on Ubuntu and on Red Hat-family systems?"
+    back: "/var/log/auth.log on Debian and Ubuntu; /var/log/secure on Red Hat-family systems."
+  - id: fc-soc-l1-linux-telemetry-02
+    front: "What do sshd's 'Invalid user', 'Failed password' and 'Accepted' lines mean?"
+    back: "Invalid user: the name does not exist. Failed password: a real account, wrong password. Accepted: a successful sign-in (password or key)."
+  - id: fc-soc-l1-linux-telemetry-03
+    front: "What does a sudo log line show?"
+    back: "Who ran it, the terminal and directory, which user it ran as (usually root), and the exact command."
+  - id: fc-soc-l1-linux-telemetry-04
+    front: "Why is shell history only a hint?"
+    back: "It can be disabled or edited and is written only when a shell exits."

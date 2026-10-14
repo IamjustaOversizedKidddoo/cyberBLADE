@@ -1,0 +1,14 @@
+lesson: soc-l1-persistence-01
+cards:
+  - id: fc-soc-l1-persistence-01
+    front: "What are five common Windows persistence locations?"
+    back: "Scheduled tasks, services, Run keys, the Startup folder, and new accounts."
+  - id: fc-soc-l1-persistence-02
+    front: "What are four common Linux persistence locations?"
+    back: "Cron jobs, systemd services, SSH authorized_keys, and shell start-up files such as ~/.bashrc."
+  - id: fc-soc-l1-persistence-03
+    front: "Which event IDs record a new service and a new scheduled task on Windows?"
+    back: "7045 for a service (System log); 4698 for a scheduled task (Security log, when auditing is on)."
+  - id: fc-soc-l1-persistence-04
+    front: "What three questions judge an autostart entry?"
+    back: "What does it run, from where, and who (which process) put it there?"

@@ -1,0 +1,14 @@
+lesson: soc-l1-process-creation-01
+cards:
+  - id: fc-soc-l1-process-creation-01
+    front: "What five things do you check in a process-creation event?"
+    back: "Parent and child pair, path, user and integrity level, the full command line, and what the process did next."
+  - id: fc-soc-l1-process-creation-02
+    front: "Which Windows sources record process creation?"
+    back: "Security event 4688 (command line only if enabled) and Sysmon event ID 1 (with command line, parent and hashes)."
+  - id: fc-soc-l1-process-creation-03
+    front: "Where does the real svchost.exe live, and what starts it?"
+    back: "C:\\Windows\\System32, started by services.exe."
+  - id: fc-soc-l1-process-creation-04
+    front: "Which parent-child pairs are suspicious?"
+    back: "Office apps or browsers starting shells or script interpreters, and script interpreters starting programs from temp or download folders."

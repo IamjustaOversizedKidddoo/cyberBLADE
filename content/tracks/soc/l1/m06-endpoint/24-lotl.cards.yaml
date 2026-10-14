@@ -1,0 +1,14 @@
+lesson: soc-l1-lotl-01
+cards:
+  - id: fc-soc-l1-lotl-01
+    front: "What does 'living off the land' mean?"
+    back: "An attacker using legitimate tools already on the system instead of their own malware, so the activity blends in."
+  - id: fc-soc-l1-lotl-02
+    front: "What five questions judge a built-in tool's use?"
+    back: "Who ran it? What started it? Which arguments? Where did it reach and write? Is this normal here?"
+  - id: fc-soc-l1-lotl-03
+    front: "Which ATT&CK techniques cover proxy execution and tool downloads?"
+    back: "T1218 System Binary Proxy Execution, and T1105 Ingress Tool Transfer."
+  - id: fc-soc-l1-lotl-04
+    front: "Does a valid operating-system signature make a tool's use safe?"
+    back: "No. Built-in tools are always signed, which is exactly why attackers misuse them."

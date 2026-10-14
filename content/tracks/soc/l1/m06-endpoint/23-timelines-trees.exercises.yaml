@@ -1,0 +1,46 @@
+lesson: soc-l1-timelines-trees-01
+exercises:
+  - id: order-events
+    title: "Merge three sources into one timeline"
+    kind: timeline
+    instructions: >-
+      Each source uses a different time zone. Convert everything to UTC before answering.
+    blocks:
+      - type: log
+        title: "Three sources (synthetic)"
+        lines:
+          - "identity  2026-10-15T11:05:00+02:00  sign-in success  user=c.moyo  src=192.0.2.243"
+          - "endpoint  2026-10-15T09:07:30Z       powershell.exe started by c.moyo on ws-207"
+          - "proxy     2026-10-15T05:03:00-04:00  ws-207 GET https://files-drop.example/a.ps1"
+    questions:
+      - id: first
+        prompt: "Which source recorded the earliest event?"
+        answer_type: choice
+        options: ["identity", "endpoint", "proxy"]
+        accept: ["proxy"]
+        hints:
+          - "Convert each time: subtract a positive offset, add a negative one."
+        explanation: >-
+          identity: 11:05+02:00 = 09:05 UTC. proxy: 05:03-04:00 = 09:03 UTC. endpoint: 09:07:30 UTC.
+          The proxy download came first. Before conversion the sign-in's 11:05 looked like the latest
+          event; in UTC it sits in the middle.
+      - id: earliest-utc
+        prompt: "What is the UTC time (HH:MM) of the earliest event?"
+        answer_type: text
+        accept: ["09:03"]
+        normalize: ["whitespace"]
+        hints:
+          - "The proxy offset is -04:00: add four hours."
+        explanation: >-
+          05:03 at -04:00 is 09:03 UTC, which is earlier than the sign-in (09:05 UTC) and the PowerShell
+          start (09:07:30 UTC).
+      - id: anchor-pivot
+        prompt: "The endpoint event is your anchor. Which value would you pivot on to find the downloaded script's activity on other machines?"
+        answer_type: choice
+        options: ["The domain files-drop.example", "The time 09:07", "The word powershell"]
+        accept: ["The domain files-drop.example"]
+        hints:
+          - "Which value is specific to this incident and searchable in other sources?"
+        explanation: >-
+          Searching proxy and DNS logs for files-drop.example finds every other machine that fetched from
+          it. A time or a common program name would match far too much.

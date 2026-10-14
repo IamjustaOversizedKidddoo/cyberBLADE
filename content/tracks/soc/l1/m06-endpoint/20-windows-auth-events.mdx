@@ -1,0 +1,173 @@
+---
+id: soc-l1-windows-auth-events-01
+title: "Windows Sign-In Events"
+track: soc
+rank: 1
+module: endpoint
+order: 20
+estimated_minutes: 16
+objectives_covered: ["soc:soc_windows_logs", "soc:soc_credential_attacks"]
+mitre: ["T1110", "T1078"]
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["core-r1-win-logs-sysmon-01"]
+skills: ["soc_windows_logs", "soc_credential_attacks"]
+practice: ["family:soc-f-brute-force-auth-01"]
+---
+
+> **Outcome:** you can read Windows sign-in events by their IDs, logon types and failure codes, and tell a forgotten password from a password-guessing attack.
+
+## Why this matters on shift
+
+Most attacks on a Windows network involve accounts: guessing passwords, using stolen ones, or creating new ones. The Windows Security log records every sign-in, success and failure, with details that tell you how and from where. A handful of event IDs and codes covers most of what an L1 analyst sees, and knowing them by heart turns a wall of log lines into a clear story.
+
+## Before you start
+
+You should already know:
+
+- Where Windows logs live and how auditing works: [Windows Event Logs, Auditing & Sysmon](/learn/core-r1-win-logs-sysmon-01).
+
+## Core ideas
+
+### Event IDs
+
+Every Windows event has an **event ID**: a number that says what kind of event it is. Think of the codes a hospital uses on its forms: the number tells you at a glance whether it is an admission, a discharge or a transfer, before you read the details.
+
+The sign-in and account events you will meet most:
+
+| Event ID | Meaning |
+|---|---|
+| 4624 | An account successfully signed in |
+| 4625 | An account failed to sign in |
+| 4634 / 4647 | Sign-out |
+| 4648 | A sign-in using explicitly supplied credentials (for example "run as" another user) |
+| 4672 | Special (administrator-level) privileges assigned to a new sign-in |
+| 4720 | A user account was created |
+| 4728 / 4732 / 4756 | A member was added to a security group (global, local, universal) |
+| 4740 | An account was locked out |
+| 1102 | The Security audit log was cleared |
+
+Domain controllers also record Kerberos events for domain sign-ins, such as 4768 (a ticket was requested) and 4771 (pre-authentication failed, often a wrong password).
+
+### Logon types
+
+A 4624 or 4625 event includes a **logon type**: a number saying how the sign-in happened. The ones you need most:
+
+| Type | How |
+|---|---|
+| 2 | Interactive: at the keyboard |
+| 3 | Network: accessing a share or service over the network |
+| 4 | Batch: a scheduled task |
+| 5 | Service: a service starting |
+| 7 | Unlock |
+| 10 | Remote interactive: Remote Desktop |
+| 11 | Cached credentials: signing in without reaching a domain controller |
+
+A Remote Desktop sign-in (type 10) to a server from a workstation that never normally does that is interesting. A type 3 sign-in to a file share is everyday traffic.
+
+### Failure codes
+
+A 4625 event explains why the sign-in failed. The detail is in the status and sub-status codes. Three to know:
+
+- `0xC000006A`: the user name exists but the password was wrong.
+- `0xC0000064`: the user name does not exist.
+- `0xC0000234`: the account is locked out.
+
+These codes are powerful in triage. Many failures with "user does not exist" means someone is guessing user names, which a real employee rarely does. Many failures with "wrong password" for one account usually means one person or one device with an old password.
+
+### Two shapes of password attack
+
+- **Brute force:** many passwords tried against one account. Usually many 4625 events for one user, often ending in a lockout (4740).
+- **Password spraying:** one or a few common passwords tried against many accounts, slowly, to stay under lockout limits. Few failures per account, many accounts, often from one source.
+
+Both become serious the moment a 4624 success appears for an account from the same source.
+
+<FlowDiagram
+  title="Reading a burst of failed sign-ins"
+  description="Group the failures by source and by account. Read the failure codes. Look for any success from the same source afterwards. Then check for lockouts and for new accounts or group changes."
+  steps={[
+    { label: "Group the failures", detail: "One account, many tries? Or many accounts, few tries each?" },
+    { label: "Read the codes", detail: "Wrong password, unknown user, or locked out?" },
+    { label: "Look for a success", detail: "Any 4624 from the same source afterwards?" },
+    { label: "Check what followed", detail: "Lockouts, new accounts (4720), group changes (4732)." },
+  ]}
+/>
+
+In plain English: who was tried, why each try failed, and whether one finally worked.
+
+## Worked example
+
+An alert at Larkspur Freight, 06:40 UTC: "Many failed sign-ins on srv-files03". The analyst groups the 4625 events from the last hour:
+
+<LogBlock
+  title="4625 summary for srv-files03 (synthetic)"
+  lines={[
+    "source 172.16.40.144 (ws-144)   account h.berg      38 failures   code 0xC000006A   logon type 3   every 5 min",
+    "source 192.0.2.226 (VPN pool)   46 accounts         1-2 each      27x 0xC0000064, 19x 0xC000006A   logon type 3",
+  ]}
+/>
+
+**A false lead.** The single biggest number is h.berg, with 38 failures. But they come from h.berg's own workstation, every five minutes, always "wrong password". That regular rhythm looks like a device or a mapped drive retrying a saved password. h.berg changed their password yesterday, and the service desk confirms a drive mapping with the old password saved. Benign, and IT fixes the saved password.
+
+**The real pattern.** The second source tried 46 different accounts once or twice each. Over half the failures say the user name does not exist. Someone is working through a list of guessed names with one or two passwords: password spraying. The analyst searches for any 4624 from 192.0.2.226:
+
+<LogBlock
+  title="4624 from 192.0.2.226 (synthetic)"
+  lines={[
+    "06:31:08  4624  account p.akande  logon type 3  source 192.0.2.226  srv-files03",
+  ]}
+/>
+
+One account, p.akande, was signed in successfully from the spraying source. That makes this an account compromise, not just an attempt. The analyst escalates immediately, recommending a password reset and a check of what p.akande's session accessed on srv-files03.
+
+## Try it
+
+<MicroExercise id="read-4625" />
+
+## Common mistakes
+
+- **Counting failures without grouping them.** Grouping by source and account reveals the shape.
+- **Ignoring the failure code.** "User does not exist" and "wrong password" tell different stories.
+- **Stopping at the failures.** The single success afterwards is what matters most.
+- **Treating every logon type the same.** Type 10 (Remote Desktop) and type 3 (network) mean very different things.
+- **Overlooking event 1102.** A cleared Security log is rarely innocent on a server.
+
+## What good looks like
+
+A strong analyst groups failures by source and account, reads the codes, recognises brute force and spraying, always searches for a success from the same source, and checks for new accounts and group changes after any compromise.
+
+## In the real world
+
+Windows events are usually collected by a SIEM agent or forwarded to a central collector. Domain sign-ins are recorded on domain controllers, so you often need both the domain controller's and the target machine's logs. Codes and field names are documented by Microsoft; keep a quick-reference list. Sign-in events for cloud services are recorded by the identity provider instead, which a later lesson covers.
+
+The simulator shows Windows events as readable messages, such as "A new process has been created", rather than as bare event ID numbers. Its brute-force scenario family uses SSH and identity-provider sign-in records. The same reasoning applies: group, read the reason, look for the success.
+
+## Remember it like this
+
+4625 fails, 4624 succeeds: group the failures, read the codes, then hunt for the success.
+
+## Interview answer
+
+"The key Windows sign-in events are 4624 for success and 4625 for failure, with the logon type showing how, such as 3 for network or 10 for Remote Desktop. In a 4625 I read the failure code: 0xC000006A is a wrong password, 0xC0000064 is an unknown user. I group failures by source and account to tell brute force on one account from spraying across many, and then I search for a 4624 from the same source, because a single success turns an attempt into a compromise. I also check for new accounts, group changes and cleared logs."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Event ID", definition: "The number that identifies the kind of event in a Windows log, such as 4624 for a successful sign-in." },
+    { term: "Logon type", definition: "A number in Windows sign-in events showing how the sign-in happened, such as 3 for network or 10 for Remote Desktop." },
+    { term: "Brute force", definition: "Trying many passwords against one account until one works." },
+    { term: "Password spraying", definition: "Trying one or a few common passwords against many accounts, slowly, to avoid lockouts." },
+    { term: "Account lockout", definition: "A control that blocks an account after too many failed sign-ins (event 4740 on Windows)." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

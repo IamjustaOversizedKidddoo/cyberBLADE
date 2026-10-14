@@ -1,0 +1,82 @@
+lesson: soc-l1-windows-auth-events-01
+questions:
+  - id: q1
+    prompt: "Which pair of Windows event IDs records successful and failed sign-ins?"
+    objectives: ["soc:soc_windows_logs"]
+    options:
+      - text: "4624 (success) and 4625 (failure)."
+        correct: true
+        explanation: "Correct."
+      - text: "4720 (success) and 4740 (failure)."
+        correct: false
+        explanation: "4720 is account creation and 4740 is lockout."
+      - text: "1102 (success) and 4688 (failure)."
+        correct: false
+        explanation: "1102 is the audit log being cleared and 4688 is process creation."
+      - text: "4672 (success) and 4648 (failure)."
+        correct: false
+        explanation: "4672 is special privileges assigned and 4648 is explicit credentials."
+  - id: q2
+    prompt: "Many 4625 events show code 0xC0000064 across dozens of accounts from one source. What does that suggest?"
+    objectives: ["soc:soc_credential_attacks"]
+    options:
+      - text: "Someone is guessing user names, as in password spraying with a name list."
+        correct: true
+        explanation: "Correct. 0xC0000064 means the user name does not exist, which real employees rarely hit."
+      - text: "One employee forgot their password."
+        correct: false
+        explanation: "That would show one account with wrong-password failures."
+      - text: "The accounts are all locked out."
+        correct: false
+        explanation: "Lockout has its own code and event."
+      - text: "The domain controller is offline."
+        correct: false
+        explanation: "The failures were answered, so the authentication service was working."
+  - id: q3
+    prompt: "A burst of failed sign-ins is followed by one 4624 from the same source. Why is that the key event?"
+    objectives: ["soc:soc_credential_attacks"]
+    options:
+      - text: "It means a guess worked, turning an attempt into an account compromise."
+        correct: true
+        explanation: "Correct. Escalate and secure that account."
+      - text: "It means the attack stopped."
+        correct: false
+        explanation: "It may mean the attack succeeded."
+      - text: "It is just a normal sign-out."
+        correct: false
+        explanation: "4624 is a successful sign-in, not a sign-out."
+      - text: "It proves the source is an employee."
+        correct: false
+        explanation: "Attackers sign in with valid credentials too (T1078 Valid Accounts)."
+  - id: q4
+    prompt: "What does logon type 10 mean?"
+    objectives: ["soc:soc_windows_logs"]
+    options:
+      - text: "A Remote Desktop sign-in."
+        correct: true
+        explanation: "Correct. Type 10 is remote interactive."
+      - text: "A sign-in at the keyboard."
+        correct: false
+        explanation: "That is type 2."
+      - text: "A network sign-in to a file share."
+        correct: false
+        explanation: "That is type 3."
+      - text: "A service starting."
+        correct: false
+        explanation: "That is type 5."
+  - id: q5
+    prompt: "One account has 40 failed sign-ins, all 'wrong password', every 5 minutes, from the user's own workstation. What is the most likely explanation?"
+    objectives: ["soc:soc_credential_attacks"]
+    options:
+      - text: "A device or saved connection retrying an old password after a password change."
+        correct: true
+        explanation: "Correct. A steady rhythm from the user's own machine is typical; confirm with the user or service desk."
+      - text: "Password spraying from the internet."
+        correct: false
+        explanation: "Spraying hits many accounts from an attacker's source, not one account from the user's own machine."
+      - text: "A successful compromise."
+        correct: false
+        explanation: "There is no success in this pattern."
+      - text: "The audit log being cleared."
+        correct: false
+        explanation: "That is event 1102, unrelated to failed sign-ins."

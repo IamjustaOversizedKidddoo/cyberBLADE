@@ -1,0 +1,48 @@
+lesson: soc-l1-process-creation-01
+exercises:
+  - id: judge-processes
+    title: "Judge a small process tree"
+    kind: log-reading
+    instructions: >-
+      This is the process tree for workstation ws-172 over ten minutes. Each line shows the process ID,
+      the parent process ID, the user and the command line.
+    blocks:
+      - type: log
+        title: "Process tree, ws-172 (synthetic)"
+        lines:
+          - "pid 704   ppid 600   SYSTEM    C:\\Windows\\System32\\services.exe"
+          - "pid 1220  ppid 704   SYSTEM    C:\\Windows\\System32\\svchost.exe -k netsvcs"
+          - "pid 3300  ppid 2900  m.nowak   C:\\Program Files\\Mail\\mailclient.exe"
+          - "pid 3420  ppid 3300  m.nowak   C:\\Windows\\System32\\wscript.exe C:\\Users\\m.nowak\\Downloads\\shipping_label.js"
+          - "pid 3480  ppid 3420  m.nowak   C:\\Users\\Public\\svchost.exe --update"
+    questions:
+      - id: parent-of-js
+        prompt: "Which program started the script interpreter (pid 3420)? (Type its file name.)"
+        answer_type: text
+        accept: ["mailclient.exe"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Find pid 3420's ppid, then find the line with that pid."
+        explanation: >-
+          pid 3420's parent is 3300, which is mailclient.exe. A mail client starting a script interpreter
+          on a downloaded .js file is the shape of a malicious attachment being opened.
+      - id: fake-svchost
+        prompt: "Which svchost.exe is not the real one?"
+        answer_type: choice
+        options: ["pid 1220", "pid 3480", "Both are real"]
+        accept: ["pid 3480"]
+        hints:
+          - "Where does the real svchost.exe live, and which process normally starts it?"
+        explanation: >-
+          pid 3480 runs from C:\Users\Public and was started by a script interpreter. The real one, pid
+          1220, runs from System32 and was started by services.exe. This is masquerading (T1036).
+      - id: technique
+        prompt: "Which ATT&CK technique best describes pid 3420's activity?"
+        answer_type: choice
+        options: ["T1059 Command and Scripting Interpreter", "T1110 Brute Force", "T1566.002 Spearphishing Link", "T1046 Network Service Discovery"]
+        accept: ["T1059 Command and Scripting Interpreter"]
+        hints:
+          - "What kind of program is wscript.exe, and what is it doing here?"
+        explanation: >-
+          wscript.exe is a script interpreter running a script file, which is T1059. The attachment being
+          opened by the user is T1204.002; spearphishing link would need a link, not an attachment.
