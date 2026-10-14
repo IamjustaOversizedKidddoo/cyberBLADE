@@ -222,37 +222,49 @@ describe("SOC Report Adversarial API & Security Controls", () => {
     });
   });
 
-  describe("5. PostgreSQL Security Definier & Search Path Audit", () => {
-    it("proves every SQL function declares SECURITY DEFINER with fixed search_path", () => {
+  describe("5. PostgreSQL SECURITY mode & search_path audit", () => {
+    // SECURITY DEFINER runs with the owner's rights, so it is the risky choice: allowed only
+    // where privilege escalation is the point, each with a reason. Everything else must say
+    // SECURITY INVOKER explicitly. (Corrected 2026-10-14: the earlier version required DEFINER
+    // everywhere and its `\Z` lookahead cut function bodies at any letter "z".)
+    const DEFINER_ALLOWLIST: Record<string, string> = {
+      "public.delete_user_account": "erases rows across tables the caller cannot delete directly; checks auth.uid()",
+      "public.prevent_operator_rank_escalation": "trigger must read service-only state to reject rank tampering",
+      "public.set_updated_at": "existing trigger helper (prompt 6); harmless, candidate for SECURITY INVOKER",
+    };
+
+    function functionsIn(content: string): Array<{ name: string; header: string }> {
+      const out: Array<{ name: string; header: string }> = [];
+      const re = /CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(public\.[a-zA-Z0-9_]+)\s*\(/gi;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(content)) !== null) {
+        // The header runs from CREATE FUNCTION to the body's opening dollar quote.
+        const bodyStart = content.indexOf("$$", m.index);
+        expect(bodyStart, `${m[1]} has no $$ body`).toBeGreaterThan(m.index);
+        out.push({ name: m[1], header: content.slice(m.index, bodyStart) });
+      }
+      return out;
+    }
+
+    it("every SQL function pins search_path and declares its security mode explicitly", () => {
       const migrationsDir = path.resolve("supabase/migrations");
-      const sqlFiles = fs
-        .readdirSync(migrationsDir)
-        .filter((f) => f.endsWith(".sql"));
+      const sqlFiles = fs.readdirSync(migrationsDir).filter((f) => f.endsWith(".sql"));
+      let checked = 0;
 
       for (const file of sqlFiles) {
         const content = fs.readFileSync(path.join(migrationsDir, file), "utf8");
-
-        // Match CREATE [OR REPLACE] FUNCTION public.<name>
-        const functionRegex = /CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(public\.[a-zA-Z0-9_]+)\s*\((.*?)\)[\s\S]*?(?=CREATE|ALTER|DROP|\Z)/gi;
-
-        let match: RegExpExecArray | null;
-        while ((match = functionRegex.exec(content)) !== null) {
-          const fnName = match[1];
-          const fnBody = match[0];
-
-          // 1. Check for search_path declaration
-          expect(
-            fnBody,
-            `Function ${fnName} in ${file} must declare SET search_path to prevent path hijacking`,
-          ).toMatch(/SET\s+search_path\s*=\s*/i);
-
-          // 2. Check for SECURITY DEFINER
-          expect(
-            fnBody,
-            `Function ${fnName} in ${file} must declare SECURITY DEFINER`,
-          ).toMatch(/SECURITY\s+DEFINER/i);
+        for (const fn of functionsIn(content)) {
+          checked++;
+          expect(fn.header, `${fn.name} in ${file} must SET search_path`).toMatch(/SET\s+search_path\s*=\s*\S/i);
+          const definer = /SECURITY\s+DEFINER/i.test(fn.header);
+          const invoker = /SECURITY\s+INVOKER/i.test(fn.header);
+          expect(definer || invoker, `${fn.name} in ${file} must declare SECURITY DEFINER or INVOKER`).toBe(true);
+          if (definer) {
+            expect(DEFINER_ALLOWLIST[fn.name], `${fn.name} in ${file} is SECURITY DEFINER without an allowlisted reason`).toBeDefined();
+          }
         }
       }
+      expect(checked).toBeGreaterThanOrEqual(5);
     });
   });
 });
