@@ -122,8 +122,8 @@ Standing rules saved to `docs/ops/standing-rules.md`. Audit and corrections in `
 | A | Design brief, AI rubric (6 criteria, original bands + synthetic anchors), prompts p1, config | ✅ | `8cd12c7`, `4abb838` |
 | B | Handler provider `complete()` (no heuristic fallback, usage, JSON mode); Handler tests unchanged (139) + 7 new | ✅ | `b6eb5ba` |
 | C | Boundary, sanitizer/PII, pre-filter, injection signals, prompt builder, output validation, aggregation, feedback tone filter, gradeCriterion, mocks; 63 unit tests | ✅ | `78d00c5` |
-| D | Store, migration, job pipeline, quotas, modes/gate enforcement, score composition | ⏳ | — |
-| E | Injection corpus (100+) and defence proof | ⬜ | — |
-| F | Calibration harness, metrics, fairness, gate CLI, drift, synthetic demo, real-provider script | ⬜ | — |
-| G | Review queue, human-review request, UI + design evidence | ⬜ | — |
+| D | Stores (local/Supabase), migration (7 tables, NOT executed), job pipeline, quotas/ceiling/kill switch, gate enforcement, score composition, sentinel deny-list (mutation-checked); corrected prompt-6 SQL audit test (S4) | ✅ | `1225980`, `b1efeee` |
+| E | 113-case injection corpus; vs obedient mock: 0 counted elevations, 113/113 detected (corpus NOT held-out: first run found 7 bypasses, fixed by general rules); susceptibility metric fails injectable models | ✅ | `6e7cb7f` |
+| F | Metrics (known answers incl. Krippendorff 2011, Shrout-Fleiss), consent-gated packets, fairness pairs (4 planted-flaw mocks fail), gate eval (empty sign-off), drift, review accept/override, CLIs, guarded real-provider script | ✅ | `0016759` |
+| G | Server actions, learner UI (status, spans, review request, consent, How-AI-works panel) + design evidence | ⏳ | — |
 | H | Deletion/export, adversarial API tests, e2e preview + axe, docs, full gates | ⬜ | — |
