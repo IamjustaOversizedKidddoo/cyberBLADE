@@ -22,12 +22,12 @@ skills:
     gap: null
   - id: soc_credential_attacks
     planned: "20, 27, 28"
-    lessons: []
+    lessons: [soc-l1-windows-auth-events-01]
     practice: ["family:soc-f-brute-force-auth-01", "family:soc-f-cloud-identity-01"]
     gap: null
   - id: soc_endpoint_triage
     planned: "21-24"
-    lessons: []
+    lessons: [soc-l1-process-creation-01, soc-l1-persistence-01, soc-l1-timelines-trees-01, soc-l1-lotl-01]
     practice: ["family:soc-f-attachment-script-01", "tool:endpoint_timeline"]
     gap: null
   - id: soc_network_indicators
@@ -72,14 +72,14 @@ skills:
     gap: null
   - id: soc_windows_logs
     planned: "20"
-    lessons: []
+    lessons: [soc-l1-windows-auth-events-01]
     practice: ["family:soc-f-brute-force-auth-01"]
     gap: null
   - id: soc_linux_logs
     planned: "25"
-    lessons: []
-    practice: []
-    gap: "gap: no Linux-centred scenario family, and the drill dataset has no Linux logs"
+    lessons: [soc-l1-linux-telemetry-01]
+    practice: ["lesson:core-r1-linux-investigate-01"]
+    gap: "gap: no Linux-centred scenario family, and the drill dataset has no Linux logs; practice is the core Linux lab"
   - id: soc_malware_triage
     planned: "14, 30, 32"
     lessons: [soc-l1-links-attachments-01]
@@ -97,7 +97,7 @@ skills:
     gap: null
   - id: soc_scope_assessment
     planned: "6, 9, 23, 36"
-    lessons: [soc-l1-prioritisation-01, soc-l1-attack-stages-01]
+    lessons: [soc-l1-prioritisation-01, soc-l1-attack-stages-01, soc-l1-timelines-trees-01]
     practice: ["report:scope_and_impact"]
     gap: null
   - id: soc_escalation_handoff

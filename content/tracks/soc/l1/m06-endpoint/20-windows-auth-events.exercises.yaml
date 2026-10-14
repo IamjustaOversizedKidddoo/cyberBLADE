@@ -1,0 +1,49 @@
+lesson: soc-l1-windows-auth-events-01
+exercises:
+  - id: read-4625
+    title: "Read Windows sign-in events"
+    kind: log-reading
+    instructions: >-
+      These events come from server srv-app11 over 20 minutes. Use the event ID, logon type and
+      code tables in the lesson.
+    blocks:
+      - type: log
+        title: "Security log, srv-app11 (synthetic)"
+        lines:
+          - "02:10:04  4625  account admin        type 3   source 192.0.2.231  code 0xC000006A"
+          - "02:10:05  4625  account admin        type 3   source 192.0.2.231  code 0xC000006A"
+          - "...       (210 more identical failures for 'admin' within 6 minutes)"
+          - "02:16:12  4740  account admin        locked out"
+          - "02:18:40  4624  account backup_svc   type 10  source 192.0.2.231"
+          - "02:21:15  4720  account 'support01' created by backup_svc"
+    questions:
+      - id: attack-shape
+        prompt: "What kind of password attack do the failures show?"
+        answer_type: choice
+        options: ["Brute force", "Password spraying", "Neither"]
+        accept: ["Brute force"]
+        hints:
+          - "How many accounts were tried, and how many times each?"
+        explanation: >-
+          Hundreds of passwords against one account, ending in a lockout, is brute force. Spraying
+          would show a few tries against many accounts.
+      - id: logon-type
+        prompt: "How did backup_svc sign in at 02:18?"
+        answer_type: choice
+        options: ["Remote Desktop", "At the keyboard", "As a service", "Over a file share"]
+        accept: ["Remote Desktop"]
+        hints:
+          - "Look up logon type 10 in the lesson's table."
+        explanation: >-
+          Logon type 10 is remote interactive, meaning Remote Desktop. A service account signing in
+          interactively over Remote Desktop from an outside address is a strong warning sign.
+      - id: persistence-event
+        prompt: "Which event ID shows the attacker setting up a way back in?"
+        answer_type: text
+        accept: ["4720"]
+        normalize: ["whitespace"]
+        hints:
+          - "Which event creates something that would survive a password reset of backup_svc?"
+        explanation: >-
+          Event 4720 records a new account, support01, created by backup_svc. A new account gives the
+          attacker access that does not depend on backup_svc's password.

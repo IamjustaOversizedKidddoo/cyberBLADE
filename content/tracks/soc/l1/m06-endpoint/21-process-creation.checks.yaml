@@ -1,0 +1,82 @@
+lesson: soc-l1-process-creation-01
+questions:
+  - id: q1
+    prompt: "Which parent-child pair deserves the closest look?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "A spreadsheet application starting a command shell."
+        correct: true
+        explanation: "Correct. Office apps rarely start shells; malicious documents often do."
+      - text: "explorer.exe starting a web browser."
+        correct: false
+        explanation: "That is a user opening a browser."
+      - text: "services.exe starting svchost.exe from System32."
+        correct: false
+        explanation: "That is how Windows normally starts its services."
+      - text: "A web browser starting a new browser tab process."
+        correct: false
+        explanation: "Modern browsers start many of their own processes."
+  - id: q2
+    prompt: "On Windows, what must be true for event 4688 to include the command line?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "The auditing setting that includes command lines in process-creation events must be turned on."
+        correct: true
+        explanation: "Correct. Without it, 4688 records the process but not its arguments."
+      - text: "Nothing; 4688 always includes it."
+        correct: false
+        explanation: "It is an optional setting, often left off."
+      - text: "The process must run as an administrator."
+        correct: false
+        explanation: "Privilege does not control whether the command line is logged."
+      - text: "Sysmon must be uninstalled."
+        correct: false
+        explanation: "Sysmon is a separate source that can record command lines itself."
+  - id: q3
+    prompt: "An svchost.exe runs from C:\\Users\\Public and was started by a script interpreter. What is this?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "Masquerading: a malicious program using a familiar Windows name."
+        correct: true
+        explanation: "Correct. The path and parent give it away."
+      - text: "A normal Windows service."
+        correct: false
+        explanation: "The real svchost.exe lives in System32 and is started by services.exe."
+      - text: "A Windows update."
+        correct: false
+        explanation: "Updates do not run system programs from the Public folder."
+      - text: "A user opening a document."
+        correct: false
+        explanation: "Nothing here is a document being opened."
+  - id: q4
+    prompt: "PowerShell runs with an execution-policy bypass. Its parent is the company's inventory agent running as SYSTEM, and the script is in the company program folder. What is the best disposition?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "Benign true positive, once the agent and its schedule are confirmed."
+        correct: true
+        explanation: "Correct. The rule caught what it looks for, and the activity is approved management software."
+      - text: "True positive, because an execution-policy bypass means an attack."
+        correct: false
+        explanation: "Management tools use it legitimately; context decides."
+      - text: "False positive, because the rule is wrong."
+        correct: false
+        explanation: "The rule correctly detected a bypass; the activity is simply approved."
+      - text: "Duplicate."
+        correct: false
+        explanation: "Nothing says another alert already covers it."
+  - id: q5
+    prompt: "Why should you look past the alerting event on a host's timeline?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "Malicious activity can sit nearby without matching any rule."
+        correct: true
+        explanation: "Correct. Rules miss things; the timeline shows what happened around the alert."
+      - text: "To make the investigation take longer."
+        correct: false
+        explanation: "The aim is to find what rules missed, not to spend time."
+      - text: "Because alerting events are always false positives."
+        correct: false
+        explanation: "Many alerts are real; the point is not to stop at them."
+      - text: "To read the user's personal files."
+        correct: false
+        explanation: "Look only at evidence the task needs."

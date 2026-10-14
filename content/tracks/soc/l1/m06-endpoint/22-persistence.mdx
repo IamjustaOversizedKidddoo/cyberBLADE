@@ -1,0 +1,141 @@
+---
+id: soc-l1-persistence-01
+title: "Persistence: Tasks, Services, Run Keys and Cron"
+track: soc
+rank: 1
+module: endpoint
+order: 22
+estimated_minutes: 15
+objectives_covered: ["soc:soc_endpoint_triage"]
+mitre: ["T1053.005", "T1543.003", "T1547.001", "T1053.003", "T1098.004"]
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-process-creation-01", "core-r1-linux-services-01"]
+skills: ["soc_endpoint_triage"]
+practice: ["family:soc-f-attachment-script-01"]
+---
+
+> **Outcome:** you can name the common places attackers use to survive a reboot on Windows and Linux, read the events that record them, and tell a malicious entry from an ordinary one.
+
+## Why this matters on shift
+
+Removing malware that has already set up persistence is like changing the front-door lock while the burglar still has a key to the back door. If you find the persistence, you find the attacker's way back in, and you also find a strong sign that the machine is compromised. Persistence entries are also easy to compare across machines, which helps you work out how far an attack spread.
+
+## Before you start
+
+You should already know:
+
+- How to read process-creation events: [Process Creation and Command Lines](/learn/soc-l1-process-creation-01).
+- How Linux services and cron jobs work: [Services, Cron and the Environment](/learn/core-r1-linux-services-01).
+
+You met persistence as a stage in [How Attacks Unfold](/learn/soc-l1-attack-stages-01).
+
+## Core ideas
+
+### Autostart locations
+
+An **autostart location** is any place a system checks to decide what to run automatically: at start-up, at sign-in, or on a schedule. Attackers add their own entries to these places. Administrators and software installers add legitimate ones every day, so the skill is telling them apart.
+
+Think of a building's standing instructions: "every morning at 7, open the loading door", "whenever the manager arrives, unlock the safe". Anyone who can add a line to that list can make the building do things on their behalf, long after they have left.
+
+### Windows: the common ones
+
+- **Scheduled task** (T1053.005): a job that Windows Task Scheduler runs at set times or on events. When object-access auditing is on, creating one is recorded as Security event 4698. Tasks are also created with the `schtasks` command, which shows up in process-creation records.
+- **Windows service** (T1543.003): a program Windows starts in the background, often as SYSTEM. Installing one is recorded in the System log as event 7045.
+- **Run key** (T1547.001): registry locations whose values are run at every sign-in. The best known are `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (for one user) and `HKLM\Software\Microsoft\Windows\CurrentVersion\Run` (for all users). Sysmon records registry value changes as its event ID 13.
+- **Startup folder**: programs or shortcuts placed in a user's or all users' Startup folder run at sign-in.
+- **New accounts**: an account the attacker creates (Windows event 4720) is persistence too.
+
+### Linux: the common ones
+
+- **Cron jobs** (T1053.003): lines in a user's crontab or in `/etc/cron.d/` and similar directories that run commands on a schedule. Cron's own log lines record jobs running.
+- **systemd services**: unit files that start programs at boot.
+- **SSH authorized keys** (T1098.004): a public key added to a user's `~/.ssh/authorized_keys` lets the holder of the matching private key sign in without the password.
+- **Shell start-up files**, such as `~/.bashrc`, which run every time the user opens a shell.
+
+### Malicious or ordinary?
+
+<FlowDiagram
+  title="Judging a new autostart entry"
+  description="Look at what the entry runs and from where, who created it and from which process, whether it is signed or belongs to installed software, and whether a change record explains it. Then compare with other machines."
+  steps={[
+    { label: "What does it run?", detail: "A known program, or a script or binary in a temp, public or downloads folder?" },
+    { label: "Who created it?", detail: "An installer or management tool, or a script interpreter or document?" },
+    { label: "Does it belong to known software?", detail: "Check the software list, the publisher and a change record." },
+    { label: "Is the name honest?", detail: "A generic or system-sounding name with a strange path is a warning." },
+    { label: "Compare across machines", detail: "On every laptop (software), or on just one or two (suspicious)?" },
+  ]}
+/>
+
+In plain English: what it runs, where from, who put it there, and whether anything ordinary explains it.
+
+## Worked example
+
+During triage of a suspicious-document alert on ws-181 at Larkspur Freight, the analyst lists new autostart entries created in the last 24 hours:
+
+<LogBlock
+  title="New autostart entries, ws-181 (synthetic)"
+  lines={[
+    "09:12  scheduled task  'PDFReaderUpdate'   runs: C:\\Program Files\\PDFReader\\updater.exe   created by: PDFReaderSetup.exe (signed)",
+    "14:03  run key (HKCU)  'OneSync'           runs: C:\\Users\\r.lopez\\AppData\\Roaming\\OneSync\\onesync.exe   created by: wscript.exe",
+    "14:05  scheduled task  'MicrosoftEdgeSvc'  runs: powershell -w hidden -File C:\\Users\\Public\\e.ps1   created by: onesync.exe",
+  ]}
+/>
+
+**A false lead.** The first entry is a new scheduled task, and new tasks are what persistence alerts look for. But it was created by the signed installer of the PDF reader, runs the vendor's updater from its program folder, and the same task exists on every laptop that got the update this week. Ordinary.
+
+**The real persistence.** Two minutes after a script interpreter ran at 14:03, a Run key named 'OneSync' was added. It runs a program from the user's roaming profile folder, and it was written by the script interpreter, not an installer. Two minutes later that program created a scheduled task with a Microsoft-sounding name that runs a hidden PowerShell script from the Public folder. Two layers of persistence, each written by the one before.
+
+The analyst escalates ws-181 and lists both entries, so responders remove both. Removing only one would leave the attacker a way back. The analyst also searches other machines for the 'OneSync' run key and the task name.
+
+## Try it
+
+<MicroExercise id="spot-persistence" />
+
+## Common mistakes
+
+- **Treating every new task or service as malicious.** Installers and updaters create them constantly.
+- **Trusting a system-sounding name.** Attackers pick names like "Update" or "Svc" on purpose.
+- **Removing one entry and stopping.** Attackers often set up more than one.
+- **Forgetting accounts and keys.** New accounts and SSH keys are persistence too.
+- **Not checking other machines.** The same entry elsewhere shows how far the attack spread.
+
+## What good looks like
+
+A strong analyst knows the main autostart locations on both platforms, checks what each entry runs, from where and who created it, compares entries across machines, and makes sure every layer of persistence is listed in the escalation.
+
+## In the real world
+
+EDR tools and tools such as Sysinternals Autoruns list autostart entries across dozens of locations, far more than this lesson covers. Many organisations collect Sysmon registry and file events to catch new entries as they appear. On Linux, file-integrity monitoring and auditd rules can watch cron, systemd and SSH key files.
+
+In the simulator's attachment scenario family, persistence appears in the scenario's endpoint events. The same three questions work there: what does it run, from where, and who put it there?
+
+## Remember it like this
+
+Find the attacker's back-door key: what runs, from where, and who put it there.
+
+## Interview answer
+
+"Common persistence on Windows is scheduled tasks, services, Run keys, the Startup folder and new accounts; on Linux it's cron jobs, systemd services, SSH authorized keys and shell start-up files. Relevant events include 4698 for a new task, 7045 for a new service, 4720 for a new account and Sysmon 13 for registry changes. To judge an entry I check what it runs and from where, which process created it, whether it belongs to known software or a change, and whether it appears on other machines, and I make sure every layer gets removed, not just one."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Autostart location", definition: "Any place a system checks to decide what to run automatically at start-up, at sign-in or on a schedule." },
+    { term: "Scheduled task", definition: "A job Windows Task Scheduler runs at set times or on events; creation is Security event 4698 when auditing is on." },
+    { term: "Run key", definition: "A Windows registry location whose values are run automatically at every sign-in." },
+    { term: "Cron job", definition: "A Linux scheduled command defined in a crontab or a cron directory." },
+    { term: "SSH authorized keys", definition: "A file listing public keys allowed to sign in to a Linux account without its password." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

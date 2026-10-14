@@ -1,0 +1,151 @@
+---
+id: soc-l1-timelines-trees-01
+title: "Timelines and Process Trees"
+track: soc
+rank: 1
+module: endpoint
+order: 23
+estimated_minutes: 15
+objectives_covered: ["soc:soc_endpoint_triage", "soc:soc_scope_assessment"]
+mitre: []
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-process-creation-01"]
+skills: ["soc_endpoint_triage", "soc_scope_assessment"]
+practice: ["tool:endpoint_timeline", "report:timeline"]
+---
+
+> **Outcome:** you can build a timeline from several log sources around one anchor event, read a process tree correctly, and write timeline entries that someone else can check.
+
+## Why this matters on shift
+
+Individual events are puzzle pieces. A timeline puts them in order, and order is what turns "a document was opened, a program ran, a connection was made" into "the document caused the program, which made the connection". Timelines are also how you find the start of an incident and how far it has gone, and they are the backbone of every incident report.
+
+## Before you start
+
+You should already know:
+
+- How to read process-creation events: [Process Creation and Command Lines](/learn/soc-l1-process-creation-01).
+- How to convert times to UTC: [Anatomy of an Alert](/learn/soc-l1-alert-anatomy-01).
+
+## Core ideas
+
+### What a timeline is
+
+A **timeline** is a list of events from one or more sources, converted to one time zone and put in order, so you can see what happened before and after a point of interest.
+
+Think of a detective pinning notes on a wall in time order: the CCTV still at 21:02, the card payment at 21:05, the taxi booking at 21:11. Each note alone means little. In order, they tell a story, and the empty space on the wall shows what you still need to find.
+
+### Start from an anchor
+
+An **anchor event** is the event you start a timeline from, usually the alert or the first thing you confirmed. From the anchor you expand in both directions:
+
+- **Backwards**, to find how it started: the email, the sign-in, the download.
+- **Forwards**, to find what it led to: new processes, connections, other machines.
+
+You expand by **pivoting**: taking a value from one event (a user, host, process ID, file hash, IP address or domain) and searching other sources for it. Each pivot either adds events to the timeline or tells you that a source has nothing.
+
+### Reading a process tree
+
+A **process tree** shows processes arranged by who started whom: each child sits under its parent. Trees are built from process IDs (PIDs) and parent process IDs (PPIDs).
+
+Two cautions:
+
+- **PIDs are reused.** After a process ends, the operating system can give its number to a new process. Always match a PPID to a parent that was running at that time, not just one with the same number earlier in the day.
+- **Parents can end before children.** A short-lived script can start a long-running program and then exit. The child's parent may no longer appear in the live process list, but the creation events still show it.
+
+### Building it carefully
+
+<FlowDiagram
+  title="Building a timeline"
+  description="Pick the anchor. Collect events from each relevant source and convert all times to UTC. Merge them in order. Expand backwards and forwards by pivoting on users, hosts, hashes and addresses. Mark gaps and note the source of every entry."
+  steps={[
+    { label: "Pick the anchor", detail: "The alert or first confirmed event." },
+    { label: "Collect and convert", detail: "Endpoint, identity, email, proxy, firewall; everything to UTC." },
+    { label: "Merge in order", detail: "One list, oldest first." },
+    { label: "Pivot both ways", detail: "Users, hosts, hashes, addresses, process IDs." },
+    { label: "Mark gaps and sources", detail: "Every entry has a source; every silence is noted." },
+  ]}
+/>
+
+In plain English: start at one fact, convert everything to one clock, then follow the threads backwards and forwards, writing down where each fact came from.
+
+### Good timeline entries
+
+Each entry should say when (with time zone), what happened in a sentence, which source it came from, and point to the evidence. Keep facts separate from interpretation: "10:47:15 UTC: winword.exe started cmd.exe (endpoint)" is a fact; "the attacker gained execution" is the interpretation you write in the narrative.
+
+The simulator's incident report has a timeline table that asks for exactly this: a timestamp with time zone, a short description, the log source and a link to the supporting evidence, with between 2 and 30 rows.
+
+## Worked example
+
+The anchor at Larkspur Freight is an alert: "Unknown program connected to 192.0.2.240" from ws-192 at 15:22 UTC. The analyst builds the timeline:
+
+<LogBlock
+  title="Merged timeline, ws-192 (synthetic, all times UTC)"
+  lines={[
+    "14:58:10  email     d.ward received 'Updated rota' with attachment rota.zip (gateway: delivered)",
+    "15:20:31  endpoint  explorer.exe (pid 2210) started 7z.exe opening rota.zip from Downloads",
+    "15:20:58  endpoint  explorer.exe (pid 2210) started rota.scr from the extracted folder (pid 4870)",
+    "15:21:40  endpoint  pid 4870 ended",
+    "15:21:55  endpoint  svcupd.exe started (pid 4870, parent pid 3008 = msedge.exe)",
+    "15:22:03  endpoint  svcupd.exe (pid 4870) connected to 192.0.2.240:443   <- anchor",
+    "15:22:30  proxy     no record for ws-192 between 15:20 and 15:40",
+  ]}
+/>
+
+**A false lead from PID reuse.** At first glance, the anchor program has pid 4870, the same as `rota.scr`, so the analyst is tempted to write "rota.scr became svcupd.exe". But pid 4870 ended at 15:21:40 and was reused. The new process's parent is pid 3008, the browser. The real chain into svcupd.exe goes through the browser, which means something in the browser started it (perhaps a second download), and that needs its own pivot.
+
+**Backwards.** The email at 14:58 and the extraction of an archive containing a `.scr` file (a screensaver file, which Windows runs as a program) are the likely start. **Forwards.** The connection at 15:22 is the anchor. **Gaps.** The proxy has no record, which the analyst notes: the connection may have bypassed the proxy, which is a lead in itself.
+
+The escalation lists the facts in order, marks the two unexplained links (browser to svcupd.exe, and the missing proxy record), and keeps interpretation separate.
+
+## Try it
+
+<MicroExercise id="order-events" />
+
+## Common mistakes
+
+- **Mixing time zones.** Convert everything to UTC before you merge.
+- **Matching parents by PID alone.** PIDs are reused; check the parent was running at that time.
+- **Writing interpretation as fact.** "Attacker executed payload" belongs in the narrative, not the timeline row.
+- **Leaving out sources.** Every entry needs one, or nobody can check it.
+- **Hiding gaps.** Silence where you expected evidence is an entry too.
+
+## What good looks like
+
+A strong analyst's timeline starts from a clear anchor, uses one time zone, cites a source for every row, separates facts from interpretation, and shows gaps openly. Reading it, someone else can follow the incident and check every step.
+
+## In the real world
+
+Teams build timelines in SIEM searches, spreadsheets, case tools or dedicated timeline tools that merge many log formats. In larger incidents, several analysts add to the same timeline, which only works if everyone uses UTC and cites sources.
+
+The simulator's endpoint timeline gives you a process tree (with process IDs, parent IDs, users, integrity levels and command lines), a list of timestamped endpoint events, and any telemetry gaps for the host.
+
+## Remember it like this
+
+One anchor, one clock, one source per row, and follow every thread both ways.
+
+## Interview answer
+
+"I start a timeline from an anchor event, usually the alert, collect events from every relevant source, convert them all to UTC, and merge them in order. Then I pivot on users, hosts, hashes, addresses and process IDs to expand backwards to the start and forwards to the impact. When reading process trees I remember that PIDs get reused, so I check the parent was alive at the time. Each entry gets a source, facts stay separate from interpretation, and I note gaps where evidence is missing."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Timeline", definition: "Events from one or more sources, converted to one time zone and put in order." },
+    { term: "Anchor event", definition: "The event a timeline starts from, usually the alert or the first confirmed event." },
+    { term: "Pivoting", definition: "Taking a value from one event, such as a user, host, hash or address, and searching other sources for it." },
+    { term: "Process tree", definition: "Processes arranged by which one started which, built from process IDs and parent process IDs." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

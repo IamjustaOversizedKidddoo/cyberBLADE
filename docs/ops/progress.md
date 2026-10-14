@@ -170,4 +170,5 @@ Prerequisite changes from the plan: the plan's Rank 2 core prerequisites for les
 | M2 Alert triage | alert-anatomy, prioritisation, dispositions, rationale-escalation (+ pilot triage-loop now depends on alert-anatomy) | ✓ | content + review 107/107 | `f30f131`, fix `e2c3c3c` (card fronts; linter rule added) |
 | M3 Detection | attack-stages, attack-vocabulary, detection-blind-spots | ✓ | content + review 107/107 | `380c367` |
 | M4 Phishing and email | how-email-travels, links-attachments, phishing-response (+ pilot email-headers now depends on how-email-travels) | ✓ | content + review 107/107 | `99b2e17` |
-| M5 Network evidence | flow-vs-packet, dns-http-tls, beacon-scan-egress, proxy-firewall-logs (drill targets remapped to what each drill practises; see plan) | ✓ | content + review + drill-check 116/116 | (this commit) |
+| M5 Network evidence | flow-vs-packet, dns-http-tls, beacon-scan-egress, proxy-firewall-logs (drill targets remapped to what each drill practises; see plan) | ✓ | content + review + drill-check 116/116 | `f708b55` |
+| M6 Windows and Linux telemetry | windows-auth-events, process-creation, persistence, timelines-trees, lotl, linux-telemetry | ✓ | content + review 107/107 | (this commit) |

@@ -1,0 +1,52 @@
+lesson: soc-l1-linux-telemetry-01
+exercises:
+  - id: read-linux-auth
+    title: "Read an Ubuntu authentication log"
+    kind: log-reading
+    instructions: >-
+      These lines come from /var/log/auth.log on srv-lnx14, an Ubuntu server whose clock is set to UTC.
+    blocks:
+      - type: log
+        title: "srv-lnx14 /var/log/auth.log (synthetic)"
+        lines:
+          - "Oct 15 05:01:12 srv-lnx14 sshd[2201]: Invalid user test from 192.0.2.250 port 51001"
+          - "Oct 15 05:01:15 srv-lnx14 sshd[2203]: Invalid user admin1 from 192.0.2.250 port 51007"
+          - "Oct 15 05:02:40 srv-lnx14 sshd[2240]: Failed password for webops from 192.0.2.250 port 51090 ssh2"
+          - "Oct 15 05:02:52 srv-lnx14 sshd[2244]: Accepted password for webops from 192.0.2.250 port 51094 ssh2"
+          - "Oct 15 05:04:30 srv-lnx14 sudo: webops : TTY=pts/0 ; PWD=/home/webops ; USER=root ; COMMAND=/usr/bin/crontab -e"
+    questions:
+      - id: guessing
+        prompt: "What do the two 'Invalid user' lines tell you?"
+        answer_type: choice
+        options:
+          - "Someone tried user names that do not exist on this server"
+          - "The webops password was wrong"
+          - "The server rejected a key"
+        accept: ["Someone tried user names that do not exist on this server"]
+        hints:
+          - "Compare 'Invalid user' with 'Failed password for'."
+        explanation: >-
+          'Invalid user' means the name does not exist here, so the source was guessing names before
+          finding a real account.
+      - id: success-ip
+        prompt: "Which address signed in successfully? (Defanged or plain is fine.)"
+        answer_type: text
+        accept: ["192.0.2.250"]
+        normalize: ["whitespace", "refang"]
+        hints:
+          - "Find the 'Accepted' line."
+        explanation: >-
+          The same address that guessed names succeeded as webops at 05:02:52 with a password.
+      - id: next-step
+        prompt: "What did the account do as root, and why does it matter?"
+        answer_type: choice
+        options:
+          - "Edited root's crontab, a common way to set up persistence"
+          - "Changed its own password"
+          - "Signed out"
+        accept: ["Edited root's crontab, a common way to set up persistence"]
+        hints:
+          - "Read the COMMAND= part of the sudo line. Which user's crontab does it edit?"
+        explanation: >-
+          sudo ran crontab -e as root, which edits root's scheduled jobs: a common persistence method
+          (T1053.003). Check what was added.

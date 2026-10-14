@@ -1,0 +1,157 @@
+---
+id: soc-l1-process-creation-01
+title: "Process Creation and Command Lines"
+track: soc
+rank: 1
+module: endpoint
+order: 21
+estimated_minutes: 16
+objectives_covered: ["soc:soc_endpoint_triage"]
+mitre: ["T1059", "T1204.002", "T1036"]
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-windows-auth-events-01", "core-r1-win-proc-services-01"]
+skills: ["soc_endpoint_triage"]
+practice: ["tool:endpoint_timeline", "drill:drill-04", "drill:drill-06"]
+---
+
+> **Outcome:** you can read a process-creation event, judge a parent-child pair and a command line, and spot a program pretending to be something it is not.
+
+## Why this matters on shift
+
+Almost every attack on a computer eventually runs a program. Process-creation records show which program started, which program started it, who it ran as, and exactly what it was told to do. That makes them one of the richest sources an analyst has, and one of the easiest to misread if you do not know what normal looks like.
+
+## Before you start
+
+You should already know:
+
+- Windows sign-in events and logon types: [Windows Sign-In Events](/learn/soc-l1-windows-auth-events-01).
+- What Windows processes and services are: [Windows Processes, Services & Task Scheduling](/learn/core-r1-win-proc-services-01).
+
+## Core ideas
+
+### What a process-creation event holds
+
+Every running program is a process. When one process starts another, the first is the **parent process** and the new one is the child. A process-creation event usually records:
+
+- the time and the computer,
+- the new process's name and full path,
+- the parent process,
+- the user it runs as, and its **integrity level** (on Windows: Low, Medium, High or System, which reflects how much it is allowed to change),
+- the **command line**: the full text used to start it, including all its arguments,
+- often a hash of the program file.
+
+On Windows, event 4688 records process creation in the Security log, but the command line is only included if that auditing setting is turned on. Sysmon, a free Microsoft tool, records process creation as its event ID 1, with the command line, parent and file hashes.
+
+Think of a building's key log. It records who opened which door, with whose key, and who handed them the key. "The night cleaner opened the server room with the IT manager's key, handed over by the receptionist" is a story even before you know what happened inside.
+
+### Parent and child: does the pair make sense?
+
+Normal software has normal family trees. A user double-clicks a document, so `explorer.exe` starts the word processor. A service starts its helper. Suspicious pairs are ones where a program starts something it has no business starting:
+
+- An office application (word processor, spreadsheet, mail client) starting a command shell or script interpreter.
+- A web browser starting a script interpreter.
+- A script interpreter starting a network tool or an unknown program from a temporary folder.
+
+None of these is proof on its own: some business add-ins really do start scripts. But they are exactly the shapes that malicious documents and links create (ATT&CK T1204.002, User Execution: Malicious File, followed by T1059, Command and Scripting Interpreter).
+
+### Reading a command line
+
+Read the whole command line, slowly. Things worth a second look:
+
+- **Where the program runs from.** System programs live in system folders. A program in a user's temporary, downloads or public folder deserves attention.
+- **Hidden or encoded content.** Arguments such as an encoded-command switch, long blocks of random-looking text, or windows set to hidden.
+- **Downloading.** A built-in tool told to fetch something from the internet.
+- **Disabling protections.** Arguments that turn off security features or logging.
+
+### Masquerading
+
+Attackers often name their programs after familiar Windows ones so they blend in (ATT&CK T1036, Masquerading). The tell is usually the path or the parent. The real `svchost.exe` lives in `C:\Windows\System32\` and is started by `services.exe`. An `svchost.exe` in a user's folder, or started by a word processor, is not the real one.
+
+<FlowDiagram
+  title="Judging one process-creation event"
+  description="Check the parent-child pair, the path, the user and integrity level, the full command line, and whether the name matches its usual location. Then look at what the process did next."
+  steps={[
+    { label: "Parent and child", detail: "Would this parent normally start this child?" },
+    { label: "Path", detail: "System folder, program folder, or a user's temp or downloads folder?" },
+    { label: "User and integrity", detail: "Expected account and privilege level?" },
+    { label: "Command line", detail: "Encoded, hidden, downloading or disabling something?" },
+    { label: "What happened next", detail: "Child processes, network connections, files written." },
+  ]}
+/>
+
+In plain English: who started it, from where, as whom, told to do what, and what it did next.
+
+## Worked example
+
+An alert fires on workstation ws-158 at Larkspur Freight: "Script interpreter launched with execution policy bypass". The analyst opens the endpoint timeline:
+
+<LogBlock
+  title="Process events, ws-158 (synthetic)"
+  lines={[
+    "09:00:02  pid 4120  parent 812 (LarkspurInventoryAgent.exe, SYSTEM)",
+    "          powershell.exe -ExecutionPolicy Bypass -File \"C:\\Program Files\\LarkspurIT\\inventory.ps1\"",
+    "10:47:15  pid 6604  parent 5980 (winword.exe, user j.kaur, Medium)",
+    "          cmd.exe /c rundll32.exe C:\\Users\\j.kaur\\AppData\\Local\\Temp\\wsx7.dll,Start",
+    "10:47:16  pid 6620  parent 6604 (cmd.exe)",
+    "          rundll32.exe C:\\Users\\j.kaur\\AppData\\Local\\Temp\\wsx7.dll,Start",
+    "10:47:19  pid 6620  net_connect 192.0.2.237:443",
+  ]}
+/>
+
+**The alerting event is a false lead.** The 09:00 event matched the rule: PowerShell with an execution policy bypass. But its parent is Larkspur's own inventory agent, running as SYSTEM, and the script is in the company's program folder. The software list confirms the agent runs this script daily at 09:00. Benign true positive.
+
+**What the analyst nearly missed.** Scrolling on, the analyst finds a different chain that matched no rule at all. At 10:47 the word processor started a command shell, which started `rundll32.exe` (a Windows tool that runs code inside DLL files) pointing at a DLL in the user's temporary folder. Three seconds later that process connected out to an unknown address. A document starting a shell that loads code from a temp folder and then calls out is a classic malicious-document chain.
+
+The analyst closes the original alert with its reason, and escalates ws-158 for the 10:47 chain, noting that no rule fired on it.
+
+## Try it
+
+<MicroExercise id="judge-processes" />
+
+## Common mistakes
+
+- **Judging by the program name alone.** Names can be copied; check the path and parent.
+- **Reading only part of the command line.** The important argument is often at the end.
+- **Treating every PowerShell event as malicious.** IT uses it all day; the parent and the script's location matter.
+- **Stopping at the alerting event.** Look at the rest of the timeline on that host.
+- **Ignoring what the process did next.** A network connection seconds after launch changes everything.
+
+## What good looks like
+
+A strong analyst reads every process event as a sentence: this parent, as this user, started this program from this path, with these arguments, and then it did this. They know the normal family trees on their network, and they look beyond the alerting event.
+
+## In the real world
+
+Process creation is recorded by endpoint detection and response (EDR) agents, by Sysmon, or by Windows auditing with command-line logging enabled. Coverage varies: many organisations never turned on command-line auditing, so check what your telemetry includes. Teams keep lists of known business parent-child pairs to reduce noise.
+
+The simulator's endpoint timeline shows a process tree with process IDs, parent IDs, user, integrity level, command line and, for some processes, a hash, plus a list of process, file, registry and network events, and any telemetry gaps for that host.
+
+## Remember it like this
+
+Who started it, from where, as whom, told to do what, and what did it do next?
+
+## Interview answer
+
+"For a process-creation event I read the parent and child together, the full path, the user and integrity level, and the whole command line. Office apps or browsers starting shells or script interpreters, programs running from temp or download folders, encoded or hidden arguments, and system names in the wrong path all raise my concern. Then I look at what the process did next, such as network connections or files written, and at the rest of the host's timeline, not just the alerting event."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Parent process", definition: "The process that started another process (its child)." },
+    { term: "Command line", definition: "The full text used to start a process, including all of its arguments." },
+    { term: "Integrity level", definition: "On Windows, a label (Low, Medium, High, System) reflecting how much a process is allowed to change." },
+    { term: "Masquerading", definition: "Giving a malicious program the name or look of a familiar legitimate one so it blends in (ATT&CK T1036)." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

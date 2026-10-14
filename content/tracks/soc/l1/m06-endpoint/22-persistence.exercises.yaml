@@ -1,0 +1,47 @@
+lesson: soc-l1-persistence-01
+exercises:
+  - id: spot-persistence
+    title: "Find the attacker's way back in"
+    kind: log-reading
+    instructions: >-
+      These entries were found on a Windows server and a Linux server after an alert. Decide which
+      are suspicious.
+    blocks:
+      - type: log
+        title: "Autostart findings (synthetic)"
+        lines:
+          - "W1  srv-win05  service 'BackupAgent'    binary: C:\\Program Files\\BackupCo\\agent.exe   installed by: BackupCoSetup.msi (signed), change CHG-4410"
+          - "W2  srv-win05  service 'WinTimeSync2'  binary: C:\\Windows\\Temp\\wts.exe          installed by: cmd.exe started from a remote session"
+          - "L1  srv-lnx07  /etc/cron.d/logrotate     runs: /usr/sbin/logrotate /etc/logrotate.conf   package: logrotate"
+          - "L2  srv-lnx07  /home/deploy/.ssh/authorized_keys   1 new key added 03:12 UTC, comment 'x@kali'"
+    questions:
+      - id: windows-bad
+        prompt: "Which Windows entry is suspicious? (Type its ID.)"
+        answer_type: text
+        accept: ["W2"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Compare where each binary lives and what installed it."
+        explanation: >-
+          W2 runs a binary from C:\Windows\Temp, was installed by a shell from a remote session, and has
+          a system-sounding name with no change record. W1 is signed vendor software with a change.
+      - id: service-event
+        prompt: "Which Windows event ID records a new service being installed?"
+        answer_type: text
+        accept: ["7045"]
+        normalize: ["whitespace"]
+        hints:
+          - "It is in the System log, not the Security log. Check the lesson's Windows list."
+        explanation: >-
+          Event 7045 in the System log records a service installation, including its name and binary
+          path.
+      - id: linux-bad
+        prompt: "Which Linux entry gives someone a way to sign in without the account's password?"
+        answer_type: choice
+        options: ["L1", "L2", "Neither"]
+        accept: ["L2"]
+        hints:
+          - "Which file controls key-based SSH sign-ins?"
+        explanation: >-
+          A new public key in the deploy account's authorized_keys lets whoever holds the matching private
+          key sign in without the password (T1098.004). It needs an explanation; none is recorded.

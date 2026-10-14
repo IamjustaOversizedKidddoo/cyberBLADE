@@ -1,0 +1,49 @@
+lesson: soc-l1-lotl-01
+exercises:
+  - id: lotl-context
+    title: "Judge three uses of built-in tools"
+    kind: log-reading
+    instructions: >-
+      Each event uses a tool that ships with the operating system. Decide which one is an attack.
+    blocks:
+      - type: table
+        title: "Events (synthetic)"
+        columns: ["ID", "Host and user", "Parent", "Command"]
+        rows:
+          - ["T1", "srv-mgmt01, it-admin.r.patel", "powershell.exe (admin session, change CHG-4520)", "Invoke-Command -ComputerName srv-app03 -ScriptBlock { Get-Service }"]
+          - ["T2", "ws-249, user l.chen", "excel.exe", "rundll32.exe C:\\Users\\l.chen\\AppData\\Local\\Temp\\q81.dll,Run"]
+          - ["T3", "srv-lnx02, root", "cron", "curl -fsS https://repo.larkspur.example/keys/apt.gpg -o /etc/apt/keyrings/larkspur.gpg"]
+    questions:
+      - id: attack
+        prompt: "Which event is most likely an attack? (Type its ID.)"
+        answer_type: text
+        accept: ["T2"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "For each event, check the parent and where the file being used lives."
+        explanation: >-
+          A spreadsheet starting rundll32 to load a DLL from the user's temp folder is a classic
+          proxy-execution chain. T1 is a ticketed admin task and T3 fetches from Larkspur's own repository.
+      - id: technique
+        prompt: "Which ATT&CK technique fits T2?"
+        answer_type: choice
+        options: ["T1218 System Binary Proxy Execution", "T1105 Ingress Tool Transfer", "T1110 Brute Force", "T1566.002 Spearphishing Link"]
+        accept: ["T1218 System Binary Proxy Execution"]
+        hints:
+          - "Is rundll32 downloading something, or running code on someone else's behalf?"
+        explanation: >-
+          rundll32 is a trusted Windows program being used to run code from an untrusted DLL, which is
+          system binary proxy execution (T1218.011 for rundll32 specifically).
+      - id: why-t3-ok
+        prompt: "Why is T3 not suspicious, even though curl downloads a file as root?"
+        answer_type: choice
+        options:
+          - "It runs from cron and fetches from the company's own repository into the expected system folder"
+          - "curl is never used by attackers"
+          - "Anything run as root is trusted"
+        accept: ["It runs from cron and fetches from the company's own repository into the expected system folder"]
+        hints:
+          - "Look at the parent, the destination domain and where the file is saved."
+        explanation: >-
+          curl is used by attackers too, and root activity is not automatically safe. Here the context is
+          routine: a scheduled job, Larkspur's own repository, and the normal folder for package keys.

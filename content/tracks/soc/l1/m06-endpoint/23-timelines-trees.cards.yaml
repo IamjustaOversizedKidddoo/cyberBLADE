@@ -1,0 +1,14 @@
+lesson: soc-l1-timelines-trees-01
+cards:
+  - id: fc-soc-l1-timelines-trees-01
+    front: "What makes a good timeline entry?"
+    back: "A time with time zone, one factual sentence, the source, and a pointer to the evidence."
+  - id: fc-soc-l1-timelines-trees-02
+    front: "Why can't you match a parent process by PID alone?"
+    back: "PIDs are reused after a process ends; match the parent that was running at that time."
+  - id: fc-soc-l1-timelines-trees-03
+    front: "What is an anchor event?"
+    back: "The event a timeline starts from, usually the alert or first confirmed event; you expand backwards and forwards from it."
+  - id: fc-soc-l1-timelines-trees-04
+    front: "Which values make good pivots?"
+    back: "Users, hosts, process IDs, file hashes, IP addresses and domains that are specific to the incident."

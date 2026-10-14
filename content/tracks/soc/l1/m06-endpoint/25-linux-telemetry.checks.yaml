@@ -1,0 +1,82 @@
+lesson: soc-l1-linux-telemetry-01
+questions:
+  - id: q1
+    prompt: "Where is the authentication log on a Red Hat-family server?"
+    objectives: ["soc:soc_linux_logs"]
+    options:
+      - text: "/var/log/secure"
+        correct: true
+        explanation: "Correct. Debian and Ubuntu use /var/log/auth.log instead."
+      - text: "/var/log/auth.log"
+        correct: false
+        explanation: "That is the Debian and Ubuntu location."
+      - text: "/etc/passwd"
+        correct: false
+        explanation: "That lists accounts; it is not a log."
+      - text: "~/.bash_history"
+        correct: false
+        explanation: "That is a user's shell history, not the system's authentication log."
+  - id: q2
+    prompt: "What does 'Accepted publickey for deploy from 192.0.2.17' mean?"
+    objectives: ["soc:soc_linux_logs"]
+    options:
+      - text: "The deploy account signed in successfully using an SSH key."
+        correct: true
+        explanation: "Correct. If the address is unexpected, the key may have been stolen."
+      - text: "A key sign-in failed."
+        correct: false
+        explanation: "'Accepted' means success."
+      - text: "A new key was added to the account."
+        correct: false
+        explanation: "Adding keys is a file change, not this log line."
+      - text: "The password was wrong."
+        correct: false
+        explanation: "No password was used; it was a key."
+  - id: q3
+    prompt: "Why is shell history weak evidence?"
+    objectives: ["soc:soc_linux_logs"]
+    options:
+      - text: "It can be disabled or edited easily, and is only written when a shell exits."
+        correct: true
+        explanation: "Correct. Treat it as a hint, never proof."
+      - text: "It records only failed commands."
+        correct: false
+        explanation: "It records commands typed, when enabled."
+      - text: "It is encrypted."
+        correct: false
+        explanation: "It is plain text, which is why it is easy to edit."
+      - text: "It is always empty."
+        correct: false
+        explanation: "It often has content; the problem is that it cannot be trusted."
+  - id: q4
+    prompt: "A sudo line reads: 'USER=root ; COMMAND=/usr/sbin/useradd -m sysmaint'. What happened?"
+    objectives: ["soc:soc_linux_logs"]
+    options:
+      - text: "The user ran useradd as root to create a new account called sysmaint."
+        correct: true
+        explanation: "Correct. A new account can be persistence; check whether it was authorised."
+      - text: "root signed in remotely."
+        correct: false
+        explanation: "The line shows a sudo command, not a sign-in."
+      - text: "The sysmaint account was deleted."
+        correct: false
+        explanation: "useradd creates accounts."
+      - text: "sudo was denied."
+        correct: false
+        explanation: "A denial would be logged differently; this line shows the command ran."
+  - id: q5
+    prompt: "Which copy of a Linux server's logs is most trustworthy during an investigation?"
+    objectives: ["soc:soc_linux_logs"]
+    options:
+      - text: "The copy already sent to the SIEM as events happened."
+        correct: true
+        explanation: "Correct. An attacker with root can change local files, but not easily what has already left the host."
+      - text: "The local file, because it is the original."
+        correct: false
+        explanation: "Root can edit or delete local files."
+      - text: "The user's shell history."
+        correct: false
+        explanation: "The least trustworthy of all."
+      - text: "A screenshot from the user."
+        correct: false
+        explanation: "Not a log source at all."

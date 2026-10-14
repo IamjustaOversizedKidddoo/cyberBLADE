@@ -1,0 +1,165 @@
+---
+id: soc-l1-linux-telemetry-01
+title: "Linux Host Telemetry"
+track: soc
+rank: 1
+module: endpoint
+order: 25
+estimated_minutes: 16
+objectives_covered: ["soc:soc_linux_logs"]
+mitre: ["T1021.004", "T1110.001", "T1548.003"]
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["core-r1-linux-investigate-01"]
+skills: ["soc_linux_logs"]
+practice: ["lesson:core-r1-linux-investigate-01"]
+---
+
+> **Outcome:** you can find and read the main Linux security logs, follow an SSH sign-in and a sudo command, and know which evidence on a Linux host you can trust.
+
+## Why this matters on shift
+
+Most servers on the internet run Linux, and many attacks on them start with SSH: guessed passwords, stolen keys, then a privileged command. Linux records these events in plain text, but in different places on different distributions, and some of the evidence people reach for first (such as shell history) is easy for an attacker to change. Knowing where to look, and what to trust, saves time and mistakes.
+
+## Before you start
+
+You should already know:
+
+- How to read logs, use SSH and investigate a Linux host: [Logs, SSH and Investigating a Linux Host](/learn/core-r1-linux-investigate-01).
+
+## Core ideas
+
+### Where the security logs are
+
+On Linux, sign-in and privilege events go to the **authentication log**. Its location depends on the distribution:
+
+- **Debian and Ubuntu:** `/var/log/auth.log`
+- **Red Hat, CentOS, Rocky, Fedora and similar:** `/var/log/secure`
+
+Many systems also keep logs in the systemd journal, read with `journalctl` (for example `journalctl -u ssh` or `journalctl -u sshd`, depending on the service name). Records of past sign-ins are also kept in binary files read with `last` (successful sessions) and `lastb` (failed sign-ins, readable by root).
+
+Think of a block of flats where every building keeps its visitor book in a different cupboard. The information is there; you just need to know which cupboard to open in which building.
+
+### Reading SSH lines
+
+The SSH server (`sshd`) writes one line per event. The ones you will see most:
+
+<LogBlock
+  title="Typical sshd lines (synthetic)"
+  lines={[
+    "Oct 15 03:10:01 srv-lnx09 sshd[3311]: Invalid user oracle from 192.0.2.245 port 50122",
+    "Oct 15 03:10:04 srv-lnx09 sshd[3315]: Failed password for root from 192.0.2.245 port 50130 ssh2",
+    "Oct 15 03:22:47 srv-lnx09 sshd[3402]: Accepted publickey for deploy from 192.0.2.246 port 41920 ssh2",
+  ]}
+/>
+
+- `Invalid user` means the user name does not exist on this server: someone is guessing names.
+- `Failed password for root` means the account exists but the password was wrong.
+- `Accepted password` or `Accepted publickey` means a successful sign-in, with the method used.
+
+Note that classic syslog lines like these have no year and no time zone. Check the server's time zone before you compare them with UTC sources.
+
+### Reading sudo lines
+
+**sudo** lets a permitted user run a command as another user, usually root, and logs each use. A sudo line shows who ran it, from which terminal and directory, as which user, and the exact command:
+
+<LogBlock
+  title="A sudo line (synthetic)"
+  lines={[
+    "Oct 15 03:24:10 srv-lnx09 sudo: deploy : TTY=pts/1 ; PWD=/home/deploy ; USER=root ; COMMAND=/usr/sbin/useradd -m -s /bin/bash sysmaint",
+  ]}
+/>
+
+This one says: the account deploy, in an interactive session, ran `useradd` as root to create a new account called sysmaint with a login shell. Misuse of sudo to gain root is ATT&CK T1548.003.
+
+### What you can trust
+
+- **Remote logs** (sent to a SIEM as they happen) are the most trustworthy, because an attacker on the host cannot easily change what has already left it.
+- **Local log files** can be edited or deleted by anyone with root.
+- **Shell history** (`~/.bash_history`) is written when a shell exits, can be turned off, and is trivially edited. It is a hint, never proof.
+- **auditd**, the Linux audit system, can record every program run (execve events) and file change if rules are set up. Many servers do not have those rules.
+
+<FlowDiagram
+  title="Investigating a Linux sign-in"
+  description="Find the right auth log for the distribution, read the SSH lines for invalid users, failures and successes, check what the account did next with sudo, and prefer remote copies of logs over local ones."
+  steps={[
+    { label: "Find the right log", detail: "auth.log or secure, plus the journal." },
+    { label: "Read the sign-ins", detail: "Invalid user, failed password, accepted (and which method)." },
+    { label: "Follow the account", detail: "sudo commands, new accounts, new keys, cron changes." },
+    { label: "Prefer remote copies", detail: "Local files and history can be edited by root." },
+  ]}
+/>
+
+In plain English: open the right visitor book, find who got in and how, then see what they did with their keys.
+
+## Worked example
+
+An alert at Larkspur Freight: "SSH sign-in from new address" on srv-lnx11, a Rocky Linux server, at 03:30 UTC.
+
+**A dead end.** The analyst searches `/var/log/auth.log` on the server and finds nothing at all, which looks like "no sign-ins". But Rocky Linux is a Red Hat-family system, so the authentication log is `/var/log/secure`. The empty result was the wrong file, not a quiet server.
+
+In `/var/log/secure` (and in the SIEM's copy) the analyst finds:
+
+<LogBlock
+  title="srv-lnx11 /var/log/secure (synthetic, server time is UTC)"
+  lines={[
+    "Oct 15 03:29:58 srv-lnx11 sshd[8810]: Accepted publickey for ci-runner from 192.0.2.248 port 39012 ssh2",
+    "Oct 15 03:31:12 srv-lnx11 sudo: ci-runner : TTY=pts/0 ; PWD=/home/ci-runner ; USER=root ; COMMAND=/bin/bash",
+    "Oct 15 03:33:40 srv-lnx11 sudo: ci-runner : TTY=pts/0 ; PWD=/root ; USER=root ; COMMAND=/usr/bin/tee -a /root/.ssh/authorized_keys",
+  ]}
+/>
+
+ci-runner is the account the build system uses, and it normally signs in without a terminal from the build server's internal address. Here it signed in from an outside address, opened an interactive root shell (`COMMAND=/bin/bash` with a terminal), then appended to root's authorized_keys file: persistence. The analyst checks `~/.bash_history` for ci-runner, finds it empty, and notes that this proves nothing either way.
+
+The escalation includes the three lines from the SIEM's copy, the fact that the key used by ci-runner should be treated as stolen, and a request to check root's authorized_keys.
+
+## Try it
+
+<MicroExercise id="read-linux-auth" />
+
+## Common mistakes
+
+- **Searching the wrong file.** auth.log on Debian and Ubuntu; secure on Red Hat-family systems.
+- **Forgetting syslog lines have no year or time zone.** Check the server's zone.
+- **Trusting shell history.** It is easy to disable and edit.
+- **Stopping at the sign-in.** sudo commands, new accounts and new keys are what the attacker did next.
+- **Ignoring the sign-in method.** A key sign-in from a new address means a key may be stolen.
+
+## What good looks like
+
+A strong analyst knows where each distribution logs, reads sshd and sudo lines fluently, follows an account from sign-in to privileged commands, prefers the SIEM's remote copy, and treats history files as hints.
+
+## In the real world
+
+Linux logs reach a SIEM through syslog forwarding or an agent. Many organisations add auditd rules or an EDR agent for process-level visibility on servers. Cloud Linux machines may also log through the cloud provider's own services.
+
+The simulator's scenarios include Linux sign-in records in this sshd format. There is no Linux-centred scenario family yet, so practise with the core Linux investigation lab linked below.
+
+## Remember it like this
+
+Right book (auth.log or secure), right lines (invalid, failed, accepted), then follow the keys (sudo, new accounts, new SSH keys).
+
+## Interview answer
+
+"On Debian and Ubuntu I look at /var/log/auth.log, and on Red Hat-family systems at /var/log/secure, plus the journal. In sshd lines, 'Invalid user' means name guessing, 'Failed password' a wrong password for a real account, and 'Accepted' a success with the method, password or public key. Then I follow the account through sudo lines to see the exact commands it ran as root, and check for new accounts, keys and cron jobs. I prefer the SIEM's remote copy, and I treat shell history as a hint only."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Authentication log", definition: "The Linux log of sign-ins and privilege use: /var/log/auth.log on Debian and Ubuntu, /var/log/secure on Red Hat-family systems." },
+    { term: "sudo", definition: "A Linux command that lets a permitted user run commands as another user, usually root, and logs each use." },
+    { term: "auditd", definition: "The Linux audit system, which can record programs run and files changed when rules are configured." },
+    { term: "Shell history", definition: "A file of commands typed in a shell, such as ~/.bash_history; useful as a hint but easy to disable or edit." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

