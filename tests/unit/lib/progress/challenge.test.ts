@@ -7,7 +7,7 @@ import {
   submitChallengeObjective,
 } from "@/lib/progress/challenge";
 import { answerCheck, startLab, submitObjective } from "@/lib/progress/service";
-import { LAB, LESSONS, makeCtx, readFromWorld, RIGHT } from "./fakes";
+import { CHALLENGE_R1_LAB, LAB, LESSONS, LESSONS_R1, makeCtx, readFromWorld, RIGHT } from "./fakes";
 
 const USER = "op-1";
 const T0 = new Date("2026-10-07T10:00:00Z");
@@ -209,5 +209,54 @@ describe("rank challenge ignores non-core track lessons", () => {
     const summary = await getRankSummary(ctx, USER, 0);
     expect(summary.lessons.map((l) => l.id)).not.toContain("soc-l1-triage-loop-01");
     expect(summary.challenge).toEqual({ kind: "ready" });
+  });
+});
+
+describe("Rank 0-3 promotion is unchanged when track lessons exist at every rank", () => {
+  // A Rank 2 challenge and lesson, added for this test only, so 2 -> 3 is covered too.
+  const R2_LESSON = { ...LESSONS_R1[0], id: "core-r2-test-alpha-01", rank: 2 };
+  const R2_CHALLENGE = { ...CHALLENGE_R1_LAB, id: "test-challenge-r2-01", rank: 2, challenge: { rank: 2, time_limit_minutes: 30, cooldown_minutes: 30 } };
+  const socAt = (rank: number) => ({ ...LESSONS[0], id: `soc-l1-rank${rank}-probe-01`, track: "soc" as const, rank, slug: "x", filePath: "x", body: "" });
+
+  function ctxWithTracks() {
+    const made = makeCtx(T0);
+    const c = made.ctx.content;
+    const [getLessons, getLesson, listLabs, loadLab] = [c.getLessons.bind(c), c.getLesson.bind(c), c.listLabs.bind(c), c.loadLab.bind(c)];
+    const extra = [R2_LESSON, socAt(0), socAt(1), socAt(2)];
+    c.getLessons = async (filter = {}) => [...(await getLessons(filter)), ...extra.filter((l) => filter.rank === undefined || l.rank === filter.rank)];
+    c.getLesson = async (id) => extra.find((l) => l.id === id) ?? getLesson(id);
+    c.listLabs = async () => [...(await listLabs()), R2_CHALLENGE];
+    c.loadLab = async (id) => (id === R2_CHALLENGE.id ? R2_CHALLENGE : loadLab(id));
+    return made;
+  }
+
+  async function pass(ctx: ReturnType<typeof makeCtx>["ctx"], rank: number) {
+    const started = await startChallenge(ctx, USER, rank);
+    await submitChallengeObjective(ctx, USER, started.attemptId, "o1", readFromWorld(started.env, "flag.txt"));
+    return submitChallengeObjective(ctx, USER, started.attemptId, "o2", readFromWorld(started.env, "word.txt"));
+  }
+
+  test("0 -> 1 -> 2 -> 3 with a SOC lesson present at each rank, which never appears in the summary", async () => {
+    const { ctx, operators } = ctxWithTracks();
+    await operators.create({ handle: "ghost", ethicsAcceptedAt: T0.toISOString() });
+
+    await completeLessons(ctx);
+    expect((await getRankSummary(ctx, USER, 0)).lessons.every((l) => l.id.startsWith("core-"))).toBe(true);
+    expect((await pass(ctx, 0)).passed).toBe(true);
+    expect((await operators.get(USER))?.rank).toBe(1);
+
+    for (const q of ["q1", "q2", "q3"]) await answerCheck(ctx, USER, LESSONS_R1[0].id, q, RIGHT(USER, LESSONS_R1[0].id, q));
+    expect((await getRankSummary(ctx, USER, 1)).challenge).toEqual({ kind: "ready" });
+    expect((await pass(ctx, 1)).passed).toBe(true);
+    expect((await operators.get(USER))?.rank).toBe(2);
+
+    // Rank 2 stays locked until its core lesson is done; the SOC probe at rank 2 is ignored.
+    expect((await getRankSummary(ctx, USER, 2)).challenge).toEqual({ kind: "locked" });
+    for (const q of ["q1", "q2", "q3"]) await answerCheck(ctx, USER, R2_LESSON.id, q, RIGHT(USER, R2_LESSON.id, q));
+    const r2 = await getRankSummary(ctx, USER, 2);
+    expect(r2.lessons.map((l) => l.id)).toEqual([R2_LESSON.id]);
+    expect(r2.challenge).toEqual({ kind: "ready" });
+    expect((await pass(ctx, 2)).passed).toBe(true);
+    expect((await operators.get(USER))?.rank).toBe(3);
   });
 });

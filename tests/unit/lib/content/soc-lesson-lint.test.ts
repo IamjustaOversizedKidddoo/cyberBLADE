@@ -112,6 +112,17 @@ describe("SOC L1 lesson linter", () => {
     expect(errs).toContain("no page yet");
   });
 
+  it("fails a lesson over 25 minutes", async () => {
+    const input = await pilotInput();
+    const long = `${input.lesson.body}
+
+${"word ".repeat(1200)}`;
+    const t = computeLessonTime({ ...input.lesson, body: long }, input.checks);
+    const errs = lintSocLesson(withBody({ ...input, lesson: { ...input.lesson, estimated_minutes: t.minutes } }, long)).errors;
+    expect(t.minutes).toBeGreaterThan(25);
+    expect(errs.some((e) => e.includes("split the lesson"))).toBe(true);
+  });
+
   it("computes time from words, exercises, checks and diagrams", async () => {
     const input = await pilotInput();
     const t = computeLessonTime(input.lesson, input.checks);
