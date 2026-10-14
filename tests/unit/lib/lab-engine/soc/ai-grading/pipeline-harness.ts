@@ -56,7 +56,7 @@ export interface Harness {
 }
 
 export function harness(opts: {
-  env?: NodeJS.ProcessEnv;
+  env?: Record<string, string | undefined>;
   provider?: AiCompletionProvider;
   config?: Partial<AiGradingConfig>;
   scenarioOverride?: (s: SocScenario, attempt: SocAttemptRecord) => SocScenario;
@@ -79,7 +79,7 @@ export function harness(opts: {
     learnerHandles: async () => ["op_kavya"],
     provider: opts.provider ?? createContentHeuristicMock(),
     now: () => clock.t,
-    env: { NODE_ENV: "test", SOC_AI_GRADING_MODE: "preview", ...opts.env },
+    env: { NODE_ENV: "test", SOC_AI_GRADING_MODE: "preview", ...opts.env } as NodeJS.ProcessEnv,
     config,
     gateDir: opts.gateDir ?? tempGateDir(),
   };
