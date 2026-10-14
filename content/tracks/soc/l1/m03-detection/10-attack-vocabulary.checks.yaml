@@ -1,0 +1,82 @@
+lesson: soc-l1-attack-vocabulary-01
+questions:
+  - id: q1
+    prompt: "In ATT&CK, what is the difference between a tactic and a technique?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "A tactic is the attacker's goal (why); a technique is how they achieve it."
+        correct: true
+        explanation: "Correct. For example, Initial Access (tactic) via Phishing (technique)."
+      - text: "A tactic is a tool; a technique is a group of attackers."
+        correct: false
+        explanation: "ATT&CK tracks tools and groups separately; tactics and techniques describe behaviour."
+      - text: "They are two words for the same thing."
+        correct: false
+        explanation: "They are different layers: goal versus method."
+      - text: "A technique is always more dangerous than a tactic."
+        correct: false
+        explanation: "They are not ranked by danger; one describes the other."
+  - id: q2
+    prompt: "What does the ID T1566.001 tell you?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "It is sub-technique 001 of technique T1566 (Phishing): Spearphishing Attachment."
+        correct: true
+        explanation: "Correct. The dot and three digits mark a sub-technique of the parent technique."
+      - text: "It is tactic number 1566."
+        correct: false
+        explanation: "Tactic IDs start with TA, such as TA0001."
+      - text: "It is the 1,566th attack ever recorded."
+        correct: false
+        explanation: "IDs are labels for behaviours, not counters of attacks."
+      - text: "It is a malware family name."
+        correct: false
+        explanation: "Software entries in ATT&CK have their own S-prefixed IDs."
+  - id: q3
+    prompt: "Evidence shows a script interpreter ran, but not which one. How should you map it?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "Use the parent technique T1059 and note the interpreter is not yet identified."
+        correct: true
+        explanation: "Correct. Never be more specific than the evidence."
+      - text: "Use T1059.001 PowerShell, since it is the most common."
+        correct: false
+        explanation: "That is a guess presented as a finding."
+      - text: "Leave it out of the mapping entirely."
+        correct: false
+        explanation: "The technique is supported; only the sub-technique is not."
+      - text: "List every T1059 sub-technique to be safe."
+        correct: false
+        explanation: "Listing everything claims things the evidence does not show."
+  - id: q4
+    prompt: "An admin's PowerShell activity maps to T1059.001. Does that make it malicious?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "No. Many ATT&CK techniques describe tools admins use daily; triage decides if it was an attack."
+        correct: true
+        explanation: "Correct. A mapping describes the kind of behaviour, not its legitimacy."
+      - text: "Yes. Anything in ATT&CK is malicious."
+        correct: false
+        explanation: "ATT&CK lists behaviour attackers use, much of which legitimate users also use."
+      - text: "Only if the admin is a contractor."
+        correct: false
+        explanation: "Employment type does not decide legitimacy; evidence and authorisation do."
+      - text: "Only on servers."
+        correct: false
+        explanation: "The location does not change whether the activity was authorised."
+  - id: q5
+    prompt: "Why should each ATT&CK ID in a report sit next to supporting evidence?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "So readers can check the mapping, and wrong or over-specific IDs are easy to spot."
+        correct: true
+        explanation: "Correct. An ID without evidence cannot be verified."
+      - text: "Because ATT&CK requires a licence for each ID used."
+        correct: false
+        explanation: "ATT&CK is free to use."
+      - text: "To make the report longer."
+        correct: false
+        explanation: "The aim is checkability, not length."
+      - text: "Because IDs are secret."
+        correct: false
+        explanation: "ATT&CK is public."

@@ -1,0 +1,47 @@
+lesson: soc-l1-detection-blind-spots-01
+exercises:
+  - id: trust-no-results
+    title: "Decide when 'no results' can be trusted"
+    kind: log-reading
+    instructions: >-
+      Tier 2 asks whether any of these servers ran the tool 'rclone' between 14:00 and 16:00 UTC.
+      Your endpoint search for that window returned no results on all three. Use the health table.
+    blocks:
+      - type: table
+        title: "Endpoint agent health (synthetic)"
+        columns: ["Host", "Agent status", "Events received 14:00-16:00 UTC", "Log retention"]
+        rows:
+          - ["srv-app07", "healthy", "4,812", "30 days"]
+          - ["srv-app08", "stopped at 13:47 UTC, restarted 16:20 UTC", "0", "30 days"]
+          - ["srv-app09", "not installed", "0", "n/a"]
+    questions:
+      - id: trusted-host
+        prompt: "For which host can you trust the 'no results' answer? (Type the host name.)"
+        answer_type: text
+        accept: ["srv-app07"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "For each host, ask: could the search have seen the tool if it had run?"
+        explanation: >-
+          srv-app07's agent was healthy and sent thousands of events during the window, so a run of the
+          tool would have been recorded. The other two had no telemetry at all.
+      - id: suspicious-gap
+        prompt: "Which host's gap is itself suspicious and worth reporting to Tier 2 straight away?"
+        answer_type: choice
+        options: ["srv-app07", "srv-app08", "srv-app09"]
+        accept: ["srv-app08"]
+        hints:
+          - "Which host's silence starts and ends right around the window Tier 2 asked about?"
+        explanation: >-
+          srv-app08's agent stopped 13 minutes before the window and restarted after it. Attackers
+          sometimes stop agents before acting, so the timing is a lead in itself.
+      - id: detection-type
+        prompt: "A brand-new tool, never seen before, behaves like known data-theft tools. Which kind of detection is most likely to catch it?"
+        answer_type: choice
+        options: ["Signature-based", "Behaviour-based", "Neither can"]
+        accept: ["Behaviour-based"]
+        hints:
+          - "Which kind needs to have seen the exact file before?"
+        explanation: >-
+          A signature needs the exact known-bad value, which a new tool will not match. A behaviour rule
+          matches what the tool does, whatever it is called.

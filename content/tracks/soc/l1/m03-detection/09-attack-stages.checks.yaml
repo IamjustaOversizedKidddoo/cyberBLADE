@@ -1,0 +1,82 @@
+lesson: soc-l1-attack-stages-01
+questions:
+  - id: q1
+    prompt: "You confirm a malicious scheduled task on a workstation. What should you look for next?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "How the attacker got in and ran code before it, and whether they have spread since."
+        correct: true
+        explanation: "Correct. Persistence means earlier stages happened, and later ones may have."
+      - text: "Nothing more: delete the task and close the alert."
+        correct: false
+        explanation: "Removing one foothold leaves the original way in, and any spread, untouched."
+      - text: "Only whether the same task exists on other machines."
+        correct: false
+        explanation: "That is a useful forward check, but it skips how the attack began."
+      - text: "The user's browsing history for the whole month."
+        correct: false
+        explanation: "Search the period around the activity, for evidence linked to the stages."
+  - id: q2
+    prompt: "Which is an example of persistence?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "A new account the attacker created so they can sign in again later."
+        correct: true
+        explanation: "Correct. It lets them return even if the original password is changed."
+      - text: "A phishing email that a user clicked."
+        correct: false
+        explanation: "That is initial access."
+      - text: "Uploading files to an outside storage service."
+        correct: false
+        explanation: "That is exfiltration."
+      - text: "Signing in from one internal server to another."
+        correct: false
+        explanation: "That can be lateral movement."
+  - id: q3
+    prompt: "Why does a later-stage alert usually get higher urgency?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "Later stages are closer to, or already causing, real harm such as data theft or encryption."
+        correct: true
+        explanation: "Correct. Earlier stages give you more time to stop the attack before harm is done."
+      - text: "Later-stage rules are always more accurate."
+        correct: false
+        explanation: "Accuracy depends on the rule, not the stage."
+      - text: "Early-stage activity is never malicious."
+        correct: false
+        explanation: "It often is; it is just further from the harm."
+      - text: "Policies require it."
+        correct: false
+        explanation: "The reason is risk: how close the attacker is to their goal."
+  - id: q4
+    prompt: "An admin signs in by remote desktop from a workstation to a server. Is that lateral movement?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "Only if it is not explained by legitimate work; check for a ticket or reason first."
+        correct: true
+        explanation: "Correct. Admins move between machines all day. The question is whether this movement is authorised."
+      - text: "Yes, every remote sign-in is lateral movement."
+        correct: false
+        explanation: "That would make every admin an attacker. Look for a legitimate reason."
+      - text: "No, admins can never be involved in attacks."
+        correct: false
+        explanation: "Admin accounts are prime targets for attackers precisely because of their access."
+      - text: "Only if the server is outside the company."
+        correct: false
+        explanation: "Lateral movement happens inside the network, between internal systems."
+  - id: q5
+    prompt: "What is true about real attacks and stage models?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "Attackers can skip or repeat stages, so the model is for asking questions, not for strict ordering."
+        correct: true
+        explanation: "Correct. For example, a stolen cloud password can go straight to reading email with no malware."
+      - text: "Every attack passes through every stage in order."
+        correct: false
+        explanation: "Many attacks skip stages or loop back to earlier ones on each new machine."
+      - text: "Stage models only apply to malware."
+        correct: false
+        explanation: "They apply to account takeovers and insider activity too."
+      - text: "Only one correct stage model exists."
+        correct: false
+        explanation: "Several published models exist; they share the same purpose."

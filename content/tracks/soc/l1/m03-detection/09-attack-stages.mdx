@@ -1,0 +1,154 @@
+---
+id: soc-l1-attack-stages-01
+title: "How Attacks Unfold: A Stage Model for Defenders"
+track: soc
+rank: 1
+module: detect
+order: 9
+estimated_minutes: 16
+objectives_covered: ["soc:soc_scope_assessment"]
+mitre: []
+xp: 90
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-triage-loop-01", "core-r0-mind-attacker-defender-01"]
+skills: ["soc_scope_assessment"]
+practice: ["family:soc-f-attachment-script-01"]
+---
+
+> **Outcome:** you can place an alert at a stage of an attack, and use that to decide what to look for before it and after it.
+
+## Why this matters on shift
+
+An alert shows you one moment. An attack is a sequence. If you see the moment an attacker set up a way back in, you know they already got in somehow, and they may have done more since. Thinking in stages turns one alert into a set of questions: how did this start, what came next, and how far has it gone? That is how you scope an incident instead of treating each alert as a separate puzzle.
+
+## Before you start
+
+You should already know:
+
+- The triage loop: [The Triage Loop](/learn/soc-l1-triage-loop-01).
+- How attackers and defenders think: [Thinking Like a Defender vs an Attacker](/learn/core-r0-mind-attacker-defender-01).
+
+## Core ideas
+
+### Attacks happen in stages
+
+Most attacks follow a broadly similar path: get in, run something, stay, spread, and then do what they came for.
+
+Think of a burglary. The burglar finds a way in, perhaps an unlocked window. They look around. They may unlock the back door so they can come back. They move from room to room. Finally they take what they came for and leave. A security guard who finds the unlocked back door knows the burglar has already been inside, and starts asking which window they used and which rooms they visited.
+
+Defenders use stage models for the same reason. Several published models exist; one widely used framework, MITRE ATT&CK, calls its stages tactics, and you will meet it in the next lesson. This track uses a simple six-stage version:
+
+<FlowDiagram
+  title="A defender's stage model"
+  description="Six stages: get in (initial access), run code (execution), stay (persistence), climb and spread (privilege escalation and lateral movement), act on goals (collection, exfiltration or impact), with command and control linking the attacker to their foothold throughout."
+  steps={[
+    { label: "Get in", detail: "Initial access: phishing, stolen passwords, exposed services." },
+    { label: "Run code", detail: "Execution: scripts, tools or malware start on a machine." },
+    { label: "Stay", detail: "Persistence: a way back in that survives reboots and password changes." },
+    { label: "Climb and spread", detail: "Gain more privileges, then move to other machines and accounts." },
+    { label: "Act on goals", detail: "Collect and steal data, encrypt files, or disrupt systems." },
+  ]}
+  loopBackLabel="Command and control connects the attacker to their foothold throughout, and attackers loop back to earlier stages on each new machine."
+/>
+
+In plain English: attackers go in, set up, spread and then act, and they talk to their foothold the whole time.
+
+### The stages in more detail
+
+- **Initial access** is how the attacker first gets a foothold: a phishing email, a guessed or stolen password, or an unpatched service exposed to the internet.
+- **Execution** is running the attacker's code: a script started by a document, a command typed into a remote session, a malicious program.
+- **Persistence** is a mechanism that lets the attacker come back after a reboot, logoff or password change: a scheduled task, a new service, a new account, a mail forwarding rule.
+- **Privilege escalation and lateral movement**: the attacker gains more powerful permissions, then moves from the first machine or account to others. **Lateral movement** is moving from one compromised system to another inside the network.
+- **Acting on goals**: collecting and stealing data (**exfiltration**, moving data out of the organisation), encrypting files for ransom, or disrupting services.
+- **Command and control** (often shortened to C2) is the communication channel between the attacker and the systems they control, used to send commands and receive results. It runs alongside the other stages.
+
+### Real attacks are messy
+
+The stages are a thinking tool, not a strict order. Attackers skip stages, repeat them on each new machine, and sometimes go straight from initial access to acting on goals. A stolen password for a cloud mailbox can lead straight to reading email, with no malware at all. Use the model to ask questions, not to force events into boxes.
+
+### Using stages in triage
+
+When an alert lands, ask three questions:
+
+1. **Which stage does this activity belong to?**
+2. **Looking back:** if this is a later stage, how did they get here? Find the earlier stages.
+3. **Looking forward:** what would the next stage look like, and has it already happened?
+
+The later the stage, the more urgent the alert: an attacker acting on goals is causing harm right now. The earlier the stage, the more chance you have to stop the attack before harm is done.
+
+## Worked example
+
+At Larkspur Freight, an alert fires at 10:32 UTC: "New scheduled task created" on workstation ws-077, user c.lindgren. The task runs a script from a temporary folder every hour.
+
+**Which stage?** A scheduled task that runs an unknown script repeatedly is a classic persistence mechanism: stay.
+
+**Looking back.** If something is setting up persistence, it already got in and ran code. The analyst searches ws-077's activity in the hour before:
+
+<LogBlock
+  title="ws-077 activity before the alert (synthetic)"
+  lines={[
+    "10:05  email delivered to c.lindgren: subject 'Updated delivery schedule', attachment schedule.docm",
+    "10:21  winword.exe opened schedule.docm",
+    "10:21  winword.exe started a script interpreter",
+    "10:22  script interpreter connected to 192.0.2.170:443",
+    "10:31  scheduled task 'SysHealthCheck' created",
+    "10:40  remote desktop sign-in to fs-ops02 from ws-077 by it-admin.p.kowal",
+  ]}
+/>
+
+That gives initial access (an email attachment with macros), execution (the document started a script interpreter), command and control (the outbound connection) and persistence (the task).
+
+**A false lead looking forward.** The 10:40 remote desktop sign-in from ws-077 to a file server looks like lateral movement, the next stage. The analyst checks before concluding: it-admin.p.kowal is an IT administrator, and the service desk shows ticket INC-6102, in which p.kowal used ws-077 to help c.lindgren with a printer at 10:38. That sign-in is explained, not lateral movement. The analyst still notes it in the escalation, because an admin signing in from an infected machine may have exposed their credentials.
+
+**Escalation.** The analyst escalates with the stages laid out: get in, run code, C2, stay, with no confirmed spread yet. They flag the admin sign-in from the infected machine as a risk to check.
+
+## Try it
+
+<MicroExercise id="place-stages" />
+
+## Common mistakes
+
+- **Treating one alert as the whole story.** A late-stage alert means earlier stages happened somewhere.
+- **Forcing every event into a stage.** Some events are normal activity; check before you label.
+- **Assuming the stages always run in order.** Attackers skip and repeat stages.
+- **Calling every remote sign-in lateral movement.** Admins move between machines legitimately all day; check for a reason.
+
+## What good looks like
+
+A strong analyst names the stage of every true positive, searches backwards for how it started and forwards for what came next, and writes the escalation as a short story in stage order, with clear gaps where evidence is missing.
+
+## In the real world
+
+You will see several stage models. Some organisations use a kill-chain style model with steps from reconnaissance to actions on objectives. Many map detections and reports to MITRE ATT&CK tactics. They differ in detail and naming, but they all serve the same purpose for a defender: thinking about what comes before and after what you can see.
+
+The simulator's scenario families are built around stages, and each scenario's debrief lays them out.
+
+## Remember it like this
+
+Get in, run, stay, spread, act, with C2 throughout: find your alert's stage, then look back and look forward.
+
+## Interview answer
+
+"I think of attacks in stages: initial access, execution, persistence, privilege escalation and lateral movement, then acting on goals such as exfiltration, with command and control throughout. When an alert fires I place it at a stage, then look back for how the attacker got there and forward for whether the next stage has already happened. That's how one alert becomes a scoped incident, and later stages get higher urgency."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Initial access", definition: "How an attacker first gets a foothold, for example through phishing, stolen passwords or an exposed service." },
+    { term: "Persistence", definition: "A mechanism that lets an attacker return after a reboot, logoff or password change, such as a scheduled task or new account." },
+    { term: "Lateral movement", definition: "Moving from one compromised system or account to others inside the network." },
+    { term: "Command and control (C2)", definition: "The communication channel an attacker uses to send commands to the systems they control and receive results." },
+    { term: "Exfiltration", definition: "Moving stolen data out of the organisation." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

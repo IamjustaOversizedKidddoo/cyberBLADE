@@ -1,0 +1,14 @@
+lesson: soc-l1-detection-blind-spots-01
+cards:
+  - id: fc-soc-l1-detection-blind-spots-01
+    front: "What four checks come before you trust 'no results'?"
+    back: "The system is covered by the log source, it was sending during the window, the data is still retained, and the search itself was right."
+  - id: fc-soc-l1-detection-blind-spots-02
+    front: "What does signature-based detection catch, and what does it miss?"
+    back: "It catches exact known-bad values (hashes, domains) and misses anything new or changed."
+  - id: fc-soc-l1-detection-blind-spots-03
+    front: "Why can an agent going silent be a lead?"
+    back: "Attackers sometimes stop monitoring agents before acting, so a gap that lines up with an incident needs explaining."
+  - id: fc-soc-l1-detection-blind-spots-04
+    front: "What is the ATT&CK technique for deleting or tampering with logs?"
+    back: "Indicator Removal, T1070."

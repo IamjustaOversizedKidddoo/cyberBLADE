@@ -1,0 +1,14 @@
+lesson: soc-l1-attack-vocabulary-01
+cards:
+  - id: fc-soc-l1-attack-vocabulary-01
+    front: "ATT&CK tactic vs technique vs sub-technique?"
+    back: "Tactic = why (the goal), technique = how, sub-technique = a more specific variety of the how."
+  - id: fc-soc-l1-attack-vocabulary-02
+    front: "Which ID is Spearphishing Attachment, and which is Spearphishing Link?"
+    back: "T1566.001 is Spearphishing Attachment; T1566.002 is Spearphishing Link."
+  - id: fc-soc-l1-attack-vocabulary-03
+    front: "Which ATT&CK ID is Password Spraying?"
+    back: "T1110.003, a sub-technique of Brute Force (T1110)."
+  - id: fc-soc-l1-attack-vocabulary-04
+    front: "When should you NOT add a sub-technique to a mapping?"
+    back: "When the evidence does not show which variety it was. Map the parent technique and note what is unknown."

@@ -1,0 +1,82 @@
+lesson: soc-l1-detection-blind-spots-01
+questions:
+  - id: q1
+    prompt: "A search for a host's activity in a time window returns nothing. What should you check before concluding nothing happened?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "That the host is covered by the log source, was sending during the window, the data is still retained, and the search was right."
+        correct: true
+        explanation: "Correct. 'Nothing found' only counts when you could have seen it."
+      - text: "Nothing; no results means no activity."
+        correct: false
+        explanation: "A stopped agent, an off-site laptop or expired logs all produce no results too."
+      - text: "Only that the host name is spelled correctly."
+        correct: false
+        explanation: "That is one of the checks, but coverage and data availability matter as much."
+      - text: "Whether the user is a trusted employee."
+        correct: false
+        explanation: "Trust in the person says nothing about whether you had telemetry."
+  - id: q2
+    prompt: "What is the main weakness of signature-based detection?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "It misses anything new or slightly changed."
+        correct: true
+        explanation: "Correct. It only matches exact values it already knows."
+      - text: "It fires on almost everything."
+        correct: false
+        explanation: "Signatures are usually precise; noise is more common with anomaly rules."
+      - text: "It needs no telemetry."
+        correct: false
+        explanation: "Every detection needs telemetry to match against."
+      - text: "It cannot detect known malware."
+        correct: false
+        explanation: "Known malware is exactly what signatures are good at."
+  - id: q3
+    prompt: "An anomaly rule flags an account downloading fifty times its usual volume. What is the right attitude?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "Unusual is a lead, not a verdict; triage it like any other alert."
+        correct: true
+        explanation: "Correct. Month-end reports and migrations are unusual too."
+      - text: "Treat it as an attack, since unusual activity means malicious activity."
+        correct: false
+        explanation: "Many legitimate events are unusual."
+      - text: "Anomaly rules are unreliable, so ignore them."
+        correct: false
+        explanation: "They can catch attacks no rule was written for; they just need triage."
+      - text: "Only escalate if the volume is a hundred times higher."
+        correct: false
+        explanation: "The size of the deviation helps prioritise, but triage decides, not an arbitrary multiplier."
+  - id: q4
+    prompt: "An endpoint agent stopped sending exactly while suspicious activity happened on another machine. Why is that worth reporting?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "Attackers sometimes stop agents before acting, so a well-timed gap is itself a lead."
+        correct: true
+        explanation: "Correct. Silence can be evidence, especially when it lines up with an incident."
+      - text: "It is not worth reporting; agents stop all the time."
+        correct: false
+        explanation: "Agents do stop, but the timing here makes it relevant."
+      - text: "Because it proves the machine was compromised."
+        correct: false
+        explanation: "It proves nothing on its own; it is a lead to check."
+      - text: "Because the agent's licence may have expired."
+        correct: false
+        explanation: "Possible, but the security question is why it stopped at that exact time."
+  - id: q5
+    prompt: "Which of these is a coverage gap?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "A new server whose logs were never connected to the SIEM."
+        correct: true
+        explanation: "Correct. Nothing on that server can be detected."
+      - text: "A rule that fires too often on harmless activity."
+        correct: false
+        explanation: "That is a noisy rule, which is a tuning problem, not a blind spot."
+      - text: "An alert waiting in the queue."
+        correct: false
+        explanation: "The SOC can see it; it just has not been triaged yet."
+      - text: "A user who reports a phishing email."
+        correct: false
+        explanation: "That is a useful extra source of detection, not a gap."

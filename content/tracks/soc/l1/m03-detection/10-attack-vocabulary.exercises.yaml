@@ -1,0 +1,57 @@
+lesson: soc-l1-attack-vocabulary-01
+exercises:
+  - id: map-techniques
+    title: "Map four observations to ATT&CK"
+    kind: report-section
+    instructions: >-
+      Use the technique table in the lesson. Choose the most specific ID that the evidence supports,
+      and no more specific than that.
+    blocks:
+      - type: table
+        title: "Observations (synthetic)"
+        columns: ["ID", "Evidence"]
+        rows:
+          - ["M1", "Sign-in logs: the password 'Winter2026!' was tried once against each of 220 accounts within 10 minutes."]
+          - ["M2", "Mail logs: a message with a link to a fake sign-in page was delivered to 12 finance staff."]
+          - ["M3", "Endpoint log: 'schtasks /create' made a task that runs C:\\Users\\Public\\upd.vbs every hour."]
+          - ["M4", "Endpoint log: the word processor started 'a script interpreter'; the interpreter's name was not recorded."]
+    questions:
+      - id: m1
+        prompt: "Which ID fits M1?"
+        answer_type: choice
+        options: ["T1110.003", "T1110", "T1078", "T1566.001"]
+        accept: ["T1110.003"]
+        hints:
+          - "One password, many accounts: which Brute Force variety is that?"
+        explanation: >-
+          One password tried against many accounts is Password Spraying, and the evidence shows that
+          pattern clearly, so the sub-technique is supported.
+      - id: m2
+        prompt: "Which ID fits M2?"
+        answer_type: choice
+        options: ["T1566.002", "T1566.001", "T1566", "T1071"]
+        accept: ["T1566.002"]
+        hints:
+          - "Was the malicious part attached to the email, or reached through it?"
+        explanation: >-
+          A link to a fake sign-in page is Spearphishing Link. The evidence shows the variety, so the
+          sub-technique is supported.
+      - id: m3
+        prompt: "Which ID fits M3?"
+        answer_type: choice
+        options: ["T1053.005", "T1053", "T1059.001", "T1547"]
+        accept: ["T1053.005"]
+        hints:
+          - "Which command created the task, and which technique family does it belong to?"
+        explanation: >-
+          schtasks creates a Windows scheduled task, so Scheduled Task (T1053.005) is directly supported.
+      - id: m4
+        prompt: "Which ID fits M4?"
+        answer_type: choice
+        options: ["T1059", "T1059.001", "T1059.005", "T1053.005"]
+        accept: ["T1059"]
+        hints:
+          - "Does the evidence say which interpreter ran?"
+        explanation: >-
+          A script interpreter ran, but the evidence does not say which one. Map the parent technique
+          T1059 and note that the interpreter is not yet identified.
