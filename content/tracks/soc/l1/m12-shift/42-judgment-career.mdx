@@ -1,0 +1,151 @@
+---
+id: soc-l1-judgment-career-01
+title: "Judgment, Sustainability and Honest Career Orientation"
+track: soc
+rank: 1
+module: shift
+order: 42
+estimated_minutes: 15
+objectives_covered: ["soc:soc_alert_triage"]
+mitre: []
+xp: 120
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-queue-handover-01"]
+skills: ["soc_alert_triage"]
+practice: ["shift:shift-standard-mixed"]
+---
+
+> **Outcome:** you can recognise the thinking traps that cause triage mistakes, protect your judgment over long shifts, and describe the L1 role and where it can lead, honestly.
+
+## Why this matters on shift
+
+Most triage mistakes are not caused by missing knowledge. They come from tired people latching on to the first explanation, trusting a tool's score too much, or seeing what they expect. Those traps get worse with fatigue, and SOC work is full of fatigue. Knowing the traps, and having habits that counter them, is what keeps a good analyst good in the fourth hour of a night shift.
+
+## Before you start
+
+You should already know:
+
+- How to run a shift and hand over: [Queue, Time and Handover](/learn/soc-l1-queue-handover-01).
+
+## Core ideas
+
+### Thinking traps
+
+Everyone falls into these; the professional difference is noticing.
+
+- **Anchoring:** sticking with the first explanation you thought of, even as new evidence arrives. The alert title is a common anchor.
+- **Confirmation bias:** looking for evidence that supports what you already believe, and skimming past evidence against it.
+- **Automation bias:** trusting a tool's verdict or score over your own reading of the evidence, such as a "clean" sandbox report on a file that behaved badly on the host.
+- **Recency:** expecting today's alert to be the same as yesterday's, because yesterday's was harmless.
+
+Think of a doctor who decides in the first minute that it is "just the flu" and then hears every symptom as flu. A good doctor asks, "What else could this be, and what would I expect to see if it were?"
+
+### Habits that counter them
+
+- **Name an alternative.** For every disposition, write down one other explanation and what evidence would support it.
+- **Ask what would change your mind**, before you look.
+- **Read the evidence before the label:** raw events before title, behaviour before verdict.
+- **Get a second pair of eyes** on anything high-impact, and offer the same to colleagues.
+
+<FlowDiagram
+  title="A quick judgment check before you decide"
+  description="State your conclusion. Name one alternative explanation. Ask what evidence would separate them and check it. Notice whether you are tired or rushed. For high-impact calls, ask a colleague."
+  steps={[
+    { label: "State your conclusion", detail: "In one sentence." },
+    { label: "Name an alternative", detail: "What else could explain the same evidence?" },
+    { label: "Find the deciding evidence", detail: "What would you see if the alternative were true? Look." },
+    { label: "Check yourself", detail: "Tired, rushed, or expecting a particular answer?" },
+    { label: "Second pair of eyes", detail: "For high-impact calls, ask a colleague." },
+  ]}
+/>
+
+In plain English: before you decide, argue with yourself for thirty seconds, and ask for help when it matters.
+
+### Working sustainably
+
+SOC work involves shifts, nights, repetitive alerts and sudden high-pressure incidents. Over time this can lead to **burnout**: exhaustion, cynicism about the work and a feeling of not being effective, caused by long-term workplace stress. The World Health Organization describes burnout as an occupational phenomenon resulting from chronic workplace stress that has not been successfully managed.
+
+Things that help, and that good teams build in:
+
+- Real breaks during shifts, and handovers that let you actually stop.
+- Fixing noisy rules instead of accepting alert fatigue as normal.
+- Saying early when the workload is too much.
+- Learning time, so the job keeps growing rather than repeating.
+
+If you notice signs of burnout in yourself or a colleague, it is a reason to talk to your lead, not a personal failing.
+
+### The L1 role, honestly
+
+An L1 SOC analyst role is often an entry point into security work. Realistically, it usually involves:
+
+- Shift work, sometimes including nights and weekends.
+- A lot of repetitive triage, most of which turns out harmless.
+- A steep learning curve in the first months, with many tools and systems.
+- Real responsibility: your calls decide whether attacks are caught early.
+
+Common next steps, depending on what you enjoy, include Tier 2 investigation, incident response, detection engineering, threat intelligence, cloud security and, with further study, penetration testing. Progression depends on the organisation and on the evidence of skill you build. Nobody can promise a particular job or timeline.
+
+What tends to matter to employers: solid fundamentals (networks, operating systems, logs), clear writing, careful reasoning, curiosity, and evidence that you have done the work, such as lab write-ups or a portfolio of investigations you can talk through. The habits in this track, such as rationales that name evidence, honest confidence and clean handovers, are exactly what interviewers probe.
+
+## Worked example
+
+An L1 analyst at Larkspur Freight gets an alert: "Possible credential dumping tool" on srv-it04 at 02:15 UTC.
+
+**Anchoring.** The title says credential dumping, the hour is unusual, and the analyst has just finished a real incident. They start writing an escalation: "Credential theft on srv-it04."
+
+**The judgment check.** Before sending, they name an alternative: "an approved admin tool that the rule mistakes for a dumping tool". What would separate them? The tool's file hash, its location, who ran it, and whether a change covers it. They look: the program is the company's licensed password-audit tool, run from its program folder by the IT security team's service account, under change CHG-4911 for a scheduled overnight audit.
+
+**The second pair of eyes.** Because the call is high-impact either way, the analyst asks the shift lead to glance at it. The lead agrees with the benign verdict, and adds that the audit tool should be excluded for that account during the change window. That is a tuning request.
+
+The final disposition is benign true positive, with the alternative, the evidence and the tuning request recorded. Five minutes of checking replaced a false escalation that would have woken up the incident team.
+
+## Try it
+
+<MicroExercise id="judgment-calls" />
+
+## Common mistakes
+
+- **Deciding from the title,** then reading evidence only to confirm it.
+- **Letting a tool's score override what you see.**
+- **Never naming an alternative explanation.**
+- **Treating exhaustion as normal,** or hiding it.
+- **Believing career hype.** Progress comes from fundamentals and evidence of skill, not shortcuts.
+
+## What good looks like
+
+A strong analyst states a conclusion and an alternative, checks the evidence that separates them, asks for a second opinion on high-impact calls, works at a sustainable pace, speaks up early, and talks about their career in terms of skills and evidence, not promises.
+
+## In the real world
+
+Mature SOCs use peer review of dispositions, regular case reviews where mistakes are discussed without blame, and rotation between tasks to reduce fatigue. Many also run tabletop exercises and post-incident reviews that focus on decisions as well as technology.
+
+The standard mixed shift in the simulator combines several kinds of activity at once, which makes it a good place to practise naming alternatives before you decide.
+
+## Remember it like this
+
+Name an alternative, find the deciding evidence, ask when it matters, and look after the person doing the thinking.
+
+## Interview answer
+
+"I'm aware that most triage mistakes come from thinking traps, such as anchoring on the alert title, confirmation bias and over-trusting tool scores, especially when tired. So before I decide, I name at least one alternative explanation and check the evidence that would separate them, and I ask for a second pair of eyes on high-impact calls. I also think sustainability matters: breaks, fixing noisy rules, and raising workload early. Long term, I want to build strong fundamentals and a record of real investigations, and grow towards whichever specialism fits me best."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Anchoring", definition: "Sticking with the first explanation you thought of, even as new evidence arrives." },
+    { term: "Confirmation bias", definition: "Looking for evidence that supports what you already believe and skimming past evidence against it." },
+    { term: "Automation bias", definition: "Trusting a tool's verdict or score over your own reading of the evidence." },
+    { term: "Burnout", definition: "Exhaustion, cynicism about work and a sense of ineffectiveness caused by long-term, unmanaged workplace stress." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

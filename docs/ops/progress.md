@@ -176,4 +176,5 @@ Prerequisite changes from the plan: the plan's Rank 2 core prerequisites for les
 | M8 Malware and intel | malware-behaviour, reputation (teaches hashing itself; Rank 0 prereq replaces core-r2), enrichment-workflow | ✓ | content + review 107/107 | `e201c8d` |
 | M9 SIEM | thinking-in-queries, stats-timechart, sessions-correlation, hunting (every lesson query is executed by a new snippet test; drill links verified) | ✓ | content + review + snippets 125/125 | `2de3d36` |
 | M10 Tier-1 incident response | ir-lifecycle, evidence-handoff | ✓ | content + review 125/125 | `aec57a8` |
-| M11 Reporting | report-anatomy, report-summaries (craft only; no grading specifics) | ✓ | content + review 125/125 | (this commit) |
+| M11 Reporting | report-anatomy, report-summaries (craft only; no grading specifics) | ✓ | content + review 125/125 | `0fa2b49` |
+| M12 Working the shift | queue-handover, judgment-career (all 42 lessons written; every skill has ≥1 lesson) | ✓ | content + review 125/125 | (this commit) |

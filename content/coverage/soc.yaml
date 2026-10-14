@@ -7,7 +7,7 @@ version: 1
 skills:
   - id: soc_alert_triage
     planned: "1, 2, 4, 5, 6, 41, 42"
-    lessons: [soc-l1-triage-loop-01, soc-l1-soc-roles-01, soc-l1-alert-lifecycle-01, soc-l1-alert-anatomy-01, soc-l1-prioritisation-01]
+    lessons: [soc-l1-triage-loop-01, soc-l1-soc-roles-01, soc-l1-alert-lifecycle-01, soc-l1-alert-anatomy-01, soc-l1-prioritisation-01, soc-l1-queue-handover-01, soc-l1-judgment-career-01]
     practice: ["family:soc-f-mixed-signal-01", "shift:shift-quiet-day"]
     gap: null
   - id: soc_false_positive_id
@@ -117,6 +117,6 @@ skills:
     gap: null
   - id: soc_case_management
     planned: "2, 38, 41"
-    lessons: [soc-l1-alert-lifecycle-01, soc-l1-evidence-handoff-01]
+    lessons: [soc-l1-alert-lifecycle-01, soc-l1-evidence-handoff-01, soc-l1-queue-handover-01]
     practice: ["family:soc-f-mixed-signal-01"]
     gap: null

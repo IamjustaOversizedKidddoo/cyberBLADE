@@ -1,0 +1,14 @@
+lesson: soc-l1-judgment-career-01
+cards:
+  - id: fc-soc-l1-judgment-career-01
+    front: "What are four common thinking traps in triage?"
+    back: "Anchoring, confirmation bias, automation bias, and recency."
+  - id: fc-soc-l1-judgment-career-02
+    front: "What is the 30-second judgment check before deciding?"
+    back: "State your conclusion, name an alternative, check the evidence that separates them, notice fatigue, and ask a colleague on high-impact calls."
+  - id: fc-soc-l1-judgment-career-03
+    front: "What is automation bias?"
+    back: "Trusting a tool's verdict or score over your own reading of the evidence."
+  - id: fc-soc-l1-judgment-career-04
+    front: "What tends to matter most to employers for L1 roles?"
+    back: "Solid fundamentals, clear writing, careful reasoning, curiosity, and evidence of hands-on work."

@@ -1,0 +1,14 @@
+lesson: soc-l1-queue-handover-01
+cards:
+  - id: fc-soc-l1-queue-handover-01
+    front: "What happens in a first pass of a large queue?"
+    back: "Group similar alerts, sort by priority, and flag urgent ones, spending seconds per alert."
+  - id: fc-soc-l1-queue-handover-02
+    front: "What are the five parts of a useful shift handover?"
+    back: "Open incidents, open alerts (and what they wait for), watch items, noise and tooling issues, and promised updates."
+  - id: fc-soc-l1-queue-handover-03
+    front: "What must you check before closing a group of similar alerts?"
+    back: "A sample including the newest and oldest; remove any that differ and triage them on their own."
+  - id: fc-soc-l1-queue-handover-04
+    front: "What should you do when the queue grows beyond your capacity?"
+    back: "Tell the shift lead early, while continuing in priority order."
