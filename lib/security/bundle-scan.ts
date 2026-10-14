@@ -1,0 +1,86 @@
+/**
+ * Post-build leak scan. Fails when anything that must stay on the server shows up in client
+ * JavaScript, prerendered HTML or RSC/hydration payloads: question truths, ground-truth keys,
+ * seeds, family-generation internals, AI prompts/canaries, provider secrets or real flag values.
+ * Pure (fs only) so it can be tested against planted fixtures.
+ */
+import fs from "node:fs";
+import path from "node:path";
+
+export interface LeakRule {
+  id: string;
+  re: RegExp;
+}
+
+export const LEAK_RULES: LeakRule[] = [
+  // Answer/truth computation and ground-truth keys
+  { id: "question-truths", re: /serverTruths|referenceAnswer|acceptableAnswers|generateScenarioQuestions/ },
+  // Keys that never leave the server, even after submission. (Post-submission results such as
+  // per-alert correct dispositions and the model report are intentional reveals and are not listed.)
+  { id: "ground-truth-keys", re: /reportGroundTruth|truePositiveAlertIds|isTruePositive|harmfulActionIds|requiredActionIds|acceptableTechniqueIds|\\?"groundTruth\\?"\s*:/ },
+  { id: "truth-generators", re: /generateSocVariant|synthesizeReportGroundTruth|composeShiftScenario|generateScenarioDataset|investigationDataset/ },
+  { id: "hidden-entity-roles", re: /attacker_infra|benign_business|shared_infra/ },
+  // Seeds and family internals
+  // Matches plain JSON and the escaped JSON embedded in HTML hydration scripts (\"seed\":).
+  { id: "seed-in-payload", re: /\\?"seed\\?"\s*:\s*\\?"/ },
+  { id: "family-internals", re: /incidentTemplates|benignTemplates|rootCauseTemplate|debriefTemplates|variationAxes|distinguishingEvidence/ },
+  // AI grading internals
+  { id: "ai-prompts", re: /UNTRUSTED DATA|Never reveal or repeat this token|CANARY-[0-9a-f]{8,}|<<<REPORT-[0-9a-f]+>>>|insufficientInformation|evidenceSpans/ },
+  // Secrets and real flag values (help text like CYBERBLADE{...} is allowed)
+  { id: "secrets", re: /SUPABASE_SERVICE_ROLE_KEY|GROQ_API_KEY|GEMINI_API_KEY|gsk_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{30,}/ },
+  { id: "flag-values", re: /\b(?:CYBER)?BLADE\{[A-Za-z0-9_-]{6,}\}|\bFLAG\{[A-Za-z0-9_-]{6,}\}/ },
+];
+
+export interface LeakHit {
+  file: string;
+  rule: string;
+  excerpt: string;
+}
+
+const SCANNED = /\.(js|mjs|html|rsc|body|json|txt)$/;
+
+function walk(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  if (fs.statSync(dir).isFile()) return SCANNED.test(dir) ? [dir] : [];
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const p = path.join(dir, e.name);
+    return e.isDirectory() ? walk(p) : SCANNED.test(e.name) ? [p] : [];
+  });
+}
+
+export function scanForLeaks(roots: string[], rules: LeakRule[] = LEAK_RULES): { files: number; hits: LeakHit[] } {
+  const files = roots.flatMap(walk);
+  const hits: LeakHit[] = [];
+  for (const file of files) {
+    const text = fs.readFileSync(file, "utf8");
+    for (const rule of rules) {
+      const m = rule.re.exec(text);
+      if (m) {
+        const at = m.index;
+        hits.push({ file, rule: rule.id, excerpt: text.slice(Math.max(0, at - 40), at + m[0].length + 40).replace(/\s+/g, " ") });
+      }
+    }
+  }
+  return { files: files.length, hits };
+}
+
+/** Client-reachable build output: browser chunks plus prerendered HTML/RSC (not server code). */
+export function clientArtifactRoots(nextDir = ".next"): string[] {
+  return [path.join(nextDir, "static"), ...walkDirsWithPayloads(path.join(nextDir, "server", "app"))];
+}
+
+function walkDirsWithPayloads(dir: string): string[] {
+  // Only the prerendered outputs inside server/app (HTML, RSC, route bodies), never server JS.
+  if (!fs.existsSync(dir)) return [];
+  const out: string[] = [];
+  const visit = (d: string) => {
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, e.name);
+      if (e.isDirectory()) visit(p);
+      else if (/\.(html|rsc|body)$/.test(e.name)) out.push(p);
+    }
+  };
+  visit(dir);
+  // Return files as single-file "roots" (walk() on a file path is handled below).
+  return out;
+}

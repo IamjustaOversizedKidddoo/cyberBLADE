@@ -17,18 +17,10 @@ export const entityTypeSchema = z.enum(ENTITY_TYPES);
 
 /**
  * Server-only hidden ground-truth role of an entity in the scenario.
- * Strictly stripped before returning to client.
+ * Strictly stripped before returning to client. Kept as a type only (erased at build time):
+ * this module is imported by client components, so no runtime list of roles may live here.
  */
-export const ENTITY_ROLES = [
-  "attacker_infra",
-  "victim",
-  "benign_business",
-  "shared_infra",
-  "scanner",
-  "partner",
-] as const;
-export type EntityRole = (typeof ENTITY_ROLES)[number];
-export const entityRoleSchema = z.enum(ENTITY_ROLES);
+export type EntityRole = "attacker_infra" | "victim" | "benign_business" | "shared_infra" | "scanner" | "partner";
 
 /**
  * Supported simulated investigation tools
