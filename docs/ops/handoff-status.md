@@ -115,3 +115,16 @@ Found by reading the migrations. None of these has been run against Postgres yet
 3. Decide whether S1–S6 are fixed now (before prompt 7) or batched into Prompt C.
 4. Confirm the design skill path and the owner-context line.
 5. Before any beta, a working SOC analyst should review the 9 families and the report rubric.
+
+## 7. Status after Prompt 7 (2026-10-14)
+
+| Finding | Status |
+|---|---|
+| S1 learner can write own SOC scores (hosted RLS) | **Open**, needs a policy-tightening migration |
+| S2 seeds readable (, column REVOKE ineffective) | **Open**, needs a migration + seed-free projections |
+| S3 submitted reports editable via direct client access | **Open** |
+| S4 SQL audit rule backwards / broken regex | **Fixed** (): pinned search_path + explicit mode required; DEFINER allowlisted |
+| S5 report migration not idempotent | **Open** (applied migrations must not be edited; fix with a follow-up migration) |
+| S6 deletion/export gaps | **Partly fixed**: AI tables covered; older SOC tables still missing from the RPC/export |
+| S7 question truths verified client-side | **Open, critical**, needs server-side questions ( still in ) |
+| S8 decisions on generated attempts + 404 routes | **Fixed** () |
