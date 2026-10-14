@@ -34,7 +34,7 @@ function writeGate(dir: string, gate: GateFile, name = gateFileName(currentVersi
   fs.writeFileSync(path.join(dir, name), JSON.stringify(gate));
 }
 
-const LIVE = { SOC_AI_GRADING_MODE: "live" };
+const LIVE: NodeJS.ProcessEnv = { NODE_ENV: "test", SOC_AI_GRADING_MODE: "live" };
 
 describe("live mode is refused server-side without a valid signed gate", () => {
   it("no gate file: live becomes preview with a reason", () => {
