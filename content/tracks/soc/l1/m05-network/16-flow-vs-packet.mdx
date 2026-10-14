@@ -1,0 +1,148 @@
+---
+id: soc-l1-flow-vs-packet-01
+title: "Flow Records vs Packets"
+track: soc
+rank: 1
+module: net
+order: 16
+estimated_minutes: 16
+objectives_covered: ["soc:soc_network_traffic"]
+mitre: []
+xp: 90
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["core-r1-net-capture-01"]
+skills: ["soc_network_traffic"]
+practice: ["tool:pcap_flows"]
+---
+
+> **Outcome:** you can read a flow record, tell which direction data moved, and decide when a summary is enough and when you need the packets.
+
+## Why this matters on shift
+
+Network evidence comes in two very different sizes. Flow records summarise every conversation in one line each, so you can search days of traffic quickly. Packet captures hold every byte, but only for a short time and only where someone set them up. Knowing what each can answer saves you hours, and stops you drawing conclusions the evidence cannot support.
+
+## Before you start
+
+You should already know:
+
+- What packets are and how a capture is read: [Capturing and Reading Packets](/learn/core-r1-net-capture-01).
+
+## Core ideas
+
+### Two kinds of network evidence
+
+A **flow record** is a one-line summary of a network conversation: who talked to whom, on which ports, with which protocol, for how long, and how much data went each way. It does not contain the content.
+
+A **packet capture** is a recording of the actual packets, including their contents (the payload), as they crossed a point in the network.
+
+Think of a phone bill and a phone recording. The bill lists every call: the numbers, the time, the length. It is small, and the company keeps it for a long time. A recording holds every word, but it is huge, rarely made, and kept briefly. Most questions ("did this office ever call that number?") are answered by the bill. Some ("what was said?") need the recording.
+
+### What a flow record contains
+
+Most flow records identify a conversation by its **five-tuple**: source IP, source port, destination IP, destination port, and protocol (TCP, UDP or ICMP). Around that they add:
+
+- the start time and duration,
+- bytes and packets in each direction (or in total),
+- for TCP, the flags seen, such as `S` for SYN (a connection request) and `F` for FIN (a normal close).
+
+Common flow formats include NetFlow and IPFIX. Firewalls, routers and cloud platforms produce flow logs too. Field names differ; the meaning is the same.
+
+### Direction matters
+
+"1.8 GB" means nothing until you know which way it went. The side that **sent** the bytes is where the data came from. A laptop that sent 2 MB and received 1.8 GB downloaded something, such as an update. A laptop that sent 1.8 GB and received 2 MB uploaded something, which is the pattern data theft leaves.
+
+Always check which side is the source, and which byte counter belongs to which side, before you describe a transfer.
+
+### What flows can and cannot tell you
+
+<FlowDiagram
+  title="Flows or packets?"
+  description="Start with flow records to find who talked to whom, when, how often and how much. Move to packets only when you need the content, and only if a capture exists for that time and place. Encrypted traffic hides the payload even in a capture."
+  steps={[
+    { label: "Ask the question", detail: "Who, when, how much, how often? Or: what exactly was sent?" },
+    { label: "Flows first", detail: "Fast and long-kept: they answer who, when, how much and how often." },
+    { label: "Need content?", detail: "Check whether a packet capture exists for that time and place." },
+    { label: "Read packets", detail: "Headers always; payload only if it is not encrypted." },
+  ]}
+/>
+
+In plain English: the bill first, the recording only when you really need the words and one exists.
+
+Flows can show that a laptop sent 1.8 GB to an outside address at 02:00. They cannot show what was in it. Packets can, if a capture was running there at that time and the traffic was not encrypted. Most web traffic today is encrypted with TLS, so even a capture often shows only the addresses, the size and the server name the client asked for.
+
+### Incomplete connections
+
+A TCP connection starts with a three-step handshake (SYN, SYN-ACK, ACK). A flow that shows only `S` from the client, with almost no bytes, is a connection attempt that never completed: the port was closed, filtered, or nothing answered. Many of those in a row, to many ports or many hosts, is what scanning looks like.
+
+## Worked example
+
+An alert fires at Larkspur Freight at 02:20 UTC: "Large transfer between ws-204 and external address." The analyst opens the flow view:
+
+<LogBlock
+  title="Flows for ws-204, 02:00-02:20 UTC (synthetic)"
+  lines={[
+    "start     src            sport  dst            dport proto  sent      received    pkts   dur     flags",
+    "02:01:12  172.16.40.204  51022  192.0.2.180    443   TCP    2.1 MB    1,840 MB    1.3M   9m10s   SAF",
+    "02:14:55  172.16.40.204  51388  192.0.2.181    443   TCP    3.6 KB    4.1 KB      31     0.4s    SAF",
+    "02:15:01  172.16.40.204  51390  192.0.2.181    443   TCP    1,212 MB  0.9 MB      0.8M   4m40s   SAF",
+  ]}
+/>
+
+**A false lead.** The first flow is the biggest, 1.84 GB, so it looks like the answer. But the large number is in the **received** column: ws-204 downloaded 1.84 GB. The asset directory shows ws-204 is scheduled for an operating-system upgrade tonight, and 192.0.2.180 is the update service's address in Larkspur's allowed list. That explains the download.
+
+**The real concern.** The third flow goes the other way: ws-204 **sent** 1.2 GB to 192.0.2.181 in under five minutes, right after a short first connection to the same address. Nothing in the asset directory explains an upload of that size at night.
+
+**What flows cannot say.** The flows show an upload over port 443, but not what was uploaded. There is no packet capture for ws-204, and the traffic was most likely encrypted anyway. The analyst writes exactly that, and escalates the upload with the evidence and the gap:
+
+> ws-204 sent 1.2 GB to 192.0.2.181:443 at 02:15-02:20 UTC (flow record); not explained by the scheduled upgrade, which accounts for the separate 1.84 GB download from 192.0.2.180. Content unknown: no capture, likely TLS. Recommend checking endpoint activity on ws-204 around 02:10-02:20.
+
+## Try it
+
+<MicroExercise id="read-flows" />
+
+## Common mistakes
+
+- **Reading the biggest number without its direction.** Sent and received tell opposite stories.
+- **Expecting packet content for every alert.** Captures are rare, short-lived and often encrypted.
+- **Treating port 443 as proof of normal web browsing.** It is a convention, not a guarantee.
+- **Ignoring incomplete connections.** A run of SYN-only flows is how scans look.
+- **Claiming what was sent from a flow record.** Flows show how much, never what.
+
+## What good looks like
+
+A strong analyst answers network questions from flows first, states direction and volume precisely, uses packets only when they exist and are needed, and says plainly what the evidence cannot show.
+
+## In the real world
+
+Flow data comes from routers, firewalls, network sensors and cloud flow logs, and is often kept for weeks or months. Full packet capture is expensive and is usually limited to key network points and short retention windows. Some sensors keep only packet headers or extract metadata, such as DNS queries and TLS server names, instead of full payloads.
+
+The simulator's flow and capture view shows flow records with bytes sent and received, packets, duration and TCP flags. For some flows it also shows synthetic packets.
+
+## Remember it like this
+
+Flows are the phone bill, packets are the recording: check the bill first, and always read which way the bytes went.
+
+## Interview answer
+
+"A flow record summarises a conversation: the five-tuple, start time, duration, bytes and packets each way, and TCP flags. A packet capture holds the actual content, but it's expensive, short-lived and often encrypted. I start with flows to see who talked to whom, when, how often and how much, and I always check direction, because a big download and a big upload mean very different things. I go to packets only when I need content and a capture exists."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Flow record", definition: "A one-line summary of a network conversation: who, which ports and protocol, when, how long, and how much data each way, without the content." },
+    { term: "Packet capture", definition: "A recording of the actual packets, including their contents, as they crossed a point in the network." },
+    { term: "Five-tuple", definition: "The five values that identify a network conversation: source IP, source port, destination IP, destination port and protocol." },
+    { term: "Payload", definition: "The content carried inside a packet, as opposed to its addressing headers." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

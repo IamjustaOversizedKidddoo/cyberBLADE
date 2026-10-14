@@ -1,0 +1,55 @@
+lesson: soc-l1-flow-vs-packet-01
+exercises:
+  - id: read-flows
+    title: "Read four flow records"
+    kind: log-reading
+    instructions: >-
+      These flows come from the server srv-hr02 (172.16.40.62). Sizes are bytes sent and received by
+      the source side.
+    blocks:
+      - type: table
+        title: "Flows for srv-hr02 (synthetic)"
+        columns: ["ID", "Source", "Destination", "Proto", "Sent", "Received", "Flags"]
+        rows:
+          - ["F1", "172.16.40.62:50110", "192.0.2.190:443", "TCP", "1.5 KB", "640 MB", "SAF"]
+          - ["F2", "172.16.40.62:50112", "192.0.2.191:443", "TCP", "910 MB", "1.1 MB", "SAF"]
+          - ["F3", "192.0.2.192:40001", "172.16.40.62:22", "TCP", "60 B", "0 B", "S"]
+          - ["F4", "172.16.40.62:50114", "172.16.40.10:53", "UDP", "74 B", "130 B", "-"]
+    questions:
+      - id: upload
+        prompt: "Which flow is a large upload from srv-hr02 to the internet? (Type its ID.)"
+        answer_type: text
+        accept: ["F2"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "For each large flow, check which column holds the big number: sent or received?"
+        explanation: >-
+          In F2 srv-hr02 is the source and sent 910 MB. F1 is the opposite: srv-hr02 received 640 MB,
+          a download.
+      - id: incomplete
+        prompt: "What does F3 show?"
+        answer_type: choice
+        options:
+          - "A connection attempt to port 22 that never completed"
+          - "A successful SSH session"
+          - "A large file transfer"
+          - "A DNS lookup"
+        accept: ["A connection attempt to port 22 that never completed"]
+        hints:
+          - "Which TCP flags appear, and how much data came back?"
+        explanation: >-
+          Only a SYN (S) was seen and nothing came back, so the handshake never finished. On its own it
+          is one probe; many of these across ports or hosts would look like a scan.
+      - id: content
+        prompt: "Can these flow records tell you what data F2 contained?"
+        answer_type: choice
+        options:
+          - "No, flows show volume and direction but not content"
+          - "Yes, the flags show the file type"
+          - "Yes, port 443 means it was a web page"
+        accept: ["No, flows show volume and direction but not content"]
+        hints:
+          - "Which fields does a flow record have, and which does it not?"
+        explanation: >-
+          Flow records never contain payload. To learn what was sent you need endpoint evidence or a
+          packet capture, and port 443 traffic is usually encrypted anyway.

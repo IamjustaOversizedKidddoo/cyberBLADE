@@ -490,5 +490,133 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "category": "soc",
     "front": "Why is a link visit seconds after delivery often not a person?",
     "back": "Mail security services follow links automatically to check them on arrival."
+  },
+  {
+    "id": "fc-soc-l1-flow-vs-packet-01",
+    "lessonId": "soc-l1-flow-vs-packet-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is in a flow record, and what is not?",
+    "back": "The five-tuple, times, duration, bytes and packets each way, and TCP flags; never the content."
+  },
+  {
+    "id": "fc-soc-l1-flow-vs-packet-02",
+    "lessonId": "soc-l1-flow-vs-packet-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Large 'sent' vs large 'received': which one is an upload?",
+    "back": "Large sent by the internal host is an upload; large received is a download."
+  },
+  {
+    "id": "fc-soc-l1-flow-vs-packet-03",
+    "lessonId": "soc-l1-flow-vs-packet-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does a flow with only the SYN flag and no reply mean?",
+    "back": "A TCP connection attempt that never completed. Many of them across hosts or ports look like scanning."
+  },
+  {
+    "id": "fc-soc-l1-flow-vs-packet-04",
+    "lessonId": "soc-l1-flow-vs-packet-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why might a packet capture still not show the content?",
+    "back": "Most traffic, especially on port 443, is encrypted with TLS."
+  },
+  {
+    "id": "fc-soc-l1-dns-http-tls-01",
+    "lessonId": "soc-l1-dns-http-tls-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does an NXDOMAIN response mean?",
+    "back": "The name does not exist. Bursts of them for random-looking names can mean malware trying generated domains."
+  },
+  {
+    "id": "fc-soc-l1-dns-http-tls-02",
+    "lessonId": "soc-l1-dns-http-tls-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does passive DNS tell you about a domain?",
+    "back": "Which addresses it resolved to over time, with first-seen and last-seen dates; useful for judging how new it is."
+  },
+  {
+    "id": "fc-soc-l1-dns-http-tls-03",
+    "lessonId": "soc-l1-dns-http-tls-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is usually still visible in TLS traffic?",
+    "back": "The server name requested (SNI), the certificate details, and the connection's timing and size."
+  },
+  {
+    "id": "fc-soc-l1-dns-http-tls-04",
+    "lessonId": "soc-l1-dns-http-tls-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why is a normal-looking user agent weak evidence?",
+    "back": "It is free text that any program can set, so it can be faked easily."
+  },
+  {
+    "id": "fc-soc-l1-beacon-scan-egress-01",
+    "lessonId": "soc-l1-beacon-scan-egress-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does beaconing look like in flow records?",
+    "back": "Repeated connections from one source to one destination at a steady interval (often with jitter), with small, similar sizes."
+  },
+  {
+    "id": "fc-soc-l1-beacon-scan-egress-02",
+    "lessonId": "soc-l1-beacon-scan-egress-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Horizontal scan vs vertical scan?",
+    "back": "Horizontal: one port on many hosts. Vertical: many ports on one host."
+  },
+  {
+    "id": "fc-soc-l1-beacon-scan-egress-03",
+    "lessonId": "soc-l1-beacon-scan-egress-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What four changes mark unusual egress?",
+    "back": "Volume, destination, time and channel, compared with the host's baseline."
+  },
+  {
+    "id": "fc-soc-l1-beacon-scan-egress-04",
+    "lessonId": "soc-l1-beacon-scan-egress-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which legitimate software beacons?",
+    "back": "Update checkers, antivirus and endpoint agents, mail and chat clients, monitoring and time synchronisation."
+  },
+  {
+    "id": "fc-soc-l1-proxy-firewall-logs-01",
+    "lessonId": "soc-l1-proxy-firewall-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "An outbound connection was denied. What is the next question?",
+    "back": "Did anything between the same two sides get through another way: other ports, the proxy, other times?"
+  },
+  {
+    "id": "fc-soc-l1-proxy-firewall-logs-02",
+    "lessonId": "soc-l1-proxy-firewall-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why can't you identify the machine from the public address alone?",
+    "back": "NAT makes many internal machines share one public address; use the firewall's logs to find the real one."
+  },
+  {
+    "id": "fc-soc-l1-proxy-firewall-logs-03",
+    "lessonId": "soc-l1-proxy-firewall-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does a proxy see for HTTPS without TLS inspection?",
+    "back": "A CONNECT to the host and port, with time, bytes and user, but not the full URL or content."
+  },
+  {
+    "id": "fc-soc-l1-proxy-firewall-logs-04",
+    "lessonId": "soc-l1-proxy-firewall-logs-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does 'default deny' mean?",
+    "back": "Anything not explicitly allowed by a firewall rule is blocked."
   }
 ];

@@ -1,0 +1,55 @@
+lesson: soc-l1-proxy-firewall-logs-01
+exercises:
+  - id: edge-logs
+    title: "Read firewall and proxy logs together"
+    kind: log-reading
+    instructions: >-
+      An alert says an internal machine tried to reach 192.0.2.214, a known-bad address. Read both logs.
+    blocks:
+      - type: log
+        title: "Firewall log (synthetic)"
+        lines:
+          - "13:20:05  deny   172.16.40.93:51510 -> 192.0.2.214:4444  TCP  rule=default-deny"
+          - "13:20:41  deny   172.16.40.93:51514 -> 192.0.2.214:8080  TCP  rule=default-deny"
+          - "13:21:02  allow  172.16.40.93:51520 -> 172.16.40.5:3128   TCP  rule=to-proxy"
+      - type: log
+        title: "Proxy log (synthetic)"
+        lines:
+          - "13:21:02  user=g.ito  host=ws-093  CONNECT 192.0.2.214:443  category=uncategorized  action=allowed  sent=2.3 MB"
+    questions:
+      - id: source-host
+        prompt: "Which internal address made the blocked attempts?"
+        answer_type: text
+        accept: ["172.16.40.93"]
+        normalize: ["whitespace", "refang"]
+        hints:
+          - "Look at the source side of the two deny lines."
+        explanation: >-
+          Both denies come from 172.16.40.93, which the proxy log shows is ws-093, used by g.ito.
+      - id: got-through
+        prompt: "Did any connection to 192.0.2.214 succeed?"
+        answer_type: choice
+        options:
+          - "Yes, through the proxy on port 443"
+          - "No, both attempts were denied"
+          - "Cannot tell from these logs"
+        accept: ["Yes, through the proxy on port 443"]
+        hints:
+          - "The firewall only shows ws-093 reaching the proxy. What does the proxy log say happened next?"
+        explanation: >-
+          After two direct attempts were denied, ws-093 connected to the proxy, which allowed a CONNECT to
+          192.0.2.214:443 and 2.3 MB went out. The blocks did not stop it.
+      - id: what-visible
+        prompt: "The proxy logged a CONNECT request. What can it NOT show you about this connection?"
+        answer_type: choice
+        options:
+          - "The full URL and the content"
+          - "The destination host"
+          - "How many bytes were sent"
+          - "Which user made it"
+        accept: ["The full URL and the content"]
+        hints:
+          - "What does a CONNECT request set up, and what travels inside it?"
+        explanation: >-
+          CONNECT opens an encrypted tunnel. Without TLS inspection the proxy sees the destination, the
+          bytes, the time and the user, but not the URL path or content inside the tunnel.

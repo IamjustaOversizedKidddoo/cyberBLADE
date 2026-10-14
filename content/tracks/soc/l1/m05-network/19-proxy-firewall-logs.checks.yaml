@@ -1,0 +1,82 @@
+lesson: soc-l1-proxy-firewall-logs-01
+questions:
+  - id: q1
+    prompt: "An outbound connection from a server to a known-bad address was denied. What is the most important next check?"
+    objectives: ["soc:soc_network_monitoring"]
+    options:
+      - text: "Whether any other connection between the same two sides was allowed, on any port or route."
+        correct: true
+        explanation: "Correct. Attackers try several routes; one block does not mean nothing got through."
+      - text: "None; denied means no impact, so close it."
+        correct: false
+        explanation: "The deny shows something tried. Other attempts may have succeeded."
+      - text: "Whether the firewall vendor is reputable."
+        correct: false
+        explanation: "That says nothing about this server's activity."
+      - text: "Whether the server's owner is on holiday."
+        correct: false
+        explanation: "Ownership context helps later, but first find out whether anything succeeded."
+  - id: q2
+    prompt: "Which firewall denies are usually background noise?"
+    objectives: ["soc:soc_network_monitoring"]
+    options:
+      - text: "Inbound denies from the internet to the company's public addresses."
+        correct: true
+        explanation: "Correct. Public addresses are scanned constantly."
+      - text: "Outbound denies from an internal server to a known-bad address."
+        correct: false
+        explanation: "Those suggest something on the server is trying to reach a bad destination."
+      - text: "Denies from a workstation to many internal hosts on one port."
+        correct: false
+        explanation: "That looks like internal scanning."
+      - text: "None; every deny must be escalated."
+        correct: false
+        explanation: "That would bury the queue in internet noise."
+  - id: q3
+    prompt: "Why might the address an outside service reports be useless for finding the machine?"
+    objectives: ["soc:soc_network_monitoring"]
+    options:
+      - text: "NAT makes many internal machines share one public address; you need the firewall's logs to find the real one."
+        correct: true
+        explanation: "Correct. Match by time and port in the firewall logs."
+      - text: "Outside services always report fake addresses."
+        correct: false
+        explanation: "They report what they saw: the shared public address."
+      - text: "Public addresses change every second."
+        correct: false
+        explanation: "They can change, but the main issue is that many machines share one."
+      - text: "Because the machine was turned off."
+        correct: false
+        explanation: "Power state is not the reason."
+  - id: q4
+    prompt: "A proxy without TLS inspection logs 'CONNECT files.example:443'. What can you learn?"
+    objectives: ["soc:soc_network_monitoring"]
+    options:
+      - text: "The host, time, bytes and user, but not the full URL or content."
+        correct: true
+        explanation: "Correct. The CONNECT request opens a tunnel the proxy cannot read."
+      - text: "The exact files that were downloaded."
+        correct: false
+        explanation: "File names are inside the encrypted tunnel."
+      - text: "Nothing at all."
+        correct: false
+        explanation: "Host, time, bytes and user are still valuable."
+      - text: "The user's password for that site."
+        correct: false
+        explanation: "Credentials are inside the encrypted traffic."
+  - id: q5
+    prompt: "What is a URL category in proxy logs?"
+    objectives: ["soc:soc_network_monitoring"]
+    options:
+      - text: "The proxy vendor's label for the kind of website, such as cloud storage or newly registered domain."
+        correct: true
+        explanation: "Correct. It is a useful hint, but new domains are often uncategorised."
+      - text: "The website's own description of itself."
+        correct: false
+        explanation: "Categories are assigned by the proxy or filtering vendor."
+      - text: "Proof that the site is safe."
+        correct: false
+        explanation: "Categories can be wrong or out of date."
+      - text: "The protocol used for the request."
+        correct: false
+        explanation: "That is the method or scheme, not the category."

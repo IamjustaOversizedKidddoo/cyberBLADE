@@ -1,0 +1,82 @@
+lesson: soc-l1-flow-vs-packet-01
+questions:
+  - id: q1
+    prompt: "What is the main difference between a flow record and a packet capture?"
+    objectives: ["soc:soc_network_traffic"]
+    options:
+      - text: "A flow record summarises a conversation without its content; a packet capture records the packets including their content."
+        correct: true
+        explanation: "Correct. That is why flows are small and long-kept, and captures large and short-lived."
+      - text: "Flow records are only for UDP; packet captures are only for TCP."
+        correct: false
+        explanation: "Both cover TCP, UDP and other protocols."
+      - text: "Flow records come from endpoints; captures come from email."
+        correct: false
+        explanation: "Both come from network devices or sensors."
+      - text: "There is no difference; they are two names for the same thing."
+        correct: false
+        explanation: "One is a summary and the other is the full recording."
+  - id: q2
+    prompt: "A laptop's flow shows 3 MB sent and 2 GB received with an outside address. What happened?"
+    objectives: ["soc:soc_network_traffic"]
+    options:
+      - text: "The laptop downloaded about 2 GB."
+        correct: true
+        explanation: "Correct. The large number is on the received side, so data came in."
+      - text: "The laptop uploaded about 2 GB."
+        correct: false
+        explanation: "That reads the direction backwards; an upload would show the large number as sent."
+      - text: "Data was stolen from the laptop."
+        correct: false
+        explanation: "Nothing large left the laptop."
+      - text: "Nothing can be said without the packets."
+        correct: false
+        explanation: "Direction and volume are exactly what flows tell you."
+  - id: q3
+    prompt: "Which five values make up the five-tuple?"
+    objectives: ["soc:soc_network_traffic"]
+    options:
+      - text: "Source IP, source port, destination IP, destination port, protocol."
+        correct: true
+        explanation: "Correct. Together they identify one conversation."
+      - text: "Source IP, destination IP, user name, host name, time."
+        correct: false
+        explanation: "User and host names are not part of the network conversation's identity."
+      - text: "Bytes sent, bytes received, packets, duration, flags."
+        correct: false
+        explanation: "Those are measurements of the conversation, not its identity."
+      - text: "MAC address, IP address, port, protocol, payload."
+        correct: false
+        explanation: "MAC addresses and payload are not part of the five-tuple."
+  - id: q4
+    prompt: "Many flows from one outside address to many internal hosts show only the SYN flag and no data back. What does that look like?"
+    objectives: ["soc:soc_network_traffic"]
+    options:
+      - text: "Scanning: connection attempts that never completed."
+        correct: true
+        explanation: "Correct. Lots of incomplete handshakes across hosts or ports is the shape of a scan."
+      - text: "Large successful transfers."
+        correct: false
+        explanation: "No data came back, so nothing was transferred."
+      - text: "Normal web browsing by employees."
+        correct: false
+        explanation: "Browsing completes handshakes and exchanges data."
+      - text: "Encrypted traffic."
+        correct: false
+        explanation: "Encryption would still show completed connections and data."
+  - id: q5
+    prompt: "You need to know exactly what was uploaded in a flow to port 443. What is the honest position?"
+    objectives: ["soc:soc_network_traffic"]
+    options:
+      - text: "Flows cannot say; you need endpoint evidence or a capture, and port 443 traffic is usually encrypted."
+        correct: true
+        explanation: "Correct. State the gap clearly and look for other evidence."
+      - text: "It must have been a web page, because port 443 is HTTPS."
+        correct: false
+        explanation: "A port is a convention; it does not tell you the content."
+      - text: "The byte count tells you the file type."
+        correct: false
+        explanation: "Size says nothing about type or content."
+      - text: "Guess based on the time of day."
+        correct: false
+        explanation: "Guessing is not evidence; write the gap down instead."

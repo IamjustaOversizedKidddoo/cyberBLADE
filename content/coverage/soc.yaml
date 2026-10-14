@@ -32,18 +32,18 @@ skills:
     gap: null
   - id: soc_network_indicators
     planned: "17, 18"
-    lessons: []
+    lessons: [soc-l1-dns-http-tls-01, soc-l1-beacon-scan-egress-01]
     practice: ["family:soc-f-outbound-exfil-01", "tool:pdns"]
     gap: null
   - id: soc_network_traffic
     planned: "16"
-    lessons: []
+    lessons: [soc-l1-flow-vs-packet-01]
     practice: ["tool:pcap_flows"]
     gap: "thin: no packet-heavy scenario family yet"
   - id: soc_network_monitoring
     planned: "19"
-    lessons: []
-    practice: ["drill:drill-07", "drill:drill-16"]
+    lessons: [soc-l1-proxy-firewall-logs-01]
+    practice: ["drill:drill-03", "drill:drill-07"]
     gap: "thin: practised only in query drills on a small generic dataset"
   - id: soc_web_attacks
     planned: "26"
@@ -57,7 +57,7 @@ skills:
     gap: null
   - id: soc_data_exfiltration
     planned: "18"
-    lessons: []
+    lessons: [soc-l1-beacon-scan-egress-01]
     practice: ["family:soc-f-outbound-exfil-01"]
     gap: null
   - id: soc_insider_policy

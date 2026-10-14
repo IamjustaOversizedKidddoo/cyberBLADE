@@ -1,0 +1,58 @@
+lesson: soc-l1-beacon-scan-egress-01
+exercises:
+  - id: name-the-shape
+    title: "Name the network shape"
+    kind: log-reading
+    instructions: >-
+      Each row summarises one host's traffic over the last hour. Use the baseline column for normal
+      behaviour.
+    blocks:
+      - type: table
+        title: "Traffic summaries (synthetic)"
+        columns: ["ID", "Host", "What the flows show", "Baseline"]
+        rows:
+          - ["N1", "ws-119", "TCP SYN to port 445 on 172.16.40.1 through 172.16.40.254; almost no replies", "Talks to two file servers only"]
+          - ["N2", "ws-205", "Connects to 192.0.2.211:443 every 120 s (plus or minus 15 s), 300-500 bytes each; no matching installed software", "No regular external connections"]
+          - ["N3", "srv-db04", "Sent 7.8 GB to a personal cloud storage service between 01:00 and 01:40", "Sends about 5 GB nightly to the internal backup server only"]
+          - ["N4", "ws-188", "Connects hourly to the endpoint agent vendor's update service", "Same pattern every day"]
+    questions:
+      - id: n1
+        prompt: "What does N1 show?"
+        answer_type: choice
+        options: ["Horizontal scan", "Vertical scan", "Beaconing", "Unusual egress", "Normal activity"]
+        accept: ["Horizontal scan"]
+        hints:
+          - "Is it one port on many hosts, or many ports on one host?"
+        explanation: >-
+          One port (445) across a whole range of internal hosts, with almost no replies, from a
+          workstation that normally talks to two servers: a horizontal internal scan, worth escalating.
+      - id: n2
+        prompt: "What does N2 show?"
+        answer_type: choice
+        options: ["Horizontal scan", "Vertical scan", "Beaconing", "Unusual egress", "Normal activity"]
+        accept: ["Beaconing"]
+        hints:
+          - "Look at the timing and sizes, and at whether software explains it."
+        explanation: >-
+          Regular small connections with jitter to one outside address, with no software to explain
+          them and no such pattern in the baseline: possible command and control.
+      - id: n3
+        prompt: "What does N3 show?"
+        answer_type: choice
+        options: ["Horizontal scan", "Vertical scan", "Beaconing", "Unusual egress", "Normal activity"]
+        accept: ["Unusual egress"]
+        hints:
+          - "Compare the destination and volume with the baseline."
+        explanation: >-
+          The volume is similar to the nightly backup, but the destination is a personal cloud storage
+          service instead of the internal backup server. The change of destination is the red flag.
+      - id: n4
+        prompt: "What does N4 show?"
+        answer_type: choice
+        options: ["Horizontal scan", "Vertical scan", "Beaconing", "Unusual egress", "Normal activity"]
+        accept: ["Normal activity"]
+        hints:
+          - "Is there a known, installed piece of software that explains this pattern?"
+        explanation: >-
+          It is a regular pattern, but it is the endpoint agent checking for updates, exactly as it does
+          every day. Ordinary software beacons too.
