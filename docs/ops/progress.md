@@ -178,4 +178,10 @@ Prerequisite changes from the plan: the plan's Rank 2 core prerequisites for les
 | M10 Tier-1 incident response | ir-lifecycle, evidence-handoff | ✓ | content + review 125/125 | `aec57a8` |
 | M11 Reporting | report-anatomy, report-summaries (craft only; no grading specifics) | ✓ | content + review 125/125 | `0fa2b49` |
 | M12 Working the shift | queue-handover, judgment-career (all 42 lessons written; every skill has ≥1 lesson) | ✓ | content + review 125/125 | `0352a8b` |
-| Track build | landing, module pages + checkpoints, glossary + first-use tooltips, practice paths, core-page card | ✓ | unit 9/9, e2e track 10/10, all-lessons sweep 2/2 | `c91da33` + next |
+| Track build | landing, module pages + checkpoints, glossary + first-use tooltips, practice paths, core-page card | ✓ | unit 9/9, e2e track 10/10, all-lessons sweep 2/2 | `c91da33`, `4cf622b` |
+
+**Prompt A complete (2026-10-15).**
+- **Content:** 42 lessons in 12 modules, 664 computed minutes, about 56,600 words, 210 checks, 42 micro-exercises (140 questions), 169 track flashcards, a 189-term glossary, 17 tested BladeQL snippets, 4 practice paths, and 12 module checkpoints.
+- **Final gates:** lint 0 errors (51 warnings) · typecheck ✓ · check:content ✓ · check:soc ✓ · unit 1728/1728 · security 159/159 · build ✓ · scan:bundle ✓ (76 artefacts) · e2e 153 passed / 1 failed / 24 skipped.
+- **The one e2e failure:** `soc-enrichment` timed out after 5 s under full-suite load and passes alone (2/2). This is a new entry on the load-flake list; it is not touched by this work.
+- **Open owner decisions:** see the final report.

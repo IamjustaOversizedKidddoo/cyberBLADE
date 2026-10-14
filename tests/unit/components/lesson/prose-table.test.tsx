@@ -33,7 +33,7 @@ test("code blocks are labelled, keyboard-focusable scroll regions", async () => 
     <>
       <button type="button">start</button>
       <Pre>
-        <code>source="auth" | stats count by user</code>
+        <code>{'source="auth" | stats count by user'}</code>
       </Pre>
     </>,
   );
