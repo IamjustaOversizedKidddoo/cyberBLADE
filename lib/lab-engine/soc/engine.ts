@@ -266,7 +266,7 @@ export async function recordSocDecision(
   if (attempt.userId !== userId) throw new Error("Forbidden: Attempt does not belong to operator");
   if (attempt.status !== "in_progress") throw new Error("Attempt is already closed");
 
-  const scenario = await loadSocScenario(attempt.scenarioId);
+  const scenario = await resolveScenarioForAttempt(attempt);
   if (!scenario.alerts.some((a) => a.id === alertId)) {
     throw new Error(`Alert '${alertId}' not found in scenario`);
   }
@@ -480,7 +480,7 @@ export async function getSocHandlerContext(
     throw new Error("Unauthorized handler context access");
   }
 
-  const scenario = await loadSocScenario(attempt.scenarioId);
+  const scenario = await resolveScenarioForAttempt(attempt);
   const decisions = await ctx.repo.listSocDecisions(attempt.id);
 
   const clientView = toClientView(scenario);

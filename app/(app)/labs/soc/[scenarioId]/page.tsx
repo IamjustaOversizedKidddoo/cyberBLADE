@@ -3,17 +3,25 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOperator } from "@/lib/identity/session";
 import { isSocWorkspaceEnabled } from "@/lib/config/env";
-import { loadSocScenario } from "@/lib/lab-engine/soc/engine";
+import { loadSocFamily, loadSocScenario, loadSocShift } from "@/lib/lab-engine/soc/engine";
 import { SocLabSessionLoader } from "@/components/labs/soc/SocLabSessionLoader";
 import { HandlerDrawer } from "@/components/handler/HandlerDrawer";
+
+/** Resolves the same three id kinds startSocSession accepts: shifts, families and static scenarios. */
+async function loadSocLabTitle(scenarioId: string): Promise<string> {
+  // Ids become file paths in the loaders; reject anything that is not a plain slug.
+  if (!/^[a-z0-9-]{1,80}$/.test(scenarioId)) throw new Error("invalid SOC lab id");
+  if (scenarioId.startsWith("shift-")) return (await loadSocShift(scenarioId)).title;
+  if (scenarioId.startsWith("soc-f-")) return (await loadSocFamily(scenarioId)).metadata.title;
+  return (await loadSocScenario(scenarioId)).title;
+}
 
 export async function generateMetadata(
   props: { params: Promise<{ scenarioId: string }> },
 ): Promise<Metadata> {
   const { scenarioId } = await props.params;
   try {
-    const scenario = await loadSocScenario(scenarioId);
-    return { title: `${scenario.title} · SOC Workspace` };
+    return { title: `${await loadSocLabTitle(scenarioId)} · SOC Workspace` };
   } catch {
     return { title: "SOC Workspace · CyberBLADE" };
   }
@@ -54,7 +62,7 @@ export default async function SocScenarioPage(
 
   // Load scenario to verify validity
   try {
-    await loadSocScenario(scenarioId);
+    await loadSocLabTitle(scenarioId);
   } catch {
     notFound();
   }

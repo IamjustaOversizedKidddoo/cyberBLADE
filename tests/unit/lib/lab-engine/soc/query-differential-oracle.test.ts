@@ -158,8 +158,8 @@ describe("BladeQL Part D: Differential Testing, Fuzzing & Safety Budgets", () =>
       const res = executeBladeQL(attackQuery, sampleEvents);
       expect(res.events.length).toBeGreaterThan(0);
       // Object prototype remains clean
-      expect(({} as any).polluted).toBeUndefined();
-      expect(({} as any).constructor).toBe(Object);
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+      expect(({} as Record<string, unknown>).constructor).toBe(Object);
     });
   });
 
@@ -178,7 +178,7 @@ describe("BladeQL Part D: Differential Testing, Fuzzing & Safety Budgets", () =>
       for (const input of fuzzInputs) {
         try {
           executeBladeQL(input, sampleEvents);
-        } catch (e: any) {
+        } catch (e) {
           // If it throws, it must strictly be a caught BladeQLError, NEVER an unhandled crash or range error
           expect(e).toBeInstanceOf(BladeQLError);
         }

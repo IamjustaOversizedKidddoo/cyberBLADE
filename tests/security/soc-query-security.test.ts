@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { executeBladeQL } from "@/lib/lab-engine/soc/query/engine";
 import { SafeRegex } from "@/lib/lab-engine/soc/query/safe-regex";
 import { BladeQLError } from "@/lib/lab-engine/soc/query/errors";
-import type { BladeQLEvent } from "@/lib/lab-engine/soc/query/types";
+import type { BladeQLBudgets, BladeQLEvent } from "@/lib/lab-engine/soc/query/types";
 
 describe("BladeQL Security & Threat Model Hardening Suite", () => {
   const sampleEvents: BladeQLEvent[] = [
@@ -18,14 +18,14 @@ describe("BladeQL Security & Threat Model Hardening Suite", () => {
     }).not.toThrow();
 
     // Verify global Object.prototype was NOT polluted
-    expect((Object.prototype as any).polluted).toBeUndefined();
-    expect(({} as any).polluted).toBeUndefined();
+    expect((Object.prototype as Record<string, unknown>).polluted).toBeUndefined();
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
 
     // Attempt pollution via constructor
     expect(() => {
       executeBladeQL('eval constructor = "hacked"', sampleEvents);
     }).not.toThrow();
-    expect(({} as any).hacked).toBeUndefined();
+    expect(({} as Record<string, unknown>).hacked).toBeUndefined();
 
     // Attempt pollution via field access
     const res = executeBladeQL('where __proto__ == "evil"', sampleEvents);
@@ -72,7 +72,7 @@ describe("BladeQL Security & Threat Model Hardening Suite", () => {
       executeBladeQL('source="auth"', sampleEvents, {
         budgets: {
           maxExecutionSteps: 5, // Strict artificial step budget
-        } as any,
+        } as unknown as BladeQLBudgets,
       });
     }).toThrow(/Execution step limit exceeded/);
   });

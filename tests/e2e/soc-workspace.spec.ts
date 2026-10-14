@@ -146,7 +146,8 @@ test.describe("SOC Tier-1 Workspace Engine (E2E & Accessibility)", () => {
     await page.reload();
     await page.waitForLoadState("domcontentloaded");
     await expect(page.getByText("SOC//WORKSPACE")).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText("Triaged ✓")).toBeVisible();
+    // Persistence check: on mobile the decision form sits on a non-active tab after reload, so assert presence.
+    await expect(page.getByText("Triaged ✓")).toBeAttached();
 
     // 5. Axe WCAG 2.2 AA Accessibility Check
     const axeResults = await new AxeBuilder({ page })

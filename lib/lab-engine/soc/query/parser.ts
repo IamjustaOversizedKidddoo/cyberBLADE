@@ -19,6 +19,7 @@ import {
   type AggregationFunction,
   type SortFieldDef,
   type SourceLocation,
+  type BinaryOperator,
 } from "./ast";
 import { BladeQLError, findClosestSuggestion } from "./errors";
 
@@ -125,7 +126,7 @@ export class Parser {
 
     // If does not start with pipe, parse BaseSearch UNLESS first token is a known command
     if (!this.check("PIPE") && !this.isAtEnd()) {
-      if (this.check("IDENTIFIER") && KNOWN_COMMANDS.includes(this.peek().value.toLowerCase() as any)) {
+      if (this.check("IDENTIFIER") && (KNOWN_COMMANDS as readonly string[]).includes(this.peek().value.toLowerCase())) {
         commands.push(this.parseCommand());
       } else {
         baseSearch = this.parseBaseSearch();
@@ -863,7 +864,7 @@ export class Parser {
       this.match("MATCH") ||
       this.match("NOT_MATCH")
     ) {
-      const op = this.previous().value as ExpressionNode extends { operator: infer O } ? O : any;
+      const op = this.previous().value as BinaryOperator | "=";
       const right = this.parseExprRelational();
       left = {
         type: "BinaryExpression",
@@ -879,7 +880,7 @@ export class Parser {
   private parseExprRelational(): ExpressionNode {
     let left = this.parseExprAdditive();
     while (this.match("LT") || this.match("LTE") || this.match("GT") || this.match("GTE")) {
-      const op = this.previous().value as any;
+      const op = this.previous().value as BinaryOperator;
       const right = this.parseExprAdditive();
       left = {
         type: "BinaryExpression",
@@ -962,7 +963,7 @@ export class Parser {
       }
       this.consume("RPAREN", `Expected ')' after function arguments for '${fnName}'.`);
 
-      if (!KNOWN_EXPR_FUNCTIONS.includes(fnName as any)) {
+      if (!(KNOWN_EXPR_FUNCTIONS as readonly string[]).includes(fnName)) {
         const suggestion = findClosestSuggestion(fnName, KNOWN_EXPR_FUNCTIONS);
         const msg = suggestion
           ? `Unknown BladeQL function '${fnName}'. Did you mean '${suggestion}'?`

@@ -34,7 +34,7 @@ export function executeBladeQL(
   const ast = parser.parse();
 
   // 2. Validate & Plan
-  const planner = new QueryPlanner(fullCtx.budgets as any);
+  const planner = new QueryPlanner(budgets);
   const plan = planner.plan(ast, query.length);
 
   // 3. Interpret & Execute

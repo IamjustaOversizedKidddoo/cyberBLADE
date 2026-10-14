@@ -226,7 +226,7 @@ export function EnrichmentWorkbenchDrawer({
             type="button"
             onClick={onClose}
             className="rounded-xs border border-line bg-surface p-1.5 text-muted hover:text-ink focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
-            aria-label="Close investigation drawer"
+            aria-label="Close investigation workbench"
           >
             <IconClose className="h-4 w-4" />
           </button>
@@ -247,6 +247,7 @@ export function EnrichmentWorkbenchDrawer({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => handleQueryChange(e.target.value)}
+                aria-label="Indicator to investigate"
                 placeholder="Enter IP, domain, URL, hash, email, user, or host..."
                 className="w-full rounded-xs border border-line bg-surface px-3 py-2 text-xs text-ink placeholder:text-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
               />

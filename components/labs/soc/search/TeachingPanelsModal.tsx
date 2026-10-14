@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { BLADEQL_SPEC } from "@/lib/lab-engine/soc/query/spec";
+import { useState } from "react";
+import { BLADEQL_SPEC, type BladeQLSpecCommand, type BladeQLSpecFunction } from "@/lib/lab-engine/soc/query/spec";
 import { Parser } from "@/lib/lab-engine/soc/query/parser";
 
 export interface TeachingPanelsModalProps {
@@ -22,9 +22,12 @@ export function TeachingPanelsModal({
   const [activeTab, setActiveTab] = useState<"reference" | "examples" | "explain" | "concepts">(defaultTab);
   const [refSearch, setRefSearch] = useState("");
 
-  useEffect(() => {
+  // Follow defaultTab changes during render (React "adjust state on prop change" pattern).
+  const [prevDefaultTab, setPrevDefaultTab] = useState(defaultTab);
+  if (defaultTab !== prevDefaultTab) {
+    setPrevDefaultTab(defaultTab);
     setActiveTab(defaultTab);
-  }, [defaultTab]);
+  }
 
   if (!isOpen) return null;
 
@@ -46,7 +49,7 @@ export function TeachingPanelsModal({
       }
 
       // Pipeline commands
-      ast.commands.forEach((stage: any, idx: number) => {
+      ast.commands.forEach((stage, idx: number) => {
         const num = idx + 2;
         switch (stage.type) {
           case "WhereCommand":
@@ -54,19 +57,19 @@ export function TeachingPanelsModal({
             break;
           case "StatsCommand":
             steps.push(
-              `${num}. Aggregation (stats): Calculate aggregate metrics (${stage.aggregations.map((a: any) => `${a.fn}(${a.field || "*"})`).join(", ")}) grouped by (${stage.byFields.join(", ") || "entire dataset"}).`,
+              `${num}. Aggregation (stats): Calculate aggregate metrics (${stage.aggregations.map((a) => `${a.func}(${a.field || "*"})`).join(", ")}) grouped by (${stage.byFields.join(", ") || "entire dataset"}).`,
             );
             break;
           case "SortCommand":
             steps.push(
-              `${num}. Ordering (sort): Sort stream by (${stage.fields.map((f: any) => `${f.field} ${f.direction}`).join(", ")}).`,
+              `${num}. Ordering (sort): Sort stream by (${stage.fields.map((f) => `${f.field} ${f.direction}`).join(", ")}).`,
             );
             break;
           case "HeadCommand":
-            steps.push(`${num}. Truncate (head): Restrict results to the top ${stage.limit} events.`);
+            steps.push(`${num}. Truncate (head): Restrict results to the top ${stage.count} events.`);
             break;
           case "TailCommand":
-            steps.push(`${num}. Tail: Keep only the last ${stage.limit} events of the stream.`);
+            steps.push(`${num}. Tail: Keep only the last ${stage.count} events of the stream.`);
             break;
           case "TopCommand":
             steps.push(`${num}. Top Talkers (top): Compute highest-frequency values for field ${stage.field} (limit ${stage.limit}).`);
@@ -79,20 +82,20 @@ export function TeachingPanelsModal({
             break;
           case "FieldsCommand":
             steps.push(
-              `${num}. Column Selection (fields): ${stage.mode === "keep" ? "Keep" : "Drop"} fields (${stage.fields.join(", ")}).`,
+              `${num}. Column Selection (fields): ${stage.mode === "include" ? "Keep" : "Drop"} fields (${stage.fields.join(", ")}).`,
             );
             break;
           case "EvalCommand":
-            steps.push(`${num}. Compute (eval): Compute and assign calculated fields (${stage.assignments.map((a: any) => a.field).join(", ")}).`);
+            steps.push(`${num}. Compute (eval): Compute and assign calculated fields (${stage.assignments.map((a) => a.target).join(", ")}).`);
             break;
           case "DedupCommand":
             steps.push(`${num}. Deduplicate (dedup): Discard consecutive duplicates on fields (${stage.fields.join(", ")}).`);
             break;
           case "SessionCommand":
-            steps.push(`${num}. Sessionization (session): Cluster events into distinct sessions by ${stage.byField} with maximum gap of ${stage.maxGapSeconds}s.`);
+            steps.push(`${num}. Sessionization (session): Cluster events into distinct sessions by ${stage.byField} with maximum gap of ${stage.maxGap}.`);
             break;
           default:
-            steps.push(`${num}. Pipeline Stage: Execute ${(stage as any).type}.`);
+            steps.push(`${num}. Pipeline Stage: Execute ${(stage as { type: string }).type}.`);
         }
       });
 
@@ -271,7 +274,7 @@ export function TeachingPanelsModal({
                   Pipeline Commands
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {(Object.entries(BLADEQL_SPEC.commands) as [string, any][])
+                  {(Object.entries(BLADEQL_SPEC.commands) as [string, BladeQLSpecCommand][])
                     .filter(
                       ([cmd, spec]) =>
                         cmd.toLowerCase().includes(refSearch.toLowerCase()) ||
@@ -295,7 +298,7 @@ export function TeachingPanelsModal({
                   Built-in Eval & Aggregation Functions
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {(Object.entries(BLADEQL_SPEC.functions) as [string, any][])
+                  {(Object.entries(BLADEQL_SPEC.functions) as [string, BladeQLSpecFunction][])
                     .filter(
                       ([fn, spec]) =>
                         fn.toLowerCase().includes(refSearch.toLowerCase()) ||
@@ -322,7 +325,7 @@ export function TeachingPanelsModal({
           {activeTab === "examples" && (
             <div className="flex flex-col gap-3">
               <div className="text-muted text-[11px]">
-                Pre-built scenario-agnostic hunting pipelines. Click "Apply" to load directly into the query editor.
+                Pre-built scenario-agnostic hunting pipelines. Click &ldquo;Apply&rdquo; to load directly into the query editor.
               </div>
               {EXAMPLES_GALLERY.map((ex) => (
                 <div key={ex.title} className="bg-surface-raised p-3 rounded-xs border border-line flex flex-col gap-2">
