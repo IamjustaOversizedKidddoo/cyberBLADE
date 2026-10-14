@@ -1,14 +1,16 @@
+import { TRACK_FLASHCARDS } from "./track-cards.generated";
+
 export type FlashCard = {
   id: string;
   lessonId: string;
   rank: number;
-  category: "linux" | "network" | "windows" | "web" | "defense";
+  category: "linux" | "network" | "windows" | "web" | "defense" | "soc";
   front: string;
   back: string;
   commandSnippet?: string;
 };
 
-export const FLASHCARDS: FlashCard[] = [
+const CORE_FLASHCARDS: FlashCard[] = [
   // --- RANK 0: CORE TERMINAL & LINUX ---
   {
     id: "fc-r0-perms-01",
@@ -161,6 +163,9 @@ export const FLASHCARDS: FlashCard[] = [
     back: "It only allows execution of scripts loaded from the same origin or containing the cryptographic matching nonce attribute, disarming injected inline scripts.",
   },
 ];
+
+// Core cards plus track cards generated from the tracks' .cards.yaml files (rank-gated like the rest).
+export const FLASHCARDS: FlashCard[] = [...CORE_FLASHCARDS, ...TRACK_FLASHCARDS];
 
 export function getFlashcardById(id: string): FlashCard | undefined {
   return FLASHCARDS.find((c) => c.id === id);

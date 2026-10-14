@@ -17,6 +17,7 @@ const PLANTED: Record<string, string> = {
   "question-truths": "const {learnerQuestions:a,serverTruths:b}=x;",
   "ground-truth-keys": '{"groundTruth": {"incidents": []}}',
   "truth-generators": "function generateSocVariant(e,t){}",
+  "exercise-keys": '{"id":"spf-result","accept":["softfail"]}',
   "hidden-entity-roles": 'z.enum(["attacker_infra","victim"])',
   "seed-in-payload": '{"attempt":{"id":"x","seed":"a1b2c3"}}',
   "family-internals": "incidentTemplates:[{titleTemplate:'x'}]",

@@ -69,7 +69,8 @@ export async function getRankSummary(ctx: Ctx, userId: string, rank: number): Pr
   ]);
   const statusOf = (id: string): RankSummary["lessons"][number]["status"] =>
     progress.find((p) => p.lessonId === id)?.status ?? "not_started";
-  const list = lessons.map((l) => ({ id: l.id, title: l.title, status: statusOf(l.id) }));
+  // Rank promotion is about the shared core only; track lessons (e.g. SOC L1) gate by their own config.
+  const list = lessons.filter((l) => l.track === "core").map((l) => ({ id: l.id, title: l.title, status: statusOf(l.id) }));
   // With no visible lessons there is nothing to have completed: keep the challenge locked.
   const allLessonsDone = list.length > 0 && list.every((l) => l.status === "completed");
   const activeAttempt = active ? await ctx.repo.getAttempt(active.labAttemptId) : null;

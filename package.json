@@ -13,6 +13,7 @@
     "test:e2e": "playwright test",
     "check:content": "tsx scripts/check-content.mts",
     "check:soc": "tsx scripts/check-soc.mts",
+    "soc:curriculum": "tsx scripts/soc-curriculum.mts",
     "check:soc:families": "tsx scripts/check-soc-families.mts",
     "check:soc:shifts": "tsx scripts/check-soc-shifts.mts",
     "soc:gen": "tsx scripts/soc-gen.mts",

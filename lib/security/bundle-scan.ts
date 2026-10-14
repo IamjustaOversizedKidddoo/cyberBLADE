@@ -19,6 +19,8 @@ export const LEAK_RULES: LeakRule[] = [
   // per-alert correct dispositions and the model report are intentional reveals and are not listed.)
   { id: "ground-truth-keys", re: /reportGroundTruth|truePositiveAlertIds|isTruePositive|harmfulActionIds|requiredActionIds|acceptableTechniqueIds|\\?"groundTruth\\?"\s*:/ },
   { id: "truth-generators", re: /generateSocVariant|synthesizeReportGroundTruth|composeShiftScenario|generateScenarioDataset|investigationDataset/ },
+  // Lesson micro-exercise answer keys (content/tracks/**/*.exercises.yaml `accept` lists) stay server-side.
+  { id: "exercise-keys", re: /\\?"accept\\?"\s*:\s*\[/ },
   { id: "hidden-entity-roles", re: /attacker_infra|benign_business|shared_infra/ },
   // Seeds and family internals
   // Matches plain JSON and the escaped JSON embedded in HTML hydration scripts (\"seed\":).

@@ -26,6 +26,8 @@ export type ContentInput = {
   checks: Map<string, CheckSet>;
   labs: LoadedLab[];
   coverage: Coverage;
+  /** Objective ids from track coverage files (e.g. soc:<skill>): valid in checks, not required by built_ranks. */
+  extraObjectiveIds?: Set<string>;
   /** Registered generator names. */
   generators: string[];
   /** Commands from the lesson that the lab shell cannot run (see lesson-commands.ts). */
@@ -90,7 +92,7 @@ async function mdxErrors(lesson: Lesson): Promise<string[]> {
 export async function validateContent(input: ContentInput): Promise<{ errors: string[]; warnings: string[] }> {
   const errors: string[] = [];
   const warnings: string[] = [];
-  const objectiveIds = new Set(input.coverage.objectives.map((o) => o.id));
+  const objectiveIds = new Set([...input.coverage.objectives.map((o) => o.id), ...(input.extraObjectiveIds ?? [])]);
   const labsById = new Map(input.labs.map((l) => [l.id, l]));
 
   for (const lab of input.labs) {
@@ -100,7 +102,8 @@ export async function validateContent(input: ContentInput): Promise<{ errors: st
   }
 
   for (const lesson of input.lessons) {
-    errors.push(...structureErrors(lesson), ...(await mdxErrors(lesson)));
+    // Track lessons (SOC L1) follow their own template, checked by lib/content/soc-lesson-lint.ts.
+    errors.push(...(lesson.track === "soc" ? [] : structureErrors(lesson)), ...(await mdxErrors(lesson)));
 
     const checks = input.checks.get(lesson.id);
     if (!checks) errors.push(`${lesson.id}: no checks file`);
