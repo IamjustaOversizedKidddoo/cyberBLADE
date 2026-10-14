@@ -1,5 +1,5 @@
-import { z } from "zod";
 import type { SocDisposition, SocSeverity } from "../schema";
+export type { SocDisposition, SocSeverity };
 
 export type IocType =
   | "ip"

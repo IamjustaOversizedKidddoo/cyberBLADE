@@ -17,14 +17,15 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { IconClock, IconShield } from "@/components/ui/icons";
 import { SocSearchTab } from "./search/SocSearchTab";
+import { SocReportWorkspace } from "./reports/SocReportWorkspace";
 
 type Props = {
   session: SocSessionClient;
   onExit?: () => void;
 };
 
-type WorkspaceView = "triage" | "search";
-type MobileTab = "queue" | "detail" | "cases" | "search" | "tools";
+type WorkspaceView = "triage" | "search" | "report";
+type MobileTab = "queue" | "detail" | "cases" | "search" | "tools" | "report";
 
 export function SocWorkspace({ session, onExit }: Props) {
   const { scenario, attempt: initialAttempt } = session;
@@ -248,6 +249,18 @@ export function SocWorkspace({ session, onExit }: Props) {
                 BladeQL
               </span>
             </button>
+            <button
+              type="button"
+              onClick={() => setWorkspaceView("report")}
+              aria-label="Incident Report"
+              className={`px-2.5 py-1 text-xs font-bold rounded-xs transition-colors flex items-center gap-1.5 ${
+                workspaceView === "report"
+                  ? "bg-cyan/20 text-cyan border border-cyan/40"
+                  : "text-muted hover:text-ink"
+              }`}
+            >
+              <span>Incident Report</span>
+            </button>
           </div>
         </div>
 
@@ -387,10 +400,29 @@ export function SocWorkspace({ session, onExit }: Props) {
         >
           Tools
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMobileTab("report");
+            setWorkspaceView("report");
+          }}
+          aria-label="Incident Report"
+          className={`flex-1 py-2 text-center rounded-xs font-bold min-h-[44px] ${
+            mobileTab === "report" || workspaceView === "report"
+              ? "bg-cyan/15 text-cyan border border-cyan/40"
+              : "text-muted hover:text-ink"
+          }`}
+        >
+          Report
+        </button>
       </div>
 
       {/* Main Workspace Body */}
-      {workspaceView === "search" ? (
+      {workspaceView === "report" ? (
+        <main className="flex-1 flex overflow-hidden">
+          <SocReportWorkspace session={session} />
+        </main>
+      ) : workspaceView === "search" ? (
         <main className="flex-1 flex overflow-hidden">
           <SocSearchTab
             scenario={scenario}

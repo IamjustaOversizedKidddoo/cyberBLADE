@@ -178,3 +178,78 @@ export async function listSocEnrichmentLookupsAction(
   }
   return ctx.repo.listSocEnrichmentLookups(cleanAttemptId);
 }
+
+// ---------------------------------------------------------------------------
+// Phase 3 Prompt 6: SOC Report System Server Actions
+// ---------------------------------------------------------------------------
+import {
+  saveSocReportDraft,
+  submitSocReport,
+  getSocReportDraft,
+  getSocReportGradingResult,
+  getSocReportModelReveal,
+  type SocReportSubmissionResult,
+} from "@/lib/lab-engine/soc/report-engine";
+import type { SocReportData, GradingResult } from "@/lib/lab-engine/soc/reports/types";
+import type { SocReportSubmissionRecord } from "@/lib/lab-engine/soc/types";
+
+export async function saveSocReportDraftAction(
+  attemptId: string,
+  reportData: SocReportData,
+  templateId = "incident-report-l1",
+): Promise<SocReportSubmissionRecord> {
+  const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  const operator = await requireOperator();
+  const rate = checkRateLimit(`soc_report_draft:${operator.id}`, 60, 60_000);
+  if (!rate.allowed) {
+    throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
+  }
+  const ctx = getCtx();
+  return saveSocReportDraft(ctx, operator.id, cleanAttemptId, reportData, templateId);
+}
+
+export async function submitSocReportAction(
+  attemptId: string,
+  reportData: SocReportData,
+  templateId = "incident-report-l1",
+): Promise<SocReportSubmissionResult> {
+  const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  const operator = await requireOperator();
+  const rate = checkRateLimit(`soc_report_submit:${operator.id}`, 10, 60_000);
+  if (!rate.allowed) {
+    throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
+  }
+  const ctx = getCtx();
+  return submitSocReport(ctx, operator.id, cleanAttemptId, reportData, templateId);
+}
+
+export async function getSocReportDraftAction(
+  attemptId: string,
+  templateId = "incident-report-l1",
+): Promise<SocReportSubmissionRecord | null> {
+  const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  const operator = await requireOperator();
+  const ctx = getCtx();
+  return getSocReportDraft(ctx, operator.id, cleanAttemptId, templateId);
+}
+
+export async function getSocReportResultAction(
+  attemptId: string,
+  submissionId: string,
+): Promise<GradingResult | null> {
+  const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  const cleanSubmissionId = z.string().uuid().parse(submissionId);
+  const operator = await requireOperator();
+  const ctx = getCtx();
+  return getSocReportGradingResult(ctx, operator.id, cleanAttemptId, cleanSubmissionId);
+}
+
+export async function getSocReportModelRevealAction(
+  attemptId: string,
+  templateId = "incident-report-l1",
+): Promise<SocReportData> {
+  const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  const operator = await requireOperator();
+  const ctx = getCtx();
+  return getSocReportModelReveal(ctx, operator.id, cleanAttemptId, templateId);
+}

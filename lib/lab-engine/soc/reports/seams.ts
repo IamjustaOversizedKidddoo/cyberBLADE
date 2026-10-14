@@ -145,6 +145,8 @@ export async function submitExamReport(
   _attemptId: string,
   _scoringConfig?: ScoringConfig,
 ): Promise<ExamSubmissionResult> {
+  void _submission;
+  void _scoringConfig;
   return {
     submissionId: "",
     attemptId: _attemptId,
@@ -182,6 +184,7 @@ export interface LearnerReportSummary {
 export function getLearnerReportSummary(
   _attemptId: string,
 ): LearnerReportSummary | null {
+  void _attemptId;
   // Future implementation will query the draft storage adapter
   return null;
 }
@@ -206,5 +209,8 @@ export async function exportReport(
   _gradingResult: GradingResult | null,
   _options: ExportOptions,
 ): Promise<string> {
+  void _report;
+  void _gradingResult;
+  void _options;
   return "<!-- Export not yet implemented -->";
 }

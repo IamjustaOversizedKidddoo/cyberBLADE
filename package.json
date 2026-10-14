@@ -19,7 +19,8 @@
     "soc:family-report": "tsx scripts/soc-family-report.mts",
     "soc:review-pack": "tsx scripts/soc-review-pack.mts",
     "eval:handler": "tsx scripts/eval-handler.mts",
-    "report:learning": "tsx scripts/learning-analytics-report.mts"
+    "report:learning": "tsx scripts/learning-analytics-report.mts",
+    "soc:regrade": "tsx scripts/soc-regrade.mts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

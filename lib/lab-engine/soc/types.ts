@@ -4,6 +4,7 @@ import type {
   SocEscalationTier,
   SocScenarioClient,
 } from "./schema";
+import type { SocReportData, GradingResult, PreSubmitLintResult } from "./reports/types";
 
 export type SocAttemptStatus = "in_progress" | "submitted" | "abandoned" | "expired";
 
@@ -142,4 +143,44 @@ export type SocQuestionAttemptRecord = {
   attemptsUsed: number;
   hintsUsed: number;
   createdAt: string;
+};
+
+/**
+ * Persisted draft or submitted report document.
+ * status='draft' rows are upserted in-place; status='submitted' rows are immutable.
+ */
+export type SocReportSubmissionRecord = {
+  id: string;
+  attemptId: string;
+  userId: string;
+  templateId: string;
+  templateVersion: string;
+  status: "draft" | "submitted";
+  reportData: SocReportData;
+  lintResults: PreSubmitLintResult | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * Persisted grading result. One-to-one with a submitted SocReportSubmissionRecord.
+ * model_report_reveal is NOT stored here — returned only by the server action
+ * that confirms submission (ground-truth containment).
+ */
+export type SocReportEvaluationRecord = {
+  id: string;
+  submissionId: string;
+  attemptId: string;
+  userId: string;
+  rubricId: string;
+  rubricVersion: string;
+  graderVersion: string;
+  scoringVersion: string;
+  totalScore: number;
+  maxScore: number;
+  isFullyGraded: boolean;
+  criterionResults: GradingResult["criterionResults"];
+  flags: GradingResult["flags"];
+  versionLabel: string;
+  computedAt: string;
 };

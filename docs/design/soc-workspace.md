@@ -243,9 +243,12 @@ The engine intentionally exposes typed, unpopulated seams so future prompts inte
 3. **SIEM Query Language Seam:**
    - Hook `queryDataset?: SocEventDataset` in `SocScenario`.
    - SIEM query console component slot in `SocWorkspace`.
-4. **Report Editor & Grading Seam:**
-   - Hook `reportRubric?: SocReportRubric` in `SocScenario`.
-   - Case export handoff payload designed to feed into the future `ReportEditor`.
+4. **Report Editor & Incident Report Workspace:**
+   - Dedicated "Incident Report" tab integrated into `SocWorkspace` (desktop header & mobile bottom navigation).
+   - Section outline navigation, live draft auto-saving, IoC table editor with defanging, chronological timeline builder, and evidence appendix picker.
+   - Zero-oracle pre-submit linter (`PreSubmitLintModal`) providing structural validation with zero ground-truth leakage.
+   - Deterministic 100-point versioned grading scorecard (`GradedResultsScorecard`) and post-submission expert model comparison (`ModelReportComparison`).
+   - Markdown and raw export tools (`ReportExport`).
 5. **Handler SOC Mode Seam:**
    - Pure server-side context provider `getSocHandlerContext(attemptId, alertId)`.
    - Supplies current alert fields and learner's triaged decisions to the Handler without exposing `scenario.groundTruth`.

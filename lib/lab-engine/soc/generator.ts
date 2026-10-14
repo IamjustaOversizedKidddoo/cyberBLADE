@@ -552,7 +552,7 @@ function generateSingleVariant(
       const rawFields = substituteRecord(altTpl.rawFieldsTemplate, noiseTokens);
       const debrief = substituteTokens(benignTpl.groundTruth.debriefTemplate, noiseTokens);
 
-      const iocs: SocAlertIoc[] = altTpl.iocs.map((ioc) => ({
+      const iocs: SocAlertIoc[] = (altTpl.iocs ?? []).map((ioc) => ({
         type: ioc.type,
         value: substituteTokens(ioc.valueTemplate, noiseTokens),
       }));
