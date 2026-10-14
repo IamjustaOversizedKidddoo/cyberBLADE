@@ -4,7 +4,7 @@ vi.mock("server-only", () => ({}));
 
 import { MemoryProgressRepo } from "@/lib/progress/memory-repo";
 import type { Ctx } from "@/lib/progress/service";
-import { startSocSession, getSocSession, submitSocAttempt } from "@/lib/lab-engine/soc/engine";
+import { startSocSession, getSocSession, submitSocAttempt, recordSocDecision } from "@/lib/lab-engine/soc/engine";
 
 function createMockCtx(): Ctx {
   const repo = new MemoryProgressRepo();
@@ -127,5 +127,19 @@ describe("SOC Engine Integration with Scenario Families", () => {
     expect(attempt2.id).not.toBe(attempt1.id);
     expect(attempt2.seed).not.toBe(attempt1.seed);
     expect(attempt2.scenarioHash).not.toBe(attempt1.scenarioHash);
+  });
+  // Regression: decisions on generated attempts used to load only static scenario files and throw.
+  it.each(["soc-f-mixed-signal-01", "shift-quiet-day"])("records a triage decision on a generated %s attempt", async (id) => {
+    const session = await startSocSession(ctx, "test-analyst-dec", id);
+    const alertId = session.scenario.alerts[0].id;
+    await recordSocDecision(ctx, "test-analyst-dec", session.attempt.id, alertId, {
+      disposition: "benign_true_positive",
+      severity: "LOW",
+      escalate: false,
+      rationale: "Scheduled maintenance activity confirmed against the change window.",
+      evidenceRefs: [alertId],
+    });
+    const decisions = await ctx.repo.listSocDecisions(session.attempt.id);
+    expect(decisions.map((d) => d.alertId)).toContain(alertId);
   });
 });

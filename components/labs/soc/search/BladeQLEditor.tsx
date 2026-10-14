@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from "react";
-import { BLADEQL_SPEC } from "@/lib/lab-engine/soc/query/spec";
+import { BLADEQL_SPEC, type BladeQLSpecCommand, type BladeQLSpecFunction } from "@/lib/lab-engine/soc/query/spec";
 import { IconSearch } from "@/components/ui/icons";
 
 export interface BladeQLEditorProps {
@@ -47,7 +47,7 @@ export function BladeQLEditor({
     const items: AutocompleteItem[] = [];
 
     // Commands
-    for (const [cmd, spec] of Object.entries(BLADEQL_SPEC.commands) as [string, any][]) {
+    for (const [cmd, spec] of Object.entries(BLADEQL_SPEC.commands) as [string, BladeQLSpecCommand][]) {
       items.push({
         type: "command",
         label: cmd,
@@ -57,7 +57,7 @@ export function BladeQLEditor({
     }
 
     // Functions
-    for (const [fn, spec] of Object.entries(BLADEQL_SPEC.functions) as [string, any][]) {
+    for (const [fn, spec] of Object.entries(BLADEQL_SPEC.functions) as [string, BladeQLSpecFunction][]) {
       items.push({
         type: "function",
         label: `${fn}()`,

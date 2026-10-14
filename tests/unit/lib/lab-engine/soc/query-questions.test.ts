@@ -40,9 +40,9 @@ describe("BladeQL Part E: Investigation Questions & Server Verification", () => 
       expect(q.status).toBe("unanswered");
 
       // Verify ground truth fields are NOT present
-      expect((q as any).referenceAnswer).toBeUndefined();
-      expect((q as any).referenceQuery).toBeUndefined();
-      expect((q as any).debrief).toBeUndefined();
+      expect((q as unknown as Record<string, unknown>).referenceAnswer).toBeUndefined();
+      expect((q as unknown as Record<string, unknown>).referenceQuery).toBeUndefined();
+      expect((q as unknown as Record<string, unknown>).debrief).toBeUndefined();
     }
   });
 

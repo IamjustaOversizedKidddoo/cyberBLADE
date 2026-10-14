@@ -541,6 +541,7 @@ export class BladeQLInterpreter {
   // Expression Evaluator (eval & where)
   // ---------------------------------------------------------------------------
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamically typed query values; coercion happens per operator
   private evaluateExpression(expr: ExpressionNode, row: BladeQLEvent): any {
     this.checkBudgets();
 
@@ -626,6 +627,7 @@ export class BladeQLInterpreter {
     return null;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamically typed query values; coercion happens per operator
   private evaluateFunction(name: string, args: ExpressionNode[], row: BladeQLEvent): any {
     const fn = name.toLowerCase();
 
@@ -829,6 +831,7 @@ export class BladeQLInterpreter {
     return out;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamically typed query values; coercion happens per operator
   private computeAggregation(agg: AggregationDefNode, rows: BladeQLEvent[]): any {
     const field = agg.field;
 
@@ -915,6 +918,7 @@ export class BladeQLInterpreter {
 
       case "list": {
         if (!field) return [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamically typed query values; coercion happens per operator
         const list: any[] = [];
         for (const r of rows) {
           if (r[field] !== null && r[field] !== undefined) {

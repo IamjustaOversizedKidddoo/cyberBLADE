@@ -62,7 +62,7 @@ export async function executeInvestigationQuery(
     hostname: a.hostname,
     ip: a.ip,
     owner: a.owner,
-    department: (a as any).department ?? a.zone,
+    department: (a as typeof a & { department?: string }).department ?? a.zone,
     criticality: a.criticality,
     zone: a.zone,
   }));

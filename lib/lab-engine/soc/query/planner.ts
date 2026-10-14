@@ -3,7 +3,7 @@
  * Static Validator, Optimization Planner & Warning Generator
  */
 
-import type { PipelineNode } from "./ast";
+import type { PipelineNode, SearchTerm } from "./ast";
 import type { BladeQLBudgets } from "./types";
 import { BladeQLError, type BladeQLWarning } from "./errors";
 
@@ -67,7 +67,7 @@ export class QueryPlanner {
     if (!this.knownFields) return;
 
     // Check base search fields
-    const checkTerm = (term: any) => {
+    const checkTerm = (term: SearchTerm | null | undefined): void => {
       if (!term) return;
       if (term.type === "FieldFilter" && typeof term.field === "string") {
         if (!this.knownFields?.has(term.field) && !term.field.startsWith("_")) {

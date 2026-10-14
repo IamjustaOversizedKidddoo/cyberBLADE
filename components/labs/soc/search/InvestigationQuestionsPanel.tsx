@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { LearnerQuestion, QuestionSubmissionResult } from "@/lib/lab-engine/soc/query/questions";
 import { submitQuestionAnswer } from "@/lib/lab-engine/soc/query/questions";
+
+type AnswerValue = string | number | string[];
 
 export interface InvestigationQuestionsPanelProps {
   questions: LearnerQuestion[];
@@ -22,17 +24,18 @@ export function InvestigationQuestionsPanel({
   onApplyReferenceQuery,
 }: InvestigationQuestionsPanelProps) {
   const [questions, setQuestions] = useState<LearnerQuestion[]>(initialQuestions);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const [orderings, setOrderings] = useState<Record<string, string[]>>({});
   const [activeHints, setActiveHints] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState<Record<string, boolean>>({});
   const [errorMessages, setErrorMessages] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (initialQuestions && initialQuestions.length > 0) {
-      setQuestions(initialQuestions);
-    }
-  }, [initialQuestions]);
+  // Adopt a new non-empty question set from the parent during render (React "adjust state on prop change" pattern).
+  const [prevInitialQuestions, setPrevInitialQuestions] = useState(initialQuestions);
+  if (initialQuestions !== prevInitialQuestions) {
+    setPrevInitialQuestions(initialQuestions);
+    if (initialQuestions && initialQuestions.length > 0) setQuestions(initialQuestions);
+  }
 
   const handleTextAnswerChange = (qId: string, val: string) => {
     setAnswers((prev) => ({ ...prev, [qId]: val }));
@@ -45,7 +48,7 @@ export function InvestigationQuestionsPanel({
 
   const handleMultiSelectToggle = (qId: string, option: string) => {
     setAnswers((prev) => {
-      const current: string[] = prev[qId] || [];
+      const current = (prev[qId] as string[] | undefined) || [];
       const updated = current.includes(option)
         ? current.filter((x) => x !== option)
         : [...current, option];
@@ -68,7 +71,7 @@ export function InvestigationQuestionsPanel({
   };
 
   const handleSubmit = async (q: LearnerQuestion) => {
-    let payload: any = answers[q.id];
+    let payload: AnswerValue | undefined = answers[q.id];
 
     if (q.type === "ordering") {
       payload = orderings[q.id] || q.options || [];
@@ -230,7 +233,7 @@ export function InvestigationQuestionsPanel({
                   {q.type === "multi_select" && q.options && (
                     <div className="flex flex-col gap-1">
                       {q.options.map((opt) => {
-                        const checked = (answers[q.id] || []).includes(opt);
+                        const checked = ((answers[q.id] as string[] | undefined) || []).includes(opt);
                         return (
                           <label
                             key={opt}

@@ -233,7 +233,9 @@ export function generateScenarioQuestions(
   const dataset = generateScenarioDataset(scenario, seed, 5000);
 
   // Pick question templates for this scenario's family
-  const famId = (scenario as any).familyId ?? (scenario as any).scenarioId ?? "soc-f-phishing-cred-01";
+  // Generated variants carry familyId/scenarioId beyond the static schema.
+  const loose = scenario as SocScenario & { familyId?: string; scenarioId?: string };
+  const famId = loose.familyId ?? loose.scenarioId ?? "soc-f-phishing-cred-01";
   const templates = getFamilyQuestionTemplates(famId);
 
   const learnerQuestions: LearnerQuestion[] = [];

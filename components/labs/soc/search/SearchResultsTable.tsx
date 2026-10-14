@@ -91,7 +91,7 @@ export function SearchResultsTable({
   const handleExportCsv = () => {
     if (events.length === 0) return;
 
-    const sanitizeCsv = (val: any): string => {
+    const sanitizeCsv = (val: unknown): string => {
       let str = String(val ?? "");
       // Prefix formula injection vectors with single quote
       if (/^[=+\-@\t\r]/.test(str)) {

@@ -6,7 +6,7 @@
  * synthetic SIEM log lake matching enterprise volume curves.
  */
 
-import { createRng } from "@/lib/generators/rng";
+import { createRng, type Rng } from "@/lib/generators/rng";
 import type { SocScenario } from "../schema";
 import type { BladeQLEvent } from "./types";
 
@@ -44,7 +44,7 @@ const COMMON_BENIGN_DOMAINS = [
   "zoom.us.example",
 ];
 
-function pickWeighted<T>(rng: any, items: Array<{ item: T; weight: number }>): T {
+function pickWeighted<T>(rng: Rng, items: Array<{ item: T; weight: number }>): T {
   const total = items.reduce((sum, i) => sum + i.weight, 0);
   let r = rng.float(0, total);
   for (const entry of items) {
@@ -54,7 +54,7 @@ function pickWeighted<T>(rng: any, items: Array<{ item: T; weight: number }>): T
   return items[items.length - 1].item;
 }
 
-const randBool = (rng: any, prob = 0.5) => rng.next() < prob;
+const randBool = (rng: Rng, prob = 0.5) => rng.next() < prob;
 
 export function generateScenarioDataset(
   scenario: SocScenario,
@@ -297,7 +297,9 @@ export function generateScenarioDataset(
 /**
  * Normalizes scenario raw events from generator into uniform BladeQLEvent shape
  */
-function normalizeScenarioRawEvent(rawEvt: any): BladeQLEvent {
+type RawScenarioEvent = SocScenario["rawEvents"][number];
+
+function normalizeScenarioRawEvent(rawEvt: RawScenarioEvent): BladeQLEvent {
   const norm: BladeQLEvent = {
     id: rawEvt.id,
     timestamp: rawEvt.timestamp,
@@ -310,7 +312,7 @@ function normalizeScenarioRawEvent(rawEvt: any): BladeQLEvent {
   // Flatten structured fields
   if (rawEvt.fields && typeof rawEvt.fields === "object") {
     for (const [k, v] of Object.entries(rawEvt.fields)) {
-      norm[k] = v as any;
+      norm[k] = v as BladeQLEvent[string];
     }
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect, useTransition } from "react";
-import type { SocScenario } from "@/lib/lab-engine/soc/schema";
+import { useState, useCallback, useMemo } from "react";
+import type { SocScenario, SocScenarioClient } from "@/lib/lab-engine/soc/schema";
 import type { BladeQLEvent, QueryExecutionResult } from "@/lib/lab-engine/soc/query/types";
 import { executeBladeQL } from "@/lib/lab-engine/soc/query/engine";
 import { generateScenarioDataset, type ScenarioDataset } from "@/lib/lab-engine/soc/query/dataset-generator";
@@ -13,12 +13,13 @@ import { FieldSidebar } from "./FieldSidebar";
 import { SearchResultsTable } from "./SearchResultsTable";
 import { InvestigationQuestionsPanel } from "./InvestigationQuestionsPanel";
 import { TeachingPanelsModal } from "./TeachingPanelsModal";
+import type { InvestigationTarget } from "../enrichment/EnrichmentWorkbenchDrawer";
 
 export interface SocSearchTabProps {
-  scenario: any;
+  scenario: SocScenarioClient;
   attemptId: string;
   seed?: string;
-  onOpenEnrichment?: (target: any) => void;
+  onOpenEnrichment?: (target: InvestigationTarget) => void;
   onAttachEvidence?: (event: BladeQLEvent) => void;
 }
 
@@ -31,9 +32,7 @@ export function SocSearchTab({
 }: SocSearchTabProps) {
   const [query, setQuery] = useState('source="auth" | stats count by outcome');
   const [queryHistory, setQueryHistory] = useState<string[]>([]);
-  const [dataset, setDataset] = useState<ScenarioDataset | null>(null);
-  const [questions, setQuestions] = useState<LearnerQuestion[]>([]);
-  const [searchResult, setSearchResult] = useState<QueryExecutionResult | null>(null);
+  const [queriedResult, setSearchResult] = useState<QueryExecutionResult | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isTeachingOpen, setIsTeachingOpen] = useState(false);
@@ -48,22 +47,35 @@ export function SocSearchTab({
 
   const scenarioNowIso = scenario.rawEvents[scenario.rawEvents.length - 1]?.timestamp ?? "2026-10-12T16:00:00Z";
 
-  // Initialize dataset & investigation questions
-  useEffect(() => {
+  // Dataset, questions and the default query result are pure functions of (scenario, seed).
+  const initial = useMemo((): {
+    dataset: ScenarioDataset;
+    questions: LearnerQuestion[];
+    result: QueryExecutionResult;
+  } | null => {
     try {
-      const ds = generateScenarioDataset(scenario, seed, 5000);
-      setDataset(ds);
-
-      const qs = generateScenarioQuestions(scenario, seed);
-      setQuestions(qs.learnerQuestions);
-
-      // Run initial default query
+      // shortcut: generates from the client view in the browser, so question truths ship to the client
+      // (handoff-status S7); move dataset + questions server-side before beta.
+      const full = scenario as unknown as SocScenario;
+      const ds = generateScenarioDataset(full, seed, 5000);
+      const qs = generateScenarioQuestions(full, seed);
       const initialRes = executeBladeQL('source="auth" | stats count by outcome', ds.events);
-      setSearchResult(initialRes);
+      return { dataset: ds, questions: qs.learnerQuestions, result: initialRes };
     } catch (err) {
       console.error("Failed to initialize BladeQL log search:", err);
+      return null;
     }
   }, [scenario, seed]);
+  const dataset = initial?.dataset ?? null;
+  const questions = useMemo(() => initial?.questions ?? [], [initial]);
+
+  // A new (scenario, seed) resets the shown result back to the default query.
+  const [prevInitial, setPrevInitial] = useState(initial);
+  if (initial !== prevInitial) {
+    setPrevInitial(initial);
+    setSearchResult(null);
+  }
+  const searchResult = queriedResult ?? initial?.result ?? null;
 
   // Execute current query
   const handleExecuteQuery = useCallback(() => {
@@ -231,7 +243,15 @@ export function SocSearchTab({
             truncated={searchResult?.truncated || false}
             executionDurationMs={searchResult?.executionDurationMs || 0}
             onAddFilter={handleAddFilter}
-            onOpenEnrichment={onOpenEnrichment}
+            onOpenEnrichment={
+              onOpenEnrichment &&
+              ((t) =>
+                onOpenEnrichment({
+                  tool: t.type === "hash" ? "sandbox" : t.type === "user" || t.type === "host" ? "cmdb" : "reputation",
+                  entityType: t.type,
+                  entityValue: t.value,
+                }))
+            }
             onAttachEvidence={onAttachEvidence}
           />
         </div>
