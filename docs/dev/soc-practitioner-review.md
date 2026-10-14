@@ -62,6 +62,13 @@ When reviewing sample variants, evaluate against these four operational pillars:
 - [ ] **Investigation Questions Neutrality**: Do question stems ask objective questions ("How many failed sign-ins occurred from the top source IP?") without disclosing answers or attacker presence?
 - [ ] **Answerability with BladeQL**: Can questions be reliably answered by an analyst using standard BladeQL pipeline hunting commands without relying on secret fields?
 
+### 7. Incident Report Ground Truth & Model Reports (Phase 3 Prompt 6)
+- [ ] **Executive Summary Synthesis**: Is the synthesized summary appropriate for senior management and Tier-2 handover (concise root cause, affected scope, and current status)?
+- [ ] **Indicator Roles & Defanging**: Are IoC roles accurate (`delivery`, `c2`, `persistence`, `lateral_movement`, `unrelated_benign`)? Are indicators properly defanged?
+- [ ] **Realistic Milestones & Tolerances**: Are timeline milestones sequenced accurately with reasonable time tolerances for analyst correlation?
+- [ ] **Containment Sanity**: Do recommended actions prioritize immediate containment without reckless operational disruptions (e.g., isolating an endpoint vs. reformatting a domain controller)?
+- [ ] **Model Report Quality**: Does the revealed post-submission model report read like an authentic report authored by a Senior Lead Incident Handler?
+
 ---
 
 ## 3. Review Workflow & Status Lifecycle

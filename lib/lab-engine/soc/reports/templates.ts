@@ -1,14 +1,12 @@
+import "server-only";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { parse as parseYaml } from "yaml";
-import type {
-  ReportTemplate,
-  SocReportData,
-  TechniqueMappingData,
-  ResponseActionData,
-} from "./types";
+import type { ReportTemplate, SocReportData } from "./types";
 import type { SocCaseRecord, SocDecisionRecord } from "../types";
-import { sanitizeReportText } from "./sanitizer";
+import { createEmptyReportData } from "./defaults";
+
+export { createEmptyReportData };
 
 let cachedTemplates: Map<string, ReportTemplate> | null = null;
 let cachedTechniques: Array<{ id: string; tactic: string; name: string; description: string }> | null = null;
@@ -88,50 +86,6 @@ export async function loadResponseActions(): Promise<
   return cachedActions!;
 }
 
-/**
- * Creates empty skeleton report data
- */
-export function createEmptyReportData(
-  analystHandle: string,
-  caseId = "case-001",
-  title = "Incident Report",
-): SocReportData {
-  return {
-    header: {
-      title: sanitizeReportText(title),
-      caseId,
-      analystHandle,
-      createdAt: new Date().toISOString(),
-      classification: "true_positive",
-    },
-    executiveSummary: "",
-    verdict: {
-      disposition: "true_positive",
-      severity: "MEDIUM",
-      confidence: "medium",
-      justification: "",
-    },
-    scope: {
-      affectedAssets: [],
-      affectedUsers: [],
-      systemsAtRisk: "",
-      businessImpact: "",
-    },
-    timeline: [],
-    iocs: [],
-    attackNarrative: "",
-    techniques: [],
-    actions: [],
-    escalation: {
-      requiresEscalation: true,
-      targetTeam: "Tier-2 Incident Response",
-      urgency: "priority",
-      handoffSummary: "",
-    },
-    lessonsLearned: "",
-    evidenceAppendix: [],
-  };
-}
 
 /**
  * Leak-free helper: builds a draft pre-filled with the learner's own case notes and decisions

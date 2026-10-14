@@ -258,8 +258,7 @@ export class SafeRegex {
 
     const parseQuantified = (): { start: NfaStateId; end: NfaStateId } => {
       const atomStart = pos;
-      let atom = parseAtom();
-      const atomEnd = pos;
+      const atom = parseAtom();
 
       if (pos >= len) return atom;
       const q = this.pattern[pos];

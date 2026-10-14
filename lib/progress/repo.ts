@@ -18,6 +18,8 @@ import type {
   SocCaseRecord,
   SocQueryLogRecord,
   SocQuestionAttemptRecord,
+  SocReportSubmissionRecord,
+  SocReportEvaluationRecord,
 } from "@/lib/lab-engine/soc/types";
 import type { SocEnrichmentLookupRecord } from "@/lib/lab-engine/soc/enrichment/types";
 
@@ -92,6 +94,21 @@ export interface ProgressRepo {
   listUsedSeeds(userId: string, familyId: string): Promise<string[]>;
   recordUsedSeed(userId: string, familyId: string, seed: string): Promise<void>;
   deleteUserData(userId: string): Promise<void>;
+
+  // Report submission & evaluation
+  /** Upsert draft (one per attempt+templateId). Returns the updated/created record. */
+  upsertSocReportDraft(
+    draft: Omit<SocReportSubmissionRecord, "id" | "createdAt" | "updatedAt"> & { id?: string },
+  ): Promise<SocReportSubmissionRecord>;
+  /** Mark a draft as submitted (idempotent). Throws if already submitted. */
+  submitSocReport(submissionId: string): Promise<SocReportSubmissionRecord>;
+  getSocReportSubmission(id: string): Promise<SocReportSubmissionRecord | null>;
+  listSocReportSubmissions(attemptId: string): Promise<SocReportSubmissionRecord[]>;
+  /** Save the grading evaluation result (one-to-one with submission, idempotent by submissionId). */
+  saveSocReportEvaluation(
+    evaluation: Omit<SocReportEvaluationRecord, "id">,
+  ): Promise<SocReportEvaluationRecord>;
+  getSocReportEvaluation(submissionId: string): Promise<SocReportEvaluationRecord | null>;
 }
 
 function latestAttempt(d: ProgressData, userId: string, labId: string, mode: AttemptMode): LabAttempt | null {
@@ -586,6 +603,117 @@ export class StoreProgressRepo implements ProgressRepo {
           }
         }
       }
+      if (d.socReportSubmissions) {
+        for (const [k, v] of Object.entries(d.socReportSubmissions)) {
+          if (v.userId === userId || userSocAttemptIds.has(v.attemptId)) {
+            delete d.socReportSubmissions[k];
+          }
+        }
+      }
+      if (d.socReportEvaluations) {
+        for (const [k, v] of Object.entries(d.socReportEvaluations)) {
+          if (v.userId === userId || userSocAttemptIds.has(v.attemptId)) {
+            delete d.socReportEvaluations[k];
+          }
+        }
+      }
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // Report submission & evaluation
+  // ---------------------------------------------------------------------------
+
+  async upsertSocReportDraft(
+    draft: Omit<SocReportSubmissionRecord, "id" | "createdAt" | "updatedAt"> & { id?: string },
+  ): Promise<SocReportSubmissionRecord> {
+    let record: SocReportSubmissionRecord | null = null;
+    await this.store.update((d) => {
+      d.socReportSubmissions ??= {};
+      // Find existing draft for this attempt+template
+      const existing = Object.values(d.socReportSubmissions).find(
+        (r) => r.attemptId === draft.attemptId && r.templateId === draft.templateId && r.status === "draft",
+      );
+      const now = new Date().toISOString();
+      if (existing) {
+        // Upsert in place
+        Object.assign(existing, {
+          reportData: draft.reportData,
+          lintResults: draft.lintResults,
+          updatedAt: now,
+        });
+        record = existing;
+      } else {
+        const id = draft.id ?? randomUUID();
+        const created: SocReportSubmissionRecord = {
+          ...draft,
+          id,
+          createdAt: now,
+          updatedAt: now,
+        };
+        d.socReportSubmissions[id] = created;
+        record = created;
+      }
+    });
+    return record!;
+  }
+
+  async submitSocReport(submissionId: string): Promise<SocReportSubmissionRecord> {
+    let record: SocReportSubmissionRecord | null = null;
+    await this.store.update((d) => {
+      d.socReportSubmissions ??= {};
+      const cur = d.socReportSubmissions[submissionId];
+      if (!cur) throw new Error(`Report submission not found: ${submissionId}`);
+      if (cur.status === "submitted") {
+        record = cur; // Idempotent
+        return;
+      }
+      cur.status = "submitted";
+      cur.updatedAt = new Date().toISOString();
+      record = cur;
+    });
+    return record!;
+  }
+
+  async getSocReportSubmission(id: string): Promise<SocReportSubmissionRecord | null> {
+    const data = await this.store.read();
+    return data.socReportSubmissions?.[id] ?? null;
+  }
+
+  async listSocReportSubmissions(attemptId: string): Promise<SocReportSubmissionRecord[]> {
+    const data = await this.store.read();
+    return Object.values(data.socReportSubmissions ?? {})
+      .filter((r) => r.attemptId === attemptId)
+      .sort((a, b) => (a.updatedAt > b.updatedAt ? -1 : 1));
+  }
+
+  async saveSocReportEvaluation(
+    evaluation: Omit<SocReportEvaluationRecord, "id">,
+  ): Promise<SocReportEvaluationRecord> {
+    let record: SocReportEvaluationRecord | null = null;
+    await this.store.update((d) => {
+      d.socReportEvaluations ??= {};
+      // Idempotent: one evaluation per submission
+      const existing = Object.values(d.socReportEvaluations).find(
+        (e) => e.submissionId === evaluation.submissionId,
+      );
+      if (existing) {
+        record = existing;
+        return;
+      }
+      const id = randomUUID();
+      const created: SocReportEvaluationRecord = { ...evaluation, id };
+      d.socReportEvaluations[id] = created;
+      record = created;
+    });
+    return record!;
+  }
+
+  async getSocReportEvaluation(submissionId: string): Promise<SocReportEvaluationRecord | null> {
+    const data = await this.store.read();
+    return (
+      Object.values(data.socReportEvaluations ?? {}).find((e) => e.submissionId === submissionId) ?? null
+    );
+  }
 }
+

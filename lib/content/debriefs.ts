@@ -204,6 +204,12 @@ export const LAB_DEBRIEFS: Record<string, LabDebrief> = {
     commonMistake: "Closing an unverified alert as benign simply because a key log source is missing.",
     goFurther: "Document telemetry blind spots and trigger secondary evidence collection from adjacent network taps.",
   },
+  "soc-query-practice-01": {
+    concept: "BladeQL query construction, multi-stage pipeline transformations, and log aggregation.",
+    realWorld: "Sifting through high-volume SIEM event streams to isolate credential abuse and adversary command sequences.",
+    commonMistake: "Running unfiltered wildcard queries that exceed memory limits instead of constraining time and source index early.",
+    goFurther: "Build automated threat hunting queries utilizing aggregation pipes and statistical anomaly thresholds.",
+  },
 };
 
 export function getLabDebrief(labId: string): LabDebrief | undefined {

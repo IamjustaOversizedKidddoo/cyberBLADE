@@ -266,7 +266,7 @@ export function synthesizeReportGroundTruth(
     timezone: "UTC",
     description: m.description,
     dataOrigin: "SIEM / EDR Alert",
-    evidenceRef: `alert:${sortedTpAlerts[idx]?.id ?? ""}`,
+    evidenceRef: `alert:${sortedTpAlerts[idx]?.id ?? sortedTpAlerts[0]?.id ?? "tp-alert"}`,
   }));
 
   const modelIocs: IocRowData[] = iocs

@@ -80,3 +80,32 @@
 - Total test count: 146 test files, 1144 tests passing (28 new tests in this part).
 - TypeScript typecheck clean (exit code 0).
 - **Stage 1 COMPLETE**: All 6 parts (1A–1F) verified, committed, and documented.
+
+---
+
+### Entry 7: Phase 3 Prompt 6 Completed (SOC Incident Report System & Versioned Grading Engine)
+- **Part A (Data Model & Schema)**: Implemented complete Zod and TypeScript schemas in `lib/lab-engine/soc/reports/types.ts` (`SocReportData`, `SocReportGroundTruth`, `RubricDefinition`, `GradingResult`, `ScoringConfig`, `PreSubmitLintResult`, `TimelineRowData`, `IocRowData`).
+- **Part B (Deterministic Grader Engine)**: Implemented `lib/lab-engine/soc/report-engine.ts` with pure deterministic grading function `gradeReport()` completing in < 150ms. Supported versioned criteria (`incident-report-l1`, `v1.0.0`), anti-gaming heuristics (padding penalties, fabrication deductions, contradiction detections, copy-paste dump detection, and inert LLM prompt injection guards).
+- **Part C (Regrading CLI Tool)**: Implemented `scripts/soc-regrade.mts` and registered `npm run soc:regrade` supporting batch historical regrading, `--dry-run`, `--apply`, and `--fixtures` verification mode.
+- **Part D (Ground Truth Synthesis)**: Implemented `synthesizeReportGroundTruth` in `lib/lab-engine/soc/generator.ts` ensuring procedural scenario variants dynamically synthesize realistic ground truth milestones, IoC sets, and containment action recommendations.
+- **Part E (Database Migration & Hardening)**: Created `supabase/migrations/20261013200000_phase_3_soc_report_engine.sql` adding `soc_report_submissions` and `soc_report_evaluations` tables with strict owner-only RLS, immutable submitted states, and hardened `SECURITY DEFINER` function with pinned `search_path = public, pg_temp`.
+- **Part F (Report Editor UI)**: Built complete modular React suite in `components/labs/soc/reports/`:
+  - `ReportEditor.tsx` & `SocReportWorkspace.tsx`: Main workspace routing and editor state.
+  - `SectionOutline.tsx`: Collapsible 7-section progression checklist.
+  - `IocTableEditor.tsx`: Defanging toggle, indicator role selector, and notes.
+  - `TimelineEditor.tsx`: Chronological milestone tracker with ascending sorter.
+  - `EvidencePickerDrawer.tsx`: Direct linking to investigated alerts/telemetry.
+  - `PreSubmitLintModal.tsx`: Zero-oracle format and evidence validator.
+  - `GradedResultsScorecard.tsx`: 100-point rubric breakdown and anti-gaming flags.
+  - `ModelReportComparison.tsx`: Post-submission side-by-side comparison with senior analyst model report.
+  - `ReportExport.tsx`: Markdown and raw export utility.
+  - Integrated into `SocWorkspace.tsx` with dedicated tab in desktop header and mobile navigation. Passed WCAG AA design guard.
+- **Part G (Server Actions)**: Added secure server actions in `app/(app)/labs/soc/actions.ts`: `saveSocReportDraftAction`, `submitSocReportAction`, `getSocReportDraftAction`, `getSocReportResultAction`, and `getSocReportModelRevealAction`.
+- **Part H (Verification & Testing)**:
+  - `lib/lab-engine/soc/reports/fixtures.ts`: Synthetic fixtures at 9 controlled quality tiers (`excellent`, `good`, `mediocre`, `poor`, `padded`, `fabricated`, `copy-paste`, `template-only`, `injection-laced`).
+  - `tests/unit/lib/lab-engine/soc/report-monotonicity.test.ts`: 1,000-seed monotonicity test proving strict scoring invariants (`excellent >= good > mediocre > poor`, `padded < 70`, `fabricated <= 50`, `template-only < 40`, `injection <= poor`).
+  - `tests/unit/lib/lab-engine/soc/report-planted-flaws.test.ts`: 5 planted flaw tests confirming grader breaks when deliberately corrupted.
+  - `tests/unit/lib/lab-engine/soc/report-no-oracle.test.ts`: Statistical zero-oracle proof verifying disposition invariance, identical fake vs real IoC lint outputs, < 1.5ms execution timing delta, and clean error contracts.
+  - `tests/security/soc-report-security.test.ts`: 10 adversarial security tests covering unauthenticated access, IDOR protection, input sanitization, one-shot replay, race conditions, ground truth secrecy, and SQL `SECURITY DEFINER` auditing.
+  - `tests/e2e/soc-report.spec.ts`: End-to-end Playwright test covering drafting, linting, submitting, scorecard inspection, model comparison, and automated Axe accessibility analysis.
+- **Part I (Documentation)**: Authored `docs/dev/soc-report-grading.md`, `docs/dev/writing-soc-report-truth.md`, and updated `docs/dev/soc-practitioner-review.md` and `docs/design/soc-workspace.md`.

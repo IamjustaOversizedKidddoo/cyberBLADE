@@ -86,6 +86,7 @@ import type {
   SocQuestionAttemptRecord,
 } from "@/lib/lab-engine/soc/types";
 import type { SocEnrichmentLookupRecord } from "@/lib/lab-engine/soc/enrichment/types";
+import type { SocReportSubmissionRecord, SocReportEvaluationRecord } from "@/lib/lab-engine/soc/types";
 
 export type ProgressData = {
   lessons: Record<string, LessonProgress>;
@@ -103,6 +104,8 @@ export type ProgressData = {
   socEnrichmentLookups?: Record<string, SocEnrichmentLookupRecord>;
   socQueryLogs?: Record<string, SocQueryLogRecord>;
   socQuestionAttempts?: Record<string, SocQuestionAttemptRecord>;
+  socReportSubmissions?: Record<string, SocReportSubmissionRecord>;
+  socReportEvaluations?: Record<string, SocReportEvaluationRecord>;
 };
 
 export const emptyProgress = (): ProgressData => ({

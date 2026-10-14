@@ -22,6 +22,8 @@ import type {
   SocEvaluationResult,
   SocQueryLogRecord,
   SocQuestionAttemptRecord,
+  SocReportSubmissionRecord,
+  SocReportEvaluationRecord,
 } from "@/lib/lab-engine/soc/types";
 import type { SocEnrichmentLookupRecord } from "@/lib/lab-engine/soc/enrichment/types";
 
@@ -1194,6 +1196,314 @@ export class SupabaseProgressRepo implements ProgressRepo {
     }));
   }
 
+  // ---------------------------------------------------------------------------
+  // SOC Report submissions & evaluations
+  // ---------------------------------------------------------------------------
+
+  async upsertSocReportDraft(
+    draft: Omit<SocReportSubmissionRecord, "id" | "createdAt" | "updatedAt"> & { id?: string },
+  ): Promise<SocReportSubmissionRecord> {
+    const client = await this.getClient();
+
+    // Check if an existing draft exists for this attempt + template
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existing } = await (client as any)
+      .from("soc_report_submissions")
+      .select("*")
+      .eq("attempt_id", draft.attemptId)
+      .eq("template_id", draft.templateId)
+      .eq("status", "draft")
+      .maybeSingle();
+
+    const now = new Date().toISOString();
+
+    if (existing) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (client as any)
+        .from("soc_report_submissions")
+        .update({
+          report_data: draft.reportData,
+          lint_results: draft.lintResults,
+          updated_at: now,
+        })
+        .eq("id", existing.id)
+        .select("*")
+        .single();
+
+      if (error || !data) {
+        throw new Error(`Failed to update report draft: ${error?.message}`);
+      }
+      return {
+        id: data.id,
+        attemptId: data.attempt_id,
+        userId: data.user_id,
+        templateId: data.template_id,
+        templateVersion: data.template_version,
+        status: data.status,
+        reportData: data.report_data,
+        lintResults: data.lint_results,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+      };
+    }
+
+    const id = draft.id ?? randomUUID();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_report_submissions")
+      .insert({
+        id,
+        attempt_id: draft.attemptId,
+        user_id: draft.userId,
+        template_id: draft.templateId,
+        template_version: draft.templateVersion,
+        status: "draft",
+        report_data: draft.reportData,
+        lint_results: draft.lintResults,
+        created_at: now,
+        updated_at: now,
+      })
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to create report draft: ${error?.message}`);
+    }
+
+    return {
+      id: data.id,
+      attemptId: data.attempt_id,
+      userId: data.user_id,
+      templateId: data.template_id,
+      templateVersion: data.template_version,
+      status: data.status,
+      reportData: data.report_data,
+      lintResults: data.lint_results,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  async submitSocReport(submissionId: string): Promise<SocReportSubmissionRecord> {
+    const client = await this.getClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existing, error: fetchErr } = await (client as any)
+      .from("soc_report_submissions")
+      .select("*")
+      .eq("id", submissionId)
+      .single();
+
+    if (fetchErr || !existing) {
+      throw new Error(`Report submission not found: ${submissionId}`);
+    }
+
+    if (existing.status === "submitted") {
+      return {
+        id: existing.id,
+        attemptId: existing.attempt_id,
+        userId: existing.user_id,
+        templateId: existing.template_id,
+        templateVersion: existing.template_version,
+        status: existing.status,
+        reportData: existing.report_data,
+        lintResults: existing.lint_results,
+        createdAt: existing.created_at,
+        updatedAt: existing.updated_at,
+      };
+    }
+
+    const now = new Date().toISOString();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_report_submissions")
+      .update({
+        status: "submitted",
+        updated_at: now,
+      })
+      .eq("id", submissionId)
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to submit report: ${error?.message}`);
+    }
+
+    return {
+      id: data.id,
+      attemptId: data.attempt_id,
+      userId: data.user_id,
+      templateId: data.template_id,
+      templateVersion: data.template_version,
+      status: data.status,
+      reportData: data.report_data,
+      lintResults: data.lint_results,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  async getSocReportSubmission(id: string): Promise<SocReportSubmissionRecord | null> {
+    const client = await this.getClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_report_submissions")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error || !data) return null;
+
+    return {
+      id: data.id,
+      attemptId: data.attempt_id,
+      userId: data.user_id,
+      templateId: data.template_id,
+      templateVersion: data.template_version,
+      status: data.status,
+      reportData: data.report_data,
+      lintResults: data.lint_results,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  }
+
+  async listSocReportSubmissions(attemptId: string): Promise<SocReportSubmissionRecord[]> {
+    const client = await this.getClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_report_submissions")
+      .select("*")
+      .eq("attempt_id", attemptId)
+      .order("updated_at", { ascending: false });
+
+    if (error || !data) return [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data as any[]).map((d) => ({
+      id: d.id,
+      attemptId: d.attempt_id,
+      userId: d.user_id,
+      templateId: d.template_id,
+      templateVersion: d.template_version,
+      status: d.status,
+      reportData: d.report_data,
+      lintResults: d.lint_results,
+      createdAt: d.created_at,
+      updatedAt: d.updated_at,
+    }));
+  }
+
+  async saveSocReportEvaluation(
+    evaluation: Omit<SocReportEvaluationRecord, "id">,
+  ): Promise<SocReportEvaluationRecord> {
+    const client = await this.getClient();
+
+    // Check if an evaluation already exists for this submissionId (idempotent)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existing } = await (client as any)
+      .from("soc_report_evaluations")
+      .select("*")
+      .eq("submission_id", evaluation.submissionId)
+      .maybeSingle();
+
+    if (existing) {
+      return {
+        id: existing.id,
+        submissionId: existing.submission_id,
+        attemptId: existing.attempt_id,
+        userId: existing.user_id,
+        rubricId: existing.rubric_id,
+        rubricVersion: existing.rubric_version,
+        graderVersion: existing.grader_version,
+        scoringVersion: existing.scoring_version,
+        totalScore: Number(existing.total_score),
+        maxScore: Number(existing.max_score),
+        isFullyGraded: existing.is_fully_graded,
+        criterionResults: existing.criterion_results,
+        flags: existing.flags ?? {},
+        versionLabel: existing.version_label,
+        computedAt: existing.computed_at,
+      };
+    }
+
+    const id = randomUUID();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_report_evaluations")
+      .insert({
+        id,
+        submission_id: evaluation.submissionId,
+        attempt_id: evaluation.attemptId,
+        user_id: evaluation.userId,
+        rubric_id: evaluation.rubricId,
+        rubric_version: evaluation.rubricVersion,
+        grader_version: evaluation.graderVersion,
+        scoring_version: evaluation.scoringVersion,
+        total_score: evaluation.totalScore,
+        max_score: evaluation.maxScore,
+        is_fully_graded: evaluation.isFullyGraded,
+        criterion_results: evaluation.criterionResults,
+        flags: evaluation.flags,
+        version_label: evaluation.versionLabel,
+        computed_at: evaluation.computedAt ?? new Date().toISOString(),
+      })
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Failed to save report evaluation: ${error?.message}`);
+    }
+
+    return {
+      id: data.id,
+      submissionId: data.submission_id,
+      attemptId: data.attempt_id,
+      userId: data.user_id,
+      rubricId: data.rubric_id,
+      rubricVersion: data.rubric_version,
+      graderVersion: data.grader_version,
+      scoringVersion: data.scoring_version,
+      totalScore: Number(data.total_score),
+      maxScore: Number(data.max_score),
+      isFullyGraded: data.is_fully_graded,
+      criterionResults: data.criterion_results,
+      flags: data.flags ?? {},
+      versionLabel: data.version_label,
+      computedAt: data.computed_at,
+    };
+  }
+
+  async getSocReportEvaluation(submissionId: string): Promise<SocReportEvaluationRecord | null> {
+    const client = await this.getClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (client as any)
+      .from("soc_report_evaluations")
+      .select("*")
+      .eq("submission_id", submissionId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+
+    return {
+      id: data.id,
+      submissionId: data.submission_id,
+      attemptId: data.attempt_id,
+      userId: data.user_id,
+      rubricId: data.rubric_id,
+      rubricVersion: data.rubric_version,
+      graderVersion: data.grader_version,
+      scoringVersion: data.scoring_version,
+      totalScore: Number(data.total_score),
+      maxScore: Number(data.max_score),
+      isFullyGraded: data.is_fully_graded,
+      criterionResults: data.criterion_results,
+      flags: data.flags ?? {},
+      versionLabel: data.version_label,
+      computedAt: data.computed_at,
+    };
+  }
+
   async deleteUserData(userId: string): Promise<void> {
     const client = await this.getClient();
     await client.from("soc_attempts").delete().eq("user_id", userId);
@@ -1205,7 +1515,12 @@ export class SupabaseProgressRepo implements ProgressRepo {
     await (client as any).from("soc_query_logs").delete().eq("user_id", userId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (client as any).from("soc_question_attempts").delete().eq("user_id", userId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (client as any).from("soc_report_evaluations").delete().eq("user_id", userId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (client as any).from("soc_report_submissions").delete().eq("user_id", userId);
     await client.from("exam_reports").delete().eq("user_id", userId);
     await client.from("review_items").delete().eq("user_id", userId);
   }
 }
+

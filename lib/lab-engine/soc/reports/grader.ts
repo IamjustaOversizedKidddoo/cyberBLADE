@@ -20,8 +20,6 @@ import type {
   CriterionResult,
   GradingResult,
   ClaimAnnotation,
-  IocRowData,
-  TimelineRowData,
 } from "./types";
 import { defangIndicator } from "./sanitizer";
 import { defaultAiCriterionGrader, type AiCriterionGrader } from "./seams";
@@ -426,8 +424,8 @@ function gradeIocExtraction(
 
   // Compute metrics
   const totalSubmitted = (report.iocs ?? []).length;
-  const recall = gtIocSet.size > 0 ? truePositives / gtIocSet.size : 0;
-  const precision = totalSubmitted > 0 ? truePositives / totalSubmitted : 0;
+  const recall = gtIocSet.size > 0 ? truePositives / gtIocSet.size : 1;
+  const precision = totalSubmitted > 0 ? truePositives / totalSubmitted : (gtIocSet.size === 0 ? 1 : 0);
 
   // Score = maxPoints × (0.7 × Recall + 0.3 × Precision) - penalties
   let score = criterion.maxPoints * (0.7 * recall + 0.3 * precision);
@@ -1036,6 +1034,18 @@ function gradeReportHygiene(
     });
   }
 
+  // 5. Check for untouched template placeholders
+  const placeholderRegex = /\[[A-Za-z0-9\s_-]{4,}\]/;
+  if (placeholderRegex.test(allText)) {
+    deductions += 2.0;
+    flags.push("placeholder_text_detected");
+    annotations.push({
+      claimType: "hygiene",
+      status: "incorrect",
+      detail: "Template placeholder markers detected in narrative fields",
+    });
+  }
+
   let score = criterion.maxPoints - deductions;
   score = Math.max(0, Math.min(criterion.maxPoints, Math.round(score * 100) / 100));
 
@@ -1065,15 +1075,15 @@ type DeterministicGrader = (
 ) => CriterionResult;
 
 const DETERMINISTIC_GRADERS: Record<string, DeterministicGrader> = {
-  verdict_accuracy: (r, g, c, _cfg) => gradeVerdictAccuracy(r, g, c),
-  incident_scoping: (r, g, c, _cfg) => gradeIncidentScoping(r, g, c),
+  verdict_accuracy: (r, g, c) => gradeVerdictAccuracy(r, g, c),
+  incident_scoping: (r, g, c) => gradeIncidentScoping(r, g, c),
   ioc_extraction: gradeIocExtraction,
   timeline_accuracy: gradeTimelineAccuracy,
   evidence_support: gradeEvidenceSupport,
-  technique_mapping: (r, g, c, _cfg) => gradeTechniqueMapping(r, g, c),
+  technique_mapping: (r, g, c) => gradeTechniqueMapping(r, g, c),
   response_actions: gradeResponseActions,
-  escalation_handoff: (r, g, c, _cfg) => gradeEscalationHandoff(r, g, c),
-  report_hygiene: (r, g, c, _cfg) => gradeReportHygiene(r, g, c),
+  escalation_handoff: (r, g, c) => gradeEscalationHandoff(r, g, c),
+  report_hygiene: (r, g, c) => gradeReportHygiene(r, g, c),
 };
 
 // ---------------------------------------------------------------------------
