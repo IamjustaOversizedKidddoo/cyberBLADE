@@ -48,7 +48,9 @@
 -- action only after evaluating attempt.status = 'submitted'.
 --
 -- STATUS:
--- Validated via SQL syntax. Not executed against a live hosted database.
+-- Not executed against a live hosted database. Re-runnable (2026-10-14, S5): triggers and
+-- policies are dropped-if-exists before creation; verified by tests/db (PGlite) applying all
+-- migrations twice. The trigger helper is SECURITY INVOKER (S4): it needs no elevated rights.
 --
 -- ROLLBACK INSTRUCTIONS:
 -- DROP TABLE IF EXISTS public.soc_report_evaluations CASCADE;
@@ -63,7 +65,7 @@
 CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY INVOKER
 SET search_path = public, pg_temp
 AS $$
 BEGIN
@@ -101,6 +103,7 @@ CREATE INDEX IF NOT EXISTS idx_soc_report_submissions_user
     ON public.soc_report_submissions (user_id, updated_at DESC);
 
 -- Keep updated_at current
+DROP TRIGGER IF EXISTS trg_soc_report_submissions_updated_at ON public.soc_report_submissions;
 CREATE TRIGGER trg_soc_report_submissions_updated_at
     BEFORE UPDATE ON public.soc_report_submissions
     FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -108,14 +111,17 @@ CREATE TRIGGER trg_soc_report_submissions_updated_at
 -- RLS
 ALTER TABLE public.soc_report_submissions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS soc_report_submissions_owner_select ON public.soc_report_submissions;
 CREATE POLICY soc_report_submissions_owner_select
     ON public.soc_report_submissions FOR SELECT
     USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS soc_report_submissions_owner_insert ON public.soc_report_submissions;
 CREATE POLICY soc_report_submissions_owner_insert
     ON public.soc_report_submissions FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS soc_report_submissions_owner_update ON public.soc_report_submissions;
 CREATE POLICY soc_report_submissions_owner_update
     ON public.soc_report_submissions FOR UPDATE
     USING (auth.uid() = user_id)
@@ -155,6 +161,7 @@ CREATE INDEX IF NOT EXISTS idx_soc_report_evaluations_user
 -- RLS: learner can read their own evaluation; no write access from client
 ALTER TABLE public.soc_report_evaluations ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS soc_report_evaluations_owner_select ON public.soc_report_evaluations;
 CREATE POLICY soc_report_evaluations_owner_select
     ON public.soc_report_evaluations FOR SELECT
     USING (auth.uid() = user_id);

@@ -26,7 +26,8 @@
     "soc:ai:review": "tsx --conditions=react-server scripts/soc-ai-review.mts",
     "soc:ai:calibration": "tsx --conditions=react-server scripts/soc-ai-calibration.mts",
     "soc:ai:drift": "tsx --conditions=react-server scripts/soc-ai-drift.mts",
-    "soc:ai:eval-real": "tsx --conditions=react-server scripts/soc-ai-eval-real.mts"
+    "soc:ai:eval-real": "tsx --conditions=react-server scripts/soc-ai-eval-real.mts",
+    "test:db": "vitest run tests/db"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -50,6 +51,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
+    "@electric-sql/pglite": "^0.3.16",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^7.0.1",
