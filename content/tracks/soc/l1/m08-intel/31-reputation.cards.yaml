@@ -1,0 +1,14 @@
+lesson: soc-l1-reputation-01
+cards:
+  - id: fc-soc-l1-reputation-01
+    front: "How long are MD5, SHA-1 and SHA-256 hashes in hex characters?"
+    back: "MD5: 32. SHA-1: 40. SHA-256: 64."
+  - id: fc-soc-l1-reputation-02
+    front: "Why does an unknown file hash prove little?"
+    back: "Hashes match only exact copies; changing one byte makes a new, never-seen hash."
+  - id: fc-soc-l1-reputation-03
+    front: "What are the common reasons reputation sources disagree?"
+    back: "Old verdicts, shared or reused hosting addresses, different definitions (such as hacktools), and gaps in coverage."
+  - id: fc-soc-l1-reputation-04
+    front: "Which WHOIS details are useful, and which are weak on their own?"
+    back: "Useful: registration age, hosting provider and ASN. Weak alone: privacy protection and registrant country."

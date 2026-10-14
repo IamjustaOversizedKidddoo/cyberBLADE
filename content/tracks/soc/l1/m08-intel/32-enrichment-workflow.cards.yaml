@@ -1,0 +1,14 @@
+lesson: soc-l1-enrichment-workflow-01
+cards:
+  - id: fc-soc-l1-enrichment-workflow-01
+    front: "What are the Pyramid of Pain's levels, from easiest to hardest for an attacker to change?"
+    back: "Hash values, IP addresses, domain names, network and host artefacts, tools, TTPs."
+  - id: fc-soc-l1-enrichment-workflow-02
+    front: "IOC vs TTP?"
+    back: "An IOC is a specific value (hash, IP, domain); a TTP is how the attacker works, which is far harder for them to change."
+  - id: fc-soc-l1-enrichment-workflow-03
+    front: "What three things must match before a ticket explains an alert?"
+    back: "Dates (window still open), scope (exact host, address or account), and status (approved or in progress)."
+  - id: fc-soc-l1-enrichment-workflow-04
+    front: "In what order should you enrich an alert?"
+    back: "State the question, check internal context first, then only the external lookups you need, and stop when it is answered."

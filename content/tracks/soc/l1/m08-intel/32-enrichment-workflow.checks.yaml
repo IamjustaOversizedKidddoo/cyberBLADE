@@ -1,0 +1,82 @@
+lesson: soc-l1-enrichment-workflow-01
+questions:
+  - id: q1
+    prompt: "Why are detections built on behaviours (TTPs) more durable than ones built on IP addresses?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "Attackers can change addresses easily, but changing how they operate is much harder."
+        correct: true
+        explanation: "Correct. That is the core idea of the Pyramid of Pain."
+      - text: "IP addresses are never used in attacks."
+        correct: false
+        explanation: "They are used constantly; they just change often."
+      - text: "Behaviour detections never produce false positives."
+        correct: false
+        explanation: "They do; they are simply harder for attackers to escape."
+      - text: "IP addresses cannot be logged."
+        correct: false
+        explanation: "They are logged everywhere."
+  - id: q2
+    prompt: "In the Pyramid of Pain, which indicator type is easiest for an attacker to change?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "Hash values."
+        correct: true
+        explanation: "Correct. Changing one byte produces a new hash."
+      - text: "TTPs."
+        correct: false
+        explanation: "TTPs are at the top: the hardest to change."
+      - text: "Tools."
+        correct: false
+        explanation: "Replacing tools is challenging for attackers."
+      - text: "Network and host artefacts."
+        correct: false
+        explanation: "Those are annoying to change, well above hashes."
+  - id: q3
+    prompt: "A ticket names the exact host in an alert, but its window ended yesterday. What does it tell you?"
+    objectives: ["soc:soc_malware_triage"]
+    options:
+      - text: "It does not authorise today's activity; check further and confirm with the ticket's owner."
+        correct: true
+        explanation: "Correct. Dates, scope and status all have to match."
+      - text: "It explains the alert; close it."
+        correct: false
+        explanation: "The authorisation has expired."
+      - text: "The ticket system is broken."
+        correct: false
+        explanation: "The ticket is accurate; it just covers a different time."
+      - text: "The host is safe forever."
+        correct: false
+        explanation: "No ticket grants permanent safety."
+  - id: q4
+    prompt: "Why check internal context before external lookups?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "Internal records such as changes, maintenance windows and test notices are fast and often decisive."
+        correct: true
+        explanation: "Correct. A matching approved change can settle an alert in a minute."
+      - text: "External lookups are always wrong."
+        correct: false
+        explanation: "They are useful, but often less decisive for internal activity."
+      - text: "External lookups are illegal."
+        correct: false
+        explanation: "They are allowed, within your team's rules on what you send out."
+      - text: "Internal records are never out of date."
+        correct: false
+        explanation: "They can be stale, which is why you check dates."
+  - id: q5
+    prompt: "When should enrichment stop?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "When the triage question is answered, or the time box ends."
+        correct: true
+        explanation: "Correct. Endless lookups delay the queue without improving the decision."
+      - text: "When every tool has been used."
+        correct: false
+        explanation: "Using every tool is rarely necessary."
+      - text: "Never; more data is always better."
+        correct: false
+        explanation: "More data costs time and can bury the important facts."
+      - text: "After exactly ten lookups."
+        correct: false
+        explanation: "The question decides, not a fixed count."

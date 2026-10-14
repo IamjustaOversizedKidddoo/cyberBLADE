@@ -1,0 +1,148 @@
+---
+id: soc-l1-enrichment-workflow-01
+title: "IOCs vs Behaviours and the Enrichment Workflow"
+track: soc
+rank: 1
+module: intel
+order: 32
+estimated_minutes: 15
+objectives_covered: ["soc:soc_threat_intel", "soc:soc_malware_triage"]
+mitre: []
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-reputation-01"]
+skills: ["soc_threat_intel", "soc_malware_triage"]
+practice: ["tool:pdns", "tool:tickets"]
+---
+
+> **Outcome:** you can explain why behaviours outlast indicators, run enrichment in a sensible order within a time limit, and spot when internal context is out of date.
+
+## Why this matters on shift
+
+Enrichment tools are addictive. One more lookup always seems useful, and an hour later the queue has grown and the alert is still open. At the same time, the cheapest and most decisive context is often internal: who owns the machine, whether a change was planned, whether a penetration test is running. A good enrichment habit gets the decisive facts first and stops when the question is answered.
+
+## Before you start
+
+You should already know:
+
+- Hashes, reputation and WHOIS: [Hashes, Reputation and Conflicting Sources](/learn/soc-l1-reputation-01).
+- What enrichment is: [Anatomy of an Alert](/learn/soc-l1-alert-anatomy-01).
+
+## Core ideas
+
+### Indicators and behaviours
+
+An **indicator of compromise** (IOC) is a specific, observable value linked to malicious activity: a file hash, an IP address, a domain, a URL, an email address. IOCs are easy to share and search for, but just as easy for attackers to change.
+
+A **TTP** (tactics, techniques and procedures) describes *how* an attacker works: for example "an office document starts a script interpreter, which downloads a file and creates a scheduled task". Behaviours like that are much harder for attackers to change, because changing them means changing how they operate.
+
+Think of catching a pickpocket. Their coat colour (an IOC) changes every day. The way they bump into people near the station exit (a behaviour) stays the same for years. Watching for the behaviour catches them in any coat.
+
+### The Pyramid of Pain
+
+The **Pyramid of Pain**, a model by security researcher David Bianco, ranks indicator types by how much pain it causes an attacker when defenders detect and block them. From least to most painful for the attacker:
+
+1. **Hash values:** trivial to change (one byte).
+2. **IP addresses:** easy to change.
+3. **Domain names:** simple to change, a little more effort.
+4. **Network and host artefacts:** such as distinctive URL paths, user agents or registry keys; annoying to change.
+5. **Tools:** the attacker's software; challenging to replace.
+6. **TTPs:** how they work; tough to change.
+
+Blocking hashes and addresses is still worth doing because it is cheap. But detections built on behaviours keep working after the attacker swaps their infrastructure.
+
+### An enrichment workflow
+
+<FlowDiagram
+  title="Enrichment in a sensible order"
+  description="State the question. Check internal context first: asset and user directories, change and maintenance tickets, penetration-test notices. Then external context: reputation, WHOIS, passive DNS. Stop when the question is answered or the time box ends. Record each result with its source, time and strength."
+  steps={[
+    { label: "State the question", detail: "What would make this harmless, and what would make it real?" },
+    { label: "Internal first", detail: "Asset and user directory, change and maintenance tickets, test notices." },
+    { label: "External next", detail: "Reputation, WHOIS, passive DNS: only what the question needs." },
+    { label: "Stop on purpose", detail: "When the question is answered, or the time box ends." },
+    { label: "Record it", detail: "Each result with source, time and how strong it is." },
+  ]}
+/>
+
+In plain English: ask a clear question, check your own records before the internet's, and stop when you have the answer.
+
+Internal context usually comes first because it is fast and decisive. An approved change, a planned maintenance window or a penetration-test notice can explain an alert in a minute. The simulator's service-ticket tool shows exactly these records (change requests, scheduled maintenance, incidents, access requests and penetration-test notices), each with a status and a scheduled start and end.
+
+### Internal context can be stale
+
+Internal records go out of date. An asset directory may list the wrong owner, a ticket may have expired, or a test window may have closed. The simulator's asset directory marks records that have not been checked recently with a stale-data notice. Always check:
+
+- **Dates:** is the change or test window still open?
+- **Scope:** does the ticket cover this exact host, address or account?
+- **Status:** approved, in progress, completed, or rejected?
+
+## Worked example
+
+An alert at Larkspur Freight, 09:40 UTC: "Port scan from 192.0.2.30 against the internet-facing servers". The question: is this the authorised penetration test, or a real attacker?
+
+**Internal first.** The ticket lookup finds a penetration-test notice:
+
+<LogBlock
+  title="Ticket lookup for 192.0.2.30 (synthetic)"
+  lines={[
+    "PT-0412  pen_test_notice  'External test by contracted testing firm'",
+    "         status: completed   scheduled: 2026-10-12 08:00 to 2026-10-14 18:00 UTC",
+    "         target: internet-facing servers   source addresses: 192.0.2.30, 192.0.2.31",
+  ]}
+/>
+
+**A false comfort.** The ticket names this exact address and these targets, so it is tempting to close the alert as the authorised test. But the window ended yesterday at 18:00, and the status is "completed". Today's scan is outside the authorised window.
+
+**External, briefly.** Passive DNS and reputation add little: the address belongs to a hosting provider, with no verdicts. The analyst does not keep looking things up, because the decisive question is internal: did the test firm continue without authorisation, or is someone else using that address?
+
+**Decision.** The analyst escalates as "scan from a test address outside the authorised window", and asks the shift lead to contact the test firm's named contact from the ticket. Twenty minutes later the firm confirms a misconfigured scheduled job on their side and stops it. The final note records both the ticket dates and the confirmation.
+
+## Try it
+
+<MicroExercise id="enrich-order" />
+
+## Common mistakes
+
+- **Looking up everything.** Enrichment should answer a question, not fill a page.
+- **Going external before internal.** Your own tickets and directories are faster and often decisive.
+- **Trusting a ticket without checking dates, scope and status.**
+- **Relying only on IOCs.** Behaviours keep working when infrastructure changes.
+- **Recording results without their source and time.** The next analyst cannot tell how fresh they are.
+
+## What good looks like
+
+A strong analyst states the question, checks internal context first, reads dates, scope and status on every ticket, uses external lookups sparingly, stops when the question is answered, and records each result with its source, time and strength.
+
+## In the real world
+
+Many teams automate enrichment so that alerts arrive with asset owner, user details and reputation already attached, through SOAR (security orchestration, automation and response) tools. That saves time, but the same cautions apply: automated context can be stale or wrong, and an expired ticket attached automatically still looks reassuring.
+
+## Remember it like this
+
+Question first, inside before outside, check the dates, and stop when you know.
+
+## Interview answer
+
+"IOCs like hashes, IPs and domains are easy to share but also easy for attackers to change, which is the point of the Pyramid of Pain; behaviours and TTPs are much harder to change, so detections built on them last longer. When I enrich an alert I start with a clear question, check internal context first, such as the asset directory, change and maintenance tickets and pen-test notices, checking dates, scope and status, then do only the external lookups the question needs. I stop when it's answered or the time box ends, and I record each result with its source and time."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Indicator of compromise", definition: "A specific observable value linked to malicious activity, such as a file hash, IP address, domain, URL or email address (often shortened to IOC)." },
+    { term: "TTP", definition: "Tactics, techniques and procedures: how an attacker works, which is much harder for them to change than their indicators." },
+    { term: "Pyramid of Pain", definition: "David Bianco's model ranking indicator types by how much pain blocking them causes an attacker, from hash values (trivial) up to TTPs (tough)." },
+    { term: "Penetration-test notice", definition: "A record that an authorised security test will run from stated addresses against stated targets during a stated window." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />
