@@ -70,8 +70,12 @@ export const proseComponents: MDXComponents = {
   ),
   pre: (p) => (
     <div className="relative my-6 overflow-hidden rounded-sm border border-line bg-surface-subtle">
+      {/* Focusable, labelled scroll region so keyboard users can scroll long lines (WCAG 2.1.1). */}
       <pre
-        className="overflow-x-auto p-4 font-mono text-sm leading-relaxed text-ink/90 selection:bg-cyan/20"
+        tabIndex={0}
+        role="region"
+        aria-label="Code (scrolls sideways on small screens)"
+        className="overflow-x-auto p-4 font-mono text-sm leading-relaxed text-ink/90 selection:bg-cyan/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan"
         {...p}
       />
     </div>

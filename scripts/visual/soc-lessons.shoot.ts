@@ -38,6 +38,26 @@ for (const w of WIDTHS) {
       const diagram = page.locator("[data-flow-diagram]").first();
       if (await diagram.count()) await diagram.screenshot({ path: `${DIR}/${l.slug}-${w}-diagram.png` });
     }
+    // Track pages: landing, module with checkpoint, glossary, and an open first-use tooltip.
+    for (const [name, url] of [["track", "/learn/soc-l1"], ["module", "/learn/soc-l1/triage"], ["glossary", "/learn/soc-l1/glossary"]] as const) {
+      await page.goto(url);
+      await page.waitForFunction(() => /\S$/.test(document.querySelector("[data-typed]")?.textContent ?? "x"));
+      await page.waitForTimeout(800);
+      await page.screenshot({ path: `${DIR}/${name}-${w}-top.png` });
+      await page.screenshot({ path: `${DIR}/${name}-${w}-full.png`, fullPage: true });
+    }
+    await page.goto("/learn/soc-l1/triage");
+    const cp = page.locator("#checkpoint-h").locator("xpath=..");
+    await cp.scrollIntoViewIfNeeded();
+    await cp.screenshot({ path: `${DIR}/checkpoint-${w}.png` });
+    await page.goto("/learn/soc-l1-dns-http-tls-01");
+    const tip = page.getByRole("button", { name: /\(glossary term\)/ }).first();
+    await tip.scrollIntoViewIfNeeded();
+    await tip.focus();
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(200);
+    const box = await tip.boundingBox();
+    if (box) await page.screenshot({ path: `${DIR}/tooltip-${w}.png`, clip: { x: 0, y: Math.max(0, box.y - 120), width: w, height: 360 } });
     // Drill page: task, a run with results.
     await page.goto("/practice/drills/drill-07");
     await page.getByRole("textbox", { name: "Your query" }).fill('source="auth" | stats count by user');

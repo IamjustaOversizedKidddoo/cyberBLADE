@@ -149,7 +149,19 @@ export default async function SocTrackPage() {
             Skills coverage
           </h2>
           <p className="mb-4 font-sans text-sm text-muted">Which lessons teach each skill, how it is practised, and where coverage is still thin.</p>
-          <div tabIndex={0} role="region" aria-label="Skills coverage table (scrolls sideways on small screens)" className={`overflow-x-auto rounded-sm border border-line bg-surface ${linkFocus}`}>
+          {/* Phones: one card per skill (a 4-column table is unreadable at 390 px). */}
+          <ul className="space-y-2 sm:hidden">
+            {coverage.skills.map((s) => (
+              <li key={s.id} className="rounded-sm border border-line bg-surface p-3">
+                <p className="font-sans text-[15px] font-semibold text-ink">{skills.get(s.id) ?? s.id}</p>
+                <p className="mt-1 font-ui text-xs text-muted">
+                  {s.lessons.length} lessons · {s.practice.length} practice items
+                </p>
+                <p className="mt-1 font-sans text-[13px] text-muted">{s.gap ?? "Covered"}</p>
+              </li>
+            ))}
+          </ul>
+          <div tabIndex={0} role="region" aria-label="Skills coverage table" className={`hidden overflow-x-auto rounded-sm border border-line bg-surface sm:block ${linkFocus}`}>
             <table className="w-full border-collapse text-left font-sans text-sm">
               <thead>
                 <tr>
