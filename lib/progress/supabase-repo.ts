@@ -1,6 +1,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ProgressRepo } from "./repo";
 import type { Database } from "@/lib/supabase/types";
@@ -1505,22 +1506,12 @@ export class SupabaseProgressRepo implements ProgressRepo {
   }
 
   async deleteUserData(userId: string): Promise<void> {
-    const client = await this.getClient();
-    await client.from("soc_attempts").delete().eq("user_id", userId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (client as any).from("soc_used_seeds").delete().eq("user_id", userId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (client as any).from("soc_enrichment_lookups").delete().eq("user_id", userId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (client as any).from("soc_query_logs").delete().eq("user_id", userId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (client as any).from("soc_question_attempts").delete().eq("user_id", userId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (client as any).from("soc_report_evaluations").delete().eq("user_id", userId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (client as any).from("soc_report_submissions").delete().eq("user_id", userId);
-    await client.from("exam_reports").delete().eq("user_id", userId);
-    await client.from("review_items").delete().eq("user_id", userId);
+    // One source of truth for erasure (S6): the SQL function covers every learner table and is
+    // exercised against real Postgres in tests/db/access-hardening.test.ts.
+    // The generated Database type does not declare this function's arguments.
+    const client = (await this.getClient()) as unknown as SupabaseClient;
+    const { error } = await client.rpc("delete_user_account", { target_user_id: userId });
+    if (error) throw new Error(`Account erasure failed: ${error.message}`);
   }
 }
 

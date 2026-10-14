@@ -6,6 +6,7 @@ import { getCtx } from "@/lib/progress/context";
 import { logSecurityEvent } from "@/lib/security/audit-logger";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getAiGradingStore } from "@/lib/lab-engine/soc/ai-grading/runtime";
+import { buildLearnerExport } from "./learner-export";
 
 /**
  * Exports all data held for the authenticated operator as a JSON object (Right to Portability / Access).
@@ -14,14 +15,8 @@ export async function exportUserDataAction() {
   const operator = await requireOperator();
   const ctx = getCtx();
 
-  const [lessons, attempts, xpEvents, socAttempts, aiFeedback] = await Promise.all([
-    ctx.repo.listLessonProgress(operator.id),
-    ctx.repo.listAttempts(operator.id),
-    ctx.repo.listXpEvents(operator.id),
-    ctx.repo.listSocAttempts(operator.id),
-    // AI writing feedback: learner-facing fields only (no raw model outputs or prompts).
-    getAiGradingStore().exportUserData(operator.id),
-  ]);
+  // Allowlisted per table (S6): no seeds, scenario hashes, ground truth, raw AI outputs or prompts.
+  const progress = await buildLearnerExport(ctx, operator.id, await getAiGradingStore().exportUserData(operator.id));
 
   return {
     exportedAt: new Date().toISOString(),
@@ -32,15 +27,10 @@ export async function exportUserDataAction() {
       ethicsAcceptedAt: operator.ethicsAcceptedAt,
       createdAt: operator.createdAt,
     },
-    progress: {
-      lessons,
-      attempts,
-      xpEvents,
-      socAttempts,
-      aiFeedback,
-    },
+    progress,
   };
 }
+
 
 /**
  * Hard-deletes the authenticated operator account and cascades removal across all progress records (Right to Erasure).

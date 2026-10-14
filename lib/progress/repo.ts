@@ -558,6 +558,11 @@ export class StoreProgressRepo implements ProgressRepo {
           if (v.userId === userId) delete d.examReports[k];
         }
       }
+      if (d.learningEvents) {
+        for (const [k, v] of Object.entries(d.learningEvents)) {
+          if (v.userId === userId) delete d.learningEvents[k];
+        }
+      }
       const userSocAttemptIds = new Set<string>();
       if (d.socAttempts) {
         for (const [k, v] of Object.entries(d.socAttempts)) {
