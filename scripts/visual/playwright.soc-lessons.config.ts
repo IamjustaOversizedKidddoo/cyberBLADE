@@ -13,6 +13,6 @@ export default defineConfig({
     command: "npm run start -- -p 3200",
     port: 3200,
     reuseExistingServer: false,
-    env: { NEON_DATA_DIR: ".data-visual", NEON_SHOW_DRAFTS: "true", CYBERBLADE_ALLOW_LOCAL_E2E: "true" },
+    env: { SOC_QUERY_ENABLED: "true", NEON_DATA_DIR: ".data-visual", NEON_SHOW_DRAFTS: "true", CYBERBLADE_ALLOW_LOCAL_E2E: "true" },
   },
 });

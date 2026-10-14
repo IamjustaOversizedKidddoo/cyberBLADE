@@ -7,6 +7,7 @@ import { parse as parseYaml } from "yaml";
 import { parseChecks, type CheckSet } from "@/lib/content/checks";
 import { consoleCommands, consoleExamples, outputMismatches, runConsoleCommands } from "@/lib/content/lesson-commands";
 import { loadLessons } from "@/lib/content/lessons";
+import { DRILL_MIN_RANK } from "@/app/(app)/practice/drills/rank";
 import { parseExercises } from "@/lib/content/exercises";
 import { resolvePracticeTarget } from "@/lib/content/practice";
 import { keyTermsOf, lintSocLesson, prerequisiteGraphErrors } from "@/lib/content/soc-lesson-lint";
@@ -166,6 +167,7 @@ async function main(): Promise<number> {
       }
     }
     errors.push(...prerequisiteGraphErrors(lessons, track.min_core_rank));
+    if (DRILL_MIN_RANK !== track.min_core_rank) errors.push(`practice/drills/rank.ts DRILL_MIN_RANK ${DRILL_MIN_RANK} must equal track min_core_rank ${track.min_core_rank}`);
     errors.push(...socCoverageErrors(socCoverage, socLessons, skillIds, practiceError));
     const expectedCards = renderTrackCardsModule(cardEntries);
     const actualCards = await fs.readFile("lib/review/track-cards.generated.ts", "utf8").catch(() => "");

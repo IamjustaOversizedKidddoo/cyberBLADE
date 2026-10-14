@@ -38,6 +38,13 @@ for (const w of WIDTHS) {
       const diagram = page.locator("[data-flow-diagram]").first();
       if (await diagram.count()) await diagram.screenshot({ path: `${DIR}/${l.slug}-${w}-diagram.png` });
     }
+    // Drill page: task, a run with results.
+    await page.goto("/practice/drills/drill-07");
+    await page.getByRole("textbox", { name: "Your query" }).fill('source="auth" | stats count by user');
+    await page.getByRole("button", { name: "Run and check" }).click();
+    await page.getByRole("status").filter({ hasText: /Correct|Not yet/ }).waitFor();
+    await page.screenshot({ path: `${DIR}/drill-${w}-top.png`, fullPage: false });
+    await page.screenshot({ path: `${DIR}/drill-${w}-full.png`, fullPage: true });
     // Interaction states on the header exercise: wrong answer + hint, then correct answer + explanation.
     await page.goto(`/learn/soc-l1-email-headers-01`);
     const ex = page.locator(`[data-exercise="header-check"]`);
