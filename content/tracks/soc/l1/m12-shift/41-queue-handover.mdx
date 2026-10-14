@@ -1,0 +1,155 @@
+---
+id: soc-l1-queue-handover-01
+title: "Queue, Time and Handover"
+track: soc
+rank: 1
+module: shift
+order: 41
+estimated_minutes: 16
+objectives_covered: ["soc:soc_alert_triage", "soc:soc_case_management"]
+mitre: []
+xp: 120
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-prioritisation-01", "soc-l1-rationale-escalation-01"]
+skills: ["soc_alert_triage", "soc_case_management"]
+practice: ["shift:shift-alert-storm"]
+---
+
+> **Outcome:** you can work a large queue without losing the important alerts, use your time deliberately, and hand over a shift so nothing falls through the gap.
+
+## Why this matters on shift
+
+Some shifts start with two hundred alerts waiting. You cannot give each one ten minutes, and if you work them top to bottom the critical one at position 140 waits for hours. Then, at the end of the shift, everything you know has to reach the next analyst, or open problems quietly disappear overnight. Queue management and handover are where individual triage skill turns into a team that does not drop things.
+
+## Before you start
+
+You should already know:
+
+- How to prioritise alerts: [Prioritising: Severity, Impact and Asset Criticality](/learn/soc-l1-prioritisation-01).
+- How to escalate and write handoff notes: [Writing Rationales and Knowing When to Escalate](/learn/soc-l1-rationale-escalation-01).
+
+## Core ideas
+
+### First pass, then deep work
+
+With a big queue, do a **first pass** before deep triage: a quick sweep through the whole queue to group, sort and spot the urgent alerts, spending seconds on each rather than minutes.
+
+Think of a hospital emergency department on a busy night. A triage nurse sees everyone briefly first and sorts them. Only then do doctors start treating, in order of need.
+
+During the first pass:
+
+- **Group** alerts that share a rule, host or account, so you can work them together.
+- **Sort** by priority: critical assets, privileged accounts, signs of success.
+- **Flag** anything urgent to start at once, and tell the shift lead if there are more urgent alerts than you can handle.
+
+### Working groups of similar alerts
+
+Forty alerts with the same rule, host and pattern can often be handled together, but only after you check them. Open a sample, including the newest and the oldest, and look for anything different. Any alert that differs leaves the group and is triaged on its own. Never close a group from the title alone.
+
+A **flapping rule** is a detection that fires, clears and fires again repeatedly because the activity hovers around its threshold. It floods the queue with near-identical alerts. Close them with a reason, and report the rule to detection engineering with examples.
+
+### Using your time deliberately
+
+- **Time-box** each alert. When you reach the limit without a decision, escalate or mark it "needs more information" with what is missing.
+- **Say when the queue is beyond you.** Telling the shift lead early is professional; quietly falling behind is not.
+- **Take short breaks.** Fatigue makes everything look the same, which is exactly how real alerts get missed.
+
+### Handover
+
+A **shift handover** is the structured transfer of open work, context and warnings from one shift to the next. A useful handover covers:
+
+1. **Open incidents:** status, owner, next steps.
+2. **Open alerts:** especially "needs more information" ones, with what you are waiting for and from whom.
+3. **Watch items:** things that are not alerts yet but need an eye kept on them, such as a host that went quiet or a password reset you asked for.
+4. **Noise and tooling:** flapping rules, broken sources, anything that will mislead the next shift.
+5. **Anything promised:** updates owed to people, with times.
+
+It should be written in the case or handover tool, and talked through when possible. The incoming analyst confirms they have it.
+
+<FlowDiagram
+  title="A shift from start to handover"
+  description="Read the incoming handover. Do a first pass of the queue: group, sort, flag the urgent. Work alerts in priority order with time boxes. Raise workload problems early. Before leaving, write the handover: open incidents, open alerts, watch items, noise and promises, and confirm the next analyst has it."
+  steps={[
+    { label: "Read the handover", detail: "Open work, watch items and warnings from the last shift." },
+    { label: "First pass", detail: "Group, sort, flag the urgent; seconds per alert." },
+    { label: "Work in priority order", detail: "Time-box each; escalate or note what is missing." },
+    { label: "Raise problems early", detail: "Queue beyond capacity? Tell the shift lead." },
+    { label: "Write and confirm the handover", detail: "Incidents, alerts, watch items, noise, promises." },
+  ]}
+/>
+
+In plain English: look at everything quickly, then work the most important first, and leave the next person a clear map.
+
+## Worked example
+
+An analyst starts the morning shift at Larkspur Freight. The night shift's handover note says only: "Quiet night. Nothing major."
+
+**A dead end.** The queue shows 162 open alerts. Reading the note, the analyst assumes they are routine and starts at the top. Twenty minutes later they find, by chance, an alert marked "needs more information: waiting for the server owner to confirm a new admin account on srv-hr03", opened at 01:40. Nobody had chased it, and the note did not mention it.
+
+**The analyst restarts with a first pass.** Grouping shows 120 alerts from one rule that alternates on a backup server every few minutes (a flapping rule), 25 scanner alerts inside a change window, and 17 others. Within those 17 are the srv-hr03 admin account, still unconfirmed after six hours, and a sign-in success after many failures for a finance account at 05:12.
+
+**What they do.** They chase the server owner and escalate the srv-hr03 account when there is still no answer, triage the 05:12 sign-in next, close the flapping and scanner alerts in checked groups with reasons, and report the flapping rule.
+
+**Their own handover, at the end of the shift:**
+
+<LogBlock
+  title="Handover (synthetic)"
+  lines={[
+    "Open incident: srv-hr03 unexplained admin account; escalated to Tier 2 at 09:05; owner still not reached.",
+    "Open alert: finance account sign-in after failures (05:12) - user confirmed travel by phone; closed benign. None waiting.",
+    "Watch: srv-hr03 - any new sign-ins by the new account should go straight to Tier 2.",
+    "Noise: backup flapping rule produced 120 alerts; reported to detection engineering (ticket DET-221).",
+    "Promised: update to the HR systems manager at 15:00 UTC on srv-hr03.",
+  ]}
+/>
+
+## Try it
+
+<MicroExercise id="shift-calls" />
+
+## Common mistakes
+
+- **Working top to bottom without a first pass.** The urgent alert may be far down.
+- **Closing groups by title.** Check a sample, including the newest and oldest.
+- **Hiding a backlog.** Raise it early.
+- **Handovers that say "all fine".** List open work, watch items and promises explicitly.
+- **Leaving without confirmation** that the next analyst has the handover.
+
+## What good looks like
+
+A strong analyst starts with the incoming handover, does a quick first pass, works in priority order with time boxes, closes groups only after checking samples, raises workload problems early, and ends with a structured handover the next analyst confirms.
+
+## In the real world
+
+Most SOCs have a handover template and a short overlap between shifts. Shift leads watch queue age and volume and move people between queues when one spikes. Flapping rules and noisy sources are a major cause of alert fatigue, which is why good teams track and fix them rather than living with them.
+
+The simulator's alert-storm shift is deliberately high-volume and noisy, with repeating rules and scanner bursts, so it is the right place to practise a first pass.
+
+## Remember it like this
+
+First pass, priority order, time boxes, and a handover with open work, watch items, noise and promises.
+
+## Interview answer
+
+"With a big queue I do a quick first pass: group similar alerts, sort by priority and flag anything urgent, and I tell the shift lead early if it's more than I can handle. I time-box each alert, and I only close groups of similar alerts after checking a sample. At the end of the shift I write a structured handover: open incidents, open alerts with what they're waiting for, watch items, noisy rules or broken sources, and anything I've promised, and I confirm the next analyst has it."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "First pass", definition: "A quick sweep through the whole queue to group, sort and spot urgent alerts before deep triage." },
+    { term: "Flapping rule", definition: "A detection that fires, clears and fires again repeatedly because the activity hovers around its threshold." },
+    { term: "Shift handover", definition: "The structured transfer of open work, context and warnings from one shift to the next." },
+    { term: "Watch item", definition: "Something that is not an alert yet but needs an eye kept on it during the next shift." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

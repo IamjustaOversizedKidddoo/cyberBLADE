@@ -1,0 +1,53 @@
+lesson: soc-l1-queue-handover-01
+exercises:
+  - id: shift-calls
+    title: "Run the start and end of a shift"
+    kind: triage-queue
+    instructions: >-
+      You start a shift with 140 alerts. Your first pass produced the groups below.
+    blocks:
+      - type: table
+        title: "First-pass groups (synthetic)"
+        columns: ["Group", "Alerts", "What the first pass shows"]
+        rows:
+          - ["G1", "96", "Same rule on the backup server, firing and clearing every 3 minutes"]
+          - ["G2", "30", "Port scans from the approved scanner inside its change window"]
+          - ["G3", "13", "Mixed rules on workstations, all low or medium severity"]
+          - ["G4", "1", "New member added to the domain admins group at 06:50, no change ticket"]
+    questions:
+      - id: first
+        prompt: "Which group do you work first? (Type its ID.)"
+        answer_type: text
+        accept: ["G4"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Which single alert has the largest possible impact and no explanation?"
+        explanation: >-
+          An unexplained addition to the domain admins group has the largest blast radius in the queue,
+          so it is worked first despite being a single alert.
+      - id: g1
+        prompt: "What is G1 most likely, and what do you do with it?"
+        answer_type: choice
+        options:
+          - "A flapping rule: check a sample, close with a reason, report it for tuning"
+          - "An attack: escalate all 96 alerts"
+          - "Ignore it and leave the alerts open"
+        accept: ["A flapping rule: check a sample, close with a reason, report it for tuning"]
+        hints:
+          - "What kind of rule fires and clears on the same host every few minutes?"
+        explanation: >-
+          Firing and clearing on a fixed rhythm is flapping. Check a few alerts, including the newest and
+          oldest, close the group with a reason, and report the rule.
+      - id: handover
+        prompt: "At the end of the shift, G4 is escalated but not resolved. Where must it appear in your handover?"
+        answer_type: choice
+        options:
+          - "Under open incidents, with owner, status and next steps"
+          - "Nowhere, because Tier 2 owns it now"
+          - "Only in a chat message to a colleague"
+        accept: ["Under open incidents, with owner, status and next steps"]
+        hints:
+          - "What would the next shift need to know if Tier 2 asks them a question about it?"
+        explanation: >-
+          The next shift needs to know the incident exists, who owns it and what is pending. Handovers list
+          open incidents explicitly, even when another team owns them.

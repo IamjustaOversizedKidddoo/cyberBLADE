@@ -1,0 +1,44 @@
+lesson: soc-l1-judgment-career-01
+exercises:
+  - id: judgment-calls
+    title: "Spot the thinking trap"
+    kind: triage-queue
+    instructions: >-
+      Each situation shows an analyst's thinking. Name the trap.
+    blocks:
+      - type: table
+        title: "Situations (synthetic)"
+        columns: ["ID", "What the analyst did"]
+        rows:
+          - ["J1", "Closed a file alert as clean because the sandbox score was 8 out of 100, even though the host showed the file creating a Run key and beaconing."]
+          - ["J2", "Decided from the title 'Brute force' that it was an attack, then only searched for evidence of more failures, and never checked whether the failures came from the user's own laptop."]
+          - ["J3", "Closed a scan alert from an unknown address quickly because yesterday's scan alerts were all the approved scanner."]
+    questions:
+      - id: j1
+        prompt: "Which trap does J1 show?"
+        answer_type: choice
+        options: ["Automation bias", "Confirmation bias", "Recency", "Anchoring"]
+        accept: ["Automation bias"]
+        hints:
+          - "What did the analyst trust more than the host's evidence?"
+        explanation: >-
+          The analyst trusted the tool's score over clear behaviour on the real host.
+      - id: j2
+        prompt: "Which trap does J2 show most clearly?"
+        answer_type: choice
+        options: ["Automation bias", "Confirmation bias", "Recency", "Burnout"]
+        accept: ["Confirmation bias"]
+        hints:
+          - "Did the analyst look for evidence that could prove the first idea wrong?"
+        explanation: >-
+          After anchoring on the title, the analyst searched only for supporting evidence. Checking the
+          source of the failures could have shown a harmless explanation.
+      - id: j3
+        prompt: "Which trap does J3 show?"
+        answer_type: choice
+        options: ["Automation bias", "Confirmation bias", "Recency", "Anchoring"]
+        accept: ["Recency"]
+        hints:
+          - "Why did the analyst expect a harmless answer this time?"
+        explanation: >-
+          Yesterday's harmless alerts set the expectation, even though today's source address was unknown.

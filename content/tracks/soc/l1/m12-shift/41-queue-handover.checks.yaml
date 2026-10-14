@@ -1,0 +1,82 @@
+lesson: soc-l1-queue-handover-01
+questions:
+  - id: q1
+    prompt: "Why do a first pass before deep triage on a large queue?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "So urgent alerts far down the queue are found and started first."
+        correct: true
+        explanation: "Correct. Working top to bottom can leave a critical alert waiting for hours."
+      - text: "To close as many alerts as possible quickly."
+        correct: false
+        explanation: "The first pass sorts and spots; it does not close alerts unchecked."
+      - text: "Because deep triage is optional."
+        correct: false
+        explanation: "Deep triage still happens, in priority order."
+      - text: "To make the queue look shorter."
+        correct: false
+        explanation: "The aim is to protect the important alerts, not appearances."
+  - id: q2
+    prompt: "When may you close a group of similar alerts together?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "After checking a sample, including the newest and oldest, and removing any that differ."
+        correct: true
+        explanation: "Correct. A different alert inside a group is often the important one."
+      - text: "Whenever their titles match."
+        correct: false
+        explanation: "Titles can match while the activity differs."
+      - text: "Never; every alert must be fully triaged alone."
+        correct: false
+        explanation: "Checked grouping is a valid technique for clearly identical alerts."
+      - text: "Only at the end of the shift."
+        correct: false
+        explanation: "Timing does not make unchecked closure safe."
+  - id: q3
+    prompt: "What is a flapping rule?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "A detection that fires, clears and fires again repeatedly because activity hovers around its threshold."
+        correct: true
+        explanation: "Correct. Report it for tuning."
+      - text: "A rule that never fires."
+        correct: false
+        explanation: "That is a silent rule, possibly a coverage gap."
+      - text: "A rule that detects only network scans."
+        correct: false
+        explanation: "Flapping describes behaviour, not a rule type."
+      - text: "A rule owned by two teams."
+        correct: false
+        explanation: "Ownership is unrelated."
+  - id: q4
+    prompt: "Which handover note is useful?"
+    objectives: ["soc:soc_case_management"]
+    options:
+      - text: "Open incidents with owners, open alerts with what they await, watch items, noisy rules, and promised updates."
+        correct: true
+        explanation: "Correct."
+      - text: "\"Quiet night, nothing major.\""
+        correct: false
+        explanation: "It hides any open work and leaves the next shift guessing."
+      - text: "A copy of every alert closed during the shift."
+        correct: false
+        explanation: "Closed work is in the case tool; the handover is about what is still open."
+      - text: "Nothing; the queue speaks for itself."
+        correct: false
+        explanation: "The queue does not show context, waiting items or promises."
+  - id: q5
+    prompt: "The queue is growing faster than you can triage it. What should you do?"
+    objectives: ["soc:soc_case_management"]
+    options:
+      - text: "Tell the shift lead early, while continuing in priority order."
+        correct: true
+        explanation: "Correct. Leads can move people or adjust priorities only if they know."
+      - text: "Speed up by closing alerts from their titles."
+        correct: false
+        explanation: "That is how real alerts get missed."
+      - text: "Say nothing and work late."
+        correct: false
+        explanation: "Hidden backlogs put the organisation at risk."
+      - text: "Turn off the noisiest rules yourself."
+        correct: false
+        explanation: "Rule changes belong to detection engineering."

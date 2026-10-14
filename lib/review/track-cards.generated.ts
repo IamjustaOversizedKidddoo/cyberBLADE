@@ -1290,5 +1290,69 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "category": "soc",
     "front": "What should replace 'several systems' in a summary?",
     "back": "An exact number, such as '3 laptops and 1 email account'."
+  },
+  {
+    "id": "fc-soc-l1-queue-handover-01",
+    "lessonId": "soc-l1-queue-handover-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What happens in a first pass of a large queue?",
+    "back": "Group similar alerts, sort by priority, and flag urgent ones, spending seconds per alert."
+  },
+  {
+    "id": "fc-soc-l1-queue-handover-02",
+    "lessonId": "soc-l1-queue-handover-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the five parts of a useful shift handover?",
+    "back": "Open incidents, open alerts (and what they wait for), watch items, noise and tooling issues, and promised updates."
+  },
+  {
+    "id": "fc-soc-l1-queue-handover-03",
+    "lessonId": "soc-l1-queue-handover-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What must you check before closing a group of similar alerts?",
+    "back": "A sample including the newest and oldest; remove any that differ and triage them on their own."
+  },
+  {
+    "id": "fc-soc-l1-queue-handover-04",
+    "lessonId": "soc-l1-queue-handover-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What should you do when the queue grows beyond your capacity?",
+    "back": "Tell the shift lead early, while continuing in priority order."
+  },
+  {
+    "id": "fc-soc-l1-judgment-career-01",
+    "lessonId": "soc-l1-judgment-career-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are four common thinking traps in triage?",
+    "back": "Anchoring, confirmation bias, automation bias, and recency."
+  },
+  {
+    "id": "fc-soc-l1-judgment-career-02",
+    "lessonId": "soc-l1-judgment-career-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is the 30-second judgment check before deciding?",
+    "back": "State your conclusion, name an alternative, check the evidence that separates them, notice fatigue, and ask a colleague on high-impact calls."
+  },
+  {
+    "id": "fc-soc-l1-judgment-career-03",
+    "lessonId": "soc-l1-judgment-career-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is automation bias?",
+    "back": "Trusting a tool's verdict or score over your own reading of the evidence."
+  },
+  {
+    "id": "fc-soc-l1-judgment-career-04",
+    "lessonId": "soc-l1-judgment-career-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What tends to matter most to employers for L1 roles?",
+    "back": "Solid fundamentals, clear writing, careful reasoning, curiosity, and evidence of hands-on work."
   }
 ];

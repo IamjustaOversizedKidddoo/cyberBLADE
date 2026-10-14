@@ -1,0 +1,82 @@
+lesson: soc-l1-judgment-career-01
+questions:
+  - id: q1
+    prompt: "What is the simplest habit that counters anchoring?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Name at least one alternative explanation and check the evidence that would separate them."
+        correct: true
+        explanation: "Correct. It forces you to look beyond the first idea."
+      - text: "Decide faster."
+        correct: false
+        explanation: "Speed makes anchoring worse."
+      - text: "Trust the alert title."
+        correct: false
+        explanation: "The title is a common anchor."
+      - text: "Avoid asking colleagues."
+        correct: false
+        explanation: "A second pair of eyes is one of the best counters."
+  - id: q2
+    prompt: "A tool scores a file as harmless, but the host shows the file adding persistence. What is the danger?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Automation bias: trusting the score over the evidence."
+        correct: true
+        explanation: "Correct. Observed behaviour on the host outranks a score."
+      - text: "Recency."
+        correct: false
+        explanation: "Recency is about expecting repeats of recent events."
+      - text: "There is no danger; tools are always right."
+        correct: false
+        explanation: "Tools can be wrong or evaded."
+      - text: "Burnout."
+        correct: false
+        explanation: "Burnout is about long-term stress, not this decision."
+  - id: q3
+    prompt: "Which statement about the L1 SOC role is honest?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "It often involves shift work and much repetitive triage, and progression depends on the skills and evidence you build."
+        correct: true
+        explanation: "Correct. It is a real entry point, with real demands."
+      - text: "It is promised to lead to a senior role within a year."
+        correct: false
+        explanation: "Nobody can promise a timeline."
+      - text: "It involves only exciting incidents."
+        correct: false
+        explanation: "Most alerts turn out harmless; that is normal."
+      - text: "It requires no writing."
+        correct: false
+        explanation: "Clear writing is one of the core skills."
+  - id: q4
+    prompt: "A colleague seems exhausted and cynical after months of night shifts. What is a good response?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Treat it as a reason to raise workload and support with the lead, not as a personal failing."
+        correct: true
+        explanation: "Correct. Burnout comes from unmanaged workplace stress."
+      - text: "Tell them to work harder."
+        correct: false
+        explanation: "That makes burnout worse."
+      - text: "Ignore it; it is part of the job."
+        correct: false
+        explanation: "Good teams address it, because it also hurts judgment."
+      - text: "Take over all their alerts without telling anyone."
+        correct: false
+        explanation: "Hidden workarounds do not fix the cause."
+  - id: q5
+    prompt: "When should you ask for a second pair of eyes?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "On high-impact calls, in either direction."
+        correct: true
+        explanation: "Correct. A wrong close and a wrong escalation both have real costs."
+      - text: "Never; it shows weakness."
+        correct: false
+        explanation: "Peer review is a professional habit."
+      - text: "Only after a mistake has been made."
+        correct: false
+        explanation: "Earlier is better."
+      - text: "For every single alert."
+        correct: false
+        explanation: "That would not scale; save it for high-impact decisions."
