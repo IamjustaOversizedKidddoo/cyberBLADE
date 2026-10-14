@@ -82,12 +82,12 @@ skills:
     gap: "gap: no Linux-centred scenario family, and the drill dataset has no Linux logs; practice is the core Linux lab"
   - id: soc_malware_triage
     planned: "14, 30, 32"
-    lessons: [soc-l1-links-attachments-01]
+    lessons: [soc-l1-links-attachments-01, soc-l1-malware-behaviour-01, soc-l1-enrichment-workflow-01]
     practice: ["tool:sandbox", "family:soc-f-attachment-script-01"]
     gap: null
   - id: soc_threat_intel
     planned: "10, 31, 32"
-    lessons: [soc-l1-attack-vocabulary-01]
+    lessons: [soc-l1-attack-vocabulary-01, soc-l1-reputation-01, soc-l1-enrichment-workflow-01]
     practice: ["tool:reputation", "tool:whois"]
     gap: null
   - id: soc_siem_correlation

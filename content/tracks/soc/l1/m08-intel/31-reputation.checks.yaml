@@ -1,0 +1,82 @@
+lesson: soc-l1-reputation-01
+questions:
+  - id: q1
+    prompt: "What happens to a file's SHA-256 hash if one byte of the file changes?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "The hash changes completely."
+        correct: true
+        explanation: "Correct. That is why an unknown hash proves little: attackers can make new ones easily."
+      - text: "The hash changes by one character."
+        correct: false
+        explanation: "Hashes change completely, not gradually."
+      - text: "Nothing; hashes ignore small changes."
+        correct: false
+        explanation: "Standard hashes match only exact contents."
+      - text: "The file can no longer be hashed."
+        correct: false
+        explanation: "Any file can be hashed; it simply gets a new value."
+  - id: q2
+    prompt: "An IP address has one 'malicious' verdict from 14 months ago and belongs to a large cloud provider. How much weight should that verdict carry?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "Little: cloud addresses are reassigned often, so an old verdict may describe a previous user."
+        correct: true
+        explanation: "Correct. Weigh it with local behaviour and recent sources."
+      - text: "Full weight; malicious is malicious."
+        correct: false
+        explanation: "Age and shared infrastructure change what the verdict means today."
+      - text: "None; reputation is always useless."
+        correct: false
+        explanation: "Recent, agreed verdicts are useful evidence."
+      - text: "It proves the cloud provider is malicious."
+        correct: false
+        explanation: "Providers host many unrelated customers."
+  - id: q3
+    prompt: "Why is SHA-256 preferred over MD5 for identifying files?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "MD5 has practical collision attacks, so two different files can be made to share an MD5."
+        correct: true
+        explanation: "Correct. SHA-256 has no known practical collisions."
+      - text: "MD5 is too long to store."
+        correct: false
+        explanation: "MD5 is shorter than SHA-256."
+      - text: "SHA-256 can recreate the file."
+        correct: false
+        explanation: "No hash can recreate the original file."
+      - text: "MD5 only works on text files."
+        correct: false
+        explanation: "MD5 works on any file; the issue is collisions."
+  - id: q4
+    prompt: "A domain's WHOIS record is privacy-protected. What does that tell you on its own?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "Very little; privacy protection is common for ordinary domains."
+        correct: true
+        explanation: "Correct. Registration age and behaviour are more useful."
+      - text: "The domain is malicious."
+        correct: false
+        explanation: "Many legitimate owners use privacy services."
+      - text: "The domain is safe."
+        correct: false
+        explanation: "Privacy says nothing about safety either way."
+      - text: "The domain does not exist."
+        correct: false
+        explanation: "A WHOIS record shows it does exist."
+  - id: q5
+    prompt: "Reputation sources disagree about a domain. What should decide your triage?"
+    objectives: ["soc:soc_threat_intel"]
+    options:
+      - text: "What the domain was involved in on your own network, with the sources as context."
+        correct: true
+        explanation: "Correct. Local behaviour is the strongest evidence you have."
+      - text: "The majority vote of the sources."
+        correct: false
+        explanation: "Sources can all be out of date or blind to new domains."
+      - text: "The source with the highest score."
+        correct: false
+        explanation: "A high score from one source is still one opinion."
+      - text: "Whichever source you used last time."
+        correct: false
+        explanation: "Habit is not evidence."

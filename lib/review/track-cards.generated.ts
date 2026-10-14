@@ -938,5 +938,101 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "category": "soc",
     "front": "How do you tell automation from a person in cloud audit logs?",
     "back": "Automation calls from known addresses with a known tool, often during deployments tied to change records."
+  },
+  {
+    "id": "fc-soc-l1-malware-behaviour-01",
+    "lessonId": "soc-l1-malware-behaviour-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does each main malware type typically do?",
+    "back": "Loader: fetches the next stage. Remote access tool: persists and beacons. Stealer: grabs credentials and uploads. Ransomware: deletes recovery options and encrypts. Miner: burns CPU."
+  },
+  {
+    "id": "fc-soc-l1-malware-behaviour-02",
+    "lessonId": "soc-l1-malware-behaviour-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What should you read first in a sandbox report?",
+    "back": "The behaviour (processes, files, registry, network, persistence), then the verdict, its confidence and the evasion flag."
+  },
+  {
+    "id": "fc-soc-l1-malware-behaviour-03",
+    "lessonId": "soc-l1-malware-behaviour-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does entropy close to 8 suggest?",
+    "back": "Compressed, encrypted or packed data. In a program it hints at packing, but installers are compressed too."
+  },
+  {
+    "id": "fc-soc-l1-malware-behaviour-04",
+    "lessonId": "soc-l1-malware-behaviour-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "When the sandbox and the real host disagree, which wins?",
+    "back": "The real host's telemetry, because sandboxes can be evaded."
+  },
+  {
+    "id": "fc-soc-l1-reputation-01",
+    "lessonId": "soc-l1-reputation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "How long are MD5, SHA-1 and SHA-256 hashes in hex characters?",
+    "back": "MD5: 32. SHA-1: 40. SHA-256: 64."
+  },
+  {
+    "id": "fc-soc-l1-reputation-02",
+    "lessonId": "soc-l1-reputation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why does an unknown file hash prove little?",
+    "back": "Hashes match only exact copies; changing one byte makes a new, never-seen hash."
+  },
+  {
+    "id": "fc-soc-l1-reputation-03",
+    "lessonId": "soc-l1-reputation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the common reasons reputation sources disagree?",
+    "back": "Old verdicts, shared or reused hosting addresses, different definitions (such as hacktools), and gaps in coverage."
+  },
+  {
+    "id": "fc-soc-l1-reputation-04",
+    "lessonId": "soc-l1-reputation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which WHOIS details are useful, and which are weak on their own?",
+    "back": "Useful: registration age, hosting provider and ASN. Weak alone: privacy protection and registrant country."
+  },
+  {
+    "id": "fc-soc-l1-enrichment-workflow-01",
+    "lessonId": "soc-l1-enrichment-workflow-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the Pyramid of Pain's levels, from easiest to hardest for an attacker to change?",
+    "back": "Hash values, IP addresses, domain names, network and host artefacts, tools, TTPs."
+  },
+  {
+    "id": "fc-soc-l1-enrichment-workflow-02",
+    "lessonId": "soc-l1-enrichment-workflow-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "IOC vs TTP?",
+    "back": "An IOC is a specific value (hash, IP, domain); a TTP is how the attacker works, which is far harder for them to change."
+  },
+  {
+    "id": "fc-soc-l1-enrichment-workflow-03",
+    "lessonId": "soc-l1-enrichment-workflow-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What three things must match before a ticket explains an alert?",
+    "back": "Dates (window still open), scope (exact host, address or account), and status (approved or in progress)."
+  },
+  {
+    "id": "fc-soc-l1-enrichment-workflow-04",
+    "lessonId": "soc-l1-enrichment-workflow-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "In what order should you enrich an alert?",
+    "back": "State the question, check internal context first, then only the external lookups you need, and stop when it is answered."
   }
 ];

@@ -1,0 +1,164 @@
+---
+id: soc-l1-reputation-01
+title: "Hashes, Reputation and Conflicting Sources"
+track: soc
+rank: 1
+module: intel
+order: 31
+estimated_minutes: 15
+objectives_covered: ["soc:soc_threat_intel"]
+mitre: []
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-malware-behaviour-01", "core-r0-comp-os-files-01"]
+skills: ["soc_threat_intel"]
+practice: ["tool:reputation", "tool:whois"]
+---
+
+> **Outcome:** you can use file hashes correctly, read reputation results from several sources that disagree, and use registration data without over-trusting any of it.
+
+## Why this matters on shift
+
+"Is this file, address or domain known to be bad?" is one of the first questions in almost every triage. The answers come from hashes, reputation services and registration records, and they are often incomplete, out of date or in conflict. An analyst who treats a single verdict as the truth will close real attacks and escalate harmless ones. An analyst who knows how to weigh the sources will do neither.
+
+## Before you start
+
+You should already know:
+
+- How files are stored and identified on a computer: [Operating Systems, Files and Permissions](/learn/core-r0-comp-os-files-01).
+- How malware behaves and how to read a sandbox report: [Malware Behaviour in Telemetry and Sandbox Reports](/learn/soc-l1-malware-behaviour-01).
+
+## Core ideas
+
+### File hashes
+
+A **file hash** is a short fixed-length fingerprint calculated from a file's exact contents.
+
+Think of a fingerprint. The same finger always gives the same print, two different fingers practically never give the same print, and you cannot rebuild the finger from the print. A hash works the same way for files:
+
+- The same file always gives the same hash, whatever its name or location.
+- Changing even one byte gives a completely different hash.
+- You cannot recreate the file from its hash.
+
+Three hash types you will see:
+
+| Type | Length (hex characters) | Notes |
+|---|---|---|
+| MD5 | 32 | Old; collisions can be made deliberately, so it is not trusted for security |
+| SHA-1 | 40 | Also has known collision attacks |
+| **SHA-256** | 64 | The current standard for identifying files |
+
+Use SHA-256 when you can. Because hashes match only exact copies, a known-bad hash is strong evidence, but a "never seen" hash proves little: an attacker can produce a new hash by changing a single byte.
+
+### Reputation
+
+**Reputation** is what outside sources say about an indicator (a hash, address, domain or URL): malicious, suspicious, clean or unknown, often with a score and dates. The simulator's reputation lookup, like many real tools, shows several sources side by side, each with a verdict, a score, a confidence and first-seen and last-seen dates. It also flags when the sources disagree.
+
+Why sources disagree:
+
+- **Age.** An address flagged two years ago may now belong to someone else; cloud and hosting addresses are reused constantly.
+- **Shared infrastructure.** One address can host thousands of sites; one bad site gets the address flagged.
+- **Different definitions.** Some sources flag legitimate admin tools as "hacktool" or "potentially unwanted".
+- **Coverage.** A brand-new domain or a targeted file may be unknown everywhere.
+
+### Registration data
+
+**WHOIS** is the registration record for a domain or IP address range: who registered it, through which registrar, when, and which name servers it uses. For IP addresses it also shows the network's owner and its **autonomous system number** (ASN), the number that identifies a network operator on the internet.
+
+Useful signals:
+
+- **A very recent registration date** for a domain sending you mail or receiving your data.
+- **The hosting provider and ASN**: a large cloud or hosting provider (shared, reused) versus a company's own network.
+
+Weak signals on their own:
+
+- **Privacy-protected registration** is very common for ordinary domains.
+- **A registrant country** says where the registrant claims to be, not where the attacker is.
+
+<FlowDiagram
+  title="Weighing indicator evidence"
+  description="For a file, use the SHA-256 hash and remember only exact matches count. For any indicator, read each reputation source with its date and confidence, look for disagreement, check registration age and hosting, and weigh it all together with what the indicator actually did in your environment."
+  steps={[
+    { label: "Exact identity", detail: "SHA-256 for files; full domain or address for others." },
+    { label: "Read every source", detail: "Verdict, score, confidence, and how recent." },
+    { label: "Explain disagreement", detail: "Old verdict? Shared hosting? Different definitions?" },
+    { label: "Check registration", detail: "Age, registrar, hosting provider, ASN." },
+    { label: "Add local behaviour", detail: "What did it actually do on your network?" },
+  ]}
+/>
+
+In plain English: outside opinions are useful, but they are old, partial and sometimes wrong. What the indicator did on your network counts most.
+
+## Worked example
+
+During triage of a beaconing alert at Larkspur Freight, the analyst looks up the destination address 192.0.2.28 and its domain `update-relay.example`:
+
+<LogBlock
+  title="Reputation and WHOIS (synthetic)"
+  lines={[
+    "192.0.2.28   source A: malicious (score 80, last seen 14 months ago, 'hosted phishing kit')",
+    "             source B: clean   source C: unknown   disagreement: yes",
+    "             WHOIS: large cloud hosting provider, shared address space",
+    "update-relay.example   sources A, B, C: unknown   disagreement: no",
+    "             WHOIS: registered 3 days ago, privacy-protected, name servers at a budget registrar",
+  ]}
+/>
+
+**A false lead.** The address has a "malicious" verdict, which looks decisive. But it is from one source out of three, it is 14 months old, and the address belongs to a large cloud provider whose addresses are reassigned constantly. That old verdict says almost nothing about whoever uses the address today.
+
+**The more useful signal.** The domain has no reputation anywhere. That is not reassurance, because it was registered three days ago, so nobody has had time to report it. Privacy protection on its own means little.
+
+**What decides it.** The analyst goes back to local evidence: ws-180 contacts the domain every 60 seconds, the process doing it runs from a temp folder, and no software explains it. The decision rests on behaviour and domain age, not on the stale "malicious" label. The note records exactly that:
+
+> 192.0.2[.]28: one 14-month-old malicious verdict on a shared cloud address (weak). update-relay[.]example: unknown, registered 3 days ago. Escalating on local behaviour: 60 s beacon from an unexplained temp-folder process on ws-180.
+
+## Try it
+
+<MicroExercise id="weigh-sources" />
+
+## Common mistakes
+
+- **Trusting one verdict.** Read every source, with its date.
+- **Treating "unknown" as "clean".** New domains and targeted files are unknown everywhere.
+- **Forgetting that hashes only match exact copies.** One changed byte makes a new hash.
+- **Using MD5 as proof of identity.** Prefer SHA-256.
+- **Over-reading privacy protection or registrant country.** Both are weak on their own.
+- **Blaming a shared cloud address for one tenant's history.**
+
+## What good looks like
+
+A strong analyst records the SHA-256, reads each source with its age and confidence, explains disagreements, uses registration age and hosting as context, and bases the decision on what the indicator did locally, saying how strong each piece is.
+
+## In the real world
+
+Teams use commercial threat intelligence feeds, free community services, internal block lists and their own past cases. Many tools combine sources into a single score; it is worth opening the individual sources when it matters. Some public reputation services also share submitted files with other users, so follow your team's rules about what you upload.
+
+## Remember it like this
+
+A hash is a fingerprint of exact contents; reputation is an opinion with a date. Local behaviour decides.
+
+## Interview answer
+
+"A file hash fingerprints exact contents: same file, same hash, and one changed byte gives a new hash, so I use SHA-256 and treat a known-bad match as strong and an unknown hash as weak. For reputation I read each source with its verdict, confidence and date, and explain any disagreement: old verdicts on reused cloud addresses, shared hosting, or tools flagged as hacktools. WHOIS adds registration age and hosting, which helps, while privacy protection on its own means little. I base the decision on what the indicator actually did on our network."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "File hash", definition: "A short, fixed-length fingerprint calculated from a file's exact contents; any change gives a different hash." },
+    { term: "SHA-256", definition: "The current standard hash for identifying files, written as 64 hexadecimal characters." },
+    { term: "Reputation", definition: "What outside sources say about an indicator, such as malicious, suspicious, clean or unknown, usually with a score and dates." },
+    { term: "WHOIS", definition: "The registration record for a domain or IP range: registrant, registrar, dates, name servers and network owner." },
+    { term: "ASN", definition: "Autonomous system number: the number that identifies a network operator, such as a hosting provider, on the internet." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

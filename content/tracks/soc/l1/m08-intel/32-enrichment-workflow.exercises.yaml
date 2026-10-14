@@ -1,0 +1,50 @@
+lesson: soc-l1-enrichment-workflow-01
+exercises:
+  - id: enrich-order
+    title: "Enrich an alert efficiently"
+    kind: triage-queue
+    instructions: >-
+      Alert: "New service installed on srv-pay02" at 22:15 UTC on 2026-10-15. Use the internal records
+      below.
+    blocks:
+      - type: table
+        title: "Internal records (synthetic)"
+        columns: ["Record", "Details"]
+        rows:
+          - ["Asset directory: srv-pay02", "Payroll server, criticality HIGH, owner: finance-it. Notice: record not reviewed for 14 months (stale)."]
+          - ["CHG-4701", "change_request: 'Install monitoring agent on payroll servers', status approved, window 2026-10-15 21:00-23:00 UTC, target srv-pay01 and srv-pay02."]
+          - ["CHG-4650", "change_request: 'Upgrade backup agent', status rejected, target srv-pay02."]
+    questions:
+      - id: first-check
+        prompt: "Which should you check first: internal records or external reputation?"
+        answer_type: choice
+        options: ["Internal records", "External reputation", "Both at the same time"]
+        accept: ["Internal records"]
+        hints:
+          - "Which kind of context can explain an internal service installation fastest?"
+        explanation: >-
+          A service installation on an internal server is most quickly explained (or not) by change
+          records and the asset directory. External reputation comes later, if a file or address needs it.
+      - id: which-ticket
+        prompt: "Which ticket could explain the alert? (Type its ID.)"
+        answer_type: text
+        accept: ["CHG-4701"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Check status, target and the time window against the alert."
+        explanation: >-
+          CHG-4701 is approved, targets srv-pay02, and its window (21:00-23:00 UTC) covers 22:15. CHG-4650
+          was rejected, so it cannot authorise anything.
+      - id: still-check
+        prompt: "Even with a matching ticket, what should you still confirm?"
+        answer_type: choice
+        options:
+          - "That the installed service is the monitoring agent named in the change"
+          - "Nothing; the ticket proves everything"
+          - "The reputation of the payroll server's IP address"
+        accept: ["That the installed service is the monitoring agent named in the change"]
+        hints:
+          - "A ticket says what was planned. Does the alert show the same thing happened?"
+        explanation: >-
+          A ticket authorises a specific change. Check that the new service actually is the monitoring
+          agent; an attacker could install something else inside the same window.

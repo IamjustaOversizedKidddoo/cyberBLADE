@@ -1,0 +1,47 @@
+lesson: soc-l1-reputation-01
+exercises:
+  - id: weigh-sources
+    title: "Weigh hashes and reputation"
+    kind: log-reading
+    instructions: >-
+      Read the lookups below. All three came up while triaging one workstation.
+    blocks:
+      - type: log
+        title: "Lookups (synthetic)"
+        lines:
+          - "H1  sha256 4f0c...a91e (64 hex chars)   sources: 3 of 3 malicious, last seen this week, 'remote access tool'"
+          - "H2  md5 9b2e...07d1 (32 hex chars)      sources: 1 of 3 'hacktool' (the company's approved remote-support tool)"
+          - "D1  parcel-notify.example                sources: all unknown   WHOIS: registered yesterday, privacy-protected"
+    questions:
+      - id: strongest
+        prompt: "Which lookup is the strongest evidence of something malicious?"
+        answer_type: choice
+        options: ["H1", "H2", "D1"]
+        accept: ["H1"]
+        hints:
+          - "Which one is an exact, current match agreed by every source?"
+        explanation: >-
+          H1 is an exact SHA-256 match, flagged by all three sources this week as a remote access tool.
+          That is strong evidence.
+      - id: hash-type
+        prompt: "Which hash type is H1, judging by its length?"
+        answer_type: choice
+        options: ["SHA-256", "MD5", "SHA-1"]
+        accept: ["SHA-256"]
+        hints:
+          - "Check the lengths in the lesson's hash table."
+        explanation: >-
+          64 hexadecimal characters is SHA-256. MD5 is 32 and SHA-1 is 40.
+      - id: d1-meaning
+        prompt: "What does D1's 'all unknown' tell you?"
+        answer_type: choice
+        options:
+          - "Little, because the domain was registered yesterday and nobody has had time to report it"
+          - "The domain is safe"
+          - "The domain is definitely malicious"
+        accept: ["Little, because the domain was registered yesterday and nobody has had time to report it"]
+        hints:
+          - "How long has the domain existed?"
+        explanation: >-
+          Unknown is not clean. A one-day-old domain has no history yet; its age is a stronger signal than
+          its empty reputation.
