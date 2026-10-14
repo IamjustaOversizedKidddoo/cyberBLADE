@@ -1,0 +1,68 @@
+lesson: soc-l1-alert-anatomy-01
+exercises:
+  - id: read-alert
+    title: "Read an alert layer by layer"
+    kind: log-reading
+    instructions: >-
+      Read the alert below. Answer from the alert itself; you do not need any other source.
+    blocks:
+      - type: log
+        title: "Alert ALR-8533 (synthetic)"
+        lines:
+          - "title:        Suspicious file download"
+          - "severity:     high"
+          - "rule logic:   executable file downloaded from a domain first seen less than 7 days ago"
+          - "entities:     user=k.yilmaz  host=ws-131  domain=fileportal-dl.example  proxy=proxy02.larkspur.example"
+          - "enrichment:   domain reputation = unknown   ws-131 owner = Logistics planning"
+          - "raw events (2):"
+          - "  2026-10-14T15:42:10-04:00  proxy02  GET https://fileportal-dl.example/tools/route-optimizer.exe  user=k.yilmaz  host=ws-131  status=200"
+          - "  2026-10-14T15:42:31-04:00  ws-131   file created  C:\\Users\\k.yilmaz\\Downloads\\route-optimizer.exe"
+    questions:
+      - id: utc-time
+        prompt: "At what time (UTC, HH:MM) was the file downloaded?"
+        answer_type: text
+        accept: ["19:42"]
+        normalize: ["whitespace"]
+        hints:
+          - "The raw event time ends in -04:00. Is that zone ahead of UTC or behind it?"
+          - "A zone behind UTC needs hours added to reach UTC."
+        explanation: >-
+          15:42 at -04:00 is four hours behind UTC, so the download was at 19:42 UTC.
+      - id: enrichment-field
+        prompt: "Which of these is enrichment, not raw evidence?"
+        answer_type: choice
+        options:
+          - "domain reputation = unknown"
+          - "status=200 on the GET request"
+          - "file created in the Downloads folder"
+          - "user=k.yilmaz in the proxy event"
+        accept: ["domain reputation = unknown"]
+        hints:
+          - "Which value was looked up by a tool after the alert fired, rather than written by the proxy or the workstation?"
+        explanation: >-
+          The reputation value was added by a lookup after the alert fired. The other three come
+          straight from the proxy and workstation raw events.
+      - id: proxy-role
+        prompt: "What role does proxy02.larkspur.example play in this alert?"
+        answer_type: choice
+        options: ["The actor", "The target", "A location the activity passed through"]
+        accept: ["A location the activity passed through"]
+        hints:
+          - "Did the proxy decide to download the file, or did the request just go through it?"
+        explanation: >-
+          The proxy is the company's web gateway: the request passed through it and it logged the
+          download. The actor is the user on ws-131.
+      - id: what-proved
+        prompt: "What does the rule logic actually prove?"
+        answer_type: choice
+        options:
+          - "An executable was downloaded from a domain first seen less than 7 days ago"
+          - "The file is malware"
+          - "k.yilmaz is an attacker"
+          - "The domain belongs to a criminal group"
+        accept: ["An executable was downloaded from a domain first seen less than 7 days ago"]
+        hints:
+          - "Read the rule logic line word by word. Does it say anything about the file's behaviour?"
+        explanation: >-
+          The rule proves only its condition: a new domain and an executable download. Whether the file
+          is harmful is what triage has to find out.

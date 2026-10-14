@@ -1,0 +1,82 @@
+lesson: soc-l1-alert-anatomy-01
+questions:
+  - id: q1
+    prompt: "Which part of an alert is the actual evidence of what happened?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "The raw events that matched the rule."
+        correct: true
+        explanation: "Correct. Raw events are the original records from the systems involved."
+      - text: "The alert title."
+        correct: false
+        explanation: "The title was written by the rule author in advance; it describes what the rule is meant to catch."
+      - text: "The severity."
+        correct: false
+        explanation: "Default severity is set in advance too. It helps prioritise, but it is not evidence."
+      - text: "The IP location on the map."
+        correct: false
+        explanation: "That is enrichment: a lookup added afterwards, and often approximate."
+  - id: q2
+    prompt: "A raw event shows 22:30+05:30. What time is that in UTC?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "17:00 UTC"
+        correct: true
+        explanation: "Correct. +05:30 is five and a half hours ahead of UTC, so subtract 5:30."
+      - text: "04:00 UTC the next day"
+        correct: false
+        explanation: "That adds the offset. A zone ahead of UTC needs the offset subtracted."
+      - text: "22:30 UTC"
+        correct: false
+        explanation: "That ignores the offset entirely."
+      - text: "16:30 UTC"
+        correct: false
+        explanation: "That subtracts six hours; the offset is five and a half."
+  - id: q3
+    prompt: "Enrichment places a sign-in in a country the user has never visited. What is the best interpretation?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "A lead worth checking, since IP location is approximate and VPNs or providers can route traffic elsewhere."
+        correct: true
+        explanation: "Correct. Treat it as a reason to check, not a conclusion."
+      - text: "Proof that the account is compromised."
+        correct: false
+        explanation: "IP location reflects networks, not people. Hotels, mobile carriers and VPNs often appear elsewhere."
+      - text: "Irrelevant, because enrichment is always wrong."
+        correct: false
+        explanation: "Enrichment is often useful. It just needs confirming when it matters."
+      - text: "Proof that the user is travelling."
+        correct: false
+        explanation: "The location alone proves neither travel nor compromise."
+  - id: q4
+    prompt: "A rule's logic is '10 or more failed sign-ins for one account within 5 minutes'. What does an alert from this rule prove?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "That at least 10 failed sign-ins for one account happened within 5 minutes."
+        correct: true
+        explanation: "Correct. A rule proves its condition and nothing more."
+      - text: "That an attacker is guessing the password."
+        correct: false
+        explanation: "A user with a forgotten password produces the same pattern. Triage decides which it is."
+      - text: "That the account is now compromised."
+        correct: false
+        explanation: "Failed sign-ins say nothing about a successful one."
+      - text: "That the source address is malicious."
+        correct: false
+        explanation: "The rule says nothing about the source's reputation."
+  - id: q5
+    prompt: "Every raw event in an alert passes through the company's web proxy. How should you treat the proxy entity?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "As a location the activity passed through, not as the actor."
+        correct: true
+        explanation: "Correct. The proxy logged the traffic; it did not decide to make it."
+      - text: "As the most likely attacker, since it appears in every event."
+        correct: false
+        explanation: "Appearing everywhere is exactly what a shared gateway does."
+      - text: "As the target of the attack."
+        correct: false
+        explanation: "Nothing suggests the proxy itself was attacked."
+      - text: "As irrelevant; ignore it completely."
+        correct: false
+        explanation: "Its logs are useful evidence. It is just not the actor."

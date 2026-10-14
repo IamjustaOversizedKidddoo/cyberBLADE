@@ -1,0 +1,166 @@
+---
+id: soc-l1-rationale-escalation-01
+title: "Writing Rationales and Knowing When to Escalate"
+track: soc
+rank: 1
+module: triage
+order: 8
+estimated_minutes: 15
+objectives_covered: ["soc:soc_escalation_handoff", "soc:soc_documentation"]
+mitre: []
+xp: 90
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-dispositions-01"]
+skills: ["soc_escalation_handoff", "soc_documentation"]
+practice: ["report:escalation_handoff"]
+---
+
+> **Outcome:** you can decide when an alert must be escalated, and write an escalation note that the next analyst can act on without asking you a single question.
+
+## Why this matters on shift
+
+When you escalate, the clock keeps running. If your note is vague, the Tier 2 analyst has to repeat your checks or come and find you, and an attacker gets that time for free. If you hold on to an alert too long because you want to be sure, the same thing happens. Good escalation is about the right moment and the right words.
+
+## Before you start
+
+You should already know:
+
+- How to choose a disposition, including true positive and needs more information: [False Positives, Benign True Positives and Duplicates](/learn/soc-l1-dispositions-01).
+
+## Core ideas
+
+### When to escalate
+
+**Escalation criteria** are the conditions under which an alert must be handed up, whatever else is going on. Your team will have its own list. Common ones:
+
+- The activity is confirmed malicious or not allowed (a true positive).
+- A privileged account, critical system or sensitive data is involved, and you cannot rule out harm quickly.
+- The activity looks active right now or is spreading: more hosts, more accounts.
+- Data may be leaving the organisation.
+- You have reached the time limit your team sets for triage (often called a time box) without being able to decide.
+- A playbook or policy says so, for example any alert on executive accounts.
+
+Think of a lifeguard. They do not wait until they are certain someone is drowning before they act; they act on clear warning signs, because waiting costs too much. Escalating a possible serious problem that turns out to be harmless is normal. Missing a real one is the failure.
+
+### What to write: the handoff note
+
+A **handoff note** is the written summary that goes with an escalation, so the next person can act without asking you anything.
+
+A useful structure is **what, where, when, evidence, checked, not checked, ask**:
+
+1. **What** you think is happening, in one line.
+2. **Where:** the accounts, hosts and addresses involved.
+3. **When:** the key times, in UTC.
+4. **Evidence:** the specific events that support it.
+5. **Checked:** what you looked at and what each check showed, including checks that found nothing.
+6. **Not checked:** what you have not looked at yet.
+7. **Ask:** what you recommend or need, and how urgent it is.
+
+### Facts versus assumptions
+
+An **assumption** is something you believe but have not confirmed. Assumptions are fine; hiding them is not. Compare:
+
+- Hidden: "The attacker used a stolen password."
+- Stated: "Likely a guessed or stolen password (12 failures, then a success). Not confirmed: we have not checked whether the password appears in a known leak."
+
+The second version tells Tier 2 exactly what is known and what still needs checking.
+
+<FlowDiagram
+  title="From triage to a good escalation"
+  description="Check the alert against your escalation criteria. If any is met, or you hit your triage time limit, escalate. Write the note: what, where, when, evidence, checked, not checked, ask. Mark assumptions clearly. Confirm the next owner has picked it up."
+  steps={[
+    { label: "Check the criteria", detail: "Confirmed malicious? Critical asset? Active? Data leaving? Time box reached?" },
+    { label: "Escalate", detail: "Through your team's channel, to the right next owner." },
+    { label: "Write the handoff note", detail: "What, where, when, evidence, checked, not checked, ask." },
+    { label: "Mark assumptions", detail: "Say what you believe but have not confirmed." },
+    { label: "Confirm pickup", detail: "Make sure someone owns it now." },
+  ]}
+/>
+
+In plain English: escalate on clear warning signs, then make your note complete enough that nobody needs to ask you anything.
+
+### Rationales for closed alerts
+
+Closed alerts need a short rationale too. You learned the basics with the triage loop. The same rule applies here: name the evidence. A closing rationale is usually one or two sentences; an escalation note is longer because someone has to act on it.
+
+## Worked example
+
+An analyst at Larkspur Freight confirms an unwanted mail forwarding rule on m.diaz's mailbox and writes a first draft:
+
+<LogBlock
+  title="Draft 1"
+  lines={[
+    "URGENT!!! m.diaz is hacked. Attacker is stealing all emails. Please look ASAP.",
+  ]}
+/>
+
+**Why this draft fails.** It sounds urgent, but Tier 2 cannot act on it. Which rule? Since when? Forwarding to where? Was there a suspicious sign-in? Has anything been done already? "Hacked" and "stealing all emails" are conclusions with no evidence attached. Tier 2 would have to start from zero.
+
+The analyst rewrites it:
+
+<LogBlock
+  title="Draft 2"
+  lines={[
+    "What: likely takeover of m.diaz's mailbox; mail is being forwarded to an outside address.",
+    "Where: account m.diaz; forwarding target archive-box@freemailbox.example; sign-in source 192.0.2.149.",
+    "When (UTC): sign-in 03:41; forwarding rule created 03:44; alert 03:45.",
+    "Evidence: rule 'Forward all' created from 192.0.2.149, first time this address is seen for m.diaz.",
+    "Checked: m.diaz confirmed by phone they did not create the rule. No travel booked.",
+    "Not checked: whether other mailboxes signed in from 192.0.2.149; what mail has already been forwarded.",
+    "Assumption: password was phished (user reported a 'shared document' email yesterday). Not confirmed.",
+    "Ask: high urgency. Recommend disabling the forwarding rule and resetting the session now; scope check on 192.0.2.149.",
+  ]}
+/>
+
+Every line can be checked, assumptions are labelled, and Tier 2 knows exactly where to start.
+
+**A detail the analyst nearly got wrong.** In the first version of the "When" line, the analyst copied the times from the mail system, which shows local time (UTC+1). They converted them to UTC before sending, so the times match the sign-in logs Tier 2 will open.
+
+## Try it
+
+<MicroExercise id="escalation-calls" />
+
+## Common mistakes
+
+- **Waiting to be certain.** Escalation criteria exist so you act on warning signs, not proof.
+- **Urgency without evidence.** Capital letters do not help; specific events do.
+- **Leaving out what you have not checked.** Tier 2 then assumes you checked it.
+- **Presenting assumptions as facts.** Label them.
+- **Escalating and walking away.** Confirm the next owner has picked it up.
+
+## What good looks like
+
+A strong analyst escalates as soon as a criterion is met, writes a note that follows the same structure every time, labels their assumptions, and checks that someone owns the case before moving on. Tier 2 analysts trust their notes because they are complete and honest about gaps.
+
+## In the real world
+
+Teams escalate through case tools, chat channels, phone calls for urgent items, or all three. Many publish escalation criteria and on-call contacts in their playbooks. The handoff structure in this lesson matches the "Escalation handoff" section of the simulator's incident report, so you can practise it directly.
+
+## Remember it like this
+
+Escalate on warning signs; write what, where, when, evidence, checked, not checked, ask.
+
+## Interview answer
+
+"I escalate as soon as one of the team's criteria is met: confirmed malicious activity, a critical asset or privileged account I can't clear quickly, signs it's active or spreading, data leaving, or I've hit the triage time box. My handoff note covers what I think is happening, where, when in UTC, the evidence, what I checked and what I haven't, and what I recommend. I label assumptions clearly, and I confirm someone has picked it up."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Escalation criteria", definition: "The conditions under which an alert must be handed to someone with more depth or authority, such as confirmed malicious activity or a critical asset." },
+    { term: "Handoff note", definition: "The written summary that goes with an escalation so the next person can act without asking any questions." },
+    { term: "Assumption", definition: "Something you believe but have not confirmed; in notes it should be labelled as such." },
+    { term: "Time box", definition: "A time limit for triaging one alert; reaching it without a decision is itself a reason to escalate." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

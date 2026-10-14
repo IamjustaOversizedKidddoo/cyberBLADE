@@ -1,0 +1,163 @@
+---
+id: soc-l1-prioritisation-01
+title: "Prioritising: Severity, Impact and Asset Criticality"
+track: soc
+rank: 1
+module: triage
+order: 6
+estimated_minutes: 16
+objectives_covered: ["soc:soc_alert_triage", "soc:soc_scope_assessment"]
+mitre: []
+xp: 90
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-triage-loop-01"]
+skills: ["soc_alert_triage", "soc_scope_assessment"]
+practice: ["tool:cmdb", "shift:shift-alert-storm"]
+---
+
+> **Outcome:** you can decide which alert to open first by combining what the rule says with how important the affected systems and accounts are.
+
+## Why this matters on shift
+
+Some shifts are quiet. Others start with forty alerts waiting. You cannot work them all at once, so the order matters. If you work oldest-first or follow the severity colours blindly, a medium alert on the payroll server can wait an hour behind a "critical" one on a test machine. Prioritising well means the most dangerous possibilities get your attention first.
+
+## Before you start
+
+You should already know:
+
+- The five steps of triage: [The Triage Loop](/learn/soc-l1-triage-loop-01).
+
+You do not need to know your organisation's systems yet. This lesson shows you how to find out which ones matter most.
+
+## Core ideas
+
+### Severity is the rule's opinion
+
+**Severity** is the level a detection rule assigns to an alert, such as low, medium, high or critical, based on how dangerous that kind of activity usually is.
+
+Think of a fire alarm panel that shows "smoke" in amber and "heat" in red. The colours are set when the system is installed. They tell you what kind of sensor tripped, not whether the fire is in an empty storeroom or the server room.
+
+Severity is set when the rule is written, before anyone knows which system it will fire on. It is a useful starting point, and it is blind to the system it fires on.
+
+### Impact and asset criticality
+
+**Impact** is how much harm the activity would cause if it turned out to be malicious.
+
+Impact depends heavily on **asset criticality**: how important a system or account is to the organisation. Examples that are usually high:
+
+- Identity systems, such as domain controllers and single sign-on, because whoever controls them controls every account.
+- Systems holding sensitive data: payroll, customer records, finance.
+- Systems that face the internet, because anyone can reach them.
+- Privileged accounts (administrators) and high-value people, such as executives or the finance staff who approve payments.
+
+Organisations record this in an asset inventory or configuration database (often called a CMDB), which lists systems, their owners and their importance.
+
+### Blast radius
+
+**Blast radius** is how far the damage could spread from the affected system or account. An attacker on one ordinary laptop can usually reach that user's files. An attacker with a domain administrator account can potentially reach everything. A big blast radius raises priority even when the alert itself looks small.
+
+### Putting it together: priority
+
+**Priority** is the order in which you work alerts. It combines severity, how likely the alert is to be real, and the impact if it is.
+
+<FlowDiagram
+  title="Working out priority"
+  description="Start from the rule's severity, then ask how likely the alert is to be real, how critical the affected asset is, and how large the blast radius would be. Together these give the priority. Ties go to the older alert."
+  steps={[
+    { label: "Severity", detail: "What kind of activity did the rule detect?" },
+    { label: "Likelihood", detail: "From a first look at the raw events, how likely is it to be real?" },
+    { label: "Asset criticality", detail: "How important is the system or account involved?" },
+    { label: "Blast radius", detail: "How far could damage spread from here?" },
+    { label: "Priority", detail: "Work the highest combination first; break ties by age." },
+  ]}
+/>
+
+In plain English: a moderately suspicious alert on a crown-jewel system usually beats a scary-sounding alert on something nobody depends on.
+
+This is a judgment, not a formula. Many teams publish a simple table, such as "high-criticality asset plus high or medium severity means work it within 15 minutes", so that judgments stay consistent. Follow your team's table when there is one.
+
+### Quick likelihood signals
+
+Before deep triage, a 30-second look at each alert can sort the queue. Signals that raise likelihood:
+
+- **A success after failures**, for example a sign-in that finally worked.
+- **Activity outside the account's normal pattern**, such as admin actions at night from a non-admin.
+- **Several different alerts on the same account or host.**
+
+Signals that lower it: a known, approved source (such as a scanner in its change window), or an exact repeat of something already triaged.
+
+## Worked example
+
+At 08:00 UTC the Larkspur Freight queue holds these alerts:
+
+<LogBlock
+  title="Queue at 08:00 UTC (synthetic)"
+  lines={[
+    "Q1  critical  'Known exploit tool signature' on lab-vm07 (test lab, isolated network)",
+    "Q2  medium    'New service installed' on dc01 (domain controller)",
+    "Q3  high      'Port scan' from 172.16.40.15 (approved scanner, change window 07:00-09:00)",
+    "Q4  low       'Sign-in from new device' for account cfo.office (shared CFO assistant account)",
+  ]}
+/>
+
+**The false lead.** Q1 is the only critical alert, and it appears first. But the asset directory says lab-vm07 is in the isolated test lab, where the security team runs exploit tools for training. The blast radius is tiny, and an approved explanation is likely. It still gets triaged, just not first.
+
+**Q2 goes first.** A new service on a domain controller is only "medium", but dc01 controls every account at Larkspur. Attackers who reach a domain controller often install services to keep control. Impact and blast radius are as high as they get.
+
+**Q4 goes second.** The severity is low, but the account belongs to the office that approves payments. Payment fraud often starts with access to exactly this kind of account. A quick check of the new device comes next.
+
+**Q1 goes third**, to confirm it was the training exercise. **Q3 goes last**: the scanner is approved and inside its window.
+
+The order is Q2, Q4, Q1, Q3, almost the reverse of the severity colours.
+
+## Try it
+
+<MicroExercise id="order-queue" />
+
+## Common mistakes
+
+- **Sorting only by severity.** Severity is set before the rule knows which system it fired on.
+- **Working strictly oldest-first.** Age breaks ties; it should not outrank impact.
+- **Ignoring "low" alerts on important people or systems.** The asset can turn a low alert into an urgent one.
+- **Deprioritising forever.** Low-priority alerts still need triage before the end of the shift, or a handover.
+- **Not knowing the crown jewels.** Learn your organisation's most critical systems and accounts in your first week.
+
+## What good looks like
+
+A strong analyst can explain their queue order in a sentence per alert, such as "dc01 first: domain controller, new service". They check the asset inventory routinely, follow the team's priority table, and still triage everything by the end of the shift.
+
+## In the real world
+
+Most SIEMs and case tools can raise severity automatically when an alert involves an asset tagged as critical, but only if someone keeps those tags up to date. Many teams set time targets per priority (for example, critical within 15 minutes), and shift leads watch them.
+
+The simulator gives you a tidy asset directory. Real inventories are often incomplete or out of date, so when an important-looking system is missing, ask its likely owner rather than assuming it does not matter.
+
+## Remember it like this
+
+Priority = how bad the activity, times how likely it is real, times how much the target matters.
+
+## Interview answer
+
+"I don't sort only by severity, because the rule sets it before it knows what system it fired on. I combine the severity with a quick look at how likely the alert is to be real and how critical the asset is, including the blast radius: a domain controller or a payments account outranks a test machine. I follow the team's priority table where there is one, break ties by age, and make sure everything still gets triaged by the end of the shift."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Severity", definition: "The level (such as low to critical) a detection rule assigns to an alert, based on how dangerous that kind of activity usually is." },
+    { term: "Impact", definition: "How much harm an activity would cause if it turned out to be malicious." },
+    { term: "Asset criticality", definition: "How important a system or account is to the organisation, usually recorded in the asset inventory." },
+    { term: "Blast radius", definition: "How far damage could spread from a compromised system or account." },
+    { term: "Priority", definition: "The order in which alerts are worked, combining severity, likelihood and impact." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

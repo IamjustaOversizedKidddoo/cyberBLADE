@@ -1,0 +1,57 @@
+lesson: soc-l1-dispositions-01
+exercises:
+  - id: pick-dispositions
+    title: "Label four hard cases"
+    kind: triage-queue
+    instructions: >-
+      Each alert below has already been looked into. Choose the disposition the findings support.
+    blocks:
+      - type: table
+        title: "Findings (synthetic)"
+        columns: ["ID", "Rule", "What triage found"]
+        rows:
+          - ["D1", "Data copied to USB storage", "The 'USB device' was a phone being charged; no files were copied. The rule triggers on any new USB device ID."]
+          - ["D2", "Remote admin tool started", "The IT team's approved remote support tool, started by a service desk technician during ticket INC-5521."]
+          - ["D3", "Failed sign-ins for account r.ahmed", "Case CASE-140 is open for the same 20 failures from the same address; nothing new in this alert's events."]
+          - ["D4", "New mail forwarding rule", "Rule forwards all mail from n.berg to an outside free-mail address. n.berg says they did not create it."]
+    questions:
+      - id: d1
+        prompt: "Which disposition fits D1?"
+        answer_type: choice
+        options: ["True positive", "False positive", "Benign true positive", "Duplicate / related", "Needs more information"]
+        accept: ["False positive"]
+        hints:
+          - "The rule is meant to catch data being copied. Was any data copied?"
+        explanation: >-
+          The rule exists to catch data leaving on USB storage, but it matched a charging phone. It did
+          not detect its target, so this is a false positive for detection engineering to tune.
+      - id: d2
+        prompt: "Which disposition fits D2?"
+        answer_type: choice
+        options: ["True positive", "False positive", "Benign true positive", "Duplicate / related", "Needs more information"]
+        accept: ["Benign true positive"]
+        hints:
+          - "Did the rule catch what it was built for? Was that activity authorised?"
+        explanation: >-
+          A remote admin tool really was started, which is exactly what the rule detects, but it was the
+          approved tool used for a ticketed support job.
+      - id: d3
+        prompt: "Which disposition fits D3?"
+        answer_type: choice
+        options: ["True positive", "False positive", "Benign true positive", "Duplicate / related", "Needs more information"]
+        accept: ["Duplicate / related"]
+        hints:
+          - "Does this alert add anything that the open case does not already have?"
+        explanation: >-
+          The same activity is already covered by CASE-140, and the alert contains nothing new. Link it
+          to the case.
+      - id: d4
+        prompt: "Which disposition fits D4?"
+        answer_type: choice
+        options: ["True positive", "False positive", "Benign true positive", "Duplicate / related", "Needs more information"]
+        accept: ["True positive"]
+        hints:
+          - "Did the rule catch what it was built for? Did the account owner authorise it?"
+        explanation: >-
+          A forwarding rule to an outside address that the owner did not create is a classic sign of an
+          account takeover. The rule did its job and the activity is not allowed: escalate.

@@ -7,12 +7,12 @@ version: 1
 skills:
   - id: soc_alert_triage
     planned: "1, 2, 4, 5, 6, 41, 42"
-    lessons: [soc-l1-triage-loop-01, soc-l1-soc-roles-01, soc-l1-alert-lifecycle-01]
+    lessons: [soc-l1-triage-loop-01, soc-l1-soc-roles-01, soc-l1-alert-lifecycle-01, soc-l1-alert-anatomy-01, soc-l1-prioritisation-01]
     practice: ["family:soc-f-mixed-signal-01", "shift:shift-quiet-day"]
     gap: null
   - id: soc_false_positive_id
     planned: "5, 7"
-    lessons: [soc-l1-triage-loop-01]
+    lessons: [soc-l1-triage-loop-01, soc-l1-dispositions-01]
     practice: ["family:soc-f-alert-fatigue-01"]
     gap: null
   - id: soc_phishing_analysis
@@ -97,17 +97,17 @@ skills:
     gap: null
   - id: soc_scope_assessment
     planned: "6, 9, 23, 36"
-    lessons: []
+    lessons: [soc-l1-prioritisation-01]
     practice: ["report:scope_and_impact"]
     gap: null
   - id: soc_escalation_handoff
     planned: "8, 38, 40"
-    lessons: []
+    lessons: [soc-l1-rationale-escalation-01]
     practice: ["report:escalation_handoff"]
     gap: null
   - id: soc_documentation
     planned: "3, 8, 39, 40"
-    lessons: [soc-l1-data-handling-01]
+    lessons: [soc-l1-data-handling-01, soc-l1-rationale-escalation-01]
     practice: ["report:verdict_and_severity"]
     gap: null
   - id: soc_incident_response

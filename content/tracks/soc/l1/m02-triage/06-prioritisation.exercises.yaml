@@ -1,0 +1,53 @@
+lesson: soc-l1-prioritisation-01
+exercises:
+  - id: order-queue
+    title: "Order a four-alert queue"
+    kind: triage-queue
+    instructions: >-
+      It is 13:00 UTC. Use the asset notes to decide the order. All four alerts arrived within the
+      last ten minutes.
+    blocks:
+      - type: table
+        title: "Queue at 13:00 UTC (synthetic)"
+        columns: ["ID", "Severity", "Rule", "Entity", "Asset note"]
+        rows:
+          - ["P1", "high", "Malware signature in email attachment (blocked)", "mailbox h.lund", "Attachment was quarantined before delivery."]
+          - ["P2", "medium", "Database export larger than usual", "db-pay01", "Payroll database. Criticality: high."]
+          - ["P3", "critical", "Exploit attempt against web server", "web-demo02", "Retired demo site; shut down last month, only a placeholder page left."]
+          - ["P4", "low", "Admin group membership changed", "account j.ferreira", "Account added to the domain admins group at 12:55. No change ticket found."]
+    questions:
+      - id: first
+        prompt: "Which alert should you open first? (Type its ID.)"
+        answer_type: text
+        accept: ["P4"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Which entity would give an attacker control over the largest part of the company?"
+          - "Is there an approved reason recorded for that change?"
+        explanation: >-
+          An unexplained addition to the domain admins group gives that account control over every
+          system. The blast radius is as large as it gets, and no change ticket explains it.
+      - id: second
+        prompt: "Which alert should you open second? (Type its ID.)"
+        answer_type: text
+        accept: ["P2"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Of the rest, which system holds the most sensitive data?"
+        explanation: >-
+          A larger-than-usual export from the payroll database could be data theft from a high
+          criticality system. It outranks the other two despite its medium severity.
+      - id: why-p1-low
+        prompt: "Why does P1 rank below P2 despite its higher severity?"
+        answer_type: choice
+        options:
+          - "The attachment was blocked, so the likely impact is low"
+          - "Email alerts are always false positives"
+          - "High severity alerts can wait"
+          - "h.lund is not an important user"
+        accept: ["The attachment was blocked, so the likely impact is low"]
+        hints:
+          - "Read P1's asset note. Did the attachment reach anyone?"
+        explanation: >-
+          The control worked: the attachment was quarantined before delivery. It is still worth a
+          check (who else was targeted?), but nothing reached a user.

@@ -1,0 +1,169 @@
+---
+id: soc-l1-alert-anatomy-01
+title: "Anatomy of an Alert"
+track: soc
+rank: 1
+module: triage
+order: 4
+estimated_minutes: 17
+objectives_covered: ["soc:soc_alert_triage"]
+mitre: []
+xp: 80
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-alert-lifecycle-01"]
+skills: ["soc_alert_triage"]
+practice: ["family:soc-f-mixed-signal-01"]
+---
+
+> **Outcome:** you can read any alert field by field, tell the raw evidence apart from summaries and added context, and convert its times to UTC.
+
+## Why this matters on shift
+
+Every alert screen looks busy: a title, a severity, a dozen fields, a map, perhaps a score. Some of those parts are evidence. Some are guesses added by tools. Some are the rule author's summary, written before your alert ever existed. If you cannot tell which is which, you will trust the wrong part. Reading an alert well is the first step of every triage.
+
+## Before you start
+
+You should already know:
+
+- What an alert is and how it moves through the queue: [The Life of an Alert](/learn/soc-l1-alert-lifecycle-01).
+
+You do not need to know any SIEM product. Field names differ between tools; the parts in this lesson exist in all of them.
+
+## Core ideas
+
+### An alert has layers
+
+An alert is a package: what the rule author wrote in advance, what actually happened, and what tools added afterwards.
+
+Think of a parcel delivered to your door. The label says what the sender thinks is inside. The contents are what is really inside. The courier's sticker ("fragile", "left with neighbour") was added on the way. You would not judge the gift by the label alone.
+
+The same three layers exist in an alert:
+
+1. **Written in advance:** the rule's name, description and default severity. These describe what the rule is meant to catch.
+2. **What happened:** the **raw events**, the original log records that matched the rule, exactly as the systems wrote them.
+3. **Added afterwards:** **enrichment**, extra context looked up automatically, such as the location of an IP address, the owner of a machine or a reputation score.
+
+The raw events are your evidence. The other two layers help you read them, and both can be wrong.
+
+### Rule logic
+
+The **rule logic** is the condition that made the alert fire, for example "10 or more failed sign-ins for one account within 5 minutes". Many tools show it, or a link to it. Reading it tells you exactly what the alert proves. An alert from that rule proves that 10 failures happened in 5 minutes. It does not prove that an attacker caused them.
+
+### Entities
+
+An **entity** is a thing the alert is about: a user account, a host (computer), an IP address, a process, a file, a domain. Most alerts list their entities in separate fields so you can pivot, which means searching for other activity involving the same entity.
+
+Ask of each entity: is this the actor (who did it), the target (what it was done to), or just a location the activity passed through? A firewall address that appears in every event is usually a location, not a suspect.
+
+### Time and time zones
+
+Systems record time in different ways. Some use **UTC** (Coordinated Universal Time, the world's reference time with no daylight-saving changes), and some use local time. A time like `14:05+02:00` means 14:05 in a zone two hours ahead of UTC, which is 12:05 UTC.
+
+SOCs usually work in UTC so that events from different systems line up. Always convert before you compare. A sign-in at "09:00" and a file download at "09:00" are not at the same moment if one is local time and the other is UTC.
+
+<FlowDiagram
+  title="Reading an alert in order"
+  description="Read the rule logic to learn what was detected, read the raw events to see what happened, list the entities and their roles, line up times in UTC, and only then look at the enrichment and the title."
+  steps={[
+    { label: "Rule logic", detail: "What exact condition fired?" },
+    { label: "Raw events", detail: "What did the systems actually record?" },
+    { label: "Entities", detail: "Who acted, on what, from where?" },
+    { label: "Times in UTC", detail: "Convert every time before comparing." },
+    { label: "Enrichment, last", detail: "Useful context, but check it against the raw events." },
+  ]}
+/>
+
+In plain English: start with what the rule required and what really happened, and treat the helpful extras as hints to verify, not facts.
+
+### Enrichment can mislead
+
+Enrichment is very useful, and it is also where many triage mistakes start:
+
+- IP location is approximate. It is often only accurate to a country or region, and it shows where an address is registered or routed, not where the person is sitting. Company VPNs and cloud services make addresses appear far from the real user.
+- Asset owner fields can be out of date.
+- A reputation score of "unknown" says nobody has reported the address, not that it is safe.
+
+Use enrichment to decide what to check next, and confirm anything important against the raw events or a second source.
+
+## Worked example
+
+This alert arrives at Larkspur Freight:
+
+<LogBlock
+  title="Alert ALR-8410 (synthetic)"
+  lines={[
+    "title:        Possible brute force against VPN",
+    "severity:     medium",
+    "rule logic:   >= 10 failed VPN sign-ins for one account within 5 minutes",
+    "entities:     user=s.bauer  source_ip=192.0.2.120  gateway=vpn01.larkspur.example",
+    "enrichment:   source_ip geo = (country S. Bauer has never visited)  reputation = unknown",
+    "raw events (11):",
+    "  2026-10-14T06:58:02+01:00  vpn01  auth failure  user=s.bauer  src=192.0.2.120  reason=bad_password",
+    "  ...  9 similar failures between 06:58:02+01:00 and 07:01:40+01:00  ...",
+    "  2026-10-14T07:02:15+01:00  vpn01  auth failure  user=s.bauer  src=192.0.2.120  reason=account_locked",
+  ]}
+/>
+
+**Rule logic first.** The rule needs 10 failures in 5 minutes for one account. There are 11, within about 4 minutes. The rule fired correctly.
+
+**Raw events.** Every failure is for one account, s.bauer, from one address. The reasons are `bad_password` ten times and then `account_locked`. The VPN gateway locked the account after repeated failures.
+
+**Times.** The events carry `+01:00`, so 06:58 local is 05:58 UTC. Larkspur's travel and leave calendars are kept in UTC.
+
+**A false lead.** The enrichment says the address is in a country S. Bauer has never visited, and the title says "brute force". It is tempting to escalate straight away. But the analyst remembers that IP location is approximate. Checking the leave calendar, they see S. Bauer is on holiday this week, and the hotel's internet provider routes traffic through another country. The location is explained.
+
+**What it really looks like.** One person, one address, about a dozen tries ending in a lockout, at 05:58 UTC on a holiday morning. That pattern fits a user who forgot a changed password more than an attacker. Attackers guessing passwords usually try many accounts, or many more attempts.
+
+**Next step.** The analyst does not close yet: one confirmation is cheap. They ask the service desk to contact S. Bauer by phone through the number on file. S. Bauer confirms the failed attempts and asks for an unlock. The analyst records the evidence and closes the alert as a benign true positive. The rule caught real failed sign-ins, and the cause was the account owner.
+
+## Try it
+
+<MicroExercise id="read-alert" />
+
+## Common mistakes
+
+- **Judging by the title or severity.** Both were written before this alert existed.
+- **Treating IP location as the person's location.** It is approximate and often reflects networks, not people.
+- **Comparing times in different zones.** Convert everything to UTC first.
+- **Counting the gateway or firewall as a suspect.** Work out each entity's role.
+- **Reading only the first raw event.** The last one, here `account_locked`, often changes the story.
+
+## What good looks like
+
+A strong analyst can say, in one sentence each: what the rule required, what the raw events show, who did what to what, and when in UTC. Only then do they mention enrichment, and they say whether they confirmed it.
+
+## In the real world
+
+SIEMs and alert tools show the same layers under different names: "detection", "events", "evidence", "observables", "context". Some show the rule logic directly; others need a click into the rule definition. Enrichment may come from threat intelligence feeds, the asset inventory, the identity system or a geo-IP database, and each source has its own errors.
+
+The simulator presents fields in a clean, consistent layout. Real alerts may be missing fields, contain truncated raw events or mix time zones within one screen.
+
+## Remember it like this
+
+Label, contents, sticker: rule text is the label, raw events are the contents, enrichment is the courier's sticker. Judge the contents.
+
+## Interview answer
+
+"I read an alert in layers. First the rule logic, to know exactly what condition fired. Then the raw events, which are the real evidence. Then I list the entities and their roles, and convert all times to UTC. Enrichment such as geo-IP or reputation comes last, and I confirm anything important against the raw events or another source, because location data in particular is often approximate."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Raw event", definition: "An original log record, exactly as a system wrote it, that matched a detection rule." },
+    { term: "Rule logic", definition: "The exact condition that makes a detection rule fire, such as '10 or more failed sign-ins in 5 minutes'." },
+    { term: "Entity", definition: "A thing an alert is about, such as a user account, host, IP address, process, file or domain." },
+    { term: "Enrichment", definition: "Context added to an alert automatically after it fires, such as IP location, asset owner or reputation." },
+    { term: "UTC", definition: "Coordinated Universal Time: the world's reference time, with no daylight-saving changes, used to line up events from different systems." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

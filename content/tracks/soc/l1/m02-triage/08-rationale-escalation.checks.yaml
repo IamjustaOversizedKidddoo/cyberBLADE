@@ -1,0 +1,82 @@
+lesson: soc-l1-rationale-escalation-01
+questions:
+  - id: q1
+    prompt: "You are 20 minutes into triaging an alert on a payroll server, your team's time box is 15 minutes, and you still cannot decide. What should you do?"
+    objectives: ["soc:soc_escalation_handoff"]
+    options:
+      - text: "Escalate now, with a note saying what you checked and what is still unknown."
+        correct: true
+        explanation: "Correct. Reaching the time box on a critical asset is itself an escalation criterion."
+      - text: "Keep going until you are certain."
+        correct: false
+        explanation: "Certainty can take hours, and the queue and the attacker do not wait."
+      - text: "Close it as needs more information and move on."
+        correct: false
+        explanation: "On a critical asset with no answer, someone with more depth needs to own it now."
+      - text: "Ask the server owner to decide."
+        correct: false
+        explanation: "The owner can provide context, but the security decision goes through your escalation path."
+  - id: q2
+    prompt: "Which line belongs in the 'Not checked' part of a handoff note?"
+    objectives: ["soc:soc_escalation_handoff"]
+    options:
+      - text: "\"Have not checked whether other accounts signed in from the same address.\""
+        correct: true
+        explanation: "Correct. It tells the next analyst exactly where the gaps are."
+      - text: "\"User confirmed they did not create the rule.\""
+        correct: false
+        explanation: "That is a completed check; it belongs under 'Checked'."
+      - text: "\"Rule created at 03:44 UTC.\""
+        correct: false
+        explanation: "That is a time or a piece of evidence."
+      - text: "\"Recommend resetting the session now.\""
+        correct: false
+        explanation: "That is the ask."
+  - id: q3
+    prompt: "Which sentence states an assumption properly?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "\"Likely phished password (user reported a suspicious email yesterday). Not confirmed.\""
+        correct: true
+        explanation: "Correct. It gives the belief, the reason for it, and says it is not confirmed."
+      - text: "\"The password was phished.\""
+        correct: false
+        explanation: "Stated as fact with no evidence; the next analyst may not check it."
+      - text: "\"Maybe something happened with the password, not sure.\""
+        correct: false
+        explanation: "Too vague to act on: what is suspected, and why?"
+      - text: "\"I will not mention how the account was accessed.\""
+        correct: false
+        explanation: "Leaving out a relevant hypothesis loses useful direction for Tier 2."
+  - id: q4
+    prompt: "Why is \"URGENT!!! user hacked, look ASAP\" a poor escalation?"
+    objectives: ["soc:soc_escalation_handoff"]
+    options:
+      - text: "It has urgency but no evidence, entities, times or ask, so the next analyst must start from zero."
+        correct: true
+        explanation: "Correct. Urgency is conveyed by the ask line and the evidence, not by capital letters."
+      - text: "Escalations should never be urgent."
+        correct: false
+        explanation: "Many are urgent. The problem is that nothing in it can be acted on."
+      - text: "It is too long."
+        correct: false
+        explanation: "It is too short and too vague."
+      - text: "It names the user."
+        correct: false
+        explanation: "Naming the affected account is necessary."
+  - id: q5
+    prompt: "What should you do immediately after escalating?"
+    objectives: ["soc:soc_escalation_handoff"]
+    options:
+      - text: "Confirm that the next owner has picked it up."
+        correct: true
+        explanation: "Correct. An escalation nobody has seen has not really happened."
+      - text: "Close the original alert and forget it."
+        correct: false
+        explanation: "Link the alert to the case, and make sure someone owns the case."
+      - text: "Start investigating it in depth yourself as well."
+        correct: false
+        explanation: "Duplicate investigation wastes effort; offer help through the case if needed."
+      - text: "Email the affected user about the escalation."
+        correct: false
+        explanation: "Contacting users is the case owner's decision and may tip off an attacker using the account."

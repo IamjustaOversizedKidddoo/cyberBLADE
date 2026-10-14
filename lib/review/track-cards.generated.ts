@@ -100,6 +100,38 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "back": "Does my task need it? Am I authorised for this kind of look? How little can I record?"
   },
   {
+    "id": "fc-soc-l1-alert-anatomy-01",
+    "lessonId": "soc-l1-alert-anatomy-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the three layers of an alert?",
+    "back": "Written in advance (title, description, severity), what happened (raw events), and added afterwards (enrichment)."
+  },
+  {
+    "id": "fc-soc-l1-alert-anatomy-02",
+    "lessonId": "soc-l1-alert-anatomy-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Convert 14:05+02:00 to UTC.",
+    "back": "12:05 UTC. For a zone ahead of UTC, subtract the offset."
+  },
+  {
+    "id": "fc-soc-l1-alert-anatomy-03",
+    "lessonId": "soc-l1-alert-anatomy-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why can't IP location be trusted as the person's location?",
+    "back": "It is approximate and reflects how the network routes traffic; VPNs, mobile carriers and hotels often appear somewhere else."
+  },
+  {
+    "id": "fc-soc-l1-alert-anatomy-04",
+    "lessonId": "soc-l1-alert-anatomy-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does an alert prove?",
+    "back": "Only that the rule's condition was met. Whether the activity is harmful is what triage decides."
+  },
+  {
     "id": "fc-soc-l1-triage-loop-01",
     "lessonId": "soc-l1-triage-loop-01",
     "rank": 1,
@@ -130,6 +162,102 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "category": "soc",
     "front": "What makes a triage rationale useful?",
     "back": "It names the evidence you checked and why it led to the disposition, briefly enough that another analyst can verify it in seconds."
+  },
+  {
+    "id": "fc-soc-l1-prioritisation-01",
+    "lessonId": "soc-l1-prioritisation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What three things combine into an alert's priority?",
+    "back": "The rule's severity, how likely the alert is to be real, and the impact if it is (asset criticality and blast radius)."
+  },
+  {
+    "id": "fc-soc-l1-prioritisation-02",
+    "lessonId": "soc-l1-prioritisation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Name four kinds of usually high-criticality assets.",
+    "back": "Identity systems (domain controllers, single sign-on), sensitive-data systems, internet-facing systems, and privileged or high-value accounts."
+  },
+  {
+    "id": "fc-soc-l1-prioritisation-03",
+    "lessonId": "soc-l1-prioritisation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why can a medium alert on a domain controller outrank a critical one on a test VM?",
+    "back": "The domain controller's impact and blast radius are far larger; severity was set without knowing the asset."
+  },
+  {
+    "id": "fc-soc-l1-prioritisation-04",
+    "lessonId": "soc-l1-prioritisation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "How do you break a priority tie?",
+    "back": "Work the older alert first, unless a quick likelihood signal (such as a success after failures) separates them."
+  },
+  {
+    "id": "fc-soc-l1-dispositions-01",
+    "lessonId": "soc-l1-dispositions-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Three questions to pick a disposition, in order?",
+    "back": "Is it already covered (duplicate)? Did the rule catch its target (if not: false positive)? Was the activity allowed (benign true positive) or not (true positive)?"
+  },
+  {
+    "id": "fc-soc-l1-dispositions-02",
+    "lessonId": "soc-l1-dispositions-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "When is a same-title alert NOT a duplicate?",
+    "back": "When its raw events show something new, such as a success after failures, a new host or a new action."
+  },
+  {
+    "id": "fc-soc-l1-dispositions-03",
+    "lessonId": "soc-l1-dispositions-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is a false negative?",
+    "back": "Malicious activity that raised no alert at all. It never appears in your queue."
+  },
+  {
+    "id": "fc-soc-l1-dispositions-04",
+    "lessonId": "soc-l1-dispositions-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What must a 'needs more information' disposition include?",
+    "back": "What is missing and who you asked, so it can be followed up or handed over."
+  },
+  {
+    "id": "fc-soc-l1-rationale-escalation-01",
+    "lessonId": "soc-l1-rationale-escalation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Seven parts of a handoff note?",
+    "back": "What, where, when (UTC), evidence, checked, not checked, ask."
+  },
+  {
+    "id": "fc-soc-l1-rationale-escalation-02",
+    "lessonId": "soc-l1-rationale-escalation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Name four common escalation criteria.",
+    "back": "Confirmed malicious activity; a critical asset or privileged account you cannot clear; signs it is active or spreading; data leaving; triage time box reached (any four)."
+  },
+  {
+    "id": "fc-soc-l1-rationale-escalation-03",
+    "lessonId": "soc-l1-rationale-escalation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "How do you write an assumption in a note?",
+    "back": "State the belief, the reason for it, and that it is not confirmed."
+  },
+  {
+    "id": "fc-soc-l1-rationale-escalation-04",
+    "lessonId": "soc-l1-rationale-escalation-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What do you do right after escalating?",
+    "back": "Confirm the next owner has picked it up."
   },
   {
     "id": "fc-soc-l1-email-headers-01",

@@ -1,0 +1,82 @@
+lesson: soc-l1-dispositions-01
+questions:
+  - id: q1
+    prompt: "Why does it matter whether a harmless alert is labelled false positive or benign true positive?"
+    objectives: ["soc:soc_false_positive_id"]
+    options:
+      - text: "They call for different fixes: a false positive means the rule logic needs changing; a benign true positive needs at most an exception."
+        correct: true
+        explanation: "Correct. The label tells detection engineering what, if anything, to fix."
+      - text: "It does not matter; both mean the alert was harmless."
+        correct: false
+        explanation: "Both are harmless, but they send different messages about the rule."
+      - text: "Benign true positives must always be escalated."
+        correct: false
+        explanation: "They are harmless and approved; nobody needs to investigate them further."
+      - text: "False positives count against the analyst's performance."
+        correct: false
+        explanation: "Labels describe the alert and the rule, not the analyst."
+  - id: q2
+    prompt: "A new alert has the same title, account and source address as an open one. What should you do before calling it a duplicate?"
+    objectives: ["soc:soc_false_positive_id"]
+    options:
+      - text: "Open its raw events and check whether they show anything new."
+        correct: true
+        explanation: "Correct. A success, a new host or a new action can arrive under the same title."
+      - text: "Nothing; same title and account means duplicate."
+        correct: false
+        explanation: "That shortcut is how the moment an attack succeeds gets closed unread."
+      - text: "Escalate both alerts to be safe."
+        correct: false
+        explanation: "Escalating without reading wastes Tier 2's time and does not answer the question."
+      - text: "Wait until the original is closed."
+        correct: false
+        explanation: "New evidence about an open investigation is time-sensitive."
+  - id: q3
+    prompt: "What is a false negative?"
+    objectives: ["soc:soc_false_positive_id"]
+    options:
+      - text: "Malicious activity that raised no alert at all."
+        correct: true
+        explanation: "Correct. It never appears in your queue; it is found through hunting, reports or other teams."
+      - text: "An alert that turned out to be harmless."
+        correct: false
+        explanation: "That is a false positive or a benign true positive."
+      - text: "An alert closed by mistake."
+        correct: false
+        explanation: "That is a triage error. A false negative is a detection gap: no alert existed."
+      - text: "A rule that has been disabled."
+        correct: false
+        explanation: "A disabled rule can cause false negatives, but the term describes the missed activity."
+  - id: q4
+    prompt: "When is 'needs more information' the right disposition?"
+    objectives: ["soc:soc_false_positive_id"]
+    options:
+      - text: "When you cannot decide yet, and you record what is missing and who you asked."
+        correct: true
+        explanation: "Correct. It is an honest answer as long as the gap is written down and followed up."
+      - text: "When the alert is low priority and you are busy."
+        correct: false
+        explanation: "That is parking, not a disposition. Low priority alerts still need triage or a handover."
+      - text: "Whenever an alert involves an executive."
+        correct: false
+        explanation: "The person involved changes priority, not the disposition."
+      - text: "Never; every alert must be decided immediately."
+        correct: false
+        explanation: "Forcing a decision without evidence leads to wrong labels."
+  - id: q5
+    prompt: "A rule built to detect malware downloads fires on a legitimate software update from the vendor's own site. The download really was an executable from the internet, which is what the rule looks for. Which disposition fits?"
+    objectives: ["soc:soc_false_positive_id"]
+    options:
+      - text: "Benign true positive."
+        correct: true
+        explanation: "Correct. The rule caught the activity it targets (an executable download) and the activity was legitimate."
+      - text: "False positive."
+        correct: false
+        explanation: "The rule did catch its target behaviour. Nothing about its logic misfired."
+      - text: "True positive."
+        correct: false
+        explanation: "The activity is legitimate, so it is not a problem."
+      - text: "Duplicate / related."
+        correct: false
+        explanation: "Nothing says this activity is already covered elsewhere."

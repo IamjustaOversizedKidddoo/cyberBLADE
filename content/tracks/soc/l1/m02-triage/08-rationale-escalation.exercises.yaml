@@ -1,0 +1,57 @@
+lesson: soc-l1-rationale-escalation-01
+exercises:
+  - id: escalation-calls
+    title: "Judge an escalation note"
+    kind: report-section
+    instructions: >-
+      A colleague wrote this escalation note about workstation ws-152. Read it, then answer.
+    blocks:
+      - type: log
+        title: "Escalation note (synthetic)"
+        lines:
+          - "What: possible malware on ws-152."
+          - "Where: host ws-152, user l.moreau."
+          - "When (UTC): 11:20 a document opened; 11:21 a script started from the document."
+          - "Evidence: process tree shows the word processor starting a script interpreter."
+          - "Checked: the document came as an email attachment from an outside sender."
+          - "The script downloaded a second-stage payload from the internet."
+          - "Ask: please investigate."
+    questions:
+      - id: hidden-assumption
+        prompt: "One line states something as fact that the note gives no evidence for. Which?"
+        answer_type: choice
+        options:
+          - "The script downloaded a second-stage payload from the internet."
+          - "Where: host ws-152, user l.moreau."
+          - "Checked: the document came as an email attachment from an outside sender."
+          - "Evidence: process tree shows the word processor starting a script interpreter."
+        accept: ["The script downloaded a second-stage payload from the internet."]
+        hints:
+          - "For each line, ask: which event or check supports this?"
+        explanation: >-
+          Nothing in the note shows a network connection or a downloaded file. It may be true, but it is
+          an assumption and should be labelled, with the check that would confirm it.
+      - id: missing-section
+        prompt: "Which part of the handoff structure is missing entirely?"
+        answer_type: choice
+        options: ["Not checked", "When", "Where", "What"]
+        accept: ["Not checked"]
+        hints:
+          - "Compare the note, part by part, with the seven-part structure from the lesson."
+        explanation: >-
+          The note never says what has not been looked at yet, so Tier 2 may assume it was. For example:
+          network connections from ws-152, and who else received the same attachment.
+      - id: weak-ask
+        prompt: "What is wrong with the 'Ask' line?"
+        answer_type: choice
+        options:
+          - "It gives no recommendation and no urgency"
+          - "It should not be addressed to Tier 2"
+          - "Asks are optional in escalations"
+          - "It should repeat the evidence"
+        accept: ["It gives no recommendation and no urgency"]
+        hints:
+          - "After reading 'please investigate', what does Tier 2 still not know?"
+        explanation: >-
+          A good ask says what you recommend and how urgent it is, for example "high urgency: isolate
+          ws-152 and find other recipients of the attachment".

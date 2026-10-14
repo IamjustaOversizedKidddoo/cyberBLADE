@@ -1,0 +1,148 @@
+---
+id: soc-l1-dispositions-01
+title: "False Positives, Benign True Positives and Duplicates"
+track: soc
+rank: 1
+module: triage
+order: 7
+estimated_minutes: 16
+objectives_covered: ["soc:soc_false_positive_id"]
+mitre: []
+xp: 90
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-triage-loop-01"]
+skills: ["soc_false_positive_id"]
+practice: ["family:soc-f-alert-fatigue-01"]
+---
+
+> **Outcome:** you can choose the right disposition for any alert, including the hard cases, and explain what each choice tells the rest of the team.
+
+## Why this matters on shift
+
+Your disposition is not just a label for you. Detection engineers read false positives to fix rules. Managers read true positives to understand risk. The next shift reads "needs more information" to know what is still open. A wrong label sends the wrong message: a real attack closed as a false positive may never be looked at again.
+
+## Before you start
+
+You should already know:
+
+- The triage loop, and the difference between a false positive and a benign true positive: [The Triage Loop](/learn/soc-l1-triage-loop-01).
+
+## Core ideas
+
+### The five dispositions
+
+A disposition answers two questions: did the rule detect what it was built to detect, and is the activity a problem?
+
+Think of a burglar alarm. If it goes off because a burglar broke in, the alarm was right and there is a problem. If it goes off because the owner came home and forgot the code, the alarm was right but there is no problem. If it goes off because a spider walked across the sensor, the alarm was simply wrong. And if it rings twice for the same burglar, the second ring is not a second burglar.
+
+The labels used in this track and the simulator:
+
+| Disposition | Did the rule detect what it was built for? | Is it a problem? | Who acts next |
+|---|---|---|---|
+| True positive | Yes | Yes: malicious or not allowed | Escalate (Tier 2 or incident response) |
+| Benign true positive | Yes | No: approved or expected | Nobody; may suggest a rule exception |
+| False positive | No: it matched something else | No | Detection engineering (tune the rule) |
+| Duplicate / related | Already covered by an open alert or case | Same as the original | Link it to the original |
+| Needs more information | Not yet known | Not yet known | You, or whoever holds the missing answer |
+
+A **true positive** is an alert where the rule detected what it was built to detect, and the activity is malicious or not allowed. A **duplicate** is an alert about activity already covered by another open alert or case. Link it rather than investigating it twice.
+
+### The two hard boundaries
+
+**False positive vs benign true positive.** Ask: what was the rule built to catch, and did this activity do that thing? A rule built to catch port scans that fires on the approved scanner caught a real port scan: benign true positive. A rule built to catch credential theft that fires on a newsletter mentioning "password" caught a word, not theft: false positive. The difference matters because the fixes differ. A false positive means the rule's logic needs changing. A benign true positive means the logic is fine, and at most an exception for the approved activity is needed.
+
+**Duplicate vs new evidence.** A second alert on the same account is a duplicate only if it shows the same activity. If it shows something new, such as the first alert was failed sign-ins and the second is a successful one, it is new evidence. Link it to the case and say what is new. Closing it as "duplicate" would hide the most important event.
+
+### Needs more information is a real answer
+
+When you cannot decide yet, "needs more information" is honest and professional, as long as you write down what is missing and who you asked. It is not a place to park alerts you do not want to deal with. Check back on them, and hand them over at the end of your shift.
+
+### The one that never appears in the queue
+
+A **false negative** is an attack that happened but raised no alert at all. You will never see one in your queue, by definition. You find them through hunting, reports from users, or other teams. Every time you see one, the question is "which rule should have caught this?", and that goes to detection engineering.
+
+<FlowDiagram
+  title="Choosing a disposition"
+  description="Check whether an open alert or case already covers this exact activity; if so it is a duplicate. Otherwise ask whether the rule detected what it was built for; if not it is a false positive. If it did, ask whether the activity is approved; if yes it is a benign true positive, if no it is a true positive. If you cannot answer, it needs more information."
+  steps={[
+    { label: "Already covered?", detail: "Same activity in an open alert or case: duplicate (link it)." },
+    { label: "Did the rule catch its target?", detail: "No: false positive." },
+    { label: "Is the activity approved or expected?", detail: "Yes: benign true positive. No: true positive." },
+    { label: "Cannot tell yet?", detail: "Needs more information, with what is missing written down." },
+  ]}
+/>
+
+In plain English: rule out repeats, then check whether the rule did its job, then check whether the activity was allowed.
+
+## Worked example
+
+Two alerts arrive at Larkspur Freight within a minute:
+
+<LogBlock
+  title="Two alerts (synthetic)"
+  lines={[
+    "ALR-9001  10:14  Rule: 'Many failed sign-ins'  user=v.costa  12 failures from 192.0.2.131 (10:08-10:13)",
+    "ALR-9002  10:15  Rule: 'Many failed sign-ins'  user=v.costa  source 192.0.2.131",
+  ]}
+/>
+
+The analyst triages ALR-9001 first. The failures come from an address not seen before for this user, and v.costa does not answer the service desk's call. That is not enough to decide either way. The analyst marks it "needs more information: waiting for v.costa to confirm".
+
+**The tempting shortcut.** ALR-9002 has the same rule, user and address. It looks like an obvious duplicate. But the analyst opens the raw events before closing it:
+
+<LogBlock
+  title="ALR-9002 raw events (synthetic)"
+  lines={[
+    "10:14:50  auth failure  user=v.costa  src=192.0.2.131  reason=bad_password",
+    "10:15:02  auth success  user=v.costa  src=192.0.2.131  mfa=not_required (legacy protocol)",
+  ]}
+/>
+
+The last event is a **success**, through an older sign-in method that skips multi-factor authentication. This is not the same activity as ALR-9001; it is the moment the guessing worked. ALR-9002 is a true positive. The analyst escalates it immediately, links ALR-9001 to the new case, and records why the title-match was misleading.
+
+## Try it
+
+<MicroExercise id="pick-dispositions" />
+
+## Common mistakes
+
+- **Closing look-alike alerts as duplicates without opening them.** New evidence often arrives under the same title.
+- **Calling every harmless alert a false positive.** If the rule did its job, it is a benign true positive. Mislabelling it sends detection engineers to fix a rule that is not broken.
+- **Parking alerts in "needs more information" with no note.** Write what is missing and who you asked.
+- **Forgetting false negatives exist.** No alert does not mean no attack.
+
+## What good looks like
+
+A strong analyst's dispositions are consistent and readable. Anyone can see from the label and the one-line reason what happened, who acts next, and whether the rule needs work. Their "needs more information" items always say what they are waiting for.
+
+## In the real world
+
+Disposition names vary: some teams say "benign" or "expected" for benign true positives, "informational" for low-value alerts, or fold several labels together. Some tools use "true/false positive" only. The thinking in this lesson still applies under any naming scheme: did the rule do its job, and is the activity a problem? Learn your team's exact labels and use them consistently, because reports and metrics depend on them.
+
+## Remember it like this
+
+Repeat? Rule right? Allowed? Answer those three in order, and the label picks itself.
+
+## Interview answer
+
+"I check first whether the alert repeats activity already covered by an open case, and I open the raw events before calling anything a duplicate, because new evidence often has the same title. Then I ask whether the rule caught what it was built to catch. If not, it's a false positive for detection engineering. If it did, and the activity was approved, it's a benign true positive; if not, it's a true positive and I escalate. If I can't tell yet, I mark it needs more information and write down what's missing."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "True positive", definition: "An alert where the rule detected what it was built to detect, and the activity is malicious or not allowed." },
+    { term: "Duplicate", definition: "An alert about activity already covered by another open alert or case; it is linked rather than investigated twice." },
+    { term: "False negative", definition: "Malicious activity that raised no alert at all; found through hunting, user reports or other teams." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

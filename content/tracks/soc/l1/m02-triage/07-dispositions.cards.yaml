@@ -1,0 +1,14 @@
+lesson: soc-l1-dispositions-01
+cards:
+  - id: fc-soc-l1-dispositions-01
+    front: "Three questions to pick a disposition, in order?"
+    back: "Is it already covered (duplicate)? Did the rule catch its target (if not: false positive)? Was the activity allowed (benign true positive) or not (true positive)?"
+  - id: fc-soc-l1-dispositions-02
+    front: "When is a same-title alert NOT a duplicate?"
+    back: "When its raw events show something new, such as a success after failures, a new host or a new action."
+  - id: fc-soc-l1-dispositions-03
+    front: "What is a false negative?"
+    back: "Malicious activity that raised no alert at all. It never appears in your queue."
+  - id: fc-soc-l1-dispositions-04
+    front: "What must a 'needs more information' disposition include?"
+    back: "What is missing and who you asked, so it can be followed up or handed over."
