@@ -2,7 +2,7 @@ import type { HandlerMessage } from "../types";
 import { GeminiProvider } from "./gemini";
 import { GroqProvider } from "./groq";
 import { HeuristicProvider } from "./heuristic";
-import type { HandlerProvider } from "./types";
+import type { CompletionRequest, CompletionResult, HandlerProvider } from "./types";
 import { ProviderCircuitBreaker } from "../circuit-breaker";
 
 const circuitBreakers = new Map<string, ProviderCircuitBreaker>();
@@ -14,6 +14,14 @@ function getCircuitBreaker(providerName: string): ProviderCircuitBreaker {
     circuitBreakers.set(providerName, cb);
   }
   return cb;
+}
+
+/** Thrown by complete() when no real model provider could answer (grading must not guess). */
+export class NoCompletionProviderError extends Error {
+  constructor(readonly reason: "none_configured" | "all_failed_or_open") {
+    super(`No completion provider available: ${reason}`);
+    this.name = "NoCompletionProviderError";
+  }
 }
 
 export class ResilientHandlerProvider implements HandlerProvider {
@@ -50,6 +58,35 @@ export class ResilientHandlerProvider implements HandlerProvider {
       this.providers = list;
     }
     this._lastUsedProvider = this.providers[0]?.name ?? "heuristic";
+  }
+
+  /** Providers that can serve structured completions (never the heuristic). */
+  completionProviders(): HandlerProvider[] {
+    return this.providers.filter((p) => p.name !== "heuristic" && typeof p.complete === "function");
+  }
+
+  /**
+   * Completion path for callers that need a real model or nothing (report grading).
+   * Same provider order and circuit breakers as generateReply, but there is no heuristic
+   * fallback: if every model provider fails or is open, this throws.
+   */
+  async complete(request: CompletionRequest): Promise<CompletionResult> {
+    const capable = this.completionProviders();
+    if (capable.length === 0) throw new NoCompletionProviderError("none_configured");
+    for (const provider of capable) {
+      const cb = getCircuitBreaker(provider.name);
+      if (cb.isOpen()) continue;
+      try {
+        const result = await provider.complete!(request);
+        cb.recordSuccess();
+        return result;
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        const isQuota = errMsg.includes("429") || errMsg.includes("quota") || errMsg.includes("SAFETY");
+        cb.recordFailure(Date.now(), isQuota);
+      }
+    }
+    throw new NoCompletionProviderError("all_failed_or_open");
   }
 
   async generateReply(systemPrompt: string, history: HandlerMessage[], userMessage: string): Promise<string> {
