@@ -38,6 +38,7 @@ const configSchema = z.object({
     baseBackoffMs: z.number().int().positive(),
     leaseMs: z.number().int().positive(),
   }),
+  drift: z.object({ maxChangedRate: z.number().min(0).max(1), maxMeanShift: z.number().min(0) }),
   gate: z.object({
     thresholdsVersion: z.string(),
     minWeightedKappa: z.number(),

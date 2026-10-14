@@ -63,6 +63,16 @@ function rawFieldText(report: SocReportData, field: AiReportField): string {
   }
 }
 
+/** Template guidance per field, exactly as the learner saw it. */
+export function guidanceForTemplate(template: Pick<ReportTemplate, "sections">): AiGradingInput["templateGuidance"] {
+  const out: AiGradingInput["templateGuidance"] = {};
+  for (const field of Object.keys(FIELD_TO_TEMPLATE_SECTION) as AiReportField[]) {
+    const section = template.sections.find((s) => s.id === FIELD_TO_TEMPLATE_SECTION[field]);
+    if (section) out[field] = section.guidance;
+  }
+  return out;
+}
+
 export interface BuiltAiGradingInput {
   input: AiGradingInput;
   /** Characters removed by Unicode neutralization (never sent; used as an injection signal). */
@@ -82,15 +92,13 @@ export function buildAiGradingInput(
 ): BuiltAiGradingInput {
   const handles = [report.header?.analystHandle ?? "", ...(options.learnerHandles ?? [])].filter(Boolean);
   const fields: AiGradingInput["fields"] = {};
-  const templateGuidance: AiGradingInput["templateGuidance"] = {};
+  const templateGuidance = guidanceForTemplate(template);
   let removed = 0;
 
   for (const field of Object.keys(FIELD_TO_TEMPLATE_SECTION) as AiReportField[]) {
     const c = clean(rawFieldText(report, field), handles);
     removed += c.removed;
     fields[field] = c.text;
-    const section = template.sections.find((s) => s.id === FIELD_TO_TEMPLATE_SECTION[field]);
-    if (section) templateGuidance[field] = section.guidance;
   }
 
   const factText = clean(`${facts.title}\n${facts.briefing}`, handles).text;
