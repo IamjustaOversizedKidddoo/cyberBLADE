@@ -22,7 +22,7 @@ export function GradedResultsScorecard({
     <div className="flex flex-col gap-4 font-mono text-xs">
       {/* Top Banner: Overall Score & Status */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xs border border-line bg-surface p-4 shadow-sm">
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 flex-wrap items-center gap-4">
           <div
             className={`flex flex-col items-center justify-center rounded-xs border px-4 py-2 ${
               isPassing
@@ -38,8 +38,8 @@ export function GradedResultsScorecard({
             </span>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-base font-bold text-ink">Authoritative Evaluation</h2>
               <span className="rounded-xs border border-line bg-surface-raised px-1.5 py-0.5 text-[10px] text-muted">
                 {result.isFullyGraded ? "Final Grade" : "Provisional Grade"}
@@ -100,7 +100,10 @@ export function GradedResultsScorecard({
         </div>
 
         <div className="space-y-2">
-          {Object.entries(result.criterionResults).map(([criterionId, cRes]) => {
+          {Object.entries(result.criterionResults)
+            // Zero-weight placeholders (the old AI seam) are shown in the writing-feedback section instead.
+            .filter(([, cRes]) => !(cRes.status === "not_available" && cRes.weight === 0))
+            .map(([criterionId, cRes]) => {
             const pct = cRes.maxScore > 0 ? (cRes.score / cRes.maxScore) * 100 : 0;
             const isGood = pct >= 80;
             const isMid = pct >= 50 && pct < 80;

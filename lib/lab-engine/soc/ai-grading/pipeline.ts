@@ -185,13 +185,11 @@ export interface ProcessSummary {
   dead: number;
 }
 
-export async function processAiGradingJobs(deps: AiPipelineDeps, opts: { limit?: number; submissionId?: string } = {}): Promise<ProcessSummary> {
+export async function processAiGradingJobs(deps: AiPipelineDeps, opts: { limit?: number } = {}): Promise<ProcessSummary> {
   const c = ctx(deps);
   const summary: ProcessSummary = { claimed: 0, graded: 0, notGraded: 0, cacheHits: 0, retried: 0, dead: 0 };
   const now = deps.now();
-  const jobs = (await deps.store.claimDueJobs(now.toISOString(), opts.limit ?? 24, c.config.jobs.leaseMs)).filter(
-    (j) => !opts.submissionId || j.submissionId === opts.submissionId,
-  );
+  const jobs = await deps.store.claimDueJobs(now.toISOString(), opts.limit ?? 24, c.config.jobs.leaseMs);
   summary.claimed = jobs.length;
   const mode = resolveEffectiveMode(deps.env ?? process.env, deps.gateDir);
 
