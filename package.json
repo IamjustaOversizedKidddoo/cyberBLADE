@@ -21,7 +21,12 @@
     "eval:handler": "tsx scripts/eval-handler.mts",
     "report:learning": "tsx scripts/learning-analytics-report.mts",
     "soc:regrade": "tsx scripts/soc-regrade.mts",
-    "soc:ai:injection": "tsx --conditions=react-server scripts/soc-ai-injection.mts"
+    "soc:ai:injection": "tsx --conditions=react-server scripts/soc-ai-injection.mts",
+    "soc:ai:worker": "tsx --conditions=react-server scripts/soc-ai-worker.mts",
+    "soc:ai:review": "tsx --conditions=react-server scripts/soc-ai-review.mts",
+    "soc:ai:calibration": "tsx --conditions=react-server scripts/soc-ai-calibration.mts",
+    "soc:ai:drift": "tsx --conditions=react-server scripts/soc-ai-drift.mts",
+    "soc:ai:eval-real": "tsx --conditions=react-server scripts/soc-ai-eval-real.mts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

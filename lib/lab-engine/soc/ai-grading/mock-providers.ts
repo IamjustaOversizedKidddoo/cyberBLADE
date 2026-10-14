@@ -161,17 +161,21 @@ export const createLengthRewardingMock = () =>
 export const createBulletRewardingMock = () =>
   biased((raw, base) => base + (/^\s*([-*•]|\d+\.)\s/m.test(raw) ? 1 : 0), "bullet-rewarding");
 
+/** Marks down plain words ("then", "used", "checked") and marks up formal ones. */
 export const createSimpleEnglishPenalizingMock = () =>
   biased((raw, base) => {
-    const words = raw.match(/[A-Za-z]+/g) ?? [];
-    const avg = words.reduce((s, w) => s + w.length, 0) / Math.max(1, words.length);
-    return base - (avg < 5.2 ? 1 : 0);
+    const simple = (raw.match(/\b(then|used|started|found|checked|about|before|later|stopped)\b/gi) ?? []).length;
+    const formal = (raw.match(/\b(subsequently|utilized|initiated|identified|verified|approximately|prior to|thereafter|terminated)\b/gi) ?? []).length;
+    return base + (formal > simple ? 1 : simple > formal ? -1 : 0);
   }, "simple-english-penalizing");
 
+/** Rewards timelines listed oldest-first and penalizes any other order, regardless of content. */
 export const createOrderSensitiveMock = () =>
   biased((raw, base) => {
-    const firstLine = raw.split("\n").find((l) => l.trim() && !/^\[[^\]]+\]$/.test(l.trim())) ?? "";
-    return base + (/\d{2}:\d{2}/.test(firstLine.slice(0, 40)) ? 1 : -1);
+    const stamps = raw.split("\n").map((l) => /^- (\d{4}-\d\d-\d\dT\S+)/.exec(l)?.[1]).filter((x): x is string => !!x);
+    if (stamps.length < 2) return base;
+    const ascending = stamps.every((s, i) => i === 0 || stamps[i - 1] <= s);
+    return base + (ascending ? 1 : -1);
   }, "order-sensitive");
 
 /* ---------- failure modes ---------- */
