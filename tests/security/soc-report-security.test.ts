@@ -230,7 +230,6 @@ describe("SOC Report Adversarial API & Security Controls", () => {
     const DEFINER_ALLOWLIST: Record<string, string> = {
       "public.delete_user_account": "erases rows across tables the caller cannot delete directly; checks auth.uid()",
       "public.prevent_operator_rank_escalation": "trigger must read service-only state to reject rank tampering",
-      "public.set_updated_at": "existing trigger helper (prompt 6); harmless, candidate for SECURITY INVOKER",
     };
 
     function functionsIn(content: string): Array<{ name: string; header: string }> {
