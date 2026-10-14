@@ -98,6 +98,7 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
         questions={toPublicChecks(checks, operator.id)}
         initialPassed={progress?.checksPassed ?? []}
         answer={answerCheckAction.bind(null, lesson.id)}
+        variant={isSoc ? "readable" : "terminal"}
       />
     ),
     LabLink: () =>
