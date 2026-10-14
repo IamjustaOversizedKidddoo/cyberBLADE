@@ -87,17 +87,17 @@ skills:
     gap: null
   - id: soc_threat_intel
     planned: "10, 31, 32"
-    lessons: []
+    lessons: [soc-l1-attack-vocabulary-01]
     practice: ["tool:reputation", "tool:whois"]
     gap: null
   - id: soc_siem_correlation
     planned: "11, 33-36"
-    lessons: []
+    lessons: [soc-l1-detection-blind-spots-01]
     practice: ["shift:shift-quiet-day", "drill:drill-12", "drill:drill-14"]
     gap: null
   - id: soc_scope_assessment
     planned: "6, 9, 23, 36"
-    lessons: [soc-l1-prioritisation-01]
+    lessons: [soc-l1-prioritisation-01, soc-l1-attack-stages-01]
     practice: ["report:scope_and_impact"]
     gap: null
   - id: soc_escalation_handoff

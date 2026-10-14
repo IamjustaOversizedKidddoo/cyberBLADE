@@ -1,0 +1,156 @@
+---
+id: soc-l1-attack-vocabulary-01
+title: "ATT&CK as a Shared Vocabulary"
+track: soc
+rank: 1
+module: detect
+order: 10
+estimated_minutes: 15
+objectives_covered: ["soc:soc_threat_intel"]
+mitre: ["T1566", "T1110", "T1053", "T1059", "T1071"]
+xp: 90
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-attack-stages-01"]
+skills: ["soc_threat_intel"]
+practice: ["report:technique_mapping"]
+---
+
+> **Outcome:** you can read an ATT&CK technique ID, map observed activity to the right tactic and technique, and avoid claiming more precision than your evidence supports.
+
+## Why this matters on shift
+
+When you write "the attacker stayed in by creating a scheduled task", a colleague in another company, another team or another country may describe the same thing differently. ATT&CK gives everyone the same words and the same IDs. Reports, detection rules, threat intelligence and the simulator's incident report all use it, so you need to read and write it accurately.
+
+## Before you start
+
+You should already know:
+
+- The stages of an attack: [How Attacks Unfold](/learn/soc-l1-attack-stages-01).
+
+## Core ideas
+
+### What ATT&CK is
+
+MITRE ATT&CK is a free, public knowledge base of the ways real attackers behave, organised by what they are trying to achieve and how they do it.
+
+Think of a field guide to birds. Instead of "a smallish brown bird with a loud song", birdwatchers say the species name, and everyone knows exactly what was seen. ATT&CK does the same for attacker behaviour: instead of "they made the computer run their thing every hour", you write "Scheduled Task, T1053.005".
+
+MITRE is a non-profit organisation. ATT&CK is built from publicly reported real-world attacks, and it is updated regularly, with new versions released each year.
+
+### Tactics, techniques, sub-techniques, procedures
+
+ATT&CK has layers, from "why" down to "exactly how":
+
+- A **tactic** is the attacker's goal at that moment: the "why". Examples are Initial Access, Execution, Persistence, Lateral Movement, Command and Control, Exfiltration and Impact. Tactics match the stages you learned, split more finely: the Enterprise matrix currently has 14, including Credential Access, Discovery and Defense Evasion.
+- A **technique** is a way of achieving a tactic: the "how". Phishing (T1566) is a technique for Initial Access.
+- A **sub-technique** is a more specific variety of a technique. Spearphishing Attachment is T1566.001; Spearphishing Link is T1566.002.
+- A **procedure** is the specific way a particular attacker carried out a technique in a particular attack, for example "emailed a macro-enabled delivery schedule to logistics staff".
+
+### Reading the IDs
+
+- Tactic IDs start with `TA`: Initial Access is TA0001.
+- Technique IDs start with `T` and four digits: Brute Force is T1110.
+- Sub-technique IDs add a dot and three digits: Password Spraying is T1110.003.
+
+<FlowDiagram
+  title="From observed activity to an ATT&CK mapping"
+  description="Describe what you observed in plain words, decide which tactic (goal) it served, find the technique (how), and add a sub-technique only if your evidence shows that specific variety. Record the evidence next to the ID."
+  steps={[
+    { label: "Describe the activity", detail: "In plain words, from the evidence." },
+    { label: "Pick the tactic", detail: "What was the attacker trying to achieve at that moment?" },
+    { label: "Pick the technique", detail: "How did they do it?" },
+    { label: "Sub-technique only with evidence", detail: "If the evidence does not show which variety, stop at the technique." },
+    { label: "Cite the evidence", detail: "Write the event next to the ID." },
+  ]}
+/>
+
+In plain English: describe first, label second, and never be more specific than what you saw.
+
+### A technique is not a verdict
+
+Many techniques describe tools that administrators use every day. Command and Scripting Interpreter (T1059) covers PowerShell (T1059.001), which IT teams run constantly. Mapping an activity to a technique says "this is the kind of thing attackers do", not "this was an attack". Triage still decides that.
+
+### Some useful techniques for L1
+
+| Activity | Technique |
+|---|---|
+| Malicious email attachment | T1566.001 Spearphishing Attachment |
+| Malicious link in email | T1566.002 Spearphishing Link |
+| One password tried against many accounts | T1110.003 Password Spraying |
+| Signing in with a stolen but real account | T1078 Valid Accounts |
+| PowerShell used to run attacker commands | T1059.001 PowerShell |
+| Scheduled task for persistence or execution | T1053.005 Scheduled Task |
+| C2 over normal web or other application protocols | T1071 Application Layer Protocol |
+
+## Worked example
+
+The Tier 2 analyst at Larkspur Freight asks for ATT&CK mappings for the intrusion on ws-077 from the previous lesson. The Tier 1 analyst drafts:
+
+<LogBlock
+  title="Draft mapping (synthetic)"
+  lines={[
+    "Initial Access   T1566.002  Spearphishing Link",
+    "Execution        T1059.001  PowerShell",
+    "Persistence      T1053.005  Scheduled Task",
+    "C2               T1071.001  Web Protocols",
+  ]}
+/>
+
+Then they check each line against the evidence:
+
+- **Initial access.** The evidence shows `schedule.docm` arriving as an attachment and being opened in the word processor. That is an attachment, not a link: T1566.001. The draft was wrong.
+- **Execution.** The evidence says the word processor "started a script interpreter". It does not say which interpreter. The parent technique T1059 is supported; T1059.001 (PowerShell) is a guess. They change it to T1059 and note "interpreter not yet identified".
+- **Persistence.** A scheduled task named 'SysHealthCheck' was created: T1053.005 is supported.
+- **C2.** The connection went to port 443. Port 443 is usually used for HTTPS, but the port alone does not prove which protocol was spoken. T1071 is supported; the web-protocols sub-technique is not yet. They map T1071 and note what would confirm the sub-technique (proxy logs showing web requests).
+
+The final mapping has two fewer guesses and one corrected error, and every line has evidence.
+
+## Try it
+
+<MicroExercise id="map-techniques" />
+
+## Common mistakes
+
+- **Guessing a sub-technique.** Stop at the technique when the evidence does not show the variety.
+- **Treating a technique as proof of malice.** Admins use many listed techniques daily.
+- **Mapping without citing evidence.** An ID with no event next to it cannot be checked.
+- **Mixing up tactic and technique.** Tactic is why, technique is how.
+- **Copying IDs from memory.** IDs change across ATT&CK versions; check the current site when it matters.
+
+## What good looks like
+
+A strong analyst's mappings are sparse and accurate: each ID sits next to the event that supports it, sub-techniques appear only when proven, and uncertainty is written down.
+
+## In the real world
+
+Detection teams use ATT&CK to see which techniques their rules cover and where the gaps are. Threat intelligence reports list the techniques a group uses. Incident reports include a technique table. You can browse it on the MITRE ATT&CK website. The simulator's incident report has a technique-mapping section. It gives credit for techniques that match the incident's observed behaviour, partial credit when only the tactic is right, and a small penalty for techniques that do not belong to the incident.
+
+## Remember it like this
+
+Tactic = why, technique = how, sub-technique = exactly how, and only as specific as the evidence.
+
+## Interview answer
+
+"MITRE ATT&CK is a public knowledge base of real attacker behaviour. Tactics are the attacker's goals, like Initial Access or Persistence. Techniques, like Phishing T1566, are how they achieve them, and sub-techniques add detail, like Spearphishing Attachment T1566.001. When I map activity I describe it first, pick the tactic and technique, and only add a sub-technique when the evidence shows it. I also remember that a technique isn't proof of malice, because admins use many of them."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "MITRE ATT&CK", definition: "A free, public knowledge base of real attacker behaviour, organised by tactics and techniques." },
+    { term: "Tactic", definition: "In ATT&CK, the attacker's goal at a moment (the 'why'), such as Initial Access or Persistence." },
+    { term: "Technique", definition: "In ATT&CK, a way of achieving a tactic (the 'how'), such as Phishing (T1566)." },
+    { term: "Sub-technique", definition: "A more specific variety of a technique, shown with a dot, such as T1566.001 Spearphishing Attachment." },
+    { term: "Procedure", definition: "The specific way a particular attacker carried out a technique in a particular attack." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

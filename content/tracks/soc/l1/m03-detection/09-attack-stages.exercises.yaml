@@ -1,0 +1,68 @@
+lesson: soc-l1-attack-stages-01
+exercises:
+  - id: place-stages
+    title: "Place events at their stage"
+    kind: timeline
+    instructions: >-
+      These events come from one confirmed intrusion at Larkspur Freight. Choose the stage each
+      event belongs to.
+    blocks:
+      - type: log
+        title: "Confirmed intrusion timeline (synthetic)"
+        lines:
+          - "E1  08:12  Successful sign-in to the VPN as b.ortiz from 192.0.2.215 after 300 failed attempts across 40 accounts"
+          - "E2  08:30  New local administrator account 'helpdesk2' created on ws-019"
+          - "E3  08:41  ws-019 signs in to the file server fs-fin01 with the 'helpdesk2' account"
+          - "E4  09:05  3 GB of files copied from fs-fin01 and uploaded to an outside storage service"
+          - "E5  every 60 s  ws-019 sends a small request to 192.0.2.215 and receives a small reply"
+    questions:
+      - id: e1
+        prompt: "Which stage is E1?"
+        answer_type: choice
+        options: ["Initial access", "Persistence", "Lateral movement", "Exfiltration", "Command and control"]
+        accept: ["Initial access"]
+        hints:
+          - "Is this the attacker's first foothold, or something they did after getting in?"
+        explanation: >-
+          A password guessed across many accounts, then a successful VPN sign-in, is the attacker's way
+          in.
+      - id: e2
+        prompt: "Which stage is E2?"
+        answer_type: choice
+        options: ["Initial access", "Persistence", "Lateral movement", "Exfiltration", "Command and control"]
+        accept: ["Persistence"]
+        hints:
+          - "What does a new account give the attacker if b.ortiz's password is changed tomorrow?"
+        explanation: >-
+          A new administrator account gives the attacker a way back in that does not depend on b.ortiz's
+          password.
+      - id: e3
+        prompt: "Which stage is E3?"
+        answer_type: choice
+        options: ["Initial access", "Persistence", "Lateral movement", "Exfiltration", "Command and control"]
+        accept: ["Lateral movement"]
+        hints:
+          - "The attacker is already inside. Are they staying on the same machine?"
+        explanation: >-
+          Moving from ws-019 to the file server with the new account is moving from one compromised
+          system to another.
+      - id: e4
+        prompt: "Which stage is E4?"
+        answer_type: choice
+        options: ["Initial access", "Persistence", "Lateral movement", "Exfiltration", "Command and control"]
+        accept: ["Exfiltration"]
+        hints:
+          - "Where is the data going?"
+        explanation: >-
+          Files copied from an internal server and uploaded to an outside service are leaving the
+          organisation.
+      - id: e5
+        prompt: "Which stage is E5?"
+        answer_type: choice
+        options: ["Initial access", "Persistence", "Lateral movement", "Exfiltration", "Command and control"]
+        accept: ["Command and control"]
+        hints:
+          - "Small, regular messages to the same outside address that the attack came from: what are they for?"
+        explanation: >-
+          Regular small requests and replies to the attacker's address are a check-in channel for
+          receiving commands.

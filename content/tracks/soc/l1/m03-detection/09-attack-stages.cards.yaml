@@ -1,0 +1,14 @@
+lesson: soc-l1-attack-stages-01
+cards:
+  - id: fc-soc-l1-attack-stages-01
+    front: "What are the six stages in this track's attack model?"
+    back: "Get in (initial access), run code (execution), stay (persistence), climb and spread, act on goals, with command and control throughout."
+  - id: fc-soc-l1-attack-stages-02
+    front: "What three questions do you ask after placing an alert at a stage?"
+    back: "Which stage is it? Looking back, how did they get here? Looking forward, has the next stage happened?"
+  - id: fc-soc-l1-attack-stages-03
+    front: "What is lateral movement?"
+    back: "Moving from one compromised system or account to others inside the network."
+  - id: fc-soc-l1-attack-stages-04
+    front: "Do attacks always pass through every stage in order?"
+    back: "No. Attackers skip and repeat stages; the model is for asking questions, not for strict ordering."

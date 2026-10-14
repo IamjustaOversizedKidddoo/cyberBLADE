@@ -1,0 +1,160 @@
+---
+id: soc-l1-detection-blind-spots-01
+title: "Detection Types and Telemetry Blind Spots"
+track: soc
+rank: 1
+module: detect
+order: 11
+estimated_minutes: 16
+objectives_covered: ["soc:soc_siem_correlation"]
+mitre: ["T1070"]
+xp: 90
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-attack-vocabulary-01"]
+skills: ["soc_siem_correlation"]
+practice: ["shift:shift-night-telemetry-gaps"]
+---
+
+> **Outcome:** you can name the main kinds of detection and what each misses, and check whether "no results" really means "nothing happened".
+
+## Why this matters on shift
+
+A search that returns nothing feels like good news. Sometimes it is. Sometimes it means the machine stopped sending logs, the logs were never collected, or the attacker deleted them. An analyst who cannot tell the difference will close real incidents as "nothing found". Knowing how detections work, and where they cannot see, is what makes "nothing found" a trustworthy statement.
+
+## Before you start
+
+You should already know:
+
+- ATT&CK tactics and techniques: [ATT&CK as a Shared Vocabulary](/learn/soc-l1-attack-vocabulary-01).
+- That a false negative is an attack that raised no alert: [False Positives, Benign True Positives and Duplicates](/learn/soc-l1-dispositions-01).
+
+## Core ideas
+
+### Detections need telemetry
+
+**Telemetry** is the stream of logs and records that systems send for monitoring. Each place that telemetry comes from is a **log source**. Common log sources for a SOC:
+
+- **Endpoint:** process starts, file changes and network connections on laptops and servers, usually from an agent such as an EDR (endpoint detection and response) tool.
+- **Identity:** sign-ins, failures, MFA results and account changes.
+- **Network:** firewall, proxy and DNS logs, and flow records.
+- **Email:** messages delivered, blocked and reported.
+- **Cloud and applications:** admin actions, file sharing and API calls.
+
+A detection rule can only see what its log source sends. No telemetry, no detection.
+
+### Kinds of detection
+
+Think of airport security. One officer checks passports against a list of known wanted people. Another watches for suspicious behaviour, such as someone avoiding cameras. A third notices that the queue is three times longer than usual for a Tuesday. Each catches things the others miss.
+
+Detections work the same way:
+
+- **Signature-based detection** matches exact known-bad values: a file hash, a domain, a specific byte pattern. It is precise and rarely wrong, but it misses anything new or slightly changed.
+- **Behaviour-based detection** matches patterns of activity, whatever the tool: "a word processor starts a script interpreter", "a new admin account is created at night". It catches new tools that behave in known ways, but fires more often on unusual legitimate work.
+- **Anomaly-based detection** compares activity with a learned normal (a baseline) and flags big differences: an account downloading fifty times its usual volume. It can catch things nobody wrote a rule for, but "unusual" is not the same as "malicious", so it needs careful triage.
+- **Threshold rules** fire when a count passes a limit, such as 10 failures in 5 minutes. Attackers who stay just under the limit are not seen.
+
+| Kind | Good at | Misses |
+|---|---|---|
+| Signature | Known malware, known bad domains | Anything new or changed |
+| Behaviour | New tools doing known things | Attacks that look like normal admin work |
+| Anomaly | The unexpected | Slow, quiet attacks that stay within normal |
+| Threshold | Bursts | Activity kept just under the limit |
+
+### Blind spots
+
+A **coverage gap** is a place or period where the SOC cannot see, so attacks there cannot be detected. Common causes:
+
+- A log source was never connected to the SIEM.
+- An endpoint agent is missing, broken or offline.
+- Logging was turned down or off on a system.
+- Logs were kept for too short a time and have already been deleted.
+- Clocks on different systems disagree, so events do not line up.
+- The attacker deleted or tampered with logs, an ATT&CK technique called Indicator Removal (T1070).
+
+<FlowDiagram
+  title="Before you trust 'no results'"
+  description="When a search returns nothing, check that the log source covers this system, that it was sending data during the period, that the data is still retained, and that the search itself was right. Only then can you say nothing happened."
+  steps={[
+    { label: "Is this system covered?", detail: "Does the log source include it at all?" },
+    { label: "Was it sending then?", detail: "Check the last-seen or heartbeat times for the period." },
+    { label: "Is the data still kept?", detail: "Is the period inside the retention window?" },
+    { label: "Was the search right?", detail: "Correct host name, time range and time zone?" },
+    { label: "Then: nothing happened", detail: "Write which checks support that statement." },
+  ]}
+/>
+
+In plain English: "I found nothing" is only useful if you can also say "and I could have seen it".
+
+## Worked example
+
+During a night shift at Larkspur Freight, Tier 2 asks the Tier 1 analyst: "Did ws-163 connect to 192.0.2.233 between 01:00 and 04:00 UTC? Another machine did."
+
+The analyst searches the firewall and endpoint logs for ws-163 in that window. **No results.**
+
+**The tempting conclusion.** "ws-163 did not connect." But the analyst follows the checks before answering:
+
+<LogBlock
+  title="Log source health for ws-163 (synthetic)"
+  lines={[
+    "source      last event before window   first event after window",
+    "endpoint    00:58 UTC                  04:12 UTC",
+    "firewall    (ws-163 is a laptop; office firewall only sees it when on site)",
+    "proxy       00:57 UTC                  04:13 UTC",
+  ]}
+/>
+
+The endpoint agent and the proxy both went quiet from 00:58 to 04:12, exactly covering the window. The laptop was not on the office network, so the firewall could not see it either. The search was correct, but the **telemetry was missing**.
+
+**What this means.** The honest answer is not "no connection". It is: "Unknown. ws-163's endpoint and proxy telemetry stopped at 00:58 and resumed at 04:12 UTC; the laptop was off site, so the firewall has no view. A gap covering the exact window needs explaining. Asleep and offline, or an agent stopped on purpose?" Tier 2 now checks whether the agent was deliberately stopped, which attackers sometimes do before acting.
+
+## Try it
+
+<MicroExercise id="trust-no-results" />
+
+## Common mistakes
+
+- **Treating "no results" as "nothing happened".** Check coverage first.
+- **Assuming every machine sends every log.** Laptops off site, unmanaged devices and new servers are common gaps.
+- **Searching in the wrong time zone.** Your search window can miss the events completely.
+- **Thinking signatures cover new attacks.** They only know what they have already seen.
+- **Ignoring silence that lines up with suspicious activity.** A gap at exactly the wrong moment is itself a lead.
+
+## What good looks like
+
+A strong analyst's "nothing found" always comes with "and here is why I could have seen it", or with a clear statement of the gap. They know which log sources cover which systems, and they report gaps so they get fixed.
+
+## In the real world
+
+Most SIEMs and endpoint tools show when each source or agent was last seen, and many teams alert when an important source goes quiet. Coverage is never complete: budgets, privacy rules and technical limits all leave gaps, and attackers look for them. Detection engineers often map their rules against ATT&CK techniques to find what is not covered.
+
+The simulator's "night telemetry gaps" shift profile hides some events on purpose. Practising there builds the habit of checking coverage before you trust silence.
+
+## Remember it like this
+
+No telemetry, no detection, so check that you could have seen it before you say it did not happen.
+
+## Interview answer
+
+"Detections can only see what their log sources send. Signatures catch known-bad values precisely but miss anything new, behaviour rules catch patterns but fire on unusual admin work, anomaly detection catches the unexpected but needs careful triage, and thresholds miss activity kept under the limit. When a search returns nothing, I check the system is covered, that it was sending during the window, that the data is still retained, and that my search was right, before I say nothing happened."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Telemetry", definition: "The stream of logs and records that systems send for security monitoring." },
+    { term: "Log source", definition: "A system or tool that sends telemetry to the SOC, such as an endpoint agent, firewall, proxy or identity provider." },
+    { term: "Signature-based detection", definition: "Detection that matches exact known-bad values, such as file hashes or domains; precise, but blind to anything new." },
+    { term: "Anomaly-based detection", definition: "Detection that flags activity far from a learned normal baseline; it can catch the unexpected but needs careful triage." },
+    { term: "Coverage gap", definition: "A place or period where the SOC cannot see, so attacks there cannot be detected." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

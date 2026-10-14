@@ -84,6 +84,8 @@ Flashcards live in `<lesson>.cards.yaml` next to the lesson and only hold facts 
 | 41 | M12 Working the shift | Queue, time and handover (`queue-handover`) | 6, 8 | soc_alert_triage, soc_case_management | shift:shift-alert-storm |
 | 42 | M12 | Judgment, sustainability and honest career orientation (`judgment-career`) | 41 | soc_alert_triage | shift:shift-standard-mixed |
 
+**Prerequisite changes during Part 4 (2026-10-14):** the track gate is Rank 1, so a Rank 1 learner cannot open Rank 2 core lessons. Lessons 9, 26 and 31 therefore use Rank 0–1 core prerequisites instead of `core-r2-*`. Lesson 9 uses `core-r0-mind-attacker-defender-01`; the replacements for 26 and 31 are recorded when those lessons land. The pilot triage loop (5) now depends on lesson 4, as planned.
+
 **Module adjustments vs the brief** (with reasons):
 - M2 has five lessons instead of four, because triage is the core L1 skill.
 - M6 adds a Linux lesson. Linux hosts are in the simulator.

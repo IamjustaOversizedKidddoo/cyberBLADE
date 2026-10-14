@@ -260,6 +260,102 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "back": "Confirm the next owner has picked it up."
   },
   {
+    "id": "fc-soc-l1-attack-stages-01",
+    "lessonId": "soc-l1-attack-stages-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the six stages in this track's attack model?",
+    "back": "Get in (initial access), run code (execution), stay (persistence), climb and spread, act on goals, with command and control throughout."
+  },
+  {
+    "id": "fc-soc-l1-attack-stages-02",
+    "lessonId": "soc-l1-attack-stages-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What three questions do you ask after placing an alert at a stage?",
+    "back": "Which stage is it? Looking back, how did they get here? Looking forward, has the next stage happened?"
+  },
+  {
+    "id": "fc-soc-l1-attack-stages-03",
+    "lessonId": "soc-l1-attack-stages-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is lateral movement?",
+    "back": "Moving from one compromised system or account to others inside the network."
+  },
+  {
+    "id": "fc-soc-l1-attack-stages-04",
+    "lessonId": "soc-l1-attack-stages-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Do attacks always pass through every stage in order?",
+    "back": "No. Attackers skip and repeat stages; the model is for asking questions, not for strict ordering."
+  },
+  {
+    "id": "fc-soc-l1-attack-vocabulary-01",
+    "lessonId": "soc-l1-attack-vocabulary-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "ATT&CK tactic vs technique vs sub-technique?",
+    "back": "Tactic = why (the goal), technique = how, sub-technique = a more specific variety of the how."
+  },
+  {
+    "id": "fc-soc-l1-attack-vocabulary-02",
+    "lessonId": "soc-l1-attack-vocabulary-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which ID is Spearphishing Attachment, and which is Spearphishing Link?",
+    "back": "T1566.001 is Spearphishing Attachment; T1566.002 is Spearphishing Link."
+  },
+  {
+    "id": "fc-soc-l1-attack-vocabulary-03",
+    "lessonId": "soc-l1-attack-vocabulary-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which ATT&CK ID is Password Spraying?",
+    "back": "T1110.003, a sub-technique of Brute Force (T1110)."
+  },
+  {
+    "id": "fc-soc-l1-attack-vocabulary-04",
+    "lessonId": "soc-l1-attack-vocabulary-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "When should you NOT add a sub-technique to a mapping?",
+    "back": "When the evidence does not show which variety it was. Map the parent technique and note what is unknown."
+  },
+  {
+    "id": "fc-soc-l1-detection-blind-spots-01",
+    "lessonId": "soc-l1-detection-blind-spots-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What four checks come before you trust 'no results'?",
+    "back": "The system is covered by the log source, it was sending during the window, the data is still retained, and the search itself was right."
+  },
+  {
+    "id": "fc-soc-l1-detection-blind-spots-02",
+    "lessonId": "soc-l1-detection-blind-spots-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does signature-based detection catch, and what does it miss?",
+    "back": "It catches exact known-bad values (hashes, domains) and misses anything new or changed."
+  },
+  {
+    "id": "fc-soc-l1-detection-blind-spots-03",
+    "lessonId": "soc-l1-detection-blind-spots-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why can an agent going silent be a lead?",
+    "back": "Attackers sometimes stop monitoring agents before acting, so a gap that lines up with an incident needs explaining."
+  },
+  {
+    "id": "fc-soc-l1-detection-blind-spots-04",
+    "lessonId": "soc-l1-detection-blind-spots-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is the ATT&CK technique for deleting or tampering with logs?",
+    "back": "Indicator Removal, T1070."
+  },
+  {
     "id": "fc-soc-l1-email-headers-01",
     "lessonId": "soc-l1-email-headers-01",
     "rank": 1,
