@@ -87,7 +87,9 @@ export function validateSample(
       if (!flags.includes("spans_in_instruction_region")) flags.push("spans_in_instruction_region");
       continue; // quoting the injection is not evidence of good writing
     }
-    if (!spans.some((s) => s.field === found.field && s.start === found.start)) spans.push(found);
+    // Overlapping quotes are one piece of evidence, not two.
+    const overlaps = spans.some((s) => s.field === found.field && found.start < s.end && found.end > s.start);
+    if (!overlaps) spans.push(found);
   }
 
   if (out.insufficientInformation && out.band !== 0) return { ok: false, rejection: "insufficient_with_band" };

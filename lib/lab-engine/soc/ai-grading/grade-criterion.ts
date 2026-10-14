@@ -153,9 +153,9 @@ export async function gradeCriterion(args: GradeCriterionArgs): Promise<Criterio
 
   const agg = aggregateSamples(valid, { lowConfidenceSpread: config.sampling.disagreementSpreadLowConfidence });
   agg.flags.forEach((f) => flags.add(f));
-  if (injection.flagged && relevantRegions.length + (injection.kinds.includes("invisible_characters") ? 1 : 0) > 0) {
-    flags.add("injection_signals");
-  }
+  // A payload anywhere makes the whole submission adversarial: split attacks put half the
+  // instruction in a field this criterion never reads.
+  if (injection.flagged) flags.add("injection_signals");
 
   let status: AiGradeStatus = "graded";
   if (agg.band >= 2 && countWords(text) < config.sanity.minWordsForHighBand) {

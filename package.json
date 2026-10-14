@@ -20,7 +20,8 @@
     "soc:review-pack": "tsx scripts/soc-review-pack.mts",
     "eval:handler": "tsx scripts/eval-handler.mts",
     "report:learning": "tsx scripts/learning-analytics-report.mts",
-    "soc:regrade": "tsx scripts/soc-regrade.mts"
+    "soc:regrade": "tsx scripts/soc-regrade.mts",
+    "soc:ai:injection": "tsx --conditions=react-server scripts/soc-ai-injection.mts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
