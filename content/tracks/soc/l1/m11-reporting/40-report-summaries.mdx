@@ -1,0 +1,161 @@
+---
+id: soc-l1-report-summaries-01
+title: "Summaries and Handoffs Under Time Pressure"
+track: soc
+rank: 1
+module: report
+order: 40
+estimated_minutes: 15
+objectives_covered: ["soc:soc_documentation", "soc:soc_escalation_handoff"]
+mitre: []
+xp: 120
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-report-anatomy-01"]
+skills: ["soc_documentation", "soc_escalation_handoff"]
+practice: ["report:executive_summary"]
+---
+
+> **Outcome:** you can write a short, accurate summary for a non-technical reader, state how sure you are in consistent words, and do it quickly when time is short.
+
+## Why this matters on shift
+
+The people who make the biggest decisions about an incident (managers, directors, the legal team) often read only the first paragraph. They need to know what happened, how bad it is, whether it is under control and what you need from them, in plain words, in under a minute. A summary full of jargon, guesses stated as facts, or no clear ask leads to slow or wrong decisions at the moment they matter most.
+
+## Before you start
+
+You should already know:
+
+- The sections of an incident report: [Report Anatomy, Timelines and IOC Tables](/learn/soc-l1-report-anatomy-01).
+
+## Core ideas
+
+### Bottom line up front
+
+An **executive summary** is the short, plain-language opening of a report for readers who will not read the rest. The best structure is **bottom line up front**: start with the conclusion and its impact, then add only the supporting detail the reader needs.
+
+Think of a weather warning on the radio: "Severe storm reaching the coast at 6 pm; stay indoors; next update at 4 pm." The listener does not need the pressure readings to act. The meteorologists have those in their report.
+
+A good executive summary answers, in order:
+
+1. **What happened**, in one or two sentences.
+2. **Impact:** who and what is affected, and the business risk.
+3. **Status:** contained or not, and what has been done.
+4. **What we need:** decisions or help from the reader, if any.
+5. **When the next update comes.**
+
+### Plain language
+
+Write for an intelligent reader who does not work in security:
+
+- Replace jargon with plain words: "an attacker signed in with a stolen password", not "T1078 valid account abuse observed".
+- If a technical term matters, explain it once in a few words.
+- Use exact numbers: "3 laptops and 1 email account", not "several systems".
+- Keep blame and speculation out. "The attacker is probably a foreign government" is a guess that helps nobody decide anything.
+
+### Saying how sure you are
+
+A **confidence statement** says how certain you are of a conclusion, in words used consistently across the team. A simple scale:
+
+- **Confirmed:** directly shown by evidence.
+- **Likely:** strongly suggested, with no evidence against it.
+- **Possible:** consistent with the evidence, but other explanations remain.
+- **Unknown:** not yet investigated, or no evidence either way.
+
+Use the same words every time, and never let "likely" turn into "confirmed" just because a sentence reads better.
+
+<FlowDiagram
+  title="Writing a summary under time pressure"
+  description="Write the bottom line first. Add impact, status, the ask and the next update time. Replace jargon with plain words and exact numbers. Mark each conclusion with a consistent confidence word. Read it as the reader would and cut anything they do not need."
+  steps={[
+    { label: "Bottom line", detail: "What happened, in one or two sentences." },
+    { label: "Impact and status", detail: "Who and what is affected; contained or not." },
+    { label: "The ask and next update", detail: "Decisions needed; when you will report again." },
+    { label: "Plain words, exact numbers", detail: "No unexplained jargon; no 'several'." },
+    { label: "Confidence and cuts", detail: "Confirmed, likely or possible; remove what the reader does not need." },
+  ]}
+/>
+
+In plain English: say the answer first, say how sure you are, say what you need, and stop.
+
+### When time is short
+
+During an active incident you may have five minutes to write an update. Use a fixed template so you do not have to think about structure: bottom line, impact, status, ask, next update. Accuracy beats polish. An update that is short and right is better than one that is long and late.
+
+## Worked example
+
+A Larkspur Freight analyst drafts the summary for a confirmed mailbox takeover:
+
+<LogBlock
+  title="Draft 1 (synthetic)"
+  lines={[
+    "At 13:42Z TA leveraged T1078 to achieve IA via the IdP, then created a malicious inbox rule (T1564.008).",
+    "We think it's probably a sophisticated APT targeting our supply chain. Several systems may be impacted.",
+    "IR is ongoing.",
+  ]}
+/>
+
+**Why it fails.** It is written for specialists ("TA", "IA", technique IDs). It guesses about the attacker with no evidence. "Several systems may be impacted" is vague. There is no status, no ask and no next update.
+
+<LogBlock
+  title="Draft 2 (synthetic)"
+  lines={[
+    "An attacker signed in to the email account of a finance manager this afternoon using a stolen password (confirmed)",
+    "and set up a hidden rule that diverted emails about payments (confirmed). One account is affected; no other",
+    "accounts show signs of access (checked: all sign-ins from the same address in the last 7 days).",
+    "Status: the account has been secured and the rule removed at 14:35 UTC. Risk: payment fraud. We do not yet know",
+    "whether any payment emails were changed (unknown).",
+    "Ask: Finance, please hold payments to any supplier whose bank details changed this week until we confirm.",
+    "Next update: 17:00 UTC.",
+  ]}
+/>
+
+The second draft is plain, exact, marks confidence on each conclusion, states the risk and gives a clear ask and update time. A reader can act on it in under a minute.
+
+## Try it
+
+<MicroExercise id="summary-calls" />
+
+## Common mistakes
+
+- **Leading with background.** Put the conclusion first.
+- **Jargon and acronyms.** Leadership needs plain words.
+- **Vague quantities.** "Several" and "some" hide what the reader needs to know.
+- **Guesses presented as facts,** or attacker attribution without evidence.
+- **No ask.** If you need a decision, say exactly what and from whom.
+- **No next update time.** People will interrupt the responders to ask.
+
+## What good looks like
+
+A strong analyst's summary fits on one screen, opens with the bottom line, uses plain words and exact numbers, marks each conclusion with a consistent confidence word, makes a clear ask, and gives the next update time.
+
+## In the real world
+
+Many organisations have fixed templates for incident updates and executive summaries, and some have legal rules about what may be said in writing during an incident. Leadership updates are often reviewed by the incident lead before they go out. Consistent confidence words are common in intelligence and incident reporting, though each team may define its own scale.
+
+## Remember it like this
+
+Bottom line, impact, status, ask, next update: plain words, exact numbers, honest confidence.
+
+## Interview answer
+
+"I write executive summaries bottom line up front: what happened, the impact, whether it's contained, what we need from the reader, and when the next update comes. I use plain words and exact numbers instead of jargon and 'several', and I mark each conclusion with a consistent confidence word, confirmed, likely, possible or unknown, without letting likely drift into confirmed. Under time pressure I use a fixed template, because a short, accurate update on time beats a polished late one."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Executive summary", definition: "The short, plain-language opening of a report for readers who will not read the rest." },
+    { term: "Bottom line up front", definition: "Starting with the conclusion and its impact, then adding only the detail the reader needs." },
+    { term: "Confidence statement", definition: "A consistent word, such as confirmed, likely, possible or unknown, saying how certain a conclusion is." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

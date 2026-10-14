@@ -1,0 +1,49 @@
+lesson: soc-l1-report-anatomy-01
+exercises:
+  - id: ioc-table
+    title: "Build a clean indicator table"
+    kind: report-section
+    instructions: >-
+      These candidate indicators came from a confirmed incident in which a server downloaded a tool
+      and then beaconed out. Decide which belong in the IOC table.
+    blocks:
+      - type: table
+        title: "Candidate indicators (synthetic)"
+        columns: ["ID", "Value", "Evidence"]
+        rows:
+          - ["C1", "192.0.2.85", "The server beaconed to it every 60 s after the tool ran"]
+          - ["C2", "172.16.40.5", "Larkspur's proxy; every outbound request passes through it"]
+          - ["C3", "tools-mirror.example/x/agent.bin", "The tool was downloaded from this exact URL"]
+          - ["C4", "203.0.113.53", "A public DNS resolver that every Larkspur server uses for name lookups"]
+    questions:
+      - id: c1-role
+        prompt: "Which role fits C1?"
+        answer_type: choice
+        options: ["Command and control", "Delivery", "Staging"]
+        accept: ["Command and control"]
+        hints:
+          - "What were the regular connections for?"
+        explanation: >-
+          Regular check-ins after the tool ran are the command-and-control channel.
+      - id: exclude
+        prompt: "Which candidate is Larkspur's own infrastructure and must be left out? (Type its ID.)"
+        answer_type: text
+        accept: ["C2"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Which value appears in all outbound traffic because it is part of Larkspur's network?"
+        explanation: >-
+          The proxy carries every outbound request. Listing it as malicious could get Larkspur's own
+          infrastructure blocked.
+      - id: defang
+        prompt: "How should C3 appear in the table?"
+        answer_type: choice
+        options:
+          - "Defanged, such as tools-mirror[.]example/x/agent.bin, with the role staging"
+          - "As a clickable link so others can check it"
+          - "Left out, because URLs are never indicators"
+        accept: ["Defanged, such as tools-mirror[.]example/x/agent.bin, with the role staging"]
+        hints:
+          - "How do you stop a reader clicking an indicator by accident?"
+        explanation: >-
+          The exact download URL is a useful, specific indicator. Defang it and label its role.

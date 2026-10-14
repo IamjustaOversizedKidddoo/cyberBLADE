@@ -1,0 +1,82 @@
+lesson: soc-l1-report-summaries-01
+questions:
+  - id: q1
+    prompt: "What does 'bottom line up front' mean?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "Start with the conclusion and its impact, then add only the detail the reader needs."
+        correct: true
+        explanation: "Correct."
+      - text: "Put the technical evidence first."
+        correct: false
+        explanation: "Evidence supports the conclusion; it does not lead."
+      - text: "Write the summary at the bottom of the report."
+        correct: false
+        explanation: "The summary goes at the top; it is written last."
+      - text: "Use as few words as possible, even if unclear."
+        correct: false
+        explanation: "Short and clear, not short and vague."
+  - id: q2
+    prompt: "Which phrase is best for a leadership summary?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "\"An attacker signed in with a stolen password to 1 email account.\""
+        correct: true
+        explanation: "Correct. Plain words and an exact number."
+      - text: "\"TA leveraged T1078 for IA.\""
+        correct: false
+        explanation: "Jargon a leadership reader cannot act on."
+      - text: "\"Several accounts may possibly be affected.\""
+        correct: false
+        explanation: "Vague and doubly hedged."
+      - text: "\"A sophisticated nation-state actor attacked us.\""
+        correct: false
+        explanation: "Attribution guess without evidence."
+  - id: q3
+    prompt: "Evidence strongly suggests a conclusion, with nothing against it, but it is not directly shown. Which confidence word fits?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "Likely."
+        correct: true
+        explanation: "Correct."
+      - text: "Confirmed."
+        correct: false
+        explanation: "Confirmed means directly shown by evidence."
+      - text: "Unknown."
+        correct: false
+        explanation: "There is evidence pointing one way."
+      - text: "Impossible."
+        correct: false
+        explanation: "Not on the scale, and not supported."
+  - id: q4
+    prompt: "Why include a 'next update' time in an incident summary?"
+    objectives: ["soc:soc_escalation_handoff"]
+    options:
+      - text: "So readers know when to expect news and do not interrupt the responders."
+        correct: true
+        explanation: "Correct."
+      - text: "Because the incident must end by then."
+        correct: false
+        explanation: "It is a reporting commitment, not a deadline for the incident."
+      - text: "It is a legal requirement everywhere."
+        correct: false
+        explanation: "Requirements vary; the reason here is managing communication."
+      - text: "It is not needed."
+        correct: false
+        explanation: "Without it, people ask repeatedly."
+  - id: q5
+    prompt: "You have five minutes to send an update during an active incident. What is the best approach?"
+    objectives: ["soc:soc_escalation_handoff"]
+    options:
+      - text: "Use a fixed template (bottom line, impact, status, ask, next update) and favour accuracy over polish."
+        correct: true
+        explanation: "Correct. Short and right beats long and late."
+      - text: "Wait until you can write a complete report."
+        correct: false
+        explanation: "Decision-makers need timely information."
+      - text: "Send the raw logs instead."
+        correct: false
+        explanation: "Leadership cannot act on raw logs."
+      - text: "Skip the update."
+        correct: false
+        explanation: "Silence causes interruptions and poor decisions."

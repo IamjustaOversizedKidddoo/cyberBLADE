@@ -1,0 +1,52 @@
+lesson: soc-l1-report-summaries-01
+exercises:
+  - id: summary-calls
+    title: "Improve a summary"
+    kind: report-section
+    instructions: >-
+      Choose the best version of each part of an executive summary for a company director.
+    blocks:
+      - type: log
+        title: "What you know (synthetic)"
+        lines:
+          - "Malware ran on 2 laptops in the warehouse office (confirmed by endpoint logs)."
+          - "Both laptops are isolated (done at 10:15 UTC)."
+          - "One laptop connected to an outside address; no evidence data was sent (checked: firewall volumes normal)."
+          - "How the malware arrived: a USB stick found in the car park is the likely source (user statement, not yet confirmed)."
+    questions:
+      - id: opening
+        prompt: "Which opening sentence is best?"
+        answer_type: choice
+        options:
+          - "Malicious software ran on 2 warehouse laptops this morning; both are now isolated and we have no evidence of data loss."
+          - "At 09:58Z an EDR telemetry event indicated T1204 user execution on two endpoints."
+          - "Something may have happened to some computers."
+        accept: ["Malicious software ran on 2 warehouse laptops this morning; both are now isolated and we have no evidence of data loss."]
+        hints:
+          - "Which one gives the bottom line, in plain words, with exact numbers?"
+        explanation: >-
+          It states what happened, how many, the status and the key reassurance in plain language. The
+          second is jargon; the third is vague.
+      - id: confidence
+        prompt: "Which confidence word fits 'the USB stick was the source'?"
+        answer_type: choice
+        options: ["Likely", "Confirmed", "Unknown"]
+        accept: ["Likely"]
+        hints:
+          - "Is it shown by evidence, or strongly suggested but not yet confirmed?"
+        explanation: >-
+          It is supported by the user's statement but not yet confirmed by evidence, so "likely" is
+          honest. "Confirmed" would overstate it.
+      - id: ask
+        prompt: "Which 'ask' is most useful to a director?"
+        answer_type: choice
+        options:
+          - "Please approve a message to all staff not to plug in found USB devices, today."
+          - "Please be aware of cybersecurity."
+          - "No ask; we will handle it."
+        accept: ["Please approve a message to all staff not to plug in found USB devices, today."]
+        hints:
+          - "Which one names a specific decision, owner and time?"
+        explanation: >-
+          A clear ask names the decision, who should make it and when. "Be aware" asks for nothing
+          specific.

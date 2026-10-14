@@ -1,0 +1,82 @@
+lesson: soc-l1-report-anatomy-01
+questions:
+  - id: q1
+    prompt: "Which value belongs in an incident's IOC table?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "The address compromised machines beaconed to, defanged, with the role command and control."
+        correct: true
+        explanation: "Correct. It is validated, malicious and actionable."
+      - text: "Your company's mail gateway address, because it appears in the headers."
+        correct: false
+        explanation: "Your own infrastructure appears in everything; listing it could get it blocked."
+      - text: "A large content delivery network's main domain."
+        correct: false
+        explanation: "Shared services host many legitimate sites; use the specific URL instead."
+      - text: "Every address seen in the logs that day."
+        correct: false
+        explanation: "Only validated malicious indicators belong."
+  - id: q2
+    prompt: "Where does interpretation belong in a report?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "In the attack narrative, clearly labelled as inference, not in the timeline rows."
+        correct: true
+        explanation: "Correct. Timeline rows are checkable facts."
+      - text: "In every timeline row."
+        correct: false
+        explanation: "That makes facts and guesses impossible to tell apart."
+      - text: "In the IOC table."
+        correct: false
+        explanation: "The IOC table lists indicators and roles."
+      - text: "Nowhere; reports contain only facts."
+        correct: false
+        explanation: "Interpretation is essential; it just needs labelling."
+  - id: q3
+    prompt: "Why write the executive summary last?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "You only know the whole story, and what matters most, after writing the rest."
+        correct: true
+        explanation: "Correct."
+      - text: "Because readers read it last."
+        correct: false
+        explanation: "Leadership usually reads it first."
+      - text: "Because it is optional."
+        correct: false
+        explanation: "It is one of the most-read parts."
+      - text: "To save the hardest part for the end."
+        correct: false
+        explanation: "The reason is accuracy, not difficulty."
+  - id: q4
+    prompt: "What is a root cause?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "The underlying weakness or gap that allowed the attack to succeed."
+        correct: true
+        explanation: "Correct. For example, MFA not enforced for an older sign-in method."
+      - text: "The first alert that fired."
+        correct: false
+        explanation: "That is how it was detected, not why it succeeded."
+      - text: "The attacker's name."
+        correct: false
+        explanation: "Attribution is a different question."
+      - text: "The user who clicked."
+        correct: false
+        explanation: "Blaming a person hides the control gap that let a click become an incident."
+  - id: q5
+    prompt: "What should every timeline row in a report include?"
+    objectives: ["soc:soc_documentation"]
+    options:
+      - text: "A time with time zone, one factual sentence, the source and a reference to the evidence."
+        correct: true
+        explanation: "Correct. Then a reader can check it."
+      - text: "Only the time."
+        correct: false
+        explanation: "A time alone does not say what happened or where it came from."
+      - text: "A full copy of the raw log."
+        correct: false
+        explanation: "Reference the evidence; do not paste whole logs."
+      - text: "The analyst's opinion of the event."
+        correct: false
+        explanation: "Opinions belong in the narrative."
