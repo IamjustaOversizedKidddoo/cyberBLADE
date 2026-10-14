@@ -1,0 +1,14 @@
+lesson: soc-l1-prioritisation-01
+cards:
+  - id: fc-soc-l1-prioritisation-01
+    front: "What three things combine into an alert's priority?"
+    back: "The rule's severity, how likely the alert is to be real, and the impact if it is (asset criticality and blast radius)."
+  - id: fc-soc-l1-prioritisation-02
+    front: "Name four kinds of usually high-criticality assets."
+    back: "Identity systems (domain controllers, single sign-on), sensitive-data systems, internet-facing systems, and privileged or high-value accounts."
+  - id: fc-soc-l1-prioritisation-03
+    front: "Why can a medium alert on a domain controller outrank a critical one on a test VM?"
+    back: "The domain controller's impact and blast radius are far larger; severity was set without knowing the asset."
+  - id: fc-soc-l1-prioritisation-04
+    front: "How do you break a priority tie?"
+    back: "Work the older alert first, unless a quick likelihood signal (such as a success after failures) separates them."

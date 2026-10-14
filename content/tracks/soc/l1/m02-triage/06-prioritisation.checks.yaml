@@ -1,0 +1,82 @@
+lesson: soc-l1-prioritisation-01
+questions:
+  - id: q1
+    prompt: "Why is sorting alerts only by severity a mistake?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Severity is set when the rule is written, before it knows which system or account it will fire on."
+        correct: true
+        explanation: "Correct. The same rule can fire on a test machine or a domain controller, with very different stakes."
+      - text: "Severity is chosen at random."
+        correct: false
+        explanation: "It reflects how dangerous that kind of activity usually is. It is just blind to the asset."
+      - text: "High-severity alerts are usually false positives."
+        correct: false
+        explanation: "Severity does not predict accuracy either way."
+      - text: "Severity is only for reporting, not for triage."
+        correct: false
+        explanation: "Severity is a useful input to priority; it simply should not be the only one."
+  - id: q2
+    prompt: "Which of these usually has the highest asset criticality?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "A domain controller."
+        correct: true
+        explanation: "Correct. It controls authentication for every account, so whoever controls it controls the domain."
+      - text: "A meeting-room display."
+        correct: false
+        explanation: "Usually low criticality, with little data and few privileges."
+      - text: "An isolated training lab machine."
+        correct: false
+        explanation: "Isolation keeps the blast radius small."
+      - text: "A retired, shut-down web server."
+        correct: false
+        explanation: "With nothing running and no data, there is little to lose."
+  - id: q3
+    prompt: "What is blast radius?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "How far damage could spread from a compromised system or account."
+        correct: true
+        explanation: "Correct. Privileged accounts and identity systems have the largest blast radius."
+      - text: "The number of alerts a rule produces per day."
+        correct: false
+        explanation: "That is alert volume, not blast radius."
+      - text: "The physical area affected by a power cut."
+        correct: false
+        explanation: "In security, the term is about how far an attacker could reach from a foothold."
+      - text: "How many people received a phishing email."
+        correct: false
+        explanation: "That is the scope of a phishing campaign. Blast radius is about reach from a compromised asset."
+  - id: q4
+    prompt: "A low-severity alert concerns the account that approves company payments. What is the best response?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Raise its priority, because the account's impact if compromised is high."
+        correct: true
+        explanation: "Correct. Asset criticality can turn a low-severity alert into an urgent one."
+      - text: "Leave it until all medium and high alerts are done."
+        correct: false
+        explanation: "That ignores impact. Payment fraud often starts with exactly this kind of account."
+      - text: "Close it, since low-severity alerts are informational."
+        correct: false
+        explanation: "Low severity still needs triage, and the asset makes this one important."
+      - text: "Escalate it straight to incident response without triage."
+        correct: false
+        explanation: "Prioritise it, then triage it. Escalate if the evidence supports it."
+  - id: q5
+    prompt: "Two alerts have the same severity and affect equally critical systems. How do you break the tie?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Take the older one first, unless one shows a stronger likelihood signal such as a success after failures."
+        correct: true
+        explanation: "Correct. Age breaks ties, and quick likelihood signals can still separate them."
+      - text: "Take the one with the more alarming title."
+        correct: false
+        explanation: "Titles are written in advance and can mislead."
+      - text: "Take whichever is easier to close."
+        correct: false
+        explanation: "Ease is not risk. That habit leaves the hard, possibly real alerts waiting."
+      - text: "Toss a coin."
+        correct: false
+        explanation: "There is a sensible tie-breaker: age, then likelihood signals."

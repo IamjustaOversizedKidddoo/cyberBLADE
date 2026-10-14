@@ -1,0 +1,14 @@
+lesson: soc-l1-alert-anatomy-01
+cards:
+  - id: fc-soc-l1-alert-anatomy-01
+    front: "What are the three layers of an alert?"
+    back: "Written in advance (title, description, severity), what happened (raw events), and added afterwards (enrichment)."
+  - id: fc-soc-l1-alert-anatomy-02
+    front: "Convert 14:05+02:00 to UTC."
+    back: "12:05 UTC. For a zone ahead of UTC, subtract the offset."
+  - id: fc-soc-l1-alert-anatomy-03
+    front: "Why can't IP location be trusted as the person's location?"
+    back: "It is approximate and reflects how the network routes traffic; VPNs, mobile carriers and hotels often appear somewhere else."
+  - id: fc-soc-l1-alert-anatomy-04
+    front: "What does an alert prove?"
+    back: "Only that the rule's condition was met. Whether the activity is harmful is what triage decides."

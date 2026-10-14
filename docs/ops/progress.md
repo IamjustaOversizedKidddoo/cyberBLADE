@@ -166,4 +166,5 @@ Prerequisite changes from the plan: the plan's Rank 2 core prerequisites for les
 
 | Module | Lessons | check:content | Targeted tests | Commit |
 |---|---|---|---|---|
-| M1 SOC foundations | soc-roles, alert-lifecycle, data-handling | ✓ | content + review 106/106 | (this commit) |
+| M1 SOC foundations | soc-roles, alert-lifecycle, data-handling | ✓ | content + review 106/106 | `8c14f8d` |
+| M2 Alert triage | alert-anatomy, prioritisation, dispositions, rationale-escalation (+ pilot triage-loop now depends on alert-anatomy) | ✓ | content + review ✓ | (this commit) |
