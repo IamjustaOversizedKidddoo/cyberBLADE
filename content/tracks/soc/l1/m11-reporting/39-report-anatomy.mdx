@@ -1,0 +1,163 @@
+---
+id: soc-l1-report-anatomy-01
+title: "Report Anatomy, Timelines and IOC Tables"
+track: soc
+rank: 1
+module: report
+order: 39
+estimated_minutes: 15
+objectives_covered: ["soc:soc_documentation"]
+mitre: []
+xp: 120
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-evidence-handoff-01"]
+skills: ["soc_documentation"]
+practice: ["report:timeline", "report:indicators_of_compromise"]
+---
+
+> **Outcome:** you can lay out an incident report so each reader finds what they need, and write timeline and indicator sections that others can check and act on.
+
+## Why this matters on shift
+
+An incident report outlives the shift. Managers use it to decide what to fund, other teams use its indicators to block and search, auditors read it months later, and the next analyst uses it when something similar happens. A report that mixes facts and guesses, lists the wrong indicators or leaves out where its facts came from wastes all that. A clear one makes the whole team better.
+
+## Before you start
+
+You should already know:
+
+- How to hand off an incident with evidence: [Evidence, Communication and the Escalation Handoff](/learn/soc-l1-evidence-handoff-01).
+- How to build a timeline: [Timelines and Process Trees](/learn/soc-l1-timelines-trees-01).
+
+## Core ideas
+
+### What a report is for
+
+An **incident report** is the written record of an incident: what happened, how it was found, what was affected, what was done, and what should change. Different readers need different parts:
+
+| Reader | Needs |
+|---|---|
+| Leadership | What happened, how bad, is it under control: in plain words |
+| Responders and IT | Exactly which systems, accounts and indicators, and what to do |
+| Detection engineers | How it got in, what was missed, which rules to add |
+| Auditors, legal | A verifiable, time-ordered record with sources |
+
+Think of a hospital discharge letter. The patient gets a plain summary; the family doctor gets the diagnosis, medications and follow-up; the hospital file keeps every test result with dates. One document, layered so each reader finds their part.
+
+### The usual sections
+
+Most incident reports, including the simulator's, follow a similar layout:
+
+1. **Header:** a descriptive title, case reference, author and classification.
+2. **Executive summary:** a short, plain-language account for non-specialists (next lesson).
+3. **Verdict and severity:** the disposition, severity, confidence and the evidence for them.
+4. **Scope:** every affected host, account, data set or service, and only those.
+5. **Timeline:** the key events in time order, each with time zone, source and a link to evidence.
+6. **Indicators of compromise:** the validated malicious indicators, defanged, each with its role.
+7. **Attack narrative:** the story from initial access to impact, and the root cause.
+8. **Technique mapping:** ATT&CK techniques supported by the evidence.
+9. **Response actions:** what was done or is recommended, and why.
+10. **Escalation and handoff:** who owns the next steps.
+11. **Lessons learned:** what to improve.
+
+### The timeline section
+
+You built timelines in an earlier lesson. In a report, each row is a fact a reader can check: a time with its zone, one sentence saying what happened, the source, and a reference to the evidence. Keep interpretation out of the rows; it belongs in the narrative. Include only the events that matter to the story. A report timeline is a summary, not a log dump.
+
+### The indicator table
+
+An **IOC table** lists the validated malicious indicators from an incident, each defanged and labelled with its type and its role in the attack, so other teams can block and search for them. Typical roles:
+
+- **Delivery:** how the attack arrived, such as a sender address or phishing domain.
+- **Command and control:** where compromised machines called home.
+- **Staging or exfiltration:** where tools were downloaded from or data was sent.
+
+What does not belong: your own company's systems, shared services such as large content delivery networks, and anything you have not confirmed as malicious. Listing them gets ordinary infrastructure blocked, or teaches the next analyst to ignore the table.
+
+### Narrative and root cause
+
+The **attack narrative** tells the incident as a story in stage order, linking the timeline's facts with your interpretation and stating clearly what is confirmed and what is inferred. It ends with the **root cause**: the underlying weakness or gap that let the attack succeed, such as "MFA was not enforced for legacy mail protocols". Root cause is what lessons learned and future prevention are built on.
+
+<FlowDiagram
+  title="Building a report"
+  description="Gather the evidence from the case. Write the facts first: scope, timeline, indicators. Then the interpretation: narrative, root cause, technique mapping. Then the decisions: verdict, severity, actions, handoff. Write the executive summary last. Check every claim against its evidence."
+  steps={[
+    { label: "Facts first", detail: "Scope, timeline, indicators, each with sources." },
+    { label: "Then interpretation", detail: "Narrative, root cause, technique mapping; label what is inferred." },
+    { label: "Then decisions", detail: "Verdict, severity, actions, handoff, with reasons." },
+    { label: "Summary last", detail: "Once you know the whole story, say it briefly." },
+    { label: "Check every claim", detail: "Could a reader find the evidence for it?" },
+  ]}
+/>
+
+In plain English: facts, then meaning, then decisions, then the short version, and every claim traceable to evidence.
+
+## Worked example
+
+A Larkspur Freight analyst drafts the indicator table for a phishing incident in which f.mwangi's laptop downloaded a remote access tool:
+
+<LogBlock
+  title="Draft IOC table (synthetic)"
+  lines={[
+    "type    value                          role",
+    "email   billing@supplierdocs[.]example  delivery",
+    "domain  supplierdocs[.]example          delivery",
+    "ip      172.16.40.25                    delivery      <- Larkspur's own mail gateway",
+    "domain  cdn.bigcontent[.]example        staging       <- shared CDN, also used by many legitimate sites",
+    "ip      192.0.2.84                      command and control",
+    "sha256  7c1e...b40a                     staging (downloaded tool)",
+  ]}
+/>
+
+**Two tempting entries that do not belong.** The mail gateway address appears in every email's headers because it is Larkspur's own front door; listing it as malicious could get it blocked by a partner. The content delivery network did serve the download, but it also serves thousands of legitimate sites, and blocking the whole domain would break normal browsing. The specific download URL path, defanged, is the useful indicator instead.
+
+The final table keeps the sender, the phishing domain, the C2 address, the file hash and the specific download URL, each with its role.
+
+## Try it
+
+<MicroExercise id="ioc-table" />
+
+## Common mistakes
+
+- **Listing your own infrastructure as indicators.** Gateways and proxies appear in everything.
+- **Listing shared services.** Use the specific URL or file, not the whole platform.
+- **Leaving indicators live.** Defang every one.
+- **Mixing facts and inference in the timeline.** Facts in rows, interpretation in the narrative.
+- **Writing the summary first.** You only know the story at the end.
+- **Claims without sources.** A reader should be able to find the evidence for every statement.
+
+## What good looks like
+
+A strong analyst's report is layered for its readers, keeps facts separate from interpretation, lists only validated malicious indicators with roles, cites a source for every timeline row, names a root cause, and could be checked line by line by someone who was not there.
+
+## In the real world
+
+Report templates vary between organisations, but the sections in this lesson appear in almost all of them. Indicator tables are often exported in machine-readable formats for sharing with partners and threat-intelligence platforms, which makes accuracy even more important, because a wrong indicator travels fast.
+
+## Remember it like this
+
+Facts with sources, meaning with labels, indicators that are truly malicious, and the summary last.
+
+## Interview answer
+
+"I structure an incident report so each reader finds their part: a header and a plain executive summary for leadership, then verdict, scope, a sourced timeline and a validated indicator table for responders, and a narrative with root cause, technique mapping, actions and lessons learned. I keep facts and inference separate, list only confirmed malicious indicators with their role, defanged and never our own infrastructure or shared services, and I write the summary last, once I know the whole story."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Incident report", definition: "The written record of an incident: what happened, how it was found, what was affected, what was done and what should change." },
+    { term: "IOC table", definition: "A report section listing validated malicious indicators, defanged, each with its type and its role in the attack." },
+    { term: "Attack narrative", definition: "The incident told as a story in stage order, linking facts with clearly labelled interpretation." },
+    { term: "Root cause", definition: "The underlying weakness or gap that allowed an attack to succeed." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

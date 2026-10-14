@@ -1,0 +1,14 @@
+lesson: soc-l1-report-anatomy-01
+cards:
+  - id: fc-soc-l1-report-anatomy-01
+    front: "What does NOT belong in an IOC table?"
+    back: "Your own infrastructure, shared services such as large CDNs, and anything not confirmed as malicious."
+  - id: fc-soc-l1-report-anatomy-02
+    front: "What are the common IOC roles?"
+    back: "Delivery, command and control, and staging or exfiltration."
+  - id: fc-soc-l1-report-anatomy-03
+    front: "In what order should you write a report?"
+    back: "Facts first (scope, timeline, indicators), then interpretation (narrative, root cause), then decisions, and the summary last."
+  - id: fc-soc-l1-report-anatomy-04
+    front: "What is a root cause?"
+    back: "The underlying weakness or gap that allowed the attack to succeed."

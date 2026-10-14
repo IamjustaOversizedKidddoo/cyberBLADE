@@ -1226,5 +1226,69 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "category": "soc",
     "front": "What are the four parts of a status update?",
     "back": "What we know, what we are doing, what we need, and when the next update will be."
+  },
+  {
+    "id": "fc-soc-l1-report-anatomy-01",
+    "lessonId": "soc-l1-report-anatomy-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does NOT belong in an IOC table?",
+    "back": "Your own infrastructure, shared services such as large CDNs, and anything not confirmed as malicious."
+  },
+  {
+    "id": "fc-soc-l1-report-anatomy-02",
+    "lessonId": "soc-l1-report-anatomy-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the common IOC roles?",
+    "back": "Delivery, command and control, and staging or exfiltration."
+  },
+  {
+    "id": "fc-soc-l1-report-anatomy-03",
+    "lessonId": "soc-l1-report-anatomy-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "In what order should you write a report?",
+    "back": "Facts first (scope, timeline, indicators), then interpretation (narrative, root cause), then decisions, and the summary last."
+  },
+  {
+    "id": "fc-soc-l1-report-anatomy-04",
+    "lessonId": "soc-l1-report-anatomy-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is a root cause?",
+    "back": "The underlying weakness or gap that allowed the attack to succeed."
+  },
+  {
+    "id": "fc-soc-l1-report-summaries-01",
+    "lessonId": "soc-l1-report-summaries-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What five things does an executive summary answer, in order?",
+    "back": "What happened, impact, status, what we need from the reader, and when the next update comes."
+  },
+  {
+    "id": "fc-soc-l1-report-summaries-02",
+    "lessonId": "soc-l1-report-summaries-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the four confidence words, and what does each mean?",
+    "back": "Confirmed: shown by evidence. Likely: strongly suggested. Possible: consistent but other explanations remain. Unknown: not yet investigated."
+  },
+  {
+    "id": "fc-soc-l1-report-summaries-03",
+    "lessonId": "soc-l1-report-summaries-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does 'bottom line up front' mean?",
+    "back": "Start with the conclusion and its impact, then add only the detail the reader needs."
+  },
+  {
+    "id": "fc-soc-l1-report-summaries-04",
+    "lessonId": "soc-l1-report-summaries-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What should replace 'several systems' in a summary?",
+    "back": "An exact number, such as '3 laptops and 1 email account'."
   }
 ];

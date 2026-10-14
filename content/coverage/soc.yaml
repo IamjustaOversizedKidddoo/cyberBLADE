@@ -102,12 +102,12 @@ skills:
     gap: null
   - id: soc_escalation_handoff
     planned: "8, 38, 40"
-    lessons: [soc-l1-rationale-escalation-01, soc-l1-evidence-handoff-01]
+    lessons: [soc-l1-rationale-escalation-01, soc-l1-evidence-handoff-01, soc-l1-report-summaries-01]
     practice: ["report:escalation_handoff"]
     gap: null
   - id: soc_documentation
     planned: "3, 8, 39, 40"
-    lessons: [soc-l1-data-handling-01, soc-l1-rationale-escalation-01]
+    lessons: [soc-l1-data-handling-01, soc-l1-rationale-escalation-01, soc-l1-report-anatomy-01, soc-l1-report-summaries-01]
     practice: ["report:verdict_and_severity"]
     gap: null
   - id: soc_incident_response
