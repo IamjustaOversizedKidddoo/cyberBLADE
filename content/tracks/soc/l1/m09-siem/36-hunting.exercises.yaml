@@ -1,0 +1,56 @@
+lesson: soc-l1-hunting-01
+exercises:
+  - id: hunt-plan
+    title: "Plan and close a small hunt"
+    kind: report-section
+    instructions: >-
+      You are asked to hunt for new scheduled tasks created by script interpreters on servers during
+      the last 14 days.
+    blocks:
+      - type: table
+        title: "What you know (synthetic)"
+        columns: ["Item", "Detail"]
+        rows:
+          - ["Data", "Endpoint process events are collected from 38 of 40 servers; srv-old01 and srv-old02 have no agent."]
+          - ["Stack result", "Parent to child pairs on servers: services.exe to svchost.exe (52,000), cmd.exe to schtasks.exe (14), powershell.exe to schtasks.exe (2)"]
+          - ["Context", "The 14 cmd.exe to schtasks.exe events come from the backup software's installer on every server, change CHG-4802."]
+    questions:
+      - id: hypothesis
+        prompt: "Which is a testable hunting hypothesis for this task?"
+        answer_type: choice
+        options:
+          - "A script interpreter on a server created a scheduled task in the last 14 days without an approved change"
+          - "Look for anything unusual on servers"
+          - "Servers might be hacked"
+        accept: ["A script interpreter on a server created a scheduled task in the last 14 days without an approved change"]
+        hints:
+          - "Which option says exactly what a match looks like and what period to search?"
+        explanation: >-
+          It names the behaviour, the hosts, the time range and what would make a match suspicious, so it
+          can be confirmed or ruled out.
+      - id: candidate
+        prompt: "Which stacked pair should you examine first?"
+        answer_type: choice
+        options:
+          - "powershell.exe to schtasks.exe (2)"
+          - "cmd.exe to schtasks.exe (14)"
+          - "services.exe to svchost.exe (52,000)"
+        accept: ["powershell.exe to schtasks.exe (2)"]
+        hints:
+          - "Which pair is both rare and not explained by the context you were given?"
+        explanation: >-
+          The two PowerShell-created tasks are rare and unexplained. The 14 cmd.exe tasks are explained by
+          the change, and the svchost pair is normal Windows behaviour.
+      - id: coverage
+        prompt: "If the two events turn out to be approved, how should you record the hunt?"
+        answer_type: choice
+        options:
+          - "Not found, searched 38 of 40 servers; srv-old01 and srv-old02 could not be tested"
+          - "Not found, all servers are clean"
+          - "Found, because rare pairs existed"
+        accept: ["Not found, searched 38 of 40 servers; srv-old01 and srv-old02 could not be tested"]
+        hints:
+          - "Could you see every server?"
+        explanation: >-
+          "Not found" is only meaningful with its coverage. Two servers had no agent, which is a gap to
+          report rather than to hide.

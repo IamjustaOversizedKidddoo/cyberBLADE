@@ -1,0 +1,82 @@
+lesson: soc-l1-hunting-01
+questions:
+  - id: q1
+    prompt: "What is threat hunting?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "Proactively searching data for attacks that did not trigger alerts."
+        correct: true
+        explanation: "Correct. It targets false negatives."
+      - text: "Working the alert queue faster."
+        correct: false
+        explanation: "That is triage."
+      - text: "Attacking the company's own systems with permission."
+        correct: false
+        explanation: "That is penetration testing."
+      - text: "Buying threat intelligence feeds."
+        correct: false
+        explanation: "Intelligence can inspire hunts, but buying it is not hunting."
+  - id: q2
+    prompt: "Why does stacking work better on 6,000 machines than on 6 events?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "With enough data, common values form a clear baseline and true oddities stand out; with very little, everything is rare."
+        correct: true
+        explanation: "Correct. Rarity needs volume to mean anything."
+      - text: "Stacking only works on servers."
+        correct: false
+        explanation: "It works on any data with enough volume."
+      - text: "Small datasets are always clean."
+        correct: false
+        explanation: "Size says nothing about cleanliness."
+      - text: "It does not; size does not matter."
+        correct: false
+        explanation: "Without volume, rare values carry no signal."
+  - id: q3
+    prompt: "A stacked value appears on only one machine. What does that mean?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "It is a candidate to examine in context; rare is not the same as malicious."
+        correct: true
+        explanation: "Correct. One-off admin tools are rare too."
+      - text: "It is malware."
+        correct: false
+        explanation: "Rarity alone does not prove harm."
+      - text: "It can be ignored."
+        correct: false
+        explanation: "Rare values are where hunts look first."
+      - text: "The data is wrong."
+        correct: false
+        explanation: "Rare values are normal in any large dataset."
+  - id: q4
+    prompt: "A hunt finds nothing. What must the record include?"
+    objectives: ["soc:soc_scope_assessment"]
+    options:
+      - text: "The hypothesis, the data searched, the coverage, and any gaps that prevented testing."
+        correct: true
+        explanation: "Correct. Without coverage, 'not found' says nothing."
+      - text: "Only the words 'nothing found'."
+        correct: false
+        explanation: "That cannot be checked or repeated."
+      - text: "Nothing; hunts that find nothing are not recorded."
+        correct: false
+        explanation: "Negative results with coverage are valuable."
+      - text: "A list of every event searched."
+        correct: false
+        explanation: "Summarise the data and coverage instead."
+  - id: q5
+    prompt: "What should happen to a useful hunting search?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "It can become a detection rule, so the behaviour raises an alert next time."
+        correct: true
+        explanation: "Correct. That is how hunting improves detection."
+      - text: "It should be deleted after use."
+        correct: false
+        explanation: "Throwing it away wastes the work."
+      - text: "It should be kept secret from the detection team."
+        correct: false
+        explanation: "The detection team is exactly who needs it."
+      - text: "It should run only during audits."
+        correct: false
+        explanation: "Useful detections should run continuously."

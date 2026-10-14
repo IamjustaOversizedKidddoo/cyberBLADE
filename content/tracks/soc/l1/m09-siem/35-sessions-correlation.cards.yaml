@@ -1,0 +1,14 @@
+lesson: soc-l1-sessions-correlation-01
+cards:
+  - id: fc-soc-l1-sessions-correlation-01
+    front: "What are the four classic correlation traps?"
+    back: "Shared addresses (proxy, VPN, NAT), different identity formats, clock differences, and ignoring the order of events."
+  - id: fc-soc-l1-sessions-correlation-02
+    front: "What does session reconstruction give you?"
+    back: "One entity's activity grouped into sessions, each with a start, end, duration and event count."
+  - id: fc-soc-l1-sessions-correlation-03
+    front: "Can a later event cause an earlier one?"
+    back: "No. Check the order before linking events as cause and effect."
+  - id: fc-soc-l1-sessions-correlation-04
+    front: "What is a correlation rule?"
+    back: "A detection that fires on a sequence or combination of events rather than a single event."

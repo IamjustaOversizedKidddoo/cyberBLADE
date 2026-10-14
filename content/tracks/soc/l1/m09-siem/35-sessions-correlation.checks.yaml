@@ -1,0 +1,82 @@
+lesson: soc-l1-sessions-correlation-01
+questions:
+  - id: q1
+    prompt: "What is correlation in an investigation?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "Linking events from different sources by a shared entity and time, so they read as one story."
+        correct: true
+        explanation: "Correct."
+      - text: "Deleting duplicate events."
+        correct: false
+        explanation: "That is de-duplication."
+      - text: "Counting events per user."
+        correct: false
+        explanation: "That is aggregation."
+      - text: "Encrypting logs before sending them."
+        correct: false
+        explanation: "Unrelated to correlation."
+  - id: q2
+    prompt: "A large upload happened at 08:11 and a suspicious script started at 08:22 on the same host. Can the script have caused the upload?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "No. The upload happened first, so it needs its own explanation."
+        correct: true
+        explanation: "Correct. Order decides cause and effect."
+      - text: "Yes. Same host means same cause."
+        correct: false
+        explanation: "Sharing a host does not reverse time."
+      - text: "Yes, if the clocks are wrong by an hour."
+        correct: false
+        explanation: "Clock drift is usually seconds or minutes; check it rather than assume a large error."
+      - text: "It cannot be known."
+        correct: false
+        explanation: "The timestamps answer it."
+  - id: q3
+    prompt: "Why is joining events on a VPN gateway's address risky?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "Many users share that address, so it can link unrelated people."
+        correct: true
+        explanation: "Correct. Use a user or host identifier instead."
+      - text: "VPN addresses are not logged."
+        correct: false
+        explanation: "They are logged; they are just shared."
+      - text: "VPN traffic is encrypted, so the address is hidden."
+        correct: false
+        explanation: "The gateway address is visible; it simply does not identify one user."
+      - text: "It is not risky."
+        correct: false
+        explanation: "Shared addresses are one of the most common correlation traps."
+  - id: q4
+    prompt: "What does `session by user maxgap=5m` do?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "Groups each user's events into sessions, starting a new one after more than 5 minutes of inactivity."
+        correct: true
+        explanation: "Correct. It outputs a start, end, duration and event count per session."
+      - text: "Shows only sessions shorter than 5 minutes."
+        correct: false
+        explanation: "maxgap is the inactivity gap, not a session length filter."
+      - text: "Signs every user out after 5 minutes."
+        correct: false
+        explanation: "It analyses logs; it does not change sessions."
+      - text: "Counts users once every 5 minutes."
+        correct: false
+        explanation: "That would be a time-bucketed count."
+  - id: q5
+    prompt: "What is a correlation rule?"
+    objectives: ["soc:soc_siem_correlation"]
+    options:
+      - text: "A detection that fires on a sequence or combination of events, not a single one."
+        correct: true
+        explanation: "Correct. Each event alone may be common; the sequence is suspicious."
+      - text: "A rule that deletes correlated events."
+        correct: false
+        explanation: "It detects; it does not delete."
+      - text: "A rule about which analyst handles which alert."
+        correct: false
+        explanation: "That is routing, not detection."
+      - text: "A rule that blocks all VPN traffic."
+        correct: false
+        explanation: "Unrelated."

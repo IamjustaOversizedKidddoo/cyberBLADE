@@ -1,0 +1,14 @@
+lesson: soc-l1-thinking-in-queries-01
+cards:
+  - id: fc-soc-l1-thinking-in-queries-01
+    front: "What is normalisation?"
+    back: "Converting events from different sources into shared field names and formats, so one query can search them all."
+  - id: fc-soc-l1-thinking-in-queries-02
+    front: "What are the five steps for building a query?"
+    back: "Plain-words question, pick the source, add filters one at a time, shape the output, sanity-check the result."
+  - id: fc-soc-l1-thinking-in-queries-03
+    front: "What are the common reasons a query returns zero results by mistake?"
+    back: "Wrong field name, wrong or missing source, wrong time range or zone, or a value spelled differently."
+  - id: fc-soc-l1-thinking-in-queries-04
+    front: "What does the | (pipe) do in a query?"
+    back: "Passes the results of one step into the next command."

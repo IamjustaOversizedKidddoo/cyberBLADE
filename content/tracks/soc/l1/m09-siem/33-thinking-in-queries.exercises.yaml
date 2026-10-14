@@ -1,0 +1,53 @@
+lesson: soc-l1-thinking-in-queries-01
+exercises:
+  - id: pick-query
+    title: "Pick the query that answers the question"
+    kind: query
+    instructions: >-
+      The practice dataset uses the normalised fields source, user, src_ip, dest_ip, dest_port, action,
+      outcome, process, parent_process, command_line, bytes_out and timestamp.
+    blocks:
+      - type: log
+        title: "Candidate queries (synthetic)"
+        lines:
+          - "Q1  source=\"firewall\" action=\"allow\" | where bytes_out > 100000 | table src_ip, dest_ip, bytes_out"
+          - "Q2  source=\"firewall\" | table src_ip, dest_ip"
+          - "Q3  source=\"auth\" | where bytes_out > 100000"
+          - "Q4  source=\"firewall\" action=\"allow\" | where bytes > 100000"
+    questions:
+      - id: best
+        prompt: "Question: which allowed firewall connections sent more than 100,000 bytes, and between which addresses? Which query answers it?"
+        answer_type: choice
+        options: ["Q1", "Q2", "Q3", "Q4"]
+        accept: ["Q1"]
+        hints:
+          - "Check each query for the right source, the right filters, and the right field names."
+        explanation: >-
+          Q1 picks firewall events, keeps allowed ones, filters on bytes_out and shows the addresses.
+          Q2 has no filters, Q3 searches the wrong source, and Q4 uses a field name (bytes) that does
+          not exist.
+      - id: zero-reason
+        prompt: "Q4 returns zero results. What is the most likely reason?"
+        answer_type: choice
+        options:
+          - "The field name is wrong"
+          - "No connections were allowed"
+          - "The firewall was switched off"
+        accept: ["The field name is wrong"]
+        hints:
+          - "Compare Q4's field names with the list of normalised fields above."
+        explanation: >-
+          The normalised field is bytes_out. A condition on a field that no event has matches nothing,
+          so zero here is a query mistake, not a finding.
+      - id: pipe
+        prompt: "What does the | character do in Q1?"
+        answer_type: choice
+        options:
+          - "Passes the results of one step into the next command"
+          - "Means OR between conditions"
+          - "Starts a comment"
+        accept: ["Passes the results of one step into the next command"]
+        hints:
+          - "What happens to the allowed firewall events before the where step runs?"
+        explanation: >-
+          The pipe feeds each step's results into the next: search, then filter with where, then table.

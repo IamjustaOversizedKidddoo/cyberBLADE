@@ -1,0 +1,14 @@
+lesson: soc-l1-stats-timechart-01
+cards:
+  - id: fc-soc-l1-stats-timechart-01
+    front: "Which measure answers 'how many', 'how many different' and 'how much'?"
+    back: "count, distinct count (dc), and sum."
+  - id: fc-soc-l1-stats-timechart-02
+    front: "Why use time buckets?"
+    back: "Totals hide timing; buckets show bursts and quiet periods."
+  - id: fc-soc-l1-stats-timechart-03
+    front: "What are the four ways summaries mislead?"
+    back: "Count hides size, totals hide timing, averages hide outliers, and the wrong grouping hides the pattern."
+  - id: fc-soc-l1-stats-timechart-04
+    front: "What do you check before reporting a surprising summary row?"
+    back: "A few of the raw events behind it."

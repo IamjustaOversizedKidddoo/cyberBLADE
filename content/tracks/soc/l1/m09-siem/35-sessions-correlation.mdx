@@ -1,0 +1,157 @@
+---
+id: soc-l1-sessions-correlation-01
+title: "Sessions and Correlation"
+track: soc
+rank: 1
+module: siem
+order: 35
+estimated_minutes: 15
+objectives_covered: ["soc:soc_siem_correlation"]
+mitre: []
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-stats-timechart-01"]
+skills: ["soc_siem_correlation"]
+practice: ["drill:drill-20"]
+---
+
+> **Outcome:** you can link events from different log sources into one story using shared entities and time, group an entity's activity into sessions, and avoid the classic correlation traps.
+
+## Why this matters on shift
+
+No single log source sees a whole attack. The sign-in is in the identity log, the program in the endpoint log, the upload in the firewall log. Correlation is how you join them. It is also how SIEM rules catch attacks that look harmless one event at a time but suspicious in sequence. Done carelessly, correlation also invents connections that are not there.
+
+## Before you start
+
+You should already know:
+
+- How to summarise events with stats and time buckets: [From Search to Stats and Timechart](/learn/soc-l1-stats-timechart-01).
+- How to build a timeline and pivot on values: [Timelines and Process Trees](/learn/soc-l1-timelines-trees-01).
+
+## Core ideas
+
+### What correlation is
+
+**Correlation** means linking events from different sources because they share an entity (a user, host or address) and fall close together in time, so they can be read as one story.
+
+Think of a detective matching a train ticket, a café receipt and a doorbell camera. Each one alone proves little. Matched by the same person and a tight sequence of times, they show where someone went and when.
+
+In BladeQL you can search several sources at once and line their events up in time order:
+
+```bladeql
+(source="endpoint" OR source="proxy") user="jdoe" | sort timestamp | table timestamp, source, process, domain, action
+```
+
+### Correlating by address
+
+Some sources record a user name, others only an address. To join them, use the address, but check what it stands for first:
+
+```bladeql
+source="auth" OR source="firewall" | where src_ip == "192.168.1.50" | sort timestamp | table timestamp, source, user, dest_ip, bytes_out
+```
+
+### Sessions
+
+**Session reconstruction** means grouping one entity's events into sessions: runs of activity separated by quiet periods longer than a chosen gap. A session gives you a start, an end, a duration and an event count, which is easier to reason about than a long list.
+
+```bladeql
+source="auth" | session by user maxgap=5m | table user, session_start, session_end, session_duration_sec, event_count
+```
+
+The `maxgap=` value is the **inactivity gap**: how long an entity can be quiet before a new session starts. A short gap splits activity into many small sessions; a long one merges them.
+
+### Correlation rules
+
+A **correlation rule** is a SIEM detection that fires on a combination or sequence of events rather than a single one, for example "a successful sign-in from a new country followed within 10 minutes by a new inbox rule for the same account". Each event alone is common; the sequence is suspicious.
+
+<FlowDiagram
+  title="Correlating safely"
+  description="Choose the joining entity and confirm it identifies the same thing in each source. Line events up in one time zone. Check that the order makes sense for cause and effect. Watch for shared addresses and differently formatted identities. Write down what joins each event."
+  steps={[
+    { label: "Pick the join", detail: "User, host or address: does it mean the same thing in each source?" },
+    { label: "One clock", detail: "Convert everything to UTC and allow for small clock differences." },
+    { label: "Check the order", detail: "Can the earlier event really have caused the later one?" },
+    { label: "Watch the traps", detail: "Shared addresses, NAT, different user name formats." },
+    { label: "Record the joins", detail: "Say which field links each event." },
+  ]}
+/>
+
+In plain English: join on something that really identifies the same person or machine, keep one clock, and check that the order makes sense.
+
+### Traps
+
+- **Shared addresses.** Proxies, VPNs and NAT put many users behind one address, so joining on it can link strangers.
+- **Different identity formats.** The same person may be `jdoe` in one log and `j.doe@larkspur.example` in another.
+- **Clock differences.** Systems' clocks can drift by seconds or minutes; very tight time windows can miss real links.
+- **Order.** If B happened before A, A did not cause B.
+
+## Worked example
+
+On the practice dataset, an analyst investigates user jdoe after a blocked proxy request to `cdn.attacker.example` at 08:32. Joining jdoe's endpoint and proxy events gives:
+
+```text
+08:20  endpoint  explorer.exe
+08:21  endpoint  chrome.exe
+08:22  endpoint  powershell.exe   (command line: powershell.exe -enc ...)
+08:23  endpoint  cmd.exe          (parent: powershell.exe, command: whoami)
+08:30  proxy     portal.office.example         allow
+08:31  proxy     login.microsoftonline.example allow
+08:32  proxy     cdn.attacker.example          block
+```
+
+The encoded PowerShell, the `whoami` check and the blocked request look like one chain.
+
+**A tempting but wrong link.** The analyst also finds a large upload: firewall events show 840,000 bytes sent from jdoe's workstation address, 192.168.1.50, to 198.51.100.22. It is tempting to write "the PowerShell then uploaded data". But the upload was at **08:11**, eleven minutes *before* PowerShell started at 08:22. The PowerShell cannot have caused it. The upload is a separate question: it might be ordinary (jdoe signed in from that address at 08:01), or an earlier stage the endpoint log did not record.
+
+**What the analyst writes.** Two linked threads, honestly separated: (1) encoded PowerShell at 08:22, discovery with `whoami`, then a blocked request to a suspicious domain; (2) an unexplained 840 KB upload at 08:11, which happened earlier and is not caused by thread 1. The second needs the destination checked and the endpoint log for 08:00-08:20 reviewed.
+
+## Try it
+
+<MicroExercise id="correlate" />
+
+## Common mistakes
+
+- **Joining on a shared address** and linking unrelated users.
+- **Ignoring order.** Later events cannot cause earlier ones.
+- **Using a time window that is too tight** for drifting clocks, or too wide to mean anything.
+- **Missing identity variants** of the same user.
+- **Merging separate threads** into one story because they share an entity.
+
+## What good looks like
+
+A strong analyst chooses join fields that really identify the same thing, works in UTC, checks cause and effect against the order, keeps separate threads separate, and writes down which field links each event.
+
+## In the real world
+
+SIEMs offer correlation rules, multi-source searches and session or transaction commands. Many organisations also build identity correlation, mapping user names, email addresses and device names to one person, because raw logs rarely agree on how to name someone.
+
+The query drill linked below practises reconstructing sign-in sessions with a maximum inactivity gap.
+
+## Remember it like this
+
+Same entity, one clock, right order: and keep separate threads separate.
+
+## Interview answer
+
+"Correlation links events from different sources by a shared entity, such as user, host or address, and by time. I check that the join field really means the same thing in each source, watching for shared addresses behind proxies or NAT and different formats of the same user name. I line everything up in UTC and check the order, because a later event can't cause an earlier one. Session reconstruction helps by grouping an entity's activity into runs with a start, end and duration."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Correlation", definition: "Linking events from different sources because they share an entity and fall close together in time, so they can be read as one story." },
+    { term: "Session reconstruction", definition: "Grouping one entity's events into runs of activity separated by quiet periods longer than a chosen gap." },
+    { term: "Inactivity gap", definition: "How long an entity can be quiet before a new session starts (maxgap in BladeQL)." },
+    { term: "Correlation rule", definition: "A detection that fires on a combination or sequence of events rather than on a single event." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />
