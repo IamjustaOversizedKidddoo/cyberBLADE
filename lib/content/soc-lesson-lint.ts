@@ -40,7 +40,9 @@ export const SOC_SECTIONS = [
 ] as const;
 
 export const MIN_CHECKS = 4;
-export const SPLIT_WARNING_MINUTES = 15;
+// Owner decision 2026-10-14: up to ~20 min is fine; over 25 must be split.
+export const SPLIT_WARNING_MINUTES = 20;
+export const SPLIT_REQUIRED_MINUTES = 25;
 
 // Lessons never name certifications (content rule: original wording, objectives mapped internally).
 const CERT_NAMES = /\b(CompTIA|Security\+|CySA\+|Network\+|CEH|OSCP|GCIH|GCIA|BTL1|SC-200|CISSP|CCNA)(?![\w+])/;
@@ -222,7 +224,8 @@ export function lintSocLesson(input: SocLintInput): { errors: string[]; warnings
   // Time
   const time = computeLessonTime(lesson, checks);
   if (time.minutes !== lesson.estimated_minutes) err(`estimated_minutes ${lesson.estimated_minutes} ≠ computed ${time.minutes} (${time.words} words, ${time.exercises} exercises, ${time.checks} checks, ${time.diagrams} diagrams)`);
-  if (time.minutes > SPLIT_WARNING_MINUTES) warnings.push(`${id}: ${time.minutes} min, over ${SPLIT_WARNING_MINUTES}; consider splitting`);
+  if (time.minutes > SPLIT_REQUIRED_MINUTES) err(`${time.minutes} min, over ${SPLIT_REQUIRED_MINUTES}; split the lesson`);
+  else if (time.minutes > SPLIT_WARNING_MINUTES) warnings.push(`${id}: ${time.minutes} min, over ${SPLIT_WARNING_MINUTES}; consider splitting`);
 
   return { errors, warnings };
 }

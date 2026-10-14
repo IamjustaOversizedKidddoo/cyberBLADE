@@ -63,3 +63,17 @@
   - the keyboard-only flow (wrong answer → Tab to the hint → defanged correct answer → explanation revealed);
   - arrow-key radio selection;
   - the rank 0 learner redirect.
+
+## Drill page (`/practice/drills`, `/practice/drills/[drillId]`), added 2026-10-14
+
+- **Design approach:** it reuses the lesson exercise pattern rather than inventing a new one:
+  - a labelled `textarea` (Ctrl/Cmd+Enter runs the query);
+  - "Run and check", which disables and reads "Running…" while busy;
+  - method-only hints behind a button;
+  - a `role="status"` verdict with a symbol and a word;
+  - the learner's own results in a labelled, focusable scroll region.
+- **Screenshots:** `drill-<width>-{top,full}.png` at 390, 768 and 1440 px.
+- **Self-critique:**
+  - The results region was first labelled "Your query results", which clashed with the "Your query" textbox label. Renamed to "Results of your query".
+  - Backticks in the drill prompts are stripped for display; inline code styling is left for later.
+- **Verification:** `tests/e2e/soc-drills.spec.ts`, 4 of 4 on desktop and mobile. It covers axe (0 serious or critical), the keyboard run, no reference query in the HTML, no sideways page scroll, and the rank 0 redirect.

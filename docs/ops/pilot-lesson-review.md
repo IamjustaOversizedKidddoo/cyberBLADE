@@ -45,8 +45,9 @@ To read them: `npm run dev` with `NEON_SHOW_DRAFTS=true` and an operator at Rank
 
 ## Known limits and decisions for you
 
-- **`drill:` and `skill:` practice targets have no page yet.** BladeQL drills exist as data but are not routed anywhere in the UI, so the resolver rejects them and neither pilot uses them. Part 4 lessons that need drills (the plan's M9) need a drill page first, or will use `family:`/`shift:` targets instead.
-- **The shared lesson table is not keyboard-scrollable.** On narrow screens, wide tables in `components/lesson/prose.tsx` scroll sideways in a wrapper that cannot take keyboard focus. I did not change that shared component (additive rule). Pilot 2 uses a list instead of its 4-column table. Fixing it for core lessons is a one-line change if you approve it.
+- **Resolved (owner decision 2):** `drill:` targets now resolve to `/practice/drills/<id>`, a minimal additive page. Answers are checked on the server by comparing result rows. The reference queries and the old answer-revealing `hint` strings never reach the client; learners get method-only hints (command names). It is gated by the SOC L1 rank and `SOC_QUERY_ENABLED`, and lessons hide drill cards while the flag is off. `skill:` targets still have no page.
+- **Resolved (owner decision 3):** the shared lesson table wrapper in `components/lesson/prose.tsx` is now a labelled, keyboard-focusable scroll region, with a unit test. A Rank 0→1→2→3 promotion test with SOC lessons present at every rank was added and mutation-checked: removing the core-only filter fails it.
+- **Lesson length (owner decision 1):** up to about 20 min is accepted; any lesson over 25 min is split. The linter now fails above 25 min and warns above 20.
 - **Reader contrast fix (shared, small).** Axe found two serious contrast failures in the existing reader shell, which every lesson renders:
   - "First lesson in module" / "Module complete" in `LessonNav`;
   - the back-to-top link in `TableOfContents`.

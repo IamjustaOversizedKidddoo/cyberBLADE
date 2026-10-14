@@ -83,7 +83,13 @@ export const proseComponents: MDXComponents = {
     />
   ),
   table: (p) => (
-    <div className="my-6 w-full overflow-x-auto rounded-sm border border-line bg-surface">
+    // Focusable, labelled scroll region so keyboard users can scroll wide tables (WCAG 2.1.1).
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label="Table (scrolls sideways on small screens)"
+      className="my-6 w-full overflow-x-auto rounded-sm border border-line bg-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
+    >
       <table
         className="w-full border-collapse text-left font-ui text-sm"
         {...p}
