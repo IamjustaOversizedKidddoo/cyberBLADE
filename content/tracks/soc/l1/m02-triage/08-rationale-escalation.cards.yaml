@@ -4,8 +4,8 @@ cards:
     front: "Seven parts of a handoff note?"
     back: "What, where, when (UTC), evidence, checked, not checked, ask."
   - id: fc-soc-l1-rationale-escalation-02
-    front: "Name four common escalation criteria."
-    back: "Confirmed malicious activity; a critical asset or privileged account you cannot clear; signs it is active or spreading; data leaving; triage time box reached (any four)."
+    front: "What are common escalation criteria?"
+    back: "Confirmed malicious activity; a critical asset or privileged account you cannot clear; signs it is active or spreading; data leaving; triage time box reached."
   - id: fc-soc-l1-rationale-escalation-03
     front: "How do you write an assumption in a note?"
     back: "State the belief, the reason for it, and that it is not confirmed."

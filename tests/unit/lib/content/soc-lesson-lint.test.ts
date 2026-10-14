@@ -112,6 +112,12 @@ describe("SOC L1 lesson linter", () => {
     expect(errs).toContain("no page yet");
   });
 
+  it("rejects a flashcard front that is not a question", async () => {
+    const input = await pilotInput();
+    const cards = [{ ...input.cards![0], front: "Convert this time to UTC." }];
+    expect(lintSocLesson({ ...input, cards }).errors.some((e) => e.includes("question mark"))).toBe(true);
+  });
+
   it("fails a lesson over 25 minutes", async () => {
     const input = await pilotInput();
     const long = `${input.lesson.body}

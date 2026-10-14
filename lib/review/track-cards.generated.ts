@@ -112,7 +112,7 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "lessonId": "soc-l1-alert-anatomy-01",
     "rank": 1,
     "category": "soc",
-    "front": "Convert 14:05+02:00 to UTC.",
+    "front": "What is 14:05+02:00 in UTC?",
     "back": "12:05 UTC. For a zone ahead of UTC, subtract the offset."
   },
   {
@@ -176,7 +176,7 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "lessonId": "soc-l1-prioritisation-01",
     "rank": 1,
     "category": "soc",
-    "front": "Name four kinds of usually high-criticality assets.",
+    "front": "Which four kinds of assets usually have high criticality?",
     "back": "Identity systems (domain controllers, single sign-on), sensitive-data systems, internet-facing systems, and privileged or high-value accounts."
   },
   {
@@ -240,8 +240,8 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "lessonId": "soc-l1-rationale-escalation-01",
     "rank": 1,
     "category": "soc",
-    "front": "Name four common escalation criteria.",
-    "back": "Confirmed malicious activity; a critical asset or privileged account you cannot clear; signs it is active or spreading; data leaving; triage time box reached (any four)."
+    "front": "What are common escalation criteria?",
+    "back": "Confirmed malicious activity; a critical asset or privileged account you cannot clear; signs it is active or spreading; data leaving; triage time box reached."
   },
   {
     "id": "fc-soc-l1-rationale-escalation-03",
