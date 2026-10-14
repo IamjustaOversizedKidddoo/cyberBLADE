@@ -1,0 +1,205 @@
+---
+id: soc-l1-triage-loop-01
+title: "The Triage Loop: From New Alert to a Decision You Can Defend"
+track: soc
+rank: 1
+module: triage
+order: 5
+estimated_minutes: 19
+objectives_covered: ["soc:soc_alert_triage", "soc:soc_false_positive_id"]
+mitre: []
+xp: 100
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["core-r0-mind-attacker-defender-01", "core-r1-net-ip-01"]
+skills: ["soc_alert_triage", "soc_false_positive_id"]
+practice: ["family:soc-f-mixed-signal-01", "shift:shift-quiet-day", "report:verdict_and_severity"]
+---
+
+> **Outcome:** you can take one alert from "new" to a decision you can explain, using the same five steps every time.
+
+## Why this matters on shift
+
+On a busy shift, alerts arrive faster than anyone can study them in depth. Most of them turn out to be harmless. A few matter a lot. Your job in the first minutes is not to solve the whole case. It is to decide, quickly and for good reasons, what each alert is and what should happen next.
+
+Analysts who do this well are not faster readers. They follow the same short routine for every alert, so nothing important gets skipped when they are tired or the queue is long. That routine is the triage loop.
+
+## Before you start
+
+You should already know:
+
+- What an attacker and a defender each try to do: [Thinking Like a Defender vs an Attacker](/learn/core-r0-mind-attacker-defender-01).
+- What an IP address is and the difference between private and public addresses: [IP Addresses, Subnets and CIDR](/learn/core-r1-net-ip-01).
+
+You do not need to know any particular security product. This lesson is about the thinking, which is the same in every tool.
+
+## Core ideas
+
+### What triage is
+
+Triage is the quick first look that decides what an alert is and what happens to it next.
+
+The word comes from hospitals. A triage nurse does not treat every patient on arrival. They spend a few minutes with each one, decide how urgent it is, and send them to the right place. Someone with a cut finger waits; someone who cannot breathe goes straight in.
+
+In a Security Operations Center (SOC), an **alert** is a message from a detection rule saying "something matched a pattern that might be bad". **Triage** is the analyst's first decision about that alert: is it real, is it harmless, is it a repeat of something already open, or do we need more information? Triage ends with a **disposition**, a label that records your decision, and a short written reason.
+
+Triage is not the full investigation. If an alert turns out to be a real attack, triage hands it to deeper investigation with a clear summary. It does not try to finish the whole case alone.
+
+### Why a loop and not a checklist
+
+A checklist runs once from top to bottom. A loop repeats.
+
+Triage needs to repeat because new evidence changes the picture. You read an alert, you check one thing, and the answer raises a new question. A good analyst goes around again with that new question instead of forcing a decision too early.
+
+<FlowDiagram
+  title="The triage loop"
+  description="Five steps in order. Read the alert, form a question, gather just enough context to answer it, decide a disposition, and record why. If new evidence raises a new question, go back to step 2."
+  steps={[
+    { label: "Read the alert", detail: "What fired, on what, when, and for whom?" },
+    { label: "Form a question", detail: "What would make this harmless, and what would make it real?" },
+    { label: "Gather just enough context", detail: "Look up only what answers your question." },
+    { label: "Decide the disposition", detail: "True positive, false positive, benign true positive, duplicate, or needs more information." },
+    { label: "Record why", detail: "One or two sentences someone else can check." },
+  ]}
+  loopBackLabel="New evidence that raises a new question sends you back to step 2."
+/>
+
+In plain English: the diagram is a five-stop cycle. You always start by reading carefully, you always end by writing down your reason, and the middle three steps can repeat as many times as the evidence needs.
+
+### Step 1: Read the alert
+
+Before you click anything, read the whole alert. You are looking for four facts:
+
+- **What fired:** the name of the rule and what it says it detected.
+- **On what:** the host, the user account, or the address involved.
+- **When:** the time, and whether that time is normal for this user or system.
+- **What the raw evidence says:** the actual log lines behind the alert, not only its title.
+
+Rule titles are written by people and are often broader than what really happened. A rule called "Possible credential theft" might simply mean "a password was typed into a web page". The raw evidence tells you which.
+
+### Step 2: Form a question
+
+Turn the alert into one clear question. A helpful pattern is to ask two sides at once:
+
+- What would make this **harmless**?
+- What would make this **real**?
+
+For example: "Is this sign-in the real employee on a trip, or someone using a stolen password?" A question like that tells you exactly what to look for next. Without one, analysts tend to click through every tool and collect facts that do not help.
+
+### Step 3: Gather just enough context
+
+**Context** is any information outside the alert that helps answer your question: what the asset is for, who owns it, whether a change was planned, whether this user normally does this, what other alerts touched the same host.
+
+The skill here is stopping. Gather what answers your question, then move on. You are not proving the case in court; you are deciding what happens next. If one lookup clearly answers the question, you do not need ten more.
+
+Watch for a common trap: **missing information is not proof of safety**. If a reputation lookup says it has "no data" about an address, that only means nobody has reported it yet. It does not mean the address is safe.
+
+### Step 4: Decide the disposition
+
+Pick the label that matches the evidence. The simulator uses five:
+
+| Disposition | What it means | Typical example |
+|---|---|---|
+| True positive | The activity is malicious, and the rule caught it. | A password was guessed and then used to sign in. |
+| False positive | The rule fired on activity that is not what it was meant to catch. | A keyword rule matched an internal training email. |
+| Benign true positive | The rule fired correctly, but the activity is allowed. | An approved vulnerability scanner scanned the network. |
+| Duplicate | Another open alert or case already covers the same event. | The same scan triggered two alerts a minute apart. |
+| Needs more information | You cannot decide with the evidence available. | The only log that would answer the question is missing. |
+
+The difference between a false positive and a benign true positive confuses many beginners. Ask: "Did the rule detect what it was designed to detect?" If yes, but the activity was approved, it is a benign true positive. If the rule matched something it was never meant to catch, it is a false positive. The difference matters because false positives tell the detection team to fix the rule, while benign true positives usually call for an exception or a documented approval.
+
+Use "needs more information" honestly and sparingly. It is the right answer when evidence is truly missing, not a way to avoid a hard call.
+
+### Step 5: Record why
+
+Every disposition gets a short **rationale**: one or two sentences that say what you checked and why that led to your decision. Good rationales name the evidence, so another analyst can check your work later without repeating it.
+
+Compare these two:
+
+- Weak: "Looks fine."
+- Strong: "Backup job on 172.16.40.30 is listed in the asset directory as the nightly backup server, and the transfer ran inside its scheduled window (change CHG-1934). Benign true positive."
+
+The strong version can be verified in seconds. The weak version cannot be verified at all.
+
+## Worked example
+
+Larkspur Freight, a fictional logistics company, runs a small SOC. At 07:52 UTC this alert arrives:
+
+<LogBlock title="Alert: Sign-in from an unusual country">
+{`rule:      Sign-in from a country not seen for this user in 90 days
+user:      r.haddad@larkspur.example
+result:    success
+source:    192.0.2.77
+location:  (country not previously seen for this user)
+mfa:       approved on registered device
+time:      07:51:40 UTC`}
+</LogBlock>
+
+**Step 1, read.** A successful sign-in, from an address the user has not used before, with multi-factor authentication (MFA) approved on the user's own registered phone. MFA means the sign-in needed a second proof, here a prompt on a phone, as well as the password.
+
+**Step 2, question.** "Is this R. Haddad travelling, or did someone else sign in with her account?"
+
+**Step 3, gather (with a dead end).** The analyst first checks the address with a reputation service. The result is "no data". That feels reassuring, but it proves nothing: it only means nobody has reported this address. This is a dead end, so the analyst moves on to evidence that can actually answer the question.
+
+Next, the analyst checks the company travel calendar, which the service desk keeps for exactly this reason. It shows R. Haddad booked for a customer visit in that country this week. The analyst also checks for other alerts on the account in the last day and finds none: no failed MFA prompts and no password resets.
+
+**Step 4, decide.** The rule worked as designed: the sign-in really was from a new country. The activity is explained and approved. The disposition is **benign true positive**.
+
+**Step 5, record.**
+
+> Sign-in from 192.0.2.77 matches R. Haddad's approved travel (travel calendar, customer visit this week). MFA approved on her registered device; no failed MFA or other alerts on the account in 24 h. Benign true positive.
+
+**What would have changed the decision?** If the travel calendar showed no trip, or the account had a run of denied MFA prompts just before this success, or the same account signed in from the office ten minutes earlier, the analyst would go back to step 2 with a new question and would likely escalate. The loop exists for exactly that moment.
+
+## Try it
+
+<MicroExercise id="mini-queue" />
+
+## Common mistakes
+
+- **Deciding from the title alone.** The rule name is a summary written in advance. Read the raw evidence.
+- **Treating "no data" as "safe".** Unknown is not the same as clean.
+- **Investigating everything.** Triage stops when the question is answered. Deep investigation is a separate step with a clear handoff.
+- **Mixing up false positive and benign true positive.** Ask whether the rule caught what it was designed to catch.
+- **Writing rationales nobody can check.** If your note does not name the evidence, it is an opinion, not a rationale.
+
+## What good looks like
+
+A strong analyst's triage looks calm and repeatable. Every alert gets read in full. Every decision answers a stated question. Lookups are few and purposeful. The rationale names the evidence and is short enough to read in ten seconds. When the evidence changes, the analyst changes the decision without fuss.
+
+## In the real world
+
+Real SOCs use a SIEM (Security Information and Event Management: a system that collects logs and raises alerts), case management tools and enrichment services. Names and screens differ between products, but the triage loop does not. Many teams also add a time target for first triage so that urgent alerts are not left waiting.
+
+The simulator simplifies some things. Real alerts often have less context attached, travel calendars are rarely this tidy, and you may need to message a colleague or the user's manager and wait for a reply. In those cases, "needs more information" with a clear note about what you are waiting for is a professional answer.
+
+## Remember it like this
+
+Triage = read → question → just enough context → decide → write down why.
+
+## Interview answer
+
+"For each alert I read the full evidence, not just the title, and turn it into one question: what would make this harmless and what would make it real. I gather only the context that answers that question, decide a disposition, and write a short rationale that names the evidence so anyone can check it. If new evidence changes the question, I go around the loop again."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Alert", definition: "A message from a detection rule saying that some activity matched a pattern that might be malicious." },
+    { term: "Triage", definition: "The analyst's quick first look that decides what an alert is and what happens to it next." },
+    { term: "Disposition", definition: "The label that records the triage decision, such as true positive or benign true positive." },
+    { term: "Benign true positive", definition: "The rule detected exactly what it was designed to detect, but the activity was approved or expected." },
+    { term: "False positive", definition: "The rule fired on activity that is not what it was designed to catch." },
+    { term: "Rationale", definition: "One or two sentences that name the evidence behind a disposition so someone else can check it." },
+    { term: "Context", definition: "Information outside the alert itself, such as asset owner, planned changes or user history, that helps answer the triage question." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

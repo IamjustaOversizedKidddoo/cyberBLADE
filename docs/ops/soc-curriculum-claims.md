@@ -1,0 +1,16 @@
+# SOC L1 curriculum: claims log
+
+Every claim in an L1 lesson that is not obviously certain gets a row here, so a human reviewer can check it before a lesson leaves `draft`. Confidence values: **certain** / **fairly sure** / **unsure**. Flashcards hold certain facts only.
+
+| # | Claim | Lesson | Confidence | Where to verify |
+|---|---|---|---|---|
+| 1 | In many mail systems, `ESMTPSA` in a `Received:` line means the client authenticated (logged in) to submit the message. | soc-l1-email-headers-01 (worked example) | fairly sure | RFC 3848 (ESMTP transmission types: "ESMTPSA" = ESMTP with STARTTLS and SMTP AUTH). The wording is kept hedged ("in many mail systems") because servers are not required to record it. |
+| 2 | The exact wording of `Received:` and `Authentication-Results:` lines varies by mail server product. | soc-l1-email-headers-01 | certain | RFC 5321 §4.4 (Received is loosely specified); RFC 8601 (Authentication-Results allows vendor-specific properties). |
+| 3 | `Authentication-Results:` is trustworthy only when your own server added it; it starts with the server's own identifier (authserv-id). | soc-l1-email-headers-01 | certain | RFC 8601 §2.2 and §5 (receivers should remove or ignore look-alike headers claiming their authserv-id). |
+| 4 | SPF `softfail` means the domain owner says the server is probably not allowed but asked receivers not to reject outright. | soc-l1-email-headers-01 (exercise explanation) | fairly sure | RFC 7208 §2.6.5. The receiver's actual handling of softfail is local policy, so the lesson does not claim what happens next. |
+| 5 | DMARC passes when the visible `From:` domain aligns with a domain that passed SPF or DKIM; policies are none / quarantine / reject. | soc-l1-email-headers-01 | certain | RFC 7489 §3.1 (alignment) and §6.3 (p= tag). |
+| 6 | With `p=none`, nothing is blocked automatically "so it reached the inbox". | soc-l1-email-headers-01 (worked example) | fairly sure | RFC 7489 §6.3. Real receivers can still filter on other signals; the example's world has no other filter. A reviewer may prefer "DMARC did not stop it". |
+| 7 | Forwarding usually breaks SPF while a DKIM signature on unchanged content usually survives. | soc-l1-email-headers-01, checks q4, card 05 | certain (as a general rule) | RFC 7208 Appendix D (forwarding); RFC 6376 (DKIM signs content, independent of path). Mailing lists that modify content break DKIM too; the lesson says "some mailing lists break SPF" and does not claim DKIM always survives. |
+| 8 | ARC (Authenticated Received Chain) preserves authentication results across forwarding. | soc-l1-email-headers-01 (In the real world) | certain | RFC 8617. Mentioned only in passing. |
+| 9 | False positive vs benign true positive: "did the rule detect what it was designed to detect?" | soc-l1-triage-loop-01 | fairly sure | Industry usage differs; some teams use "benign positive" or fold both into "false positive". This lesson follows the disposition labels used by the platform's simulator (`content/soc/taxonomy.yaml`). The linter enforces that wording. |
+| 10 | A reputation lookup returning "no data" is not evidence of safety. | soc-l1-triage-loop-01, card 03 | certain | Reasoning claim, not a source claim. |

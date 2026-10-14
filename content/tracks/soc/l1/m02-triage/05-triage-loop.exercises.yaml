@@ -1,0 +1,64 @@
+lesson: soc-l1-triage-loop-01
+exercises:
+  - id: mini-queue
+    title: "Work a four-alert mini-queue"
+    kind: triage-queue
+    instructions: >-
+      It is 09:10 UTC at Larkspur Freight. Four alerts are waiting. Use the context column the way
+      you would use the asset directory and change calendar. Decide what each alert is and which one
+      you would open first.
+    blocks:
+      - type: table
+        title: "Alert queue (synthetic)"
+        columns: ["ID", "Time (UTC)", "Rule", "Source", "Context available"]
+        rows:
+          - ["A1", "09:02", "Port scan from internal host", "172.16.40.15", "Asset directory: 172.16.40.15 = approved vulnerability scanner. Change CHG-2207: scan window 09:00–11:00 today."]
+          - ["A2", "09:05", "Outbound email contains the word 'password'", "hr-news@larkspur.example", "The email is HR's monthly newsletter announcing password-manager training."]
+          - ["A3", "09:06", "Port scan from internal host", "172.16.40.15", "Same host, same target range and same scan as A1; A1 is still open."]
+          - ["A4", "09:07", "Successful sign-in after 30 failed attempts", "192.0.2.91 (external)", "Account: f.lindqvist (finance). No travel or change recorded."]
+    questions:
+      - id: a1-disposition
+        prompt: "What is the disposition for A1?"
+        answer_type: choice
+        options: ["True positive", "False positive", "Benign true positive", "Duplicate", "Needs more information"]
+        accept: ["Benign true positive"]
+        hints:
+          - "Ask first: did the rule detect what it was designed to detect?"
+          - "Then ask: was this activity planned and approved? Check both context sources."
+        explanation: >-
+          The rule correctly detected a port scan, and the scan came from the approved scanner inside
+          its change window. Detected correctly, but approved: benign true positive.
+      - id: a2-disposition
+        prompt: "What is the disposition for A2?"
+        answer_type: choice
+        options: ["True positive", "False positive", "Benign true positive", "Duplicate", "Needs more information"]
+        accept: ["False positive"]
+        hints:
+          - "What kind of risky behaviour is a keyword rule like this trying to catch?"
+          - "Did this email do that risky thing, or did it only contain the word?"
+        explanation: >-
+          The rule matched a word, not the risky behaviour it exists to catch. An internal newsletter
+          about training is not that behaviour, so the rule fired on the wrong thing: false positive.
+          The useful follow-up is to tell the detection team the rule is too broad.
+      - id: a3-disposition
+        prompt: "What is the disposition for A3?"
+        answer_type: choice
+        options: ["True positive", "False positive", "Benign true positive", "Duplicate", "Needs more information"]
+        accept: ["Duplicate"]
+        hints:
+          - "Compare A3 with the other alerts. Is anything already covering this exact event?"
+        explanation: >-
+          A3 is the same scan from the same host as A1, which is still open. Close it as a duplicate
+          linked to A1 so the work is not done twice.
+      - id: open-first
+        prompt: "Which alert should you open first? (Type its ID.)"
+        answer_type: text
+        accept: ["A4"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "The earliest alert is not always the most urgent one."
+          - "Which alert could mean someone outside the company now controls an account?"
+        explanation: >-
+          A4 could mean an outsider guessed a finance user's password and signed in. That has the
+          highest possible impact and nothing in the context explains it, so it goes first even
+          though it arrived last.

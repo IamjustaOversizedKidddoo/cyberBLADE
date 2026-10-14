@@ -1,0 +1,14 @@
+lesson: soc-l1-triage-loop-01
+cards:
+  - id: fc-soc-l1-triage-loop-01
+    front: "What are the five steps of the triage loop?"
+    back: "Read the alert, form a question, gather just enough context, decide the disposition, record why. New evidence sends you back to the question step."
+  - id: fc-soc-l1-triage-loop-02
+    front: "False positive vs benign true positive: which question tells them apart?"
+    back: "Did the rule detect what it was designed to detect? Yes but approved = benign true positive. No, it matched something else = false positive."
+  - id: fc-soc-l1-triage-loop-03
+    front: "A reputation lookup says 'no data'. Is the indicator safe?"
+    back: "No. 'No data' only means nobody has reported it. Missing information is not proof of safety."
+  - id: fc-soc-l1-triage-loop-04
+    front: "What makes a triage rationale useful?"
+    back: "It names the evidence you checked and why it led to the disposition, briefly enough that another analyst can verify it in seconds."

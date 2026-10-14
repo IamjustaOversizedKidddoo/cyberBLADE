@@ -1,0 +1,82 @@
+lesson: soc-l1-triage-loop-01
+questions:
+  - id: q1
+    prompt: "What is the main job of triage?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "To decide quickly, for good reasons, what an alert is and what should happen next."
+        correct: true
+        explanation: "Correct. Triage is the first decision: what the alert is and where it goes next, with a short written reason."
+      - text: "To fully investigate every alert until the root cause is proven."
+        correct: false
+        explanation: "That is deeper investigation. Triage decides and hands off; it does not try to finish every case alone."
+      - text: "To close as many alerts as possible before the end of the shift."
+        correct: false
+        explanation: "Speed matters, but closing alerts without a defensible reason is how real attacks get missed."
+      - text: "To tune detection rules so they stop firing."
+        correct: false
+        explanation: "Triage can feed rule tuning (for example by reporting false positives), but tuning is a separate task."
+  - id: q2
+    prompt: "A rule correctly detects a port scan, but the scan came from the approved vulnerability scanner during its planned window. Which disposition fits?"
+    objectives: ["soc:soc_false_positive_id"]
+    options:
+      - text: "Benign true positive"
+        correct: true
+        explanation: "Correct. The rule detected exactly what it was built to detect; the activity was approved."
+      - text: "False positive"
+        correct: false
+        explanation: "A false positive means the rule fired on something it was not designed to catch. Here it caught a real scan."
+      - text: "True positive"
+        correct: false
+        explanation: "True positive means malicious activity. An approved scan is not malicious."
+      - text: "Needs more information"
+        correct: false
+        explanation: "The asset directory and the change window already answer the question, so more information is not needed."
+  - id: q3
+    prompt: "A reputation lookup returns 'no data' for the address in an alert. What does that tell you?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Only that nobody has reported the address yet; it is not evidence that the address is safe."
+        correct: true
+        explanation: "Correct. Missing information is not proof of safety. Move on to evidence that can actually answer your question."
+      - text: "The address is safe and the alert can be closed."
+        correct: false
+        explanation: "Unknown is not the same as clean. New attacker infrastructure often has no reputation history at all."
+      - text: "The address is definitely malicious, because legitimate addresses always have reputation data."
+        correct: false
+        explanation: "Many ordinary addresses have no reputation entries. 'No data' points in neither direction."
+      - text: "The reputation service is broken and should be reported."
+        correct: false
+        explanation: "'No data' is a normal result, not an error."
+  - id: q4
+    prompt: "Which rationale is the most useful to another analyst?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "\"Sign-in matches the user's approved travel (travel calendar); MFA approved on her registered device; no other alerts in 24 h. Benign true positive.\""
+        correct: true
+        explanation: "Correct. It names each piece of evidence, so someone else can check it in seconds."
+      - text: "\"Looks fine, closing.\""
+        correct: false
+        explanation: "This gives no evidence at all, so nobody can verify the decision."
+      - text: "\"I checked a lot of tools and nothing looked bad.\""
+        correct: false
+        explanation: "It does not say which tools or what was found, so the work would have to be repeated."
+      - text: "\"Probably the user travelling, but not sure.\""
+        correct: false
+        explanation: "A guess is not a rationale. If you are unsure, check the evidence that would settle it, or use 'needs more information' with a note."
+  - id: q5
+    prompt: "During triage, new evidence raises a question you had not considered. What should you do?"
+    objectives: ["soc:soc_alert_triage"]
+    options:
+      - text: "Go back to forming a question and gather context for the new question before deciding."
+        correct: true
+        explanation: "Correct. That is why triage is a loop: new evidence restarts it at the question step."
+      - text: "Stick with your first decision so you stay consistent."
+        correct: false
+        explanation: "Consistency in method matters; consistency in a decision the evidence no longer supports does not."
+      - text: "Escalate immediately without writing anything."
+        correct: false
+        explanation: "Escalation may be right, but it still needs a rationale so the next analyst knows why."
+      - text: "Close the alert as a duplicate to save time."
+        correct: false
+        explanation: "Duplicate means another open alert already covers the same event, which is not what happened here."
