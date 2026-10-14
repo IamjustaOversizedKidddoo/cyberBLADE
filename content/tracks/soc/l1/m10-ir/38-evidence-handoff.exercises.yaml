@@ -1,0 +1,64 @@
+lesson: soc-l1-evidence-handoff-01
+exercises:
+  - id: handoff-calls
+    title: "Make four incident-handling calls"
+    kind: report-section
+    instructions: >-
+      An incident is open: workstation ws-327 is running a remote access tool, and its user's account
+      may be compromised. Choose the best option in each situation.
+    blocks:
+      - type: table
+        title: "Situations (synthetic)"
+        columns: ["ID", "Situation"]
+        rows:
+          - ["S1", "You want to tell the user not to use the laptop."]
+          - ["S2", "A colleague suggests switching ws-327 off to stop the tool."]
+          - ["S3", "You export the endpoint events for ws-327 to attach to the case."]
+          - ["S4", "Your shift ends in 10 minutes and the incident team has not yet confirmed they have the case."]
+    questions:
+      - id: s1
+        prompt: "How should you contact the user in S1?"
+        answer_type: choice
+        options: ["By phone on the number in the directory", "By email to their work mailbox", "By chat message from their account's contacts"]
+        accept: ["By phone on the number in the directory"]
+        hints:
+          - "Which channels might the attacker be able to read?"
+        explanation: >-
+          The account may be compromised, so email and chat tied to it could be read by the attacker.
+          A phone call to a known number is safe.
+      - id: s2
+        prompt: "What is the better containment for S2, unless the playbook says otherwise?"
+        answer_type: choice
+        options: ["Isolate the laptop from the network but leave it on", "Switch it off", "Leave it alone"]
+        accept: ["Isolate the laptop from the network but leave it on"]
+        hints:
+          - "Which evidence is lost when a machine is switched off?"
+        explanation: >-
+          Switching off loses memory, running processes and network state. Isolation cuts the tool off
+          while preserving that volatile evidence.
+      - id: s3
+        prompt: "Which three things should you record with the export in S3?"
+        answer_type: choice
+        options:
+          - "Source system and query, UTC time of export, and a SHA-256 hash of the file"
+          - "Your opinion of the user, the file size, and the colour of the console"
+          - "Nothing; the file speaks for itself"
+        accept: ["Source system and query, UTC time of export, and a SHA-256 hash of the file"]
+        hints:
+          - "What would someone need, later, to trust that this file is what you say it is?"
+        explanation: >-
+          Source and time make it verifiable; the hash proves it has not changed since. That is the start
+          of the chain of custody.
+      - id: s4
+        prompt: "What should you do in S4?"
+        answer_type: choice
+        options:
+          - "Hand over to the next shift and the incident lead explicitly, and confirm someone owns it"
+          - "Leave a note in the case and go home"
+          - "Close the case so it is not left open"
+        accept: ["Hand over to the next shift and the incident lead explicitly, and confirm someone owns it"]
+        hints:
+          - "Who owns the incident the moment you leave, if nobody has confirmed?"
+        explanation: >-
+          An incident with no confirmed owner can stall. Hand it over explicitly and confirm ownership
+          before you leave.

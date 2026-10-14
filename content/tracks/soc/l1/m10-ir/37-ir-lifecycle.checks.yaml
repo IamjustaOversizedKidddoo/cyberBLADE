@@ -1,0 +1,82 @@
+lesson: soc-l1-ir-lifecycle-01
+questions:
+  - id: q1
+    prompt: "Which order matches the incident response lifecycle?"
+    objectives: ["soc:soc_incident_response"]
+    options:
+      - text: "Preparation; detection and analysis; containment, eradication and recovery; post-incident activity."
+        correct: true
+        explanation: "Correct. Lessons learned then feed back into preparation."
+      - text: "Recovery; containment; detection; preparation."
+        correct: false
+        explanation: "You cannot recover from something you have not yet detected or contained."
+      - text: "Eradication; detection; lessons learned; containment."
+        correct: false
+        explanation: "Eradication before detection and containment has nothing to act on."
+      - text: "Detection; lessons learned; preparation; containment."
+        correct: false
+        explanation: "Containment has to come straight after detection and analysis."
+  - id: q2
+    prompt: "Why is 'reimage the laptop immediately' often a poor first action?"
+    objectives: ["soc:soc_incident_response"]
+    options:
+      - text: "It destroys evidence and does nothing about other compromised machines or stolen credentials."
+        correct: true
+        explanation: "Correct. Scope and preserve first, then eradicate."
+      - text: "Reimaging is never allowed."
+        correct: false
+        explanation: "It is a normal eradication step, just not the first one."
+      - text: "It takes too long."
+        correct: false
+        explanation: "Speed is not the main problem; lost evidence and missed scope are."
+      - text: "It makes the attacker stronger."
+        correct: false
+        explanation: "It removes the attacker from that machine; the risk is what it misses."
+  - id: q3
+    prompt: "An attacker is using a stolen account to sign in to several servers. Which containment works at the right level?"
+    objectives: ["soc:soc_incident_response"]
+    options:
+      - text: "Disable the account and revoke its sessions."
+        correct: true
+        explanation: "Correct. It cuts off access to every server at once."
+      - text: "Isolate one of the servers."
+        correct: false
+        explanation: "The attacker still has the others."
+      - text: "Kill one process on one server."
+        correct: false
+        explanation: "The account still works everywhere."
+      - text: "Wait until malware is found."
+        correct: false
+        explanation: "Stolen credentials are enough to act on; malware may never appear."
+  - id: q4
+    prompt: "What is the difference between containment and eradication?"
+    objectives: ["soc:soc_incident_response"]
+    options:
+      - text: "Containment limits the damage now; eradication removes the attacker's access and tools."
+        correct: true
+        explanation: "Correct."
+      - text: "They are the same thing."
+        correct: false
+        explanation: "One stops it getting worse; the other removes it."
+      - text: "Containment is done after recovery."
+        correct: false
+        explanation: "Containment comes before recovery."
+      - text: "Eradication is only about notifying users."
+        correct: false
+        explanation: "Eradication removes malware, persistence, credentials and accounts."
+  - id: q5
+    prompt: "Why should a containment recommendation state its cost?"
+    objectives: ["soc:soc_incident_response"]
+    options:
+      - text: "So the incident lead can weigh it against business impact and arrange workarounds."
+        correct: true
+        explanation: "Correct. Containment often stops legitimate work too."
+      - text: "Because actions are billed to the SOC."
+        correct: false
+        explanation: "The cost meant here is business impact."
+      - text: "It should not; costs slow things down."
+        correct: false
+        explanation: "Unstated costs cause surprise outages and bad decisions."
+      - text: "Only for actions on laptops."
+        correct: false
+        explanation: "Server and account actions often have the largest costs."

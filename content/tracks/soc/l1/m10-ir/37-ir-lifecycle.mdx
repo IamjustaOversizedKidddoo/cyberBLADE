@@ -1,0 +1,146 @@
+---
+id: soc-l1-ir-lifecycle-01
+title: "The Incident Lifecycle and Containment Trade-offs"
+track: soc
+rank: 1
+module: ir
+order: 37
+estimated_minutes: 15
+objectives_covered: ["soc:soc_incident_response"]
+mitre: []
+xp: 120
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-phishing-response-01"]
+skills: ["soc_incident_response"]
+practice: ["report:response_actions"]
+---
+
+> **Outcome:** you can describe the phases of incident response, choose containment actions that fit the situation, and explain what each action costs.
+
+## Why this matters on shift
+
+When an alert becomes a confirmed incident, people start asking for action: "Just wipe the laptop!", "Block everything!", "Disable the account now!" Some of those actions stop the attacker. Some destroy the evidence needed to find out how far they got. Some take down a business process for no gain. An L1 analyst rarely makes the final call, but your recommendations and the order you suggest them in matter a great deal.
+
+## Before you start
+
+You should already know:
+
+- How a phishing incident is scoped and contained: [Triage and Containment of a Phishing Report](/learn/soc-l1-phishing-response-01).
+
+## Core ideas
+
+### What makes it an incident
+
+An **incident** is an event, or set of events, that actually harms or threatens the confidentiality, integrity or availability of systems or data, such as a compromised account, malware running on a server, or data taken. Most alerts never become incidents. Once one does, the work changes from "what is this?" to "stop it, remove it, recover, and learn".
+
+### The lifecycle
+
+A widely used model, from the US National Institute of Standards and Technology (NIST), describes incident response in four phases. Newer guidance reorganises them, but the ideas are the same:
+
+<FlowDiagram
+  title="The incident response lifecycle"
+  description="Preparation, then detection and analysis, then containment, eradication and recovery, then post-incident activity, which feeds back into preparation."
+  steps={[
+    { label: "Preparation", detail: "Playbooks, contacts, tools, logging and training, before anything happens." },
+    { label: "Detection and analysis", detail: "Triage, scoping and confirming what happened." },
+    { label: "Containment", detail: "Stop it spreading or getting worse." },
+    { label: "Eradication and recovery", detail: "Remove the attacker's access, then restore normal operation safely." },
+    { label: "Post-incident activity", detail: "Lessons learned: what to improve so it does not happen again." },
+  ]}
+  loopBackLabel="What is learned after each incident improves preparation for the next."
+/>
+
+In plain English: get ready, find it, stop it, clean it up, then learn from it.
+
+Think of a kitchen fire. Preparation is having extinguishers and knowing the exits. Detection is the smoke alarm. Containment is closing the door and smothering the pan. Eradication is making sure nothing is still smouldering. Recovery is cleaning up and cooking again. Lessons learned is asking why the pan was left on.
+
+- **Containment** means limiting the damage: stopping the attacker from spreading, reaching more data or doing more harm, without yet removing them completely.
+- **Eradication** means removing the attacker's access and tools: malware, persistence, stolen credentials, new accounts.
+- **Recovery** means restoring systems to normal, trusted operation and watching for the attacker's return.
+
+### Containment is a trade-off
+
+Every containment action has a cost:
+
+| Action | What it gains | What it can cost |
+|---|---|---|
+| Isolate a host from the network | Stops spread and command and control | Stops the user working; may alert the attacker |
+| Disable an account or revoke sessions | Cuts the attacker off from that identity | Stops the real user; may break services using the account |
+| Block an address or domain | Cuts one channel | Easy for attackers to switch; may block legitimate shared services |
+| Kill a process | Stops one running program | Persistence may restart it; loses what was in memory |
+| Reimage (wipe and rebuild) a machine | Removes everything from it | Destroys evidence; does nothing for other compromised machines |
+
+Three principles help:
+
+1. **Scope before you clean.** Removing the attacker from one machine while they sit on three others just warns them.
+2. **Preserve evidence before destructive steps.** Collect what responders need (for example a forensic image or memory capture) before wiping.
+3. **Contain at the right level.** If the attacker is using a stolen account across many machines, disabling the account does more than isolating one laptop.
+
+The simulator's incident report lets you choose recommended actions from a catalogue (isolating hosts, disabling accounts, revoking sessions, blocking addresses and domains, collecting forensic images, reimaging and more) and asks for a short rationale for each one.
+
+## Worked example
+
+Larkspur Freight confirms that ws-301 is running a remote access tool, reached through a phishing email to b.lindqvist. The tool has been beaconing to 192.0.2.80 since 09:10 UTC.
+
+**A tempting first move.** A manager asks the analyst to "just reimage ws-301 now". It is quick, and it would remove the tool from that laptop. But the analyst points out two problems. Nobody has checked yet whether other machines are beaconing to the same address, or whether b.lindqvist's credentials were used elsewhere. And wiping the laptop now destroys the evidence of what the tool did.
+
+**A better order, recommended in the case:**
+
+1. **Isolate ws-301** from the network (containment). This stops the beacon without destroying anything.
+2. **Scope:** search for other hosts contacting 192.0.2.80, and for sign-ins by b.lindqvist from unusual places.
+3. **Revoke b.lindqvist's sessions and reset the password**, because the attacker may have captured them.
+4. **Block 192.0.2.80** at the perimeter, after the scoping search, so you learn which hosts were using it.
+5. **Collect a forensic image** of ws-301 for Tier 2.
+6. **Then reimage** ws-301 (eradication) and restore it for the user (recovery).
+
+The scoping search finds a second host, ws-318, beaconing to the same address since 09:40. It was missed by the alert, and it would have survived the "just reimage" plan.
+
+## Try it
+
+<MicroExercise id="contain-order" />
+
+## Common mistakes
+
+- **Wiping first.** You lose evidence and miss other compromised machines.
+- **Blocking only the address.** The attacker switches addresses; the foothold remains.
+- **Forgetting identities.** Stolen credentials and sessions outlive a cleaned laptop.
+- **Containing without telling anyone.** Isolating a server can stop a business process; coordinate through the incident lead.
+- **Skipping lessons learned.** The same gap lets the next attack in.
+
+## What good looks like
+
+A strong analyst recommends containment that matches the scope, puts evidence-preserving steps before destructive ones, includes identity actions as well as host actions, explains the cost of each action, and records why the order was chosen.
+
+## In the real world
+
+Most organisations have an incident response plan and playbooks that say who may take which actions, and many require approval before isolating servers or disabling important accounts. Large incidents involve legal, communications and management teams as well as security. Post-incident reviews are most useful when they focus on fixing causes, not on blame.
+
+## Remember it like this
+
+Prepare, detect, contain, clean, recover, learn: and scope before you clean, preserve before you wipe.
+
+## Interview answer
+
+"I think of incident response as preparation, detection and analysis, containment, eradication and recovery, and lessons learned. Containment is a trade-off: isolating a host stops spread but stops the user working, and reimaging removes the attacker from one machine but destroys evidence and does nothing for other compromised hosts. So I recommend scoping before cleaning, preserving evidence before destructive steps, including identity actions like revoking sessions, and I explain the cost of each action."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Incident", definition: "An event that actually harms or threatens the confidentiality, integrity or availability of systems or data." },
+    { term: "Containment", definition: "Limiting an incident's damage by stopping the attacker spreading or doing more harm, before removing them completely." },
+    { term: "Eradication", definition: "Removing the attacker's access and tools, such as malware, persistence, stolen credentials and new accounts." },
+    { term: "Recovery", definition: "Restoring systems to normal, trusted operation and watching for the attacker's return." },
+    { term: "Lessons learned", definition: "The review after an incident that identifies what to improve so it does not happen again." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

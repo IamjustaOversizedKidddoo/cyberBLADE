@@ -1,0 +1,14 @@
+lesson: soc-l1-evidence-handoff-01
+cards:
+  - id: fc-soc-l1-evidence-handoff-01
+    front: "What should you record with every piece of evidence you collect?"
+    back: "The source (system and query), the UTC time, and a SHA-256 hash of exported files."
+  - id: fc-soc-l1-evidence-handoff-02
+    front: "What is chain of custody?"
+    back: "The record of who collected each piece of evidence, when, and everyone who has handled it since."
+  - id: fc-soc-l1-evidence-handoff-03
+    front: "What is usually better than switching off a compromised machine?"
+    back: "Isolating it from the network, which keeps memory and other volatile evidence."
+  - id: fc-soc-l1-evidence-handoff-04
+    front: "What are the four parts of a status update?"
+    back: "What we know, what we are doing, what we need, and when the next update will be."

@@ -1,0 +1,58 @@
+lesson: soc-l1-ir-lifecycle-01
+exercises:
+  - id: contain-order
+    title: "Choose containment for a confirmed incident"
+    kind: report-section
+    instructions: >-
+      Confirmed: the account svc-reports (a reporting service account) signed in from 192.0.2.81 at
+      02:10 UTC and has since signed in to three servers: srv-rep01, srv-db02 and srv-file05. No malware
+      has been found yet.
+    blocks:
+      - type: table
+        title: "Facts (synthetic)"
+        columns: ["Item", "Detail"]
+        rows:
+          - ["Account", "svc-reports runs the nightly finance reports at 05:00 UTC"]
+          - ["Servers", "Each server shows only sign-ins and file reads by svc-reports since 02:10"]
+          - ["Address", "192.0.2.81 is a hosting provider address; never seen before"]
+    questions:
+      - id: first
+        prompt: "Which single action contains this incident at the right level?"
+        answer_type: choice
+        options:
+          - "Disable the svc-reports account and revoke its sessions"
+          - "Reimage srv-rep01"
+          - "Isolate srv-file05 only"
+          - "Block 192.0.2.81 and do nothing else"
+        accept: ["Disable the svc-reports account and revoke its sessions"]
+        hints:
+          - "What is the attacker using to move between all three servers?"
+        explanation: >-
+          The attacker's access is the stolen account, used across three servers. Cutting off the
+          account contains all three at once. Isolating or reimaging one server leaves the others open,
+          and blocking one address is easy to get around.
+      - id: cost
+        prompt: "What is the main cost of that action, which you should state in your recommendation?"
+        answer_type: choice
+        options:
+          - "The nightly finance reports at 05:00 will fail until the account is restored"
+          - "It destroys evidence on the servers"
+          - "It alerts every user in the company"
+        accept: ["The nightly finance reports at 05:00 will fail until the account is restored"]
+        hints:
+          - "What does this account normally do, and when?"
+        explanation: >-
+          Disabling a service account stops the business process that uses it. Say so, so the incident
+          lead can arrange a workaround or a new credential.
+      - id: before-wipe
+        prompt: "Before any server is rebuilt, what should happen?"
+        answer_type: choice
+        options:
+          - "Collect forensic evidence, such as an image of the affected servers"
+          - "Nothing; rebuild immediately"
+          - "Delete the logs to save space"
+        accept: ["Collect forensic evidence, such as an image of the affected servers"]
+        hints:
+          - "What would responders lose if the servers were wiped first?"
+        explanation: >-
+          Wiping destroys evidence of what the attacker read or changed. Preserve it first, then rebuild.

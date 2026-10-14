@@ -1,0 +1,82 @@
+lesson: soc-l1-evidence-handoff-01
+questions:
+  - id: q1
+    prompt: "Why record a SHA-256 hash of an exported evidence file?"
+    objectives: ["soc:soc_case_management"]
+    options:
+      - text: "So anyone can later prove the file has not changed since it was collected."
+        correct: true
+        explanation: "Correct. That is evidence integrity."
+      - text: "To encrypt the file."
+        correct: false
+        explanation: "A hash does not encrypt anything."
+      - text: "To make the file smaller."
+        correct: false
+        explanation: "Hashing does not change the file."
+      - text: "To check it for malware."
+        correct: false
+        explanation: "A hash identifies a file; it does not scan it."
+  - id: q2
+    prompt: "Why should you usually not switch off a compromised machine?"
+    objectives: ["soc:soc_case_management"]
+    options:
+      - text: "Memory, running processes and network connections are lost, and they are the most volatile evidence."
+        correct: true
+        explanation: "Correct. Isolation is usually better, unless the playbook says otherwise."
+      - text: "Switching off spreads the malware."
+        correct: false
+        explanation: "The concern is lost evidence."
+      - text: "It is illegal."
+        correct: false
+        explanation: "It is a procedural choice, guided by the playbook."
+      - text: "The machine will not turn on again."
+        correct: false
+        explanation: "It usually will; the evidence in memory will not come back."
+  - id: q3
+    prompt: "A mailbox is compromised. How should you tell its owner what to do?"
+    objectives: ["soc:soc_escalation_handoff"]
+    options:
+      - text: "Through a channel the attacker cannot read, such as a phone call to a known number."
+        correct: true
+        explanation: "Correct."
+      - text: "By email to that mailbox, marked urgent."
+        correct: false
+        explanation: "The attacker would read it and learn your plans."
+      - text: "By replying to the suspicious email."
+        correct: false
+        explanation: "That goes straight to the attacker."
+      - text: "Do not tell them at all."
+        correct: false
+        explanation: "The user needs to know, through a safe channel."
+  - id: q4
+    prompt: "What does an incident handoff add to an ordinary escalation note?"
+    objectives: ["soc:soc_escalation_handoff"]
+    options:
+      - text: "Actions already taken with times, scope so far, open questions, the receiving team and recommended next steps."
+        correct: true
+        explanation: "Correct. It lets the next team act without repeating your work."
+      - text: "A list of every alert in the queue."
+        correct: false
+        explanation: "Only the incident's own evidence and actions belong in it."
+      - text: "Your personal opinion of the user."
+        correct: false
+        explanation: "Stick to evidence and actions."
+      - text: "Nothing; they are identical."
+        correct: false
+        explanation: "Incidents need the extra parts about actions and scope."
+  - id: q5
+    prompt: "What does a good status update contain?"
+    objectives: ["soc:soc_case_management"]
+    options:
+      - text: "What we know, what we are doing, what we need, and when the next update will be."
+        correct: true
+        explanation: "Correct. Regular, structured updates reduce interruptions."
+      - text: "Every log line collected so far."
+        correct: false
+        explanation: "Too much detail; logs belong in the case."
+      - text: "Only good news."
+        correct: false
+        explanation: "Updates must be honest about gaps and needs."
+      - text: "A guess about who the attacker is."
+        correct: false
+        explanation: "Attribution guesses do not help the response and can mislead."

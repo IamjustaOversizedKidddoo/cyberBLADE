@@ -1162,5 +1162,69 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "category": "soc",
     "front": "Is a rare value malicious?",
     "back": "Not necessarily. Rare values are candidates; check each one's context."
+  },
+  {
+    "id": "fc-soc-l1-ir-lifecycle-01",
+    "lessonId": "soc-l1-ir-lifecycle-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the phases of the NIST-style incident response lifecycle?",
+    "back": "Preparation; detection and analysis; containment, eradication and recovery; post-incident activity."
+  },
+  {
+    "id": "fc-soc-l1-ir-lifecycle-02",
+    "lessonId": "soc-l1-ir-lifecycle-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the three containment principles?",
+    "back": "Scope before you clean, preserve evidence before destructive steps, and contain at the right level (often the identity)."
+  },
+  {
+    "id": "fc-soc-l1-ir-lifecycle-03",
+    "lessonId": "soc-l1-ir-lifecycle-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Containment vs eradication vs recovery?",
+    "back": "Containment limits the damage; eradication removes the attacker's access and tools; recovery restores normal, trusted operation."
+  },
+  {
+    "id": "fc-soc-l1-ir-lifecycle-04",
+    "lessonId": "soc-l1-ir-lifecycle-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does reimaging a machine first cost?",
+    "back": "The evidence on it, and it does nothing about other compromised machines or stolen credentials."
+  },
+  {
+    "id": "fc-soc-l1-evidence-handoff-01",
+    "lessonId": "soc-l1-evidence-handoff-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What should you record with every piece of evidence you collect?",
+    "back": "The source (system and query), the UTC time, and a SHA-256 hash of exported files."
+  },
+  {
+    "id": "fc-soc-l1-evidence-handoff-02",
+    "lessonId": "soc-l1-evidence-handoff-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is chain of custody?",
+    "back": "The record of who collected each piece of evidence, when, and everyone who has handled it since."
+  },
+  {
+    "id": "fc-soc-l1-evidence-handoff-03",
+    "lessonId": "soc-l1-evidence-handoff-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What is usually better than switching off a compromised machine?",
+    "back": "Isolating it from the network, which keeps memory and other volatile evidence."
+  },
+  {
+    "id": "fc-soc-l1-evidence-handoff-04",
+    "lessonId": "soc-l1-evidence-handoff-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the four parts of a status update?",
+    "back": "What we know, what we are doing, what we need, and when the next update will be."
   }
 ];
