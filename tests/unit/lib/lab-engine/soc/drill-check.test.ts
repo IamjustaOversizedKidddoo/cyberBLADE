@@ -69,3 +69,25 @@ describe("public drill data", () => {
     expect(v.lines.length).toBeGreaterThan(15);
   });
 });
+
+describe("drill reference queries select real fields", () => {
+  it("every field a reference query tables out is present in its results (no always-empty columns)", async () => {
+    const { executeBladeQL } = await import("@/lib/lab-engine/soc/query/engine");
+    const { DRILL_SYNTHETIC_DATASET } = await import("@/lib/lab-engine/soc/query/drills");
+    for (const d of BLADEQL_DRILLS) {
+      const m = /\|\s*table\s+([^|]+)$/.exec(d.referenceQuery);
+      if (!m) continue;
+      const r = executeBladeQL(d.referenceQuery, DRILL_SYNTHETIC_DATASET, { scenarioNowEpochMs: Date.parse("2026-10-12T23:59:59Z") });
+      for (const f of m[1].split(",").map((x) => x.trim())) {
+        expect(r.events.some((e) => e[f] !== null && e[f] !== undefined), `${d.id}: column ${f} is always empty`).toBe(true);
+      }
+    }
+  });
+
+  it("drill 20 returns session durations", () => {
+    const r = checkDrillAnswer("drill-20", ref("drill-20"));
+    expect(r.correct).toBe(true);
+    expect(r.preview!.fields).toContain("session_duration_sec");
+    expect(r.preview!.rows.some((row) => row.session_duration_sec !== "")).toBe(true);
+  });
+});

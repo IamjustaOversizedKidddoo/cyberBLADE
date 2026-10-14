@@ -255,8 +255,8 @@ export const BLADEQL_DRILLS: BladeQLDrill[] = [
     title: "20. Temporal Sessionization",
     category: "Advanced Computation",
     prompt: "Reconstruct user authentication sessions with a 30-minute maximum inactivity gap.",
-    hint: 'Use `source="auth" outcome="success" | session by user maxgap=30m | table user, event_count, duration_seconds`.',
-    referenceQuery: 'source="auth" outcome="success" | session by user maxgap=30m | table user, event_count, duration_seconds',
+    hint: 'Use `source="auth" outcome="success" | session by user maxgap=30m | table user, event_count, session_duration_sec`.',
+    referenceQuery: 'source="auth" outcome="success" | session by user maxgap=30m | table user, event_count, session_duration_sec',
     expectedRowCount: 4,
   },
 ];
