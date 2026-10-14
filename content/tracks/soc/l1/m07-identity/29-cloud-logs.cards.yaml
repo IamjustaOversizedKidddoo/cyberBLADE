@@ -1,0 +1,14 @@
+lesson: soc-l1-cloud-logs-01
+cards:
+  - id: fc-soc-l1-cloud-logs-01
+    front: "What fields does a cloud audit entry usually contain?"
+    back: "Time, action, caller, source address, user agent (tool), request details (target), and the result or error."
+  - id: fc-soc-l1-cloud-logs-02
+    front: "What is the typical cloud takeover sequence?"
+    back: "Unusual sign-in, discovery, new access key or user, administrator policy, then attempts to disable logging."
+  - id: fc-soc-l1-cloud-logs-03
+    front: "Why must new access keys be disabled during cloud account recovery?"
+    back: "They keep working after the password is reset and sessions are revoked."
+  - id: fc-soc-l1-cloud-logs-04
+    front: "How do you tell automation from a person in cloud audit logs?"
+    back: "Automation calls from known addresses with a known tool, often during deployments tied to change records."

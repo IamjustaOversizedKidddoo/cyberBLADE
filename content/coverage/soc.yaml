@@ -22,7 +22,7 @@ skills:
     gap: null
   - id: soc_credential_attacks
     planned: "20, 27, 28"
-    lessons: [soc-l1-windows-auth-events-01]
+    lessons: [soc-l1-windows-auth-events-01, soc-l1-credential-attacks-01, soc-l1-impossible-travel-mfa-01]
     practice: ["family:soc-f-brute-force-auth-01", "family:soc-f-cloud-identity-01"]
     gap: null
   - id: soc_endpoint_triage
@@ -47,12 +47,12 @@ skills:
     gap: "thin: practised only in query drills on a small generic dataset"
   - id: soc_web_attacks
     planned: "26"
-    lessons: []
+    lessons: [soc-l1-web-logs-01]
     practice: ["family:soc-f-web-attack-data-01"]
     gap: null
   - id: soc_web_log_analysis
     planned: "26"
-    lessons: []
+    lessons: [soc-l1-web-logs-01]
     practice: ["family:soc-f-web-attack-data-01"]
     gap: null
   - id: soc_data_exfiltration
@@ -67,7 +67,7 @@ skills:
     gap: "thin: one lesson"
   - id: soc_cloud_identity
     planned: "28, 29"
-    lessons: []
+    lessons: [soc-l1-impossible-travel-mfa-01, soc-l1-cloud-logs-01]
     practice: ["family:soc-f-cloud-identity-01"]
     gap: null
   - id: soc_windows_logs

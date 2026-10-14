@@ -1,0 +1,82 @@
+lesson: soc-l1-cloud-logs-01
+questions:
+  - id: q1
+    prompt: "What does a cloud audit log record?"
+    objectives: ["soc:soc_cloud_identity"]
+    options:
+      - text: "Each management call: who made it, what action, on what, from where, and the result."
+        correct: true
+        explanation: "Correct. It is often the only record of what an attacker changed in the cloud."
+      - text: "The content of every file in cloud storage."
+        correct: false
+        explanation: "Audit logs record actions, not file contents."
+      - text: "Only failed sign-ins."
+        correct: false
+        explanation: "It records successful and refused actions alike."
+      - text: "Network packets between cloud machines."
+        correct: false
+        explanation: "That is flow or packet data, a different source."
+  - id: q2
+    prompt: "Why do attackers create access keys after taking over a cloud account?"
+    objectives: ["soc:soc_cloud_identity"]
+    options:
+      - text: "Keys keep working after the account's password is reset or MFA is changed."
+        correct: true
+        explanation: "Correct. Always check for and disable new keys."
+      - text: "Keys make the console load faster."
+        correct: false
+        explanation: "Keys are about programmatic access and persistence."
+      - text: "Keys hide the attacker's address."
+        correct: false
+        explanation: "Calls made with keys are still logged with their source address."
+      - text: "Keys are required to read the audit log."
+        correct: false
+        explanation: "The point is to keep access, not to read logs."
+  - id: q3
+    prompt: "An automation identity attaches a broad policy to a deployment role from its usual address, during a release covered by a change record. What is it most likely?"
+    objectives: ["soc:soc_cloud_identity"]
+    options:
+      - text: "Routine automation; it may be worth raising as a risk, but it is not an attack."
+        correct: true
+        explanation: "Correct. Caller, address, tool and change record all match normal."
+      - text: "An account takeover."
+        correct: false
+        explanation: "Nothing about the caller or context is unusual."
+      - text: "Data exfiltration."
+        correct: false
+        explanation: "No data was moved."
+      - text: "A logging failure."
+        correct: false
+        explanation: "The action was logged normally."
+  - id: q4
+    prompt: "A caller's attempt to stop audit logging was refused. Why is it still important?"
+    objectives: ["soc:soc_cloud_identity"]
+    options:
+      - text: "It shows the caller's intent to blind the defenders, a strong sign of compromise."
+        correct: true
+        explanation: "Correct. Refused actions reveal what the caller wanted."
+      - text: "It is not important, because it failed."
+        correct: false
+        explanation: "Failure does not change intent; the next attempt might work."
+      - text: "It proves the logs are broken."
+        correct: false
+        explanation: "The refusal itself was logged, so logging works."
+      - text: "It means the account is an administrator."
+        correct: false
+        explanation: "If it were, the action might have succeeded."
+  - id: q5
+    prompt: "What is the typical takeover sequence in a cloud audit log?"
+    objectives: ["soc:soc_cloud_identity"]
+    options:
+      - text: "Unusual sign-in, look around, new credentials or users, more privilege, attempts to disable logging."
+        correct: true
+        explanation: "Correct. Seeing two or three of these in order is strong evidence."
+      - text: "Many failed sign-ins, then nothing."
+        correct: false
+        explanation: "That is an unsuccessful password attack."
+      - text: "Routine deployments during business hours."
+        correct: false
+        explanation: "That is normal automation."
+      - text: "A single billing report view."
+        correct: false
+        explanation: "That is ordinary use."

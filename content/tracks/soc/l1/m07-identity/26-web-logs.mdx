@@ -1,0 +1,167 @@
+---
+id: soc-l1-web-logs-01
+title: "Web Logs: Blocked vs Successful Attacks"
+track: soc
+rank: 1
+module: identity
+order: 26
+estimated_minutes: 16
+objectives_covered: ["soc:soc_web_log_analysis", "soc:soc_web_attacks"]
+mitre: ["T1190", "T1505.003", "T1595"]
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["core-r1-net-web-01", "core-r1-net-routing-fw-01"]
+skills: ["soc_web_log_analysis", "soc_web_attacks"]
+practice: ["family:soc-f-web-attack-data-01"]
+---
+
+> **Outcome:** you can read a web server access log, decode attack strings, and tell an attack that was blocked or failed from one that worked.
+
+## Why this matters on shift
+
+Any website open to the internet is attacked all day by automated tools. Most of those attempts fail, and treating every one as an incident would bury the team. A few succeed, and those can expose a whole customer database. The skill is reading the server's own records to see which requests were turned away and which ones the application actually answered with something it should not have.
+
+## Before you start
+
+You should already know:
+
+- How HTTP requests, responses and status codes work: [HTTP, HTTPS and TLS](/learn/core-r1-net-web-01).
+- What proxies and firewalls do: [Routing, Firewalls and Proxies](/learn/core-r1-net-routing-fw-01).
+
+You do not need to know how to attack a website. This lesson is about reading the evidence.
+
+## Core ideas
+
+### The access log
+
+A **web server access log** records every request a website receives, one line per request. A widely used layout, the "combined" log format, looks like this:
+
+<LogBlock
+  title="One access log line (synthetic)"
+  lines={[
+    "192.0.2.252 - - [15/Oct/2026:10:04:12 +0000] \"GET /orders?id=1042 HTTP/1.1\" 200 5310 \"-\" \"Mozilla/5.0 (Windows NT 10.0)\"",
+  ]}
+/>
+
+Reading left to right: the client's address, two fields that are usually `-`, the time with its time zone, the request (method, path with query, protocol), the **status code** the server returned, the size of the response in bytes, the referring page, and the user agent.
+
+Think of a shop's till receipts. Each receipt shows who bought what, when, and how much it cost. You can spot a problem without being in the shop: a refund for an item the shop never stocked, or one customer buying the whole stock at 3 a.m.
+
+### Two families of web attack
+
+- **SQL injection:** sending database commands inside a field the website passes to its database, hoping the website runs them. A successful one can return data the attacker should never see, such as user tables.
+- **Web shell** (ATT&CK T1505.003): a small script an attacker manages to upload or create on the server, which then runs commands they send in requests. A request to an upload folder with a parameter like `cmd=` is a classic sign.
+
+Both start by exploiting something public (ATT&CK T1190, Exploit Public-Facing Application). Before that, attackers usually scan (T1595), producing many requests for paths that do not exist.
+
+### Decoding the request
+
+Attack strings are usually **URL-encoded**: special characters are written as `%` followed by two hexadecimal digits so they can travel in a URL. The common ones:
+
+| Encoded | Character |
+|---|---|
+| `%20` | space |
+| `%27` | `'` (single quote) |
+| `%22` | `"` (double quote) |
+| `%3D` | `=` |
+| `%2F` | `/` |
+
+So `/search?q=%27%20OR%201%3D1--` decodes to `/search?q=' OR 1=1--`, a textbook injection probe. Decode before you judge, both to see attacks and to avoid false alarms: a quote mark in a search for a surname is not an attack.
+
+### Blocked or successful?
+
+The status code and response size are your best evidence:
+
+- **403** (forbidden) often means a security filter, such as a web application firewall, blocked the request.
+- **404** (not found) means the path does not exist: typical of scanners guessing.
+- **500** (server error) can mean an attack string broke something. A burst of 500s on one parameter is a sign someone is probing it.
+- **200** (OK) means the application answered. Compare the size with normal responses for the same page. An injection request that returns a 200 many times larger than usual may have returned extra data.
+
+<FlowDiagram
+  title="Was this web attack successful?"
+  description="Decode the request. Check the status code. Compare the response size with normal responses for the same path. Look at what the same client did next. Check the server for new files if a web shell is suspected."
+  steps={[
+    { label: "Decode", detail: "What does the request really say?" },
+    { label: "Status code", detail: "403 or 404: turned away. 500: something broke. 200: answered." },
+    { label: "Response size", detail: "Larger than normal for this path?" },
+    { label: "What came next", detail: "Same client: new paths, uploads, cmd= parameters?" },
+    { label: "Check the server", detail: "New files in upload or web folders?" },
+  ]}
+/>
+
+In plain English: decode it, see what the server said back, and compare with normal.
+
+## Worked example
+
+An alert at Larkspur Freight: "SQL injection patterns against the customer portal". The analyst groups the portal's access log by client:
+
+<LogBlock
+  title="Portal access log, grouped (synthetic)"
+  lines={[
+    "192.0.2.253  1,840 requests 09:00-09:20  mostly 404, some 403   user agent: a known scanning tool",
+    "192.0.2.254  14 requests 09:31-09:38:",
+    "  GET /track?ref=LK1001                                  200  2,104",
+    "  GET /track?ref=LK1001%27                               500    310",
+    "  GET /track?ref=LK1001%27%20AND%201%3D1--               200  2,104",
+    "  GET /track?ref=LK1001%27%20UNION%20SELECT%20...--      200 96,880",
+    "  GET /static/upl/img7.php?c=id                          200     58",
+  ]}
+/>
+
+**The noisy client is the false lead.** 192.0.2.253 made 1,840 requests, almost all 404 and 403: a scanning tool guessing paths and being blocked. It caused the alert, but nothing it did succeeded.
+
+**The quiet client is the real one.** 192.0.2.254 made only 14 requests, but they tell a story. A normal tracking lookup returns about 2 KB. Adding a quote mark (`%27`) caused a server error: the parameter breaks the database query. A test that is always true returned the normal page: injection confirmed. Then a UNION query returned 96 KB, over forty times the normal size: data came back. Finally, a request to a `.php` file in an upload folder with `c=id` returned a tiny 200: a web shell answering a command.
+
+The analyst escalates immediately: likely data exposure through the tracking page, and a web shell on the server.
+
+## Try it
+
+<MicroExercise id="web-success" />
+
+## Common mistakes
+
+- **Escalating every scanner.** Bursts of 404s and 403s are background noise.
+- **Judging encoded strings without decoding them.**
+- **Treating a quote mark as an attack on its own.** Names like O'Neill contain quotes.
+- **Ignoring response sizes.** A 200 can be ordinary or catastrophic; size tells you which.
+- **Missing the quiet attacker.** A few careful requests matter more than thousands of blocked ones.
+
+## What good looks like
+
+A strong analyst groups requests by client, decodes them, separates blocked and failed attempts from answered ones, compares response sizes with normal, and follows a suspicious client's later requests. They escalate on evidence of success, not on volume.
+
+## In the real world
+
+Web logs come from web servers, load balancers, web application firewalls and content delivery networks, each with its own format and fields. Many sites log only the path, not the request body, so attacks sent in POST bodies may be invisible in access logs. Web application firewall logs often state which rule matched and whether the request was blocked.
+
+The simulator's web-attack scenario family uses access-log lines in this layout, ending at the status code and size (without the referrer and user agent), and includes requests that look alarming but are harmless.
+
+## Remember it like this
+
+Decode it, read the status, compare the size, follow the quiet client.
+
+## Interview answer
+
+"In an access log I read the client, time, request, status code and response size. I URL-decode the request to see what it really says. 403s and 404s from scanners are usually noise; a burst of 500s on one parameter suggests probing; a 200 that's much bigger than normal after an injection string suggests data came back. Then I follow that client's next requests, for example to an upload folder with a cmd parameter, which points to a web shell. Volume doesn't decide; evidence of success does."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Web server access log", definition: "A record of every request a website receives: client, time, request, status code, size, referrer and user agent." },
+    { term: "Status code", definition: "The three-digit number a web server returns to say what happened, such as 200 (OK), 403 (forbidden), 404 (not found) or 500 (server error)." },
+    { term: "URL encoding", definition: "Writing special characters in a URL as % followed by two hexadecimal digits, such as %27 for a single quote." },
+    { term: "SQL injection", definition: "Sending database commands inside a website's input fields, hoping the site runs them against its database." },
+    { term: "Web shell", definition: "A small script placed on a web server that runs commands an attacker sends in web requests (ATT&CK T1505.003)." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

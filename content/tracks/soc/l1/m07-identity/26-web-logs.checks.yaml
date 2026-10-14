@@ -1,0 +1,82 @@
+lesson: soc-l1-web-logs-01
+questions:
+  - id: q1
+    prompt: "An injection string returns status 200 and a response 30 times the normal size for that page. What does that suggest?"
+    objectives: ["soc:soc_web_attacks"]
+    options:
+      - text: "The application answered and probably returned extra data: likely a successful injection."
+        correct: true
+        explanation: "Correct. Status and size together show success."
+      - text: "The attack was blocked."
+        correct: false
+        explanation: "A block would usually show 403 and a small response."
+      - text: "The page does not exist."
+        correct: false
+        explanation: "That would be a 404."
+      - text: "Nothing, because 200 means OK."
+        correct: false
+        explanation: "200 only means the application answered; the size shows what it answered with."
+  - id: q2
+    prompt: "A client makes 2,000 requests in 20 minutes, almost all returning 404 or 403. What is it most likely?"
+    objectives: ["soc:soc_web_log_analysis"]
+    options:
+      - text: "An automated scanner being turned away: usually background noise."
+        correct: true
+        explanation: "Correct. Note it, but look for clients whose requests succeeded."
+      - text: "A successful data theft."
+        correct: false
+        explanation: "Nothing was answered successfully."
+      - text: "A customer placing orders."
+        correct: false
+        explanation: "Customers do not request thousands of missing pages."
+      - text: "A server outage."
+        correct: false
+        explanation: "The server answered every request, just negatively."
+  - id: q3
+    prompt: "Why decode URL-encoded requests before judging them?"
+    objectives: ["soc:soc_web_log_analysis"]
+    options:
+      - text: "To see what the request really says, both to spot attacks and to avoid false alarms."
+        correct: true
+        explanation: "Correct. Encoded text hides both attacks and harmless characters such as apostrophes in names."
+      - text: "Because encoded requests are always attacks."
+        correct: false
+        explanation: "Browsers encode many ordinary characters."
+      - text: "To make the log shorter."
+        correct: false
+        explanation: "Decoding is about understanding, not length."
+      - text: "Because the server cannot read encoded requests."
+        correct: false
+        explanation: "Servers decode them routinely."
+  - id: q4
+    prompt: "A request goes to /uploads/img3.php?cmd=whoami and gets a tiny 200 response. What should you suspect?"
+    objectives: ["soc:soc_web_attacks"]
+    options:
+      - text: "A web shell answering a command."
+        correct: true
+        explanation: "Correct. A script in an upload folder taking a command parameter is the classic sign."
+      - text: "A normal image download."
+        correct: false
+        explanation: "Images are not .php scripts with command parameters."
+      - text: "A blocked attack."
+        correct: false
+        explanation: "200 means it was answered."
+      - text: "A search engine crawler."
+        correct: false
+        explanation: "Crawlers do not send command parameters to upload folders."
+  - id: q5
+    prompt: "Which client is usually more important: one with 1,800 blocked requests, or one with 12 requests that got unusual 200 responses?"
+    objectives: ["soc:soc_web_attacks"]
+    options:
+      - text: "The one with 12 unusual 200 responses."
+        correct: true
+        explanation: "Correct. Success matters more than volume."
+      - text: "The one with 1,800 blocked requests."
+        correct: false
+        explanation: "Volume caused the alert, but nothing it did succeeded."
+      - text: "Both equally."
+        correct: false
+        explanation: "Evidence of success makes the quiet client far more urgent."
+      - text: "Neither; web logs cannot show success."
+        correct: false
+        explanation: "Status codes and sizes often do."
