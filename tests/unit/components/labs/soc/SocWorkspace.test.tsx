@@ -19,6 +19,13 @@ vi.mock("@/app/(app)/labs/soc/actions", () => ({
 }));
 
 // Server actions for AI writing feedback (Prompt 7) are server-only; the workspace never calls them here.
+// BladeQL search runs through server actions (S7); not exercised by this component test.
+vi.mock("@/app/(app)/labs/soc/query-actions", () => ({
+  getSocQueryWorkspaceAction: vi.fn(async () => ({ questions: [], fields: [], sources: [], eventCount: 0, scenarioNowIso: "2026-10-12T16:00:00Z" })),
+  runSocQueryAction: vi.fn(async () => ({ events: [], fields: [], truncated: false, executionDurationMs: 0, executionSteps: 0 })),
+  submitSocQuestionAnswerAction: vi.fn(),
+}));
+
 vi.mock("@/app/(app)/labs/soc/ai-actions", () => ({
   getSocAiResultAction: vi.fn(),
   requestSocAiHumanReviewAction: vi.fn(),
