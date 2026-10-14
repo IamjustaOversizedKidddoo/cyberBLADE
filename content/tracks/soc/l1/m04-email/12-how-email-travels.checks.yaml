@@ -1,0 +1,82 @@
+lesson: soc-l1-how-email-travels-01
+questions:
+  - id: q1
+    prompt: "How does a sending mail server find out where to deliver mail for a domain?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "It looks up the domain's MX records in DNS."
+        correct: true
+        explanation: "Correct. MX records list the servers that accept mail for the domain."
+      - text: "It sends the message to the recipient's computer directly."
+        correct: false
+        explanation: "Email goes to the domain's mail servers, not to individual computers."
+      - text: "It asks the recipient's web server."
+        correct: false
+        explanation: "Web servers are unrelated to mail delivery."
+      - text: "It uses the address in the From: line."
+        correct: false
+        explanation: "The From: line is about the sender; delivery depends on the recipient's domain."
+  - id: q2
+    prompt: "A domain has MX records with preferences 5 and 50. Which server is tried first?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "The one with preference 5."
+        correct: true
+        explanation: "Correct. Lower preference numbers are tried first."
+      - text: "The one with preference 50."
+        correct: false
+        explanation: "That reads the preference backwards; 50 is the backup."
+      - text: "Both at the same time."
+        correct: false
+        explanation: "Servers try them in order of preference."
+      - text: "A random one each time."
+        correct: false
+        explanation: "Only entries with equal preference are chosen between; different numbers set an order."
+  - id: q3
+    prompt: "A user asks whether an expected email arrived. Where is the fastest place to look first?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "The email security gateway logs, which record every inbound message and the decision taken."
+        correct: true
+        explanation: "Correct. They show whether it arrived and whether it was delivered, quarantined or rejected."
+      - text: "The user's web browsing history."
+        correct: false
+        explanation: "Browsing has nothing to do with whether an email arrived."
+      - text: "The sender's mailbox."
+        correct: false
+        explanation: "You usually cannot see another organisation's mailbox, and it does not show delivery at your end."
+      - text: "The firewall logs for port 443."
+        correct: false
+        explanation: "Inbound mail arrives over SMTP; the gateway logs describe it directly."
+  - id: q4
+    prompt: "An email arrived over an encrypted (STARTTLS) connection. What does that prove?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "Only that it was protected from being read in transit between those servers."
+        correct: true
+        explanation: "Correct. Encryption in transit says nothing about the sender's honesty."
+      - text: "That the sender is genuine."
+        correct: false
+        explanation: "Attackers' servers use encryption too."
+      - text: "That the attachment is safe."
+        correct: false
+        explanation: "Encryption does not inspect content."
+      - text: "That the email passed SPF, DKIM and DMARC."
+        correct: false
+        explanation: "Those are separate checks recorded separately."
+  - id: q5
+    prompt: "A supplier's invoice was quarantined because its archive contained a script file. What is the right next step?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "Keep it quarantined, triage it as possible phishing, and contact the supplier through a known phone number."
+        correct: true
+        explanation: "Correct. A script in an invoice archive is unusual and may mean the supplier's account is compromised."
+      - text: "Release it, because the supplier is trusted."
+        correct: false
+        explanation: "Trusted senders can be compromised; that is exactly how many attacks spread."
+      - text: "Reply to the email to ask if it is genuine."
+        correct: false
+        explanation: "If the account is compromised, the attacker would answer. Use a known contact route."
+      - text: "Delete the quarantined message to be safe."
+        correct: false
+        explanation: "Keep it as evidence for the triage."

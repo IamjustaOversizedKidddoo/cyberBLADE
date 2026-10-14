@@ -17,7 +17,7 @@ skills:
     gap: null
   - id: soc_phishing_analysis
     planned: "12-15"
-    lessons: [soc-l1-email-headers-01]
+    lessons: [soc-l1-email-headers-01, soc-l1-how-email-travels-01, soc-l1-links-attachments-01, soc-l1-phishing-response-01]
     practice: ["family:soc-f-phishing-cred-01", "tool:email_headers"]
     gap: null
   - id: soc_credential_attacks
@@ -82,7 +82,7 @@ skills:
     gap: "gap: no Linux-centred scenario family, and the drill dataset has no Linux logs"
   - id: soc_malware_triage
     planned: "14, 30, 32"
-    lessons: []
+    lessons: [soc-l1-links-attachments-01]
     practice: ["tool:sandbox", "family:soc-f-attachment-script-01"]
     gap: null
   - id: soc_threat_intel
@@ -112,7 +112,7 @@ skills:
     gap: null
   - id: soc_incident_response
     planned: "15, 37"
-    lessons: []
+    lessons: [soc-l1-phishing-response-01]
     practice: ["report:response_actions"]
     gap: null
   - id: soc_case_management

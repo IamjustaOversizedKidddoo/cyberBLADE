@@ -356,6 +356,38 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "back": "Indicator Removal, T1070."
   },
   {
+    "id": "fc-soc-l1-how-email-travels-01",
+    "lessonId": "soc-l1-how-email-travels-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which TCP ports carry server-to-server mail and client submission?",
+    "back": "Port 25 between mail servers; port 587 for a mail program submitting new mail after signing in."
+  },
+  {
+    "id": "fc-soc-l1-how-email-travels-02",
+    "lessonId": "soc-l1-how-email-travels-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which MX record is tried first?",
+    "back": "The one with the lowest preference number; higher numbers are backups."
+  },
+  {
+    "id": "fc-soc-l1-how-email-travels-03",
+    "lessonId": "soc-l1-how-email-travels-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does an email security gateway log record?",
+    "back": "Every inbound message: sender, recipients, subject, sending server, and the verdict (delivered, quarantined, rejected) with the reason."
+  },
+  {
+    "id": "fc-soc-l1-how-email-travels-04",
+    "lessonId": "soc-l1-how-email-travels-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Does an encrypted (STARTTLS) connection prove the sender is genuine?",
+    "back": "No. It only protects the message in transit between servers."
+  },
+  {
     "id": "fc-soc-l1-email-headers-01",
     "lessonId": "soc-l1-email-headers-01",
     "rank": 1,
@@ -394,5 +426,69 @@ export const TRACK_FLASHCARDS: FlashCard[] = [
     "category": "soc",
     "front": "Why can SPF fail on legitimate forwarded mail?",
     "back": "The forwarding server is not on the original domain's SPF list. A DKIM signature on unchanged content usually still verifies."
+  },
+  {
+    "id": "fc-soc-l1-links-attachments-01",
+    "lessonId": "soc-l1-links-attachments-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which end of a host name holds the registered domain?",
+    "back": "The right-hand end. Everything to its left is a subdomain chosen by the owner."
+  },
+  {
+    "id": "fc-soc-l1-links-attachments-02",
+    "lessonId": "soc-l1-links-attachments-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Where does https://trusted.example@other.example/ actually go?",
+    "back": "To other.example. Everything before the @ is treated as a user name."
+  },
+  {
+    "id": "fc-soc-l1-links-attachments-03",
+    "lessonId": "soc-l1-links-attachments-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Which attachment types should be treated as risky?",
+    "back": "Programs and scripts, macro-enabled Office files, archives and disk images containing them, HTML files, shortcut (.lnk) files and double extensions."
+  },
+  {
+    "id": "fc-soc-l1-links-attachments-04",
+    "lessonId": "soc-l1-links-attachments-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Is a clean sandbox report proof that a file is safe?",
+    "back": "No. Some malware waits, needs a click, or detects that it is in a sandbox."
+  },
+  {
+    "id": "fc-soc-l1-phishing-response-01",
+    "lessonId": "soc-l1-phishing-response-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What are the four phases of phishing response?",
+    "back": "Confirm, scope, contain, follow up."
+  },
+  {
+    "id": "fc-soc-l1-phishing-response-02",
+    "lessonId": "soc-l1-phishing-response-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "What does a message trace tell you?",
+    "back": "Every copy of a message in the mail system: who received it and whether it was delivered or blocked."
+  },
+  {
+    "id": "fc-soc-l1-phishing-response-03",
+    "lessonId": "soc-l1-phishing-response-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "A user typed their password on a phishing page. What three things do you do?",
+    "back": "Reset the password, revoke the account's sessions, and check for attacker changes such as new mailbox rules or MFA devices, then escalate."
+  },
+  {
+    "id": "fc-soc-l1-phishing-response-04",
+    "lessonId": "soc-l1-phishing-response-01",
+    "rank": 1,
+    "category": "soc",
+    "front": "Why is a link visit seconds after delivery often not a person?",
+    "back": "Mail security services follow links automatically to check them on arrival."
   }
 ];

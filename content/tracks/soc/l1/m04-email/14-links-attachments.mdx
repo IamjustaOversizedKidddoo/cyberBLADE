@@ -1,0 +1,167 @@
+---
+id: soc-l1-links-attachments-01
+title: "Links, Attachments and Impersonation"
+track: soc
+rank: 1
+module: email
+order: 14
+estimated_minutes: 16
+objectives_covered: ["soc:soc_phishing_analysis", "soc:soc_malware_triage"]
+mitre: ["T1566.001", "T1566.002", "T1204"]
+xp: 100
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-email-headers-01"]
+skills: ["soc_phishing_analysis", "soc_malware_triage"]
+practice: ["tool:url_analysis", "tool:sandbox"]
+---
+
+> **Outcome:** you can work out where a link really goes, spot risky attachment types, and handle suspicious links and files safely.
+
+## Why this matters on shift
+
+Headers tell you who sent an email. Links and attachments tell you what the email wants the reader to do: sign in somewhere, open something, run something. Most phishing harm happens at that moment. If you can read a link correctly and judge an attachment without opening it, you can decide quickly whether anyone is at risk.
+
+## Before you start
+
+You should already know:
+
+- How to read email headers and spot a lookalike domain: [Reading Email Headers](/learn/soc-l1-email-headers-01).
+
+**Safety first:** never click a suspicious link or open a suspicious attachment on your own machine. Use your team's approved analysis tools. Every example in this lesson uses reserved, fictional domains.
+
+## Core ideas
+
+### Where a link really goes
+
+The text you see in an email and the place the link goes are separate. "Sign in to Larkspur" can point anywhere.
+
+Think of a signpost. Anyone can paint "Town centre" on a sign and point it down a dark alley. You have to look at where the road actually goes, not at the paint.
+
+To read a link, find its **host**: the part after `https://` and before the next `/`. Within the host, what matters is the **registered domain**: the last part, which someone actually owns, such as `larkspur.example`. Everything to its left is a subdomain chosen by that owner.
+
+| Link | Registered domain | Why it fools people |
+|---|---|---|
+| `https://larkspur.example/login` | larkspur.example | It is genuine |
+| `https://larkspur.example.secure-login.example/` | secure-login.example | The real name appears at the start as a subdomain |
+| `https://larkspur.example@portal-check.example/` | portal-check.example | Everything before `@` is treated as a user name, and the browser goes to what comes after it |
+| `https://larkspvr.example/` | larkspvr.example | A changed letter (v for u) |
+
+Read hosts from the right. The registered domain is at the end.
+
+### Redirects and shorteners
+
+A link may not go directly to its final page. A **redirect chain** is a sequence of addresses a link passes through before the final page loads. Shorteners and tracking services do this legitimately, and attackers use it to hide the destination or to bounce through a trusted site first. Analysis tools can follow the chain safely and show you each hop.
+
+### What the destination wants
+
+The most common phishing destination is a **credential harvesting page**: a fake sign-in page built to collect the usernames and passwords people type into it. These pages copy real login screens closely. The giveaway is almost always the registered domain in the address, not the design of the page.
+
+### Risky attachments
+
+Attachments become dangerous when the reader runs them. ATT&CK calls this User Execution (T1204). Types to treat with suspicion:
+
+- **Programs and scripts:** `.exe`, `.js`, `.vbs`, `.bat`, `.ps1`.
+- **Office files with macros:** `.docm`, `.xlsm`. A **macro** is a small program embedded in a document that can run when the document is opened and macros are enabled.
+- **Archives and disk images** containing any of the above: `.zip`, `.iso`, `.img`. Password-protected archives cannot be scanned by most filters, which is why attackers put the password in the email body.
+- **HTML attachments** that open a credential harvesting page in the browser.
+- **Shortcut files** (`.lnk`) that start a command.
+- **Double extensions** such as `invoice.pdf.exe`, which shows as `invoice.pdf` when the system hides known extensions.
+
+**Defanging** is changing a link or address so it cannot be clicked by accident, for example `hxxps://portal-check[.]example`. Always defang indicators in tickets and chat.
+
+<FlowDiagram
+  title="Handling a suspicious link or attachment"
+  description="Do not click or open it. Read the link's registered domain or the attachment's real type. Send it to an approved analysis tool. Read the report, including what the tool could not see. Defang everything you record."
+  steps={[
+    { label: "Do not click or open", detail: "Not even 'just to look'." },
+    { label: "Read it statically", detail: "Registered domain for links; real file type for attachments." },
+    { label: "Use an approved analysis tool", detail: "URL analysis or a sandbox, per team rules." },
+    { label: "Read the report critically", detail: "What did it see, and what might it have missed?" },
+    { label: "Record it defanged", detail: "hxxps and [.] in every note." },
+  ]}
+/>
+
+In plain English: look without touching, let a safe tool do the touching, and record the result so nobody can click it by accident.
+
+### What sandboxes can and cannot tell you
+
+A **sandbox** is an isolated environment that opens a file or visits a link and records what happens: processes started, files written, network connections. It is very useful, but a clean report is not proof of safety. Some malware waits, checks whether it is in a sandbox, or needs a click before it acts.
+
+## Worked example
+
+A Larkspur Freight employee reports this email:
+
+<LogBlock
+  title="Reported email (synthetic)"
+  lines={[
+    "From: \"Larkspur IT\" <it-notice@larkspur-helpdesk.example>",
+    "Subject: Your mailbox is almost full",
+    "Body: Click 'Increase storage' to avoid losing email.",
+    "Link text: Increase storage",
+    "Link target: https://larkspur.example.storage-upgrade.example/m/login?u=r.fischer",
+  ]}
+/>
+
+**Read the link.** Reading the host from the right, the registered domain is `storage-upgrade.example`. `larkspur.example` is only a subdomain the attacker chose. The `?u=r.fischer` part pre-fills the user's name to make the page feel personal.
+
+**A dead end.** The analyst checks the domain's reputation: "no known detections". That is not reassuring. The URL analysis tool shows the domain was registered yesterday, and new domains have no reputation yet.
+
+**Let a tool visit it.** The approved URL analysis tool follows the link and records a single redirect to a page that copies Larkspur's sign-in screen and sends whatever is typed to `storage-upgrade.example`. That is a credential harvesting page.
+
+**Decide.** Lookalike sender, a link whose registered domain is not Larkspur's, a new domain, and a fake sign-in page: phishing, true positive. The next lesson covers what to do now: who else received it, and did anyone type their password?
+
+> Reported mail from it-notice@larkspur-helpdesk[.]example links to hxxps://larkspur.example.storage-upgrade[.]example/m/login, registered domain storage-upgrade[.]example (registered yesterday). URL analysis: one redirect to a copy of our sign-in page posting to the same domain. Credential phishing, true positive.
+
+## Try it
+
+<MicroExercise id="read-links" />
+
+## Common mistakes
+
+- **Reading a host from the left.** The registered domain is at the right-hand end.
+- **Trusting link text.** Only the actual target counts.
+- **Clicking "just to see".** Use approved tools.
+- **Treating "no detections" as "safe".** New domains have no history.
+- **Trusting a clean sandbox report completely.** Some malware hides from sandboxes.
+- **Pasting live links into tickets.** Defang them.
+
+## What good looks like
+
+A strong analyst reads every link from the right, names the registered domain in their note, knows the risky attachment types by heart, sends samples only to approved tools, and writes every indicator defanged.
+
+## In the real world
+
+Email platforms often rewrite links so clicks go through a checking service first; the original link is usually still visible in the gateway logs or the rewritten URL. Many organisations block whole attachment types, such as scripts and disk images, at the gateway. Public URL and file analysis services exist, but uploading company files to them can expose the contents, so follow your team's rules (see [Handling Data Ethically on Shift](/learn/soc-l1-data-handling-01)).
+
+The simulator's URL and sandbox tools return deterministic reports so you can practise reading them.
+
+## Remember it like this
+
+Read hosts from the right, never click, let the sandbox touch it, and defang what you write.
+
+## Interview answer
+
+"For links, I ignore the link text and read the real target's host from the right to find the registered domain, watching for subdomain tricks, @ signs and lookalike spellings. For attachments, I flag executables, scripts, macro-enabled documents, archives, disk images, HTML files and double extensions. I never open them myself; I use approved URL analysis or sandbox tools, read their reports critically because some malware evades sandboxes, and I defang every indicator I write down."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Registered domain", definition: "The part of a host name someone actually owns, found at the right-hand end, such as larkspur.example." },
+    { term: "Redirect chain", definition: "The sequence of addresses a link passes through before the final page loads." },
+    { term: "Credential harvesting page", definition: "A fake sign-in page built to collect the usernames and passwords people type into it." },
+    { term: "Macro", definition: "A small program embedded in a document that can run when the document is opened and macros are enabled." },
+    { term: "Defanging", definition: "Changing a link or address so it cannot be clicked by accident, for example hxxps://portal-check[.]example." },
+    { term: "Sandbox", definition: "An isolated environment that opens a file or visits a link and records what happens." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

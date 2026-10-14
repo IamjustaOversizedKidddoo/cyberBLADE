@@ -1,0 +1,61 @@
+lesson: soc-l1-links-attachments-01
+exercises:
+  - id: read-links
+    title: "Read three links and three attachments"
+    kind: header-analysis
+    instructions: >-
+      These links and attachments came from three different reported emails. Do not click anything;
+      read them as text.
+    blocks:
+      - type: log
+        title: "Links (synthetic)"
+        lines:
+          - "L1  https://larkspur.example.docs-review.example/share/8812"
+          - "L2  https://larkspur.example@payroll-update.example/login"
+          - "L3  https://intranet.larkspur.example/hr/holidays"
+      - type: log
+        title: "Attachments (synthetic)"
+        lines:
+          - "A1  Q3-report.pdf"
+          - "A2  Delivery_note.pdf.exe"
+          - "A3  timesheet.xlsx"
+    questions:
+      - id: l1-domain
+        prompt: "What is the registered domain in L1?"
+        answer_type: text
+        accept: ["docs-review.example"]
+        normalize: ["case", "whitespace", "refang", "trailing-dot"]
+        hints:
+          - "Find the host, then read it from the right-hand end."
+        explanation: >-
+          The host is larkspur.example.docs-review.example. Read from the right, the registered domain is
+          docs-review.example; larkspur.example is only a subdomain its owner chose.
+      - id: l2-domain
+        prompt: "Which site would L2 actually open?"
+        answer_type: text
+        accept: ["payroll-update.example"]
+        normalize: ["case", "whitespace", "refang", "trailing-dot"]
+        hints:
+          - "What does a browser do with everything before an @ sign in a link?"
+        explanation: >-
+          Everything before the @ is treated as a user name, so the browser goes to payroll-update.example.
+      - id: genuine-link
+        prompt: "Which link points to Larkspur's own domain?"
+        answer_type: choice
+        options: ["L1", "L2", "L3"]
+        accept: ["L3"]
+        hints:
+          - "For each link, which domain sits at the right-hand end of the host?"
+        explanation: >-
+          L3's host intranet.larkspur.example ends in larkspur.example, so it belongs to Larkspur. L1 and
+          L2 only contain the name.
+      - id: risky-attachment
+        prompt: "Which attachment is most dangerous?"
+        answer_type: choice
+        options: ["A1", "A2", "A3"]
+        accept: ["A2"]
+        hints:
+          - "Look at the very last extension of each file name."
+        explanation: >-
+          A2 ends in .exe: it is a program disguised with a double extension, and with known extensions
+          hidden it would look like a PDF.

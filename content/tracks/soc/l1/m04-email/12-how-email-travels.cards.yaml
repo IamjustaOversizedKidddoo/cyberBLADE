@@ -1,0 +1,14 @@
+lesson: soc-l1-how-email-travels-01
+cards:
+  - id: fc-soc-l1-how-email-travels-01
+    front: "Which TCP ports carry server-to-server mail and client submission?"
+    back: "Port 25 between mail servers; port 587 for a mail program submitting new mail after signing in."
+  - id: fc-soc-l1-how-email-travels-02
+    front: "Which MX record is tried first?"
+    back: "The one with the lowest preference number; higher numbers are backups."
+  - id: fc-soc-l1-how-email-travels-03
+    front: "What does an email security gateway log record?"
+    back: "Every inbound message: sender, recipients, subject, sending server, and the verdict (delivered, quarantined, rejected) with the reason."
+  - id: fc-soc-l1-how-email-travels-04
+    front: "Does an encrypted (STARTTLS) connection prove the sender is genuine?"
+    back: "No. It only protects the message in transit between servers."

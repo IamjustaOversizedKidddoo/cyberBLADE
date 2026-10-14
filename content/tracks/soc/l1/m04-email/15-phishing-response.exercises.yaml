@@ -1,0 +1,62 @@
+lesson: soc-l1-phishing-response-01
+exercises:
+  - id: phish-scope
+    title: "Scope a phishing campaign"
+    kind: log-reading
+    instructions: >-
+      A confirmed phishing email linking to parcel-redelivery.example was delivered to 9 people at
+      10:02 UTC. Read the activity that followed.
+    blocks:
+      - type: log
+        title: "Activity after delivery (synthetic)"
+        lines:
+          - "10:02:20  proxy  GET   parcel-redelivery.example/track  src=192.0.2.142 (mail security link scanner)"
+          - "10:14:55  proxy  GET   parcel-redelivery.example/track  user=k.dube"
+          - "10:20:03  proxy  GET   parcel-redelivery.example/track  user=a.pires"
+          - "10:20:41  proxy  POST  parcel-redelivery.example/track  user=a.pires"
+          - "10:34:12  idp    sign-in success  user=a.pires  src=192.0.2.236  new address for user"
+          - "10:36:00  mail   reply sent  from=s.mehta  to=redelivery-desk@parcel-redelivery.example"
+    questions:
+      - id: compromised
+        prompt: "Whose account must be treated as compromised? (Type the user name.)"
+        answer_type: text
+        accept: ["a.pires"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Look for someone who sent data to the page, and for what happened after that."
+        explanation: >-
+          a.pires sent data to the page (the POST) and 14 minutes later the account signed in from an
+          address never seen before. Reset, revoke sessions, check for changes, and escalate.
+      - id: not-a-person
+        prompt: "Which visit was not made by a person?"
+        answer_type: choice
+        options: ["10:02:20", "10:14:55", "10:20:03"]
+        accept: ["10:02:20"]
+        hints:
+          - "Look at the source of each visit, and how soon after delivery it happened."
+        explanation: >-
+          The 10:02:20 visit came from the mail security link scanner, seconds after delivery. It checks
+          links automatically and is not a victim.
+      - id: replied
+        prompt: "Who replied to the attacker and needs a follow-up conversation? (Type the user name.)"
+        answer_type: text
+        accept: ["s.mehta"]
+        normalize: ["case", "whitespace"]
+        hints:
+          - "Which line shows mail going from Larkspur to the phishing domain?"
+        explanation: >-
+          s.mehta sent a reply to the phishing domain. Find out what was sent; it may have included
+          personal or company information.
+      - id: first-step
+        prompt: "Before purging the remaining copies, what must you do?"
+        answer_type: choice
+        options:
+          - "Keep a copy of the original email with full headers"
+          - "Reply to the sender asking them to stop"
+          - "Reset every recipient's password"
+          - "Nothing; purge immediately"
+        accept: ["Keep a copy of the original email with full headers"]
+        hints:
+          - "After a purge, what would you no longer be able to examine?"
+        explanation: >-
+          A purge removes every delivered copy. Keep the original with full headers first, as evidence.

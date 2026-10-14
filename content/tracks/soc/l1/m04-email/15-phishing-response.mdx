@@ -1,0 +1,153 @@
+---
+id: soc-l1-phishing-response-01
+title: "Triage and Containment of a Phishing Report"
+track: soc
+rank: 1
+module: email
+order: 15
+estimated_minutes: 16
+objectives_covered: ["soc:soc_phishing_analysis", "soc:soc_incident_response"]
+mitre: ["T1566", "T1078"]
+xp: 110
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-links-attachments-01", "soc-l1-rationale-escalation-01"]
+skills: ["soc_phishing_analysis", "soc_incident_response"]
+practice: ["family:soc-f-phishing-cred-01"]
+---
+
+> **Outcome:** you can take a confirmed phishing email from "one report" to "every recipient found, every risk handled", in the right order.
+
+## Why this matters on shift
+
+One person reporting a phishing email usually means many people received it. Some will have deleted it, some will have clicked, and one may have typed their password into the fake page. The reporter is your early warning. What you do in the next hour decides whether the attacker gets one account, or none, or ten.
+
+## Before you start
+
+You should already know:
+
+- How to read links and attachments safely: [Links, Attachments and Impersonation](/learn/soc-l1-links-attachments-01).
+- When and how to escalate: [Writing Rationales and Knowing When to Escalate](/learn/soc-l1-rationale-escalation-01).
+
+Your team's phishing playbook decides who may perform each action below. In many teams, Tier 1 runs the searches and requests the containment actions, and another role approves or performs them.
+
+## Core ideas
+
+### Confirm, scope, contain, follow up
+
+Responding to phishing is like a product recall. When one faulty item is reported, the company does not just replace that one. It finds every batch shipped, tells every buyer, pulls the rest from shelves and checks who has already been hurt.
+
+<FlowDiagram
+  title="Phishing response"
+  description="Confirm the email is malicious. Scope: find every recipient and who clicked, replied or entered a password. Contain: keep a copy, remove the remaining copies, block the sender and link, and secure any account whose password was entered. Follow up: tell the people affected, thank the reporter and record everything."
+  steps={[
+    { label: "Confirm", detail: "Headers, links and attachments say it is malicious." },
+    { label: "Scope", detail: "Who received it? Who clicked, replied, opened or typed a password?" },
+    { label: "Contain", detail: "Keep a copy, remove the rest, block indicators, secure exposed accounts." },
+    { label: "Follow up", detail: "Tell the affected people, thank the reporter, record and escalate." },
+  ]}
+/>
+
+In plain English: find out how far it went before you start cleaning up, and treat any typed password as a compromised account.
+
+### Scope: finding everyone
+
+A **message trace** is a search of the mail system's records for every copy of a message, by sender, subject, sending server, link or attachment. It tells you who received the email and whether it was delivered or blocked.
+
+Then find who acted on it:
+
+- **Clicked:** proxy or DNS logs show visits to the link's domain.
+- **Entered a password:** proxy logs show data sent to the page (often a POST request), or the identity logs show a new sign-in for that user from an unusual address soon after the click.
+- **Replied:** sent-mail records show replies to the sender or the Reply-To address.
+- **Opened an attachment:** endpoint logs show the file being opened and what it started.
+
+Watch out for automated visits. Many mail security services follow links themselves to check them, so a "click" logged seconds after delivery, from a security service's address, may not be a person at all.
+
+### Contain: in the right order
+
+1. **Keep a copy** of the original email, with full headers, as evidence before removing anything.
+2. **Remove the remaining copies.** An **email purge** deletes a delivered message from every mailbox that received it, so nobody else can click it later.
+3. **Block the indicators.** A **block list** is a list of senders, domains, addresses or file hashes that the gateway, proxy or other tools refuse. Add the sending domain or address, the link's domain and any attachment hash.
+4. **Secure exposed accounts.** For anyone who entered a password: reset the password, and use **session revocation** to sign the account out of every device and app, because a stolen session keeps working after a password change in many systems. Then check for changes the attacker may already have made: new mailbox rules, new MFA devices, forwarding.
+
+A password entered on a phishing page, followed by a sign-in from a new address, is no longer a phishing alert. It is an account compromise, and it is escalated as an incident.
+
+### Follow up
+
+Tell affected users what to do through a known channel, never by replying to the phishing thread. Thank the reporter: reports are how most phishing is caught, and people who feel thanked report again.
+
+## Worked example
+
+At 09:40 UTC, a Larkspur Freight employee reports a "shared invoice" email. The analyst confirms it: lookalike sender, link to a credential harvesting page on `invoice-view.example`.
+
+**Scope: message trace.** The trace finds 23 copies, all delivered between 09:12 and 09:14 UTC.
+
+**Scope: who acted.**
+
+<LogBlock
+  title="Activity after delivery (synthetic)"
+  lines={[
+    "09:12:31  proxy   GET  invoice-view.example/doc   src=192.0.2.141 (mail security link scanner)",
+    "09:25:10  proxy   GET  invoice-view.example/doc   user=o.reyes",
+    "09:31:44  proxy   GET  invoice-view.example/doc   user=t.varga",
+    "09:32:20  proxy   POST invoice-view.example/doc   user=t.varga",
+    "09:47:05  idp     sign-in success  user=t.varga  src=192.0.2.229  new address for user",
+  ]}
+/>
+
+**A false lead.** The first visit, 30 seconds after delivery, looks like the first victim. But the source is the mail security service's link scanner, which checks every link on arrival. It is not a person.
+
+**o.reyes** opened the page but sent nothing back: clicked, no sign of a password. The analyst asks the service desk to confirm with o.reyes by phone and notes it.
+
+**t.varga** opened the page, then sent data to it (the POST), and 15 minutes later someone signed in as t.varga from an address never seen before. That is an account compromise.
+
+**Contain.** The analyst saves a copy of the email, then the team purges all 23 copies, blocks `invoice-view.example` at the proxy and the sending domain at the gateway, resets t.varga's password and revokes the account's sessions. The analyst escalates t.varga's account as an incident, with a handoff note that includes the 09:47 sign-in and a request to check what that session did.
+
+## Try it
+
+<MicroExercise id="phish-scope" />
+
+## Common mistakes
+
+- **Handling only the reported copy.** One report usually means many recipients.
+- **Purging before keeping a copy.** You lose the evidence.
+- **Counting scanner visits as people.** Check the source of very early clicks.
+- **Resetting the password but not revoking sessions.** A stolen session can outlive the old password.
+- **Treating a typed password as "just phishing".** It is an account compromise; escalate it.
+- **Warning users by replying to the phishing email.** Use a known channel.
+
+## What good looks like
+
+A strong analyst scopes before cleaning up, can say exactly how many people received, clicked and entered a password, contains in the right order, escalates every exposed account, and closes the loop with the reporter.
+
+## In the real world
+
+Mail platforms offer message trace and purge features under different names, and many teams automate parts of the phishing playbook: a report button that collects the email, automatic trace, and one-click purge after approval. Approval rules matter because a purge removes email from many mailboxes at once. The simulator's phishing family lets you practise the scoping and decisions; the containment actions are recorded as recommendations in your report.
+
+## Remember it like this
+
+Confirm, scope, contain, follow up, and a typed password means a compromised account.
+
+## Interview answer
+
+"Once I've confirmed an email is phishing, I scope before I clean up: a message trace for every recipient, then proxy, DNS and sign-in logs to see who clicked, who submitted data, and whether any account signed in from somewhere new. I watch for security scanners that click links automatically. Then I keep a copy, purge the rest, block the sender and link, and for anyone who entered a password, reset it, revoke their sessions and check for new mailbox rules or MFA devices, and escalate it as an account compromise. Finally I tell affected users through a known channel and thank the reporter."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Message trace", definition: "A search of the mail system's records for every copy of a message, showing who received it and whether it was delivered." },
+    { term: "Email purge", definition: "Deleting a delivered message from every mailbox that received it." },
+    { term: "Block list", definition: "A list of senders, domains, addresses or file hashes that security tools refuse." },
+    { term: "Session revocation", definition: "Signing an account out of every device and app, so a stolen session stops working." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

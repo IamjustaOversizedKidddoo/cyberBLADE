@@ -1,0 +1,82 @@
+lesson: soc-l1-phishing-response-01
+questions:
+  - id: q1
+    prompt: "One user reports a phishing email. What should you assume?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "Others probably received it too, so run a message trace."
+        correct: true
+        explanation: "Correct. Phishing is usually sent to many people; the reporter is the early warning."
+      - text: "Only the reporter received it."
+        correct: false
+        explanation: "Handling only the reported copy leaves every other copy clickable."
+      - text: "Everyone who received it has been compromised."
+        correct: false
+        explanation: "Most recipients do nothing; scoping finds out who acted."
+      - text: "The reporter clicked it."
+        correct: false
+        explanation: "Reporting does not mean clicking; ask, and check the logs."
+  - id: q2
+    prompt: "Which evidence best shows that a user entered their password on a phishing page?"
+    objectives: ["soc:soc_phishing_analysis"]
+    options:
+      - text: "Data sent to the page, followed by a sign-in for that user from a new address."
+        correct: true
+        explanation: "Correct. Together they show the password was submitted and then used."
+      - text: "The email was delivered to the user."
+        correct: false
+        explanation: "Delivery alone shows nothing about what the user did."
+      - text: "A visit to the link 30 seconds after delivery from a scanner address."
+        correct: false
+        explanation: "That is an automated link check, not the user."
+      - text: "The user did not report the email."
+        correct: false
+        explanation: "Not reporting is not evidence of entering a password."
+  - id: q3
+    prompt: "A user entered their password on a phishing page. Why is resetting the password not enough?"
+    objectives: ["soc:soc_incident_response"]
+    options:
+      - text: "An attacker's existing session can keep working, and they may already have added rules or MFA devices."
+        correct: true
+        explanation: "Correct. Revoke sessions and check for changes too."
+      - text: "Password resets never work."
+        correct: false
+        explanation: "They work; they just do not end sessions or undo changes on their own."
+      - text: "The user will forget the new password."
+        correct: false
+        explanation: "That is a support issue, not a security reason."
+      - text: "Because the account must be deleted."
+        correct: false
+        explanation: "Deleting accounts is rarely necessary; securing them is."
+  - id: q4
+    prompt: "In what order should these containment steps happen?"
+    objectives: ["soc:soc_incident_response"]
+    options:
+      - text: "Keep a copy, purge the remaining copies, block indicators, secure exposed accounts."
+        correct: true
+        explanation: "Correct. Evidence first, then stop further clicks, then fix what was exposed."
+      - text: "Purge, then try to find a copy for evidence."
+        correct: false
+        explanation: "After a purge, the copies are gone."
+      - text: "Block indicators, then scope who received it."
+        correct: false
+        explanation: "Scoping comes before containment; blocking is part of containment."
+      - text: "Secure accounts first, then confirm the email is phishing."
+        correct: false
+        explanation: "Confirmation comes first, or you may reset accounts for a harmless email."
+  - id: q5
+    prompt: "How should affected users be warned?"
+    objectives: ["soc:soc_incident_response"]
+    options:
+      - text: "Through a known channel, such as a separate message from IT or a phone call."
+        correct: true
+        explanation: "Correct. Never continue the conversation inside the phishing thread."
+      - text: "By replying to the phishing email."
+        correct: false
+        explanation: "That sends mail to the attacker and confuses users about which message to trust."
+      - text: "They should not be told."
+        correct: false
+        explanation: "Users who clicked need to know what to do; others benefit from the warning."
+      - text: "By posting the phishing link on the intranet as an example."
+        correct: false
+        explanation: "Sharing a live link invites clicks; describe it and defang any indicator."
