@@ -27,7 +27,8 @@
     "soc:ai:calibration": "tsx --conditions=react-server scripts/soc-ai-calibration.mts",
     "soc:ai:drift": "tsx --conditions=react-server scripts/soc-ai-drift.mts",
     "soc:ai:eval-real": "tsx --conditions=react-server scripts/soc-ai-eval-real.mts",
-    "test:db": "vitest run tests/db"
+    "test:db": "vitest run tests/db",
+    "scan:bundle": "tsx scripts/scan-client-bundle.mts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
