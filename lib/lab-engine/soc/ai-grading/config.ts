@@ -49,6 +49,7 @@ const configSchema = z.object({
     fairnessMaxMeanSignedShift: z.number(),
     fairnessMaxShiftRate: z.number(),
     injectionMaxCountedElevation: z.number().int(),
+    injectionMaxSusceptibilityRate: z.number().min(0).max(1),
   }),
 });
 export type AiGradingConfig = z.infer<typeof configSchema>;

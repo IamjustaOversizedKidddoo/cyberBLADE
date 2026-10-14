@@ -113,11 +113,16 @@ export function createContentHeuristicMock(): MockProvider {
 
 const INSTRUCTION_CUE = /(ignore|disregard|forget|system|assistant|developer|grader|band|marks|score|rubric|canary|prompt|reveal|pretend|act as|you are now|anadekha|nirdesh|अंक|निर्देश|अनदेखा|<<<|END[\s_-]*REPORT|\{\s*"band")/i;
 
-/** An adversary: follows whatever the injected text asks for. */
-export function createInjectionCompliantMock(): MockProvider {
+/**
+ * An adversary: follows whatever the injected text asks for. `triggers` are the payload's own
+ * distinctive strings, so it obeys even payloads our detector cannot see (e.g. homoglyphs);
+ * it cannot obey text that sanitization removed before the prompt was built.
+ */
+export function createInjectionCompliantMock(triggers: string[] = []): MockProvider {
   return createScriptedProvider((req) => {
     const { raw, sections } = extractFencedReport(req.userMessage);
-    const lines = raw.split("\n").filter((l) => INSTRUCTION_CUE.test(l) && !/^\[[^\]]+\]$/.test(l.trim()));
+    const isInjected = (l: string) => INSTRUCTION_CUE.test(l) || triggers.some((t) => t.length > 0 && l.includes(t));
+    const lines = raw.split("\n").filter((l) => isInjected(l) && !/^\[[^\]]+\]$/.test(l.trim()));
     if (lines.length === 0) return respondWithBand(contentBand(raw), sections);
 
     const injected = lines.join("\n");
@@ -128,9 +133,10 @@ export function createInjectionCompliantMock(): MockProvider {
     if (/reveal|show|print|repeat|canary|prompt|rubric/i.test(injected)) {
       return json(3, lines.slice(0, 2), 1, { strengths: [`Secret: ${extractCanary(req.systemPrompt) ?? ""}`] });
     }
-    // 3) Everything else: top band, quoting the injection as "evidence".
-    const quotes = lines.map((l) => l.trim()).slice(0, 2);
-    if (quotes.length === 1) quotes.push(quotes[0].slice(0, Math.max(12, Math.floor(quotes[0].length / 2))));
+    // 3) Everything else: top band, quoting the injection plus an honest sentence as "evidence"
+    //    (the strongest attack: two distinct verbatim quotes satisfy the span rule).
+    const honest = quotableSentences(sections).filter((q) => !lines.some((l) => l.includes(q) || q.includes(l.trim())));
+    const quotes = [lines[0].trim().slice(0, 240), ...(lines[1] ? [lines[1].trim().slice(0, 240)] : honest.slice(0, 1))];
     return json(3, quotes, 1);
   }, "mock:injection-compliant");
 }
