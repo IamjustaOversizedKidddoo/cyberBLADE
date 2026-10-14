@@ -5,6 +5,7 @@ import { requireOperator, clearOperatorCookie } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 import { logSecurityEvent } from "@/lib/security/audit-logger";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getAiGradingStore } from "@/lib/lab-engine/soc/ai-grading/runtime";
 
 /**
  * Exports all data held for the authenticated operator as a JSON object (Right to Portability / Access).
@@ -13,11 +14,13 @@ export async function exportUserDataAction() {
   const operator = await requireOperator();
   const ctx = getCtx();
 
-  const [lessons, attempts, xpEvents, socAttempts] = await Promise.all([
+  const [lessons, attempts, xpEvents, socAttempts, aiFeedback] = await Promise.all([
     ctx.repo.listLessonProgress(operator.id),
     ctx.repo.listAttempts(operator.id),
     ctx.repo.listXpEvents(operator.id),
     ctx.repo.listSocAttempts(operator.id),
+    // AI writing feedback: learner-facing fields only (no raw model outputs or prompts).
+    getAiGradingStore().exportUserData(operator.id),
   ]);
 
   return {
@@ -34,6 +37,7 @@ export async function exportUserDataAction() {
       attempts,
       xpEvents,
       socAttempts,
+      aiFeedback,
     },
   };
 }
@@ -56,6 +60,8 @@ export async function deleteAccountAction() {
 
   // 2. Cascade deletion in progress repository (covers SOC attempts/decisions/cases)
   await ctx.repo.deleteUserData(operator.id);
+  // AI grading rows, raw outputs, review items, requests, consent and usage counters.
+  await getAiGradingStore().deleteUserData(operator.id);
 
   // 3. Cascade deletion in operator store
   await ctx.operators.delete(operator.id);
