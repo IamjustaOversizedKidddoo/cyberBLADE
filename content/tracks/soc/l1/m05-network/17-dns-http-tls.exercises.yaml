@@ -1,0 +1,63 @@
+lesson: soc-l1-dns-http-tls-01
+exercises:
+  - id: three-doors
+    title: "Weigh DNS, passive DNS and proxy evidence"
+    kind: log-reading
+    instructions: >-
+      Workstation ws-317 (accounts team) made these requests this morning. Passive DNS results are
+      included.
+    blocks:
+      - type: log
+        title: "DNS and proxy log for ws-317 (synthetic)"
+        lines:
+          - "08:02  dns    query  intranet.larkspur.example         -> 172.16.40.20"
+          - "08:15  dns    query  kq8zt1mw0p.example                NXDOMAIN"
+          - "08:15  dns    query  r7vb2xla9d.example                NXDOMAIN"
+          - "08:15  dns    query  m3pd8qzc1e.example                NXDOMAIN"
+          - "08:16  dns    query  w9tn4lce2h.example                -> 192.0.2.197"
+          - "08:16  proxy  POST https://w9tn4lce2h.example/c  user_agent='Go-http-client/1.1'  bytes_out=512"
+      - type: table
+        title: "Passive DNS (synthetic)"
+        columns: ["Domain", "First seen", "Addresses", "Shared hosting"]
+        rows:
+          - ["intranet.larkspur.example", "4 years ago", "172.16.40.20", "no"]
+          - ["w9tn4lce2h.example", "1 day ago", "192.0.2.197", "no"]
+    questions:
+      - id: pattern
+        prompt: "What does the burst of NXDOMAIN answers at 08:15 most resemble?"
+        answer_type: choice
+        options:
+          - "Malware trying generated domain names until one works"
+          - "A printer looking for a retired file server"
+          - "Normal web browsing"
+        accept: ["Malware trying generated domain names until one works"]
+        hints:
+          - "Read the names themselves. Do they look like real services, or like random strings?"
+          - "What happened right after the failures?"
+        explanation: >-
+          Random-looking names fail in a burst until one resolves, and the host connects to it straight
+          away. That is the shape of generated domain names (T1568).
+      - id: user-agent
+        prompt: "Why is the user agent in the POST request a useful signal here?"
+        answer_type: choice
+        options:
+          - "It is a programming library, not a browser, on an accounts-team workstation"
+          - "It proves the request was malicious"
+          - "User agents cannot be faked"
+        accept: ["It is a programming library, not a browser, on an accounts-team workstation"]
+        hints:
+          - "What would you expect an accounts-team user's web traffic to identify itself as?"
+        explanation: >-
+          An accounts workstation normally talks to the web through a browser. A programming library's
+          user agent is odd for this device. It is a supporting signal, not proof, because user agents
+          can be set to anything.
+      - id: domain-age
+        prompt: "How old is the domain the host finally contacted, according to passive DNS?"
+        answer_type: choice
+        options: ["1 day", "4 years", "Unknown"]
+        accept: ["1 day"]
+        hints:
+          - "Find the domain from the 08:16 lines in the passive DNS table."
+        explanation: >-
+          w9tn4lce2h.example was first seen one day ago, which fits the other signals: random-looking
+          name, found after failures, contacted by a non-browser client.

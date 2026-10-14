@@ -1,0 +1,14 @@
+lesson: soc-l1-flow-vs-packet-01
+cards:
+  - id: fc-soc-l1-flow-vs-packet-01
+    front: "What is in a flow record, and what is not?"
+    back: "The five-tuple, times, duration, bytes and packets each way, and TCP flags; never the content."
+  - id: fc-soc-l1-flow-vs-packet-02
+    front: "Large 'sent' vs large 'received': which one is an upload?"
+    back: "Large sent by the internal host is an upload; large received is a download."
+  - id: fc-soc-l1-flow-vs-packet-03
+    front: "What does a flow with only the SYN flag and no reply mean?"
+    back: "A TCP connection attempt that never completed. Many of them across hosts or ports look like scanning."
+  - id: fc-soc-l1-flow-vs-packet-04
+    front: "Why might a packet capture still not show the content?"
+    back: "Most traffic, especially on port 443, is encrypted with TLS."

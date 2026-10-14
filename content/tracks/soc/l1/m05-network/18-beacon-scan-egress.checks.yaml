@@ -1,0 +1,82 @@
+lesson: soc-l1-beacon-scan-egress-01
+questions:
+  - id: q1
+    prompt: "A workstation contacts the same outside address every 60 seconds with small, similar connections. What should you check before calling it command and control?"
+    objectives: ["soc:soc_network_indicators"]
+    options:
+      - text: "Whether the destination belongs to known software installed on that machine, such as an updater or agent."
+        correct: true
+        explanation: "Correct. Legitimate software beacons all the time."
+      - text: "Nothing; regular connections always mean malware."
+        correct: false
+        explanation: "Updaters, agents, mail and chat clients all beacon."
+      - text: "Whether the connections use port 80."
+        correct: false
+        explanation: "The port alone does not separate good from bad."
+      - text: "Whether the user is in the office."
+        correct: false
+        explanation: "Beacons run whether or not anyone is at the keyboard."
+  - id: q2
+    prompt: "Why do malware authors add jitter to beacons?"
+    objectives: ["soc:soc_network_indicators"]
+    options:
+      - text: "To make the regular interval harder to spot."
+        correct: true
+        explanation: "Correct. Regularity still shows over many connections, just less sharply."
+      - text: "To make the malware faster."
+        correct: false
+        explanation: "Jitter is about hiding the pattern, not speed."
+      - text: "To encrypt the traffic."
+        correct: false
+        explanation: "Timing variation does not encrypt anything."
+      - text: "Because networks are unreliable."
+        correct: false
+        explanation: "It is added on purpose to evade detection."
+  - id: q3
+    prompt: "What is the difference between a horizontal and a vertical scan?"
+    objectives: ["soc:soc_network_indicators"]
+    options:
+      - text: "Horizontal: one port on many hosts. Vertical: many ports on one host."
+        correct: true
+        explanation: "Correct."
+      - text: "Horizontal: from outside. Vertical: from inside."
+        correct: false
+        explanation: "Direction of origin is a separate question."
+      - text: "Horizontal: TCP. Vertical: UDP."
+        correct: false
+        explanation: "Both can use either protocol."
+      - text: "There is no difference."
+        correct: false
+        explanation: "They answer different questions for the attacker."
+  - id: q4
+    prompt: "A file server sends 6 GB every night to the internal backup server. Tonight it sent 6 GB to a personal cloud storage service. What matters most?"
+    objectives: ["soc:soc_data_exfiltration"]
+    options:
+      - text: "The destination changed from the baseline, even though the volume is normal."
+        correct: true
+        explanation: "Correct. Unusual egress is about change in volume, destination, time or channel."
+      - text: "Nothing, because the volume matches the usual backup."
+        correct: false
+        explanation: "Volume alone hides the real change: where the data went."
+      - text: "Only that it happened at night."
+        correct: false
+        explanation: "Night is normal for this server's backups; the destination is the anomaly."
+      - text: "The protocol used."
+        correct: false
+        explanation: "It may matter, but the destination is the clearest change here."
+  - id: q5
+    prompt: "Which pattern is most worrying?"
+    objectives: ["soc:soc_network_indicators"]
+    options:
+      - text: "An internal workstation scanning port 445 across the whole office network."
+        correct: true
+        explanation: "Correct. Internal scanning from a workstation suggests discovery after a compromise."
+      - text: "Internet addresses scanning the company's public web server."
+        correct: false
+        explanation: "That is constant background noise for any public address."
+      - text: "The approved vulnerability scanner running in its change window."
+        correct: false
+        explanation: "It is scanning, but approved and expected."
+      - text: "An antivirus agent checking for updates every hour."
+        correct: false
+        explanation: "That is ordinary beaconing by known software."

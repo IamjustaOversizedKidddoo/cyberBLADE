@@ -84,7 +84,15 @@ Flashcards live in `<lesson>.cards.yaml` next to the lesson and only hold facts 
 | 41 | M12 Working the shift | Queue, time and handover (`queue-handover`) | 6, 8 | soc_alert_triage, soc_case_management | shift:shift-alert-storm |
 | 42 | M12 | Judgment, sustainability and honest career orientation (`judgment-career`) | 41 | soc_alert_triage | shift:shift-standard-mixed |
 
-**Prerequisite changes during Part 4 (2026-10-14):** the track gate is Rank 1, so a Rank 1 learner cannot open Rank 2 core lessons. Lessons 9, 26 and 31 therefore use Rank 0–1 core prerequisites instead of `core-r2-*`. Lesson 9 uses `core-r0-mind-attacker-defender-01`; the replacements for 26 and 31 are recorded when those lessons land. The pilot triage loop (5) now depends on lesson 4, as planned.
+**Prerequisite changes during Part 4 (2026-10-14):** the track gate is Rank 1, so a Rank 1 learner cannot open Rank 2 core lessons. Lessons 9, 26 and 31 therefore use Rank 0–1 core prerequisites instead of `core-r2-*`. Lesson 9 uses `core-r0-mind-attacker-defender-01`. Lesson 26 uses `core-r1-net-web-01` and `core-r1-net-routing-fw-01`. Lesson 31 uses `core-r0-comp-os-files-01`; no Rank 0–1 lesson teaches file hashing, so lesson 31 teaches it itself. The pilot triage loop (5) now depends on lesson 4, as planned.
+
+**Drill remapping during Part 4 (2026-10-15):** the planned `drill:` targets were checked against what each drill actually practises (`lib/lab-engine/soc/query/drills.ts`). Several did not match: drill 06 searches command lines for `-enc`, drill 16 ranks processes, drill 20 rebuilds sign-in sessions, and drill 12 counts sign-ins by outcome. They are remapped as follows:
+- Lesson 17 has no drill (DNS is not in the drill dataset).
+- Lesson 18 uses `tool:pcap_flows`.
+- Lesson 19 uses drills 03 and 07 (firewall action and bytes).
+- Lesson 21 uses drills 04 and 06; lesson 24 uses drill 06.
+- Lesson 25 practises with `lesson:core-r1-linux-investigate-01`, because the drill dataset has no Linux logs.
+- Lesson 27 uses drills 12 and 14.
 
 **Module adjustments vs the brief** (with reasons):
 - M2 has five lessons instead of four, because triage is the core L1 skill.

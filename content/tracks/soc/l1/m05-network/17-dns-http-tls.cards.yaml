@@ -1,0 +1,14 @@
+lesson: soc-l1-dns-http-tls-01
+cards:
+  - id: fc-soc-l1-dns-http-tls-01
+    front: "What does an NXDOMAIN response mean?"
+    back: "The name does not exist. Bursts of them for random-looking names can mean malware trying generated domains."
+  - id: fc-soc-l1-dns-http-tls-02
+    front: "What does passive DNS tell you about a domain?"
+    back: "Which addresses it resolved to over time, with first-seen and last-seen dates; useful for judging how new it is."
+  - id: fc-soc-l1-dns-http-tls-03
+    front: "What is usually still visible in TLS traffic?"
+    back: "The server name requested (SNI), the certificate details, and the connection's timing and size."
+  - id: fc-soc-l1-dns-http-tls-04
+    front: "Why is a normal-looking user agent weak evidence?"
+    back: "It is free text that any program can set, so it can be faked easily."

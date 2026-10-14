@@ -1,0 +1,152 @@
+---
+id: soc-l1-dns-http-tls-01
+title: "DNS, HTTP and TLS Through a Defender's Eyes"
+track: soc
+rank: 1
+module: net
+order: 17
+estimated_minutes: 16
+objectives_covered: ["soc:soc_network_indicators"]
+mitre: ["T1071", "T1568"]
+xp: 100
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-flow-vs-packet-01", "core-r1-net-web-01"]
+skills: ["soc_network_indicators"]
+practice: ["tool:pdns"]
+---
+
+> **Outcome:** you can read DNS, web and TLS records for signs of malicious activity, and use passive DNS history without being fooled by shared hosting.
+
+## Why this matters on shift
+
+Almost every attack touches the network through the same three doors. A program looks up a name (DNS), talks to a web server (HTTP), usually over an encrypted connection (TLS). Even when the content is hidden, the names, addresses, timing and a few unencrypted details are often enough to tell normal traffic from an attacker's.
+
+## Before you start
+
+You should already know:
+
+- How flow records work and what they cannot show: [Flow Records vs Packets](/learn/soc-l1-flow-vs-packet-01).
+- How HTTP requests and TLS work: [HTTP, HTTPS and TLS](/learn/core-r1-net-web-01).
+
+## Core ideas
+
+### DNS: intent before connection
+
+Before most programs connect to a server, they ask DNS for its address. A DNS log therefore shows what a machine *intended* to reach, often before any connection happens.
+
+Think of a taxi company's booking log. Even if you never see the journey, the bookings tell you where each customer wanted to go, and a customer who keeps booking trips to addresses that do not exist is worth asking about.
+
+Patterns worth a closer look:
+
+- **Newly seen or newly registered domains.** Legitimate services usually have long histories; attackers often use fresh domains.
+- **Many failed lookups.** An **NXDOMAIN** response means "this name does not exist". A burst of NXDOMAIN answers for random-looking names can mean malware trying generated domain names until one works (ATT&CK T1568, Dynamic Resolution). It can also mean a misconfigured device, so check.
+- **Very long or random-looking subdomains**, sent often to one domain. Data can be hidden inside DNS queries this way.
+- **Connections with no DNS lookup at all**, straight to an IP address. Normal software rarely does this; some malware does.
+
+### Passive DNS
+
+**Passive DNS** is a historical database of DNS answers seen over time: which addresses a domain pointed to, and which domains pointed to an address, with first-seen and last-seen dates.
+
+It answers questions like "how long has this domain existed in practice?" and "what else has used this address?". But be careful with shared hosting: one address on a large hosting or content-delivery service can serve thousands of unrelated domains. A bad domain sharing an address with a good one does not make the good one bad. The simulator's passive DNS history marks records that look like shared infrastructure.
+
+### HTTP: what proxy logs show
+
+A web proxy logs each request: the method (such as GET or POST), the host, the path, the status code, the bytes, and the **user agent**, a text string in which the client describes itself (browser, version, operating system).
+
+Useful signals:
+
+- A POST of data to a site the user has never visited, especially just after a phishing email.
+- A user agent that does not match the device, such as a scripting tool's user agent on a finance laptop. User agents are easy to fake, so a normal one proves nothing; an odd one is a lead.
+- Requests to an address instead of a name, or downloads of executables from new domains.
+
+### TLS: what you can still see
+
+TLS encrypts the content, but some details are usually visible:
+
+- **SNI** (Server Name Indication): the server name the client asks for at the start of the TLS connection, sent in the clear in most traffic today. Newer standards can encrypt it, so it may be missing.
+- The server's certificate: who it was issued to, by whom, and when. A brand-new certificate for a brand-new domain is a weak signal on its own, but it adds up.
+- Timing, size and frequency of connections, which you met in flow records.
+
+<FlowDiagram
+  title="Reading the three doors"
+  description="For a suspicious connection, check what name was looked up and how old it is, check passive DNS for history and shared hosting, check the web request or TLS server name, and only then decide."
+  steps={[
+    { label: "DNS", detail: "What name was looked up? New? Random? Many failures?" },
+    { label: "Passive DNS", detail: "How long has it existed? Shared hosting?" },
+    { label: "HTTP or TLS", detail: "Method, path, user agent; or the TLS server name and certificate." },
+    { label: "Decide", detail: "Combine weak signals; no single one is proof." },
+  ]}
+/>
+
+In plain English: look at where the machine wanted to go, how old that place is, and how it talked to it, then weigh it all together.
+
+## Worked example
+
+An alert at Larkspur Freight: "Burst of failed DNS lookups from 172.16.40.88" at 07:00 UTC. The DNS log shows 400 NXDOMAIN answers in ten minutes.
+
+**A false lead.** Hundreds of failed lookups sounds like malware trying generated names. But the analyst reads the actual names:
+
+<LogBlock
+  title="DNS log sample, 172.16.40.88 (synthetic)"
+  lines={[
+    "07:00:01  query  fs-old01.larkspur.example         NXDOMAIN",
+    "07:00:01  query  fs-old01.corp.larkspur.example    NXDOMAIN",
+    "07:00:02  query  scan-share.larkspur.example       NXDOMAIN",
+    "...       (same three names repeated every 4 seconds)",
+  ]}
+/>
+
+The names are not random. They are old internal server names, repeated on a fixed schedule. The asset directory shows 172.16.40.88 is a printer, and IT retired fs-old01 last week. The printer is still trying to save scans to it. This is a benign misconfiguration: the analyst closes the alert as a false positive and tells IT.
+
+**A real lead in the same hour.** While checking, the analyst notices ws-301 looked up `cdn-sync-update.example` at 07:12. Passive DNS shows the domain was first seen two days ago and has only ever pointed to 192.0.2.195. Nothing marks that address as shared hosting. The proxy log shows ws-301 then sent a POST of 48 KB to that host with the user agent of a command-line download tool, on a laptop used by the payroll team. Three weak signals pointing the same way make a strong one, and the analyst escalates ws-301.
+
+## Try it
+
+<MicroExercise id="three-doors" />
+
+## Common mistakes
+
+- **Treating every NXDOMAIN burst as malware.** Read the names: random strings and stale internal names mean different things.
+- **Blaming a domain for sharing an address with a bad one.** Shared hosting is normal.
+- **Trusting a normal-looking user agent.** It can be faked; only odd ones are useful signals.
+- **Ignoring the SNI because the traffic is encrypted.** The server name is often still visible.
+- **Deciding on one weak signal.** Combine them.
+
+## What good looks like
+
+A strong analyst reads the actual names in DNS logs, checks domain age and passive DNS history, recognises shared hosting, uses the user agent and TLS server name as supporting details, and explains how several weak signals add up to a decision.
+
+## In the real world
+
+DNS logs come from internal resolvers or protective DNS services, proxy logs from secure web gateways, and TLS details from network sensors or firewalls that record metadata. Domain age comes from registration (WHOIS-style) data or passive DNS. Some newer protocols encrypt DNS itself (DNS over HTTPS) or the SNI, which can remove these signals, so many organisations require devices to use the company's resolver.
+
+The simulator's passive DNS history shows forward and reverse resolutions with first-seen and last-seen times, counts, and a shared-infrastructure marker.
+
+## Remember it like this
+
+Where it wanted to go (DNS), how long that place has existed (passive DNS), and how it talked (HTTP or TLS): no single answer convicts.
+
+## Interview answer
+
+"DNS logs show what a host intended to reach, so I look for newly seen domains, bursts of NXDOMAIN with random-looking names, long odd subdomains, and connections with no lookup. Passive DNS tells me how long a domain has been around and what else used its address, but I'm careful with shared hosting. In proxy logs I look at method, path and user agent, and for TLS the server name and certificate are often still visible. I treat each of these as a weak signal and decide on the combination."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "NXDOMAIN", definition: "A DNS response meaning 'this name does not exist'." },
+    { term: "Passive DNS", definition: "A historical database of DNS answers seen over time, showing which addresses a domain used and when." },
+    { term: "User agent", definition: "A text string in which a web client describes itself (browser, version, operating system); easy to fake." },
+    { term: "SNI", definition: "Server Name Indication: the server name a client asks for at the start of a TLS connection, usually visible even though the content is encrypted." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

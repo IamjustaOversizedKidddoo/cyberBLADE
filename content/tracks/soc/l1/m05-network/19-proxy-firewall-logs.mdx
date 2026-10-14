@@ -1,0 +1,156 @@
+---
+id: soc-l1-proxy-firewall-logs-01
+title: "Proxy and Firewall Logs"
+track: soc
+rank: 1
+module: net
+order: 19
+estimated_minutes: 16
+objectives_covered: ["soc:soc_network_monitoring"]
+mitre: []
+xp: 100
+status: draft
+review_status: agent-checked
+last_reviewed: null
+prerequisites: ["soc-l1-flow-vs-packet-01", "core-r1-net-routing-fw-01"]
+skills: ["soc_network_monitoring"]
+practice: ["drill:drill-03", "drill:drill-07"]
+---
+
+> **Outcome:** you can read firewall and web proxy logs, tell blocked attempts from successful connections, and find the internal machine behind a translated address.
+
+## Why this matters on shift
+
+Firewalls and web proxies sit at the edge of the network, so almost every connection in or out passes through one of them. Their logs are often the only network evidence you have. Reading them well means knowing what "deny" really tells you, why the address you see may not be the machine you are looking for, and what a proxy can and cannot see inside encrypted traffic.
+
+## Before you start
+
+You should already know:
+
+- How flow records work: [Flow Records vs Packets](/learn/soc-l1-flow-vs-packet-01).
+- What routers, firewalls and proxies do: [Routing, Firewalls and Proxies](/learn/core-r1-net-routing-fw-01).
+
+## Core ideas
+
+### Firewall logs
+
+A **firewall rule** is an instruction that says which traffic to allow or block, matched on fields such as addresses, ports and protocol. A firewall log records each decision. Typical fields:
+
+- time, source and destination addresses and ports, protocol,
+- **action**: allow, deny or drop (deny and drop both block; drop sends no reply),
+- the name of the rule that matched,
+- bytes and packets, for allowed connections.
+
+Most well-run firewalls use **default deny**: anything not explicitly allowed is blocked.
+
+Think of a building's front desk with a visitor list. The log shows everyone who came to the desk, who was let in, who was turned away, and which line of the visitor list made the decision.
+
+### What a deny tells you
+
+A deny is good news about that one connection: it did not happen. It is also information about the source. Inbound denies from the internet are constant background noise. **Outbound** denies from an internal machine are different. Something on that machine tried to reach a place your policy does not allow, perhaps malware trying a blocked destination.
+
+The most important follow-up question is: **did anything from that machine succeed by another route?** Attackers try several ports and addresses. One blocked attempt and one allowed attempt to the same destination is a very different story from a single deny.
+
+### Translated addresses
+
+Many internal machines share one public address through **network address translation** (NAT): the firewall rewrites the internal source address to its own public one on the way out. Two consequences:
+
+- An outside party sees only the shared public address, not which machine it was.
+- To find the internal machine behind an outbound connection, you need the firewall's own logs (which record both addresses) or the internal side's logs, matched by time and port.
+
+### Web proxy logs
+
+A **forward proxy** is a server that makes web requests on behalf of internal users, so the company can filter and log web traffic. Proxy logs usually include:
+
+- the user name (if users sign in to the proxy) and the internal machine,
+- the URL or host, method, status code and bytes,
+- the user agent,
+- a **URL category**: the proxy vendor's label for the kind of site, such as "news", "cloud storage" or "newly registered domain",
+- the action: allowed or blocked.
+
+For HTTPS, what the proxy sees depends on its set-up. Without TLS inspection, the browser opens an encrypted tunnel through the proxy with a `CONNECT host:443` request, and the proxy logs only the host name, the size and the time, not the full URL. With TLS inspection (decrypting and re-encrypting traffic), it can log full URLs, but that is a deliberate company decision with privacy rules attached.
+
+<FlowDiagram
+  title="Working an outbound network alert"
+  description="Find the internal machine (through NAT if needed), check the action, look for other attempts to the same destination including allowed ones, check proxy logs for the host name and category, then decide."
+  steps={[
+    { label: "Identify the machine", detail: "Use firewall or internal logs if the address is translated." },
+    { label: "Read the action", detail: "Allowed, denied or dropped?" },
+    { label: "Look for other routes", detail: "Same destination on other ports, protocols or times: anything allowed?" },
+    { label: "Check the proxy", detail: "Host name, category, user agent, bytes." },
+    { label: "Decide", detail: "A single deny is rarely the end of the story." },
+  ]}
+/>
+
+In plain English: a block tells you something tried; your job is to find out whether anything got through another way.
+
+## Worked example
+
+An alert at Larkspur Freight, 11:05 UTC: "Outbound connection to known-bad address denied", from srv-ftp01 to 192.0.2.203 on port 8443.
+
+**A tempting close.** The firewall blocked it, so it is tempting to close the alert as "blocked, no impact". The analyst searches the firewall log for every connection between srv-ftp01 and that address today instead:
+
+<LogBlock
+  title="Firewall log: srv-ftp01 (172.16.40.71) to 192.0.2.203 (synthetic)"
+  lines={[
+    "10:41:12  allow  172.16.40.71:49822 -> 192.0.2.203:443   TCP  rule=web-out       sent=1.2 KB recv=38 KB",
+    "10:58:30  allow  172.16.40.71:49910 -> 192.0.2.203:443   TCP  rule=web-out       sent=310 MB recv=0.4 MB",
+    "11:04:59  deny   172.16.40.71:49934 -> 192.0.2.203:8443  TCP  rule=default-deny",
+  ]}
+/>
+
+The deny at 11:04 was only the latest attempt. Earlier, the same server reached the same address on port 443, which the `web-out` rule allows: first a small connection that received 38 KB (perhaps a download of tools), then one that **sent** 310 MB.
+
+**Check the proxy.** Servers at Larkspur are supposed to send web traffic through the proxy, but the proxy has no record of srv-ftp01 at those times. The server went straight out through the firewall's broad `web-out` rule. That is a misconfiguration worth reporting on its own.
+
+**Decision.** This is not "blocked, no impact". It is a likely compromise of srv-ftp01 with a 310 MB upload to a known-bad address. The analyst escalates it with the three log lines, and notes that the `web-out` rule lets servers bypass the proxy.
+
+## Try it
+
+<MicroExercise id="edge-logs" />
+
+## Common mistakes
+
+- **Closing an alert because the connection was denied.** Look for the attempts that were allowed.
+- **Escalating every inbound deny.** Internet background scanning is constant.
+- **Blaming the public address.** With NAT, many machines share it; find the internal one.
+- **Expecting full URLs for HTTPS without TLS inspection.** You will usually see only the host name.
+- **Trusting URL categories completely.** They are a vendor's label; new domains are often uncategorised.
+
+## What good looks like
+
+A strong analyst treats a deny as the start of a question, searches all traffic between the two sides, finds the real internal machine behind translated addresses, uses proxy logs for host names and categories, and reports rules that let traffic bypass controls.
+
+## In the real world
+
+Firewall and proxy logs come in many formats, often one line per decision, sometimes with separate start and end records. Cloud platforms add their own network flow logs. Teams usually alert on outbound denies to known-bad destinations, connections to newly registered or uncategorised domains, and direct-to-internet traffic from servers that should use the proxy.
+
+The query drills linked below use firewall events with an action field and a bytes-sent field, so you can practise finding denies and large transfers.
+
+## Remember it like this
+
+A deny says something tried; find out what got through. And behind every shared address is a real machine to find.
+
+## Interview answer
+
+"In firewall logs I look at the action, the rule that matched, and the bytes. A deny tells me the connection failed but also that something tried, so I always search for other connections between the same two sides, especially allowed ones on other ports. With NAT I use the firewall's own logs to find the internal machine. Proxy logs add the user, host name, category and user agent, but for HTTPS without TLS inspection I'll usually only see the host name from the CONNECT request."
+
+## Check your understanding
+
+<TerminalCheck />
+
+## Key terms
+
+<KeyTerms
+  terms={[
+    { term: "Firewall rule", definition: "An instruction that tells a firewall which traffic to allow or block, matched on fields such as addresses, ports and protocol." },
+    { term: "Default deny", definition: "A firewall policy that blocks anything not explicitly allowed." },
+    { term: "Network address translation", definition: "Rewriting internal addresses to a shared public address on the way out, so many machines appear as one outside (often shortened to NAT)." },
+    { term: "Forward proxy", definition: "A server that makes web requests on behalf of internal users, so web traffic can be filtered and logged." },
+    { term: "URL category", definition: "A proxy vendor's label for the kind of website, such as news, cloud storage or newly registered domain." },
+  ]}
+/>
+
+## Practice this
+
+<PracticeThis />

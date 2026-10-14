@@ -1,0 +1,82 @@
+lesson: soc-l1-dns-http-tls-01
+questions:
+  - id: q1
+    prompt: "Why are DNS logs useful even when the later connection is encrypted?"
+    objectives: ["soc:soc_network_indicators"]
+    options:
+      - text: "They show which names a machine tried to reach, often before any connection happens."
+        correct: true
+        explanation: "Correct. DNS reveals intent, and the lookup itself is usually not encrypted on company networks."
+      - text: "They contain the content of the web pages."
+        correct: false
+        explanation: "DNS only resolves names to addresses; it carries no page content."
+      - text: "They prove which user was at the keyboard."
+        correct: false
+        explanation: "DNS logs usually show a device, not a person."
+      - text: "They decrypt TLS traffic."
+        correct: false
+        explanation: "DNS has nothing to do with decrypting TLS."
+  - id: q2
+    prompt: "A malicious domain shares its address with hundreds of other domains on a large hosting service. What follows?"
+    objectives: ["soc:soc_network_indicators"]
+    options:
+      - text: "Little about the other domains; shared hosting is normal, so judge each domain on its own evidence."
+        correct: true
+        explanation: "Correct. Blocking or blaming the whole address would hit many innocent sites."
+      - text: "All those domains are malicious too."
+        correct: false
+        explanation: "Sharing an address with a bad domain does not make a domain bad."
+      - text: "The hosting service is run by the attacker."
+        correct: false
+        explanation: "Attackers often rent space on ordinary hosting services."
+      - text: "Passive DNS is useless for this domain."
+        correct: false
+        explanation: "It is still useful, for example for first-seen dates; you just interpret shared addresses carefully."
+  - id: q3
+    prompt: "A host produces hundreds of NXDOMAIN answers. What should you check first?"
+    objectives: ["soc:soc_network_indicators"]
+    options:
+      - text: "The actual names: random strings and stale internal server names mean different things."
+        correct: true
+        explanation: "Correct. Misconfigured devices also produce NXDOMAIN bursts."
+      - text: "Nothing; isolate the host immediately."
+        correct: false
+        explanation: "A misconfigured printer would trigger the same alert. Read the names first."
+      - text: "The host's user agent."
+        correct: false
+        explanation: "User agents belong to HTTP, not DNS."
+      - text: "Whether the DNS server is down."
+        correct: false
+        explanation: "NXDOMAIN is an answer from a working server: the name does not exist."
+  - id: q4
+    prompt: "What can a defender usually still see about a TLS connection?"
+    objectives: ["soc:soc_network_indicators"]
+    options:
+      - text: "The server name requested (SNI), the certificate details, and the connection's timing and size."
+        correct: true
+        explanation: "Correct. Newer standards can hide the SNI, so it may be missing."
+      - text: "The full content of the requests."
+        correct: false
+        explanation: "The content is what TLS encrypts."
+      - text: "The user's password."
+        correct: false
+        explanation: "Passwords are inside the encrypted content."
+      - text: "Nothing at all."
+        correct: false
+        explanation: "Addresses, names, certificates and timing are often visible."
+  - id: q5
+    prompt: "A proxy log shows a browser-like user agent for a request. What does that prove?"
+    objectives: ["soc:soc_network_indicators"]
+    options:
+      - text: "Very little: user agents are easy to fake, so only odd ones are useful signals."
+        correct: true
+        explanation: "Correct. A normal user agent is not evidence of a normal client."
+      - text: "That the request came from a real browser."
+        correct: false
+        explanation: "Any program can claim to be a browser."
+      - text: "That the request was malicious."
+        correct: false
+        explanation: "Most browser traffic is legitimate."
+      - text: "That the site is safe."
+        correct: false
+        explanation: "The user agent describes the client, not the site."

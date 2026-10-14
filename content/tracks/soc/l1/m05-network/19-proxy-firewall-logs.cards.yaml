@@ -1,0 +1,14 @@
+lesson: soc-l1-proxy-firewall-logs-01
+cards:
+  - id: fc-soc-l1-proxy-firewall-logs-01
+    front: "An outbound connection was denied. What is the next question?"
+    back: "Did anything between the same two sides get through another way: other ports, the proxy, other times?"
+  - id: fc-soc-l1-proxy-firewall-logs-02
+    front: "Why can't you identify the machine from the public address alone?"
+    back: "NAT makes many internal machines share one public address; use the firewall's logs to find the real one."
+  - id: fc-soc-l1-proxy-firewall-logs-03
+    front: "What does a proxy see for HTTPS without TLS inspection?"
+    back: "A CONNECT to the host and port, with time, bytes and user, but not the full URL or content."
+  - id: fc-soc-l1-proxy-firewall-logs-04
+    front: "What does 'default deny' mean?"
+    back: "Anything not explicitly allowed by a firewall rule is blocked."

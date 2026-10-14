@@ -1,0 +1,14 @@
+lesson: soc-l1-beacon-scan-egress-01
+cards:
+  - id: fc-soc-l1-beacon-scan-egress-01
+    front: "What does beaconing look like in flow records?"
+    back: "Repeated connections from one source to one destination at a steady interval (often with jitter), with small, similar sizes."
+  - id: fc-soc-l1-beacon-scan-egress-02
+    front: "Horizontal scan vs vertical scan?"
+    back: "Horizontal: one port on many hosts. Vertical: many ports on one host."
+  - id: fc-soc-l1-beacon-scan-egress-03
+    front: "What four changes mark unusual egress?"
+    back: "Volume, destination, time and channel, compared with the host's baseline."
+  - id: fc-soc-l1-beacon-scan-egress-04
+    front: "Which legitimate software beacons?"
+    back: "Update checkers, antivirus and endpoint agents, mail and chat clients, monitoring and time synchronisation."
