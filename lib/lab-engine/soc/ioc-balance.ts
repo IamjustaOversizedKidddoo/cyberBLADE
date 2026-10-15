@@ -6,15 +6,69 @@
  * True-positive alerts keep exactly their template IOCs, so report and enrichment answer keys for
  * malicious indicators do not change. Pure and deterministic: no randomness, no new values.
  */
+import { createRng } from "@/lib/generators/rng";
 import type { SocAlertIoc, SocScenario } from "./schema";
 
 export const IOC_BALANCING_FROM = "1.1.0";
+/** Benign "roaming user" address used by noise generation in both generators. */
+export const NOISE_ROAMING_IP = "198.51.100.201";
+export const SEEDED_IOCS_FROM = "1.2.0";
 
-export function usesIocBalancing(generatorVersion: string | null | undefined): boolean {
+function atLeast(generatorVersion: string | null | undefined, min: string): boolean {
   const v = (generatorVersion ?? "1.0.0").split(".").map(Number);
-  const min = IOC_BALANCING_FROM.split(".").map(Number);
-  for (let i = 0; i < 3; i++) if ((v[i] ?? 0) !== min[i]) return (v[i] ?? 0) > min[i];
+  const m = min.split(".").map(Number);
+  for (let i = 0; i < 3; i++) if ((v[i] ?? 0) !== m[i]) return (v[i] ?? 0) > m[i];
   return true;
+}
+
+export const usesIocBalancing = (generatorVersion: string | null | undefined) => atLeast(generatorVersion, IOC_BALANCING_FROM);
+export const usesSeededIocs = (generatorVersion: string | null | undefined) => atLeast(generatorVersion, SEEDED_IOCS_FROM);
+
+const WORDS_A = ["account", "secure", "verify", "billing", "portal", "update", "signin", "invoice", "payroll", "support", "docs", "cloud", "mail", "auth", "service", "notice", "share", "vendor", "remit", "session"];
+const WORDS_B = ["center", "hub", "desk", "online", "access", "gateway", "check", "review", "files", "link", "zone", "point", "site", "login", "pass", "team", "office", "web", "net", "now"];
+
+/**
+ * Generator 1.2.0 (L1-A-09): true-positive indicator values are drawn per seed instead of from
+ * a handful of fixed values, so "this IP was bad last time" carries no information. Values stay in
+ * reserved documentation space (RFC 5737 addresses; .example / .test domains). Uses its own RNG
+ * sub-stream, so every other generated value is unchanged.
+ */
+export function seededIncidentIocs(streamSeed: string, pooled: { attackerIp: string }, avoid: ReadonlySet<string> = new Set()) {
+  const rng = createRng(`${streamSeed}:ioc-values`);
+  const prefix = pooled.attackerIp.split(".").slice(0, 3).join(".");
+  const label = () => `${rng.pick(WORDS_A)}-${rng.pick(WORDS_B)}${rng.int(2, 99)}`;
+  const tld = () => rng.pick([".example", ".test"]);
+  // Never reuse a value the content already uses (benign noise has fixed reserved addresses), or a
+  // benign alert would share the attacker's indicator.
+  const taken = (v: string) => avoid.has(v.toLowerCase()) || v === NOISE_ROAMING_IP;
+  const fresh = (make: () => string) => {
+    let v = make();
+    for (let i = 0; i < 50 && taken(v); i++) v = make();
+    return v;
+  };
+  return {
+    attackerIp: fresh(() => `${prefix}.${rng.int(2, 253)}`),
+    phishingDomain: fresh(() => `${rng.pick(WORDS_A)}.${label()}${tld()}`),
+    c2Domain: fresh(() => `${rng.pick(["cdn", "api", "sync", "telemetry", "assets"])}.${label()}${tld()}`),
+    fileHash: rng.hex(64),
+  };
+}
+
+const RESERVED_LITERAL = /\b(?:(?:198\.51\.100|203\.0\.113|192\.0\.2)\.\d{1,3}|[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:example|test))\b/gi;
+const literalCache = new WeakMap<object, Set<string>>();
+
+/** Reserved IPs and domains written literally anywhere in the given content objects (cached). */
+export function reservedLiterals(...sources: object[]): Set<string> {
+  const out = new Set<string>();
+  for (const src of sources) {
+    let set = literalCache.get(src);
+    if (!set) {
+      set = new Set((JSON.stringify(src).match(RESERVED_LITERAL) ?? []).map((v) => v.toLowerCase()));
+      literalCache.set(src, set);
+    }
+    for (const v of set) out.add(v);
+  }
+  return out;
 }
 
 const FILE_EXT = /\.(exe|dll|ps1|psm1|bat|cmd|vbs|js|jar|msi|iso|lnk|zip|rar|7z|pdf|docx?|xlsx?|pptx?|txt|log|csv|json|xml|html?|png|jpe?g|gif|sys|tmp|dat|ini|cfg|conf|sh|py)$/i;

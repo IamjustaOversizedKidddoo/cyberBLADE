@@ -16,10 +16,11 @@ import type {
 } from "./family-schema";
 import { loadVocab, type SocVocab } from "./vocab";
 import { synthesizeReportGroundTruth } from "./reports/ground-truth-synthesis";
-import { balanceAlertIocs, usesIocBalancing } from "./ioc-balance";
+import { NOISE_ROAMING_IP, balanceAlertIocs, reservedLiterals, seededIncidentIocs, usesIocBalancing, usesSeededIocs } from "./ioc-balance";
 
-// 1.1.0: IOC balancing on non-true-positive alerts (L1-A-03); attempts keep their pinned version.
-export const GENERATOR_VERSION = "1.1.0";
+// 1.1.0: IOC balancing on non-true-positive alerts (L1-A-03). 1.2.0: per-seed indicator values
+// (L1-A-09). Attempts keep their pinned version.
+export const GENERATOR_VERSION = "1.2.0";
 
 export type GenerationOptions = {
   maxAttempts?: number;
@@ -94,7 +95,7 @@ export function generateSocVariant(
 
     try {
       const generatorVersion = options.generatorVersion ?? GENERATOR_VERSION;
-      const base = generateSingleVariant(family, attemptSeed, difficulty, vocab, options.shiftStartTime);
+      const base = generateSingleVariant(family, attemptSeed, difficulty, vocab, options.shiftStartTime, generatorVersion);
       const pinned = { ...base, generatorConfig: { ...base.generatorConfig!, generatorVersion } };
       // Version-pinned: attempts created before 1.1.0 keep their original alerts.
       const scenario = usesIocBalancing(generatorVersion) ? balanceAlertIocs(pinned) : pinned;
@@ -125,6 +126,7 @@ function generateSingleVariant(
   difficulty: DifficultyLevel,
   vocab: SocVocab,
   baseShiftStartTime?: string,
+  generatorVersion: string = GENERATOR_VERSION,
 ): SocScenario {
   // 1. Sub-stream derivation: guarantees adding noise/text changes never alters incident logic
   const envRng = createRng(`${seed}:environment`);
@@ -363,10 +365,16 @@ function generateSingleVariant(
     // Select IOCs from pool
     const ipPool = extIpPools[extIpPoolIndex % extIpPools.length];
     extIpPoolIndex++;
-    const attackerIp = incRng.pick(ipPool);
-    const phishingDomain = incRng.pick(vocab.iocs.phishingDomains);
-    const c2Domain = incRng.pick(vocab.iocs.c2Domains);
-    const fileHash = incRng.pick(vocab.iocs.fileHashes.maliciousPayloader);
+    // The pool picks always run (same RNG stream for every version); 1.2.0+ replaces the values.
+    const pooledIocs = {
+      attackerIp: incRng.pick(ipPool),
+      phishingDomain: incRng.pick(vocab.iocs.phishingDomains),
+      c2Domain: incRng.pick(vocab.iocs.c2Domains),
+      fileHash: incRng.pick(vocab.iocs.fileHashes.maliciousPayloader),
+    };
+    const { attackerIp, phishingDomain, c2Domain, fileHash } = usesSeededIocs(generatorVersion)
+      ? seededIncidentIocs(`${seed}:inc:${incIdx}`, pooledIocs, reservedLiterals(family, vocab))
+      : pooledIocs;
     const proc = vocab.iocs.suspiciousProcesses[0];
 
     const tokens: Record<string, string | number | boolean> = {
@@ -513,7 +521,7 @@ function generateSingleVariant(
     const actorUser = noiseRng.pick(users);
     const targetAsset = noiseRng.pick(assets);
     const scannerIp = "10.10.0.85";
-    const roamingIp = "198.51.100.201";
+    const roamingIp = NOISE_ROAMING_IP;
 
     const noiseTokens: Record<string, string | number | boolean> = {
       username: actorUser.username,

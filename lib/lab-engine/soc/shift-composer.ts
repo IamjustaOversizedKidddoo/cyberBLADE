@@ -23,7 +23,7 @@ import {
 import { loadVocab } from "./vocab";
 import type { ShiftProfile } from "./shift-schema";
 import { GENERATOR_VERSION, computeVariantMetrics } from "./generator";
-import { balanceAlertIocs, usesIocBalancing } from "./ioc-balance";
+import { NOISE_ROAMING_IP, balanceAlertIocs, reservedLiterals, seededIncidentIocs, usesIocBalancing, usesSeededIocs } from "./ioc-balance";
 import { synthesizeReportGroundTruth } from "./reports/ground-truth-synthesis";
 import { validateSocScenario } from "./validator";
 import {
@@ -288,6 +288,7 @@ export function composeShiftScenario(
   const extIpPools = Object.values(vocab.iocs.externalIps);
   let extIpPoolIndex = 0;
   let remainingGaps = shiftProfile.telemetryGaps.count;
+  const generatorVersion = options.generatorVersion ?? GENERATOR_VERSION;
 
   for (let selIdx = 0; selIdx < shiftProfile.incidentSelections.length; selIdx++) {
     const sel = shiftProfile.incidentSelections[selIdx];
@@ -332,10 +333,16 @@ export function composeShiftScenario(
     // Pick distinct external IOCs
     const ipPool = extIpPools[extIpPoolIndex % extIpPools.length];
     extIpPoolIndex++;
-    const attackerIp = incRng.pick(ipPool);
-    const phishingDomain = incRng.pick(vocab.iocs.phishingDomains);
-    const c2Domain = incRng.pick(vocab.iocs.c2Domains);
-    const fileHash = incRng.pick(vocab.iocs.fileHashes.maliciousPayloader);
+    // The pool picks always run (same RNG stream for every version); 1.2.0+ replaces the values.
+    const pooledIocs = {
+      attackerIp: incRng.pick(ipPool),
+      phishingDomain: incRng.pick(vocab.iocs.phishingDomains),
+      c2Domain: incRng.pick(vocab.iocs.c2Domains),
+      fileHash: incRng.pick(vocab.iocs.fileHashes.maliciousPayloader),
+    };
+    const { attackerIp, phishingDomain, c2Domain, fileHash } = usesSeededIocs(generatorVersion)
+      ? seededIncidentIocs(`${seed}:shift-inc:${selIdx}`, pooledIocs, reservedLiterals(vocab, ...catalog.values()))
+      : pooledIocs;
     const proc = vocab.iocs.suspiciousProcesses[0];
 
     const tokens: Record<string, string | number | boolean> = {
@@ -511,7 +518,7 @@ export function composeShiftScenario(
     const actorUser = noiseRng.pick(users);
     const targetAsset = noiseRng.pick(assets);
     const scannerIp = "10.10.0.85";
-    const roamingIp = "198.51.100.201";
+    const roamingIp = NOISE_ROAMING_IP;
 
     const noiseTokens: Record<string, string | number | boolean> = {
       username: actorUser.username,
@@ -692,7 +699,6 @@ export function composeShiftScenario(
       : Array.from(new Set(participatingFamilies.flatMap((f) => f.metadata.skillsTested)));
 
   const seedHash = crypto.createHash("sha256").update(seed).digest("hex").slice(0, 8);
-  const generatorVersion = options.generatorVersion ?? GENERATOR_VERSION;
 
   const composed: SocScenario = {
     id: `${shiftProfile.id}-${seedHash}`,
