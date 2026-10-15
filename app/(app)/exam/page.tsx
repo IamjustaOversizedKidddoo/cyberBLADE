@@ -89,7 +89,7 @@ export default async function ExamReadinessPage() {
 
         {/* Analytical Disclaimer */}
         <Callout variant="info" title="READINESS ESTIMATE & OBJECTIVE COVERAGE">
-          Readiness percentages reflect completed hands-on lessons and verified terminal checks mapped to official certification domain objectives. Scores represent estimated practical knowledge alignment to guide your preparation, not an accredited examination score guarantee.
+          Readiness percentages reflect completed hands-on lessons and verified terminal checks aligned with the published objectives of certification domains. Scores represent estimated practical knowledge alignment to guide your preparation, not an accredited examination score guarantee.
         </Callout>
 
         {/* Interactive Readiness Section with Objective Audit Breakdowns */}

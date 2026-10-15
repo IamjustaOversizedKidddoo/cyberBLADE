@@ -65,7 +65,7 @@ report ─▶ sanitize (bidi/zero-width/control chars, PII) ─▶ pre-filter �
 
 - **Selecting the mode:** set with `SOC_AI_GRADING_MODE`. The kill switch `SOC_AI_GRADING_KILL_SWITCH=1` forces `off` immediately.
 - **Live is refused server-side.** `resolveEffectiveMode()` downgrades `live` to `preview` and records the reason unless a gate file exists at `content/soc/ai-grading/gates/<rubric>@<version>__<prompt>__<model>.json` that:
-  - was computed by `npm run soc:ai:gate` from a non-synthetic calibration set;
+  - was computed by `npm run soc:ai:calibration -- gate --set <id> --provider real` from a non-synthetic calibration set;
   - has `passed: true`;
   - has non-empty `signOff.signedOffBy` and `signOff.signedOffAt` (filled in **by the owner by hand**);
   - matches the current rubric, prompt and model versions.
@@ -124,7 +124,7 @@ report ─▶ sanitize (bidi/zero-width/control chars, PII) ─▶ pre-filter �
 
   The band must not move beyond a tolerance.
 - **Injection corpus.** 100+ cases, run against a mock "compliant-with-injection" model so the defences are proven independent of real model behaviour.
-- **Gate.** `npm run soc:ai:gate` computes pass/fail from provisional thresholds in `config.yaml`:
+- **Gate.** `npm run soc:ai:calibration -- gate --set <id> --provider mock|real` computes pass/fail from provisional thresholds in `config.yaml`:
   - weighted κ ≥ 0.60;
   - within-one-band ≥ 90%;
   - human–human κ ≥ 0.60;

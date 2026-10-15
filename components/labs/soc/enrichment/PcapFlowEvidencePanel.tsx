@@ -7,6 +7,7 @@ import { PacketTable } from "@/components/labs/packet/PacketTable";
 import { PacketDetails } from "@/components/labs/packet/PacketDetails";
 import type { Packet } from "@/lib/lab-engine/packet/types";
 import { IconDownload, IconLayers, IconActivity } from "@/components/ui/icons";
+import { csvCell } from "@/lib/security/csv";
 
 type Props = {
   data: PcapFlowsResult;
@@ -14,18 +15,7 @@ type Props = {
   onAttachEvidence?: (summary: string) => void;
 };
 
-function escapeCsvCell(val: string | number): string {
-  let str = String(val);
-  // Formula injection defense (leading =, +, -, @)
-  if (/^[=+\-@]/.test(str)) {
-    str = "'" + str;
-  }
-  // Wrap in quotes if containing comma or quotes
-  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-    str = `"${str.replace(/"/g, '""')}"`;
-  }
-  return str;
-}
+const escapeCsvCell = csvCell;
 
 export function PcapFlowEvidencePanel({ data, onPivot, onAttachEvidence }: Props) {
   const [activeTab, setActiveTab] = useState<"flows" | "periodicity" | "packets">("flows");

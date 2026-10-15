@@ -19,7 +19,7 @@
 | `npm run test:security` | ✅ pass | 10 files, 123 tests |
 | `npm run build` | ✅ pass | includes `/labs/soc/[scenarioId]` |
 | `npm run test:e2e` | ⚪ **not run** in this audit | needs Playwright and a dev server; 4 SOC specs exist |
-| `npm run verify` | ⚪ does not exist | — |
+| `npm run verify` | added 2026-10-15: runs every gate in order, stopping at the first failure | — |
 
 **CI:** `.github/workflows/ci.yml` runs lint first, so **CI is red on `main`**. The actions are tag-pinned (`@v4`), not SHA-pinned. `check:soc*` and `test:security` are not in CI.
 

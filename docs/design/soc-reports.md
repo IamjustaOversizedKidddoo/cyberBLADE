@@ -265,7 +265,7 @@ graph TD
    - UI explicitly discloses: *"Graded: 85 of 100 available points; Narrative quality not yet graded in this version"*.
 2. **Calibration Seam:**
    - Format defined in `content/soc/calibration/` to store paired learner reports and human practitioner scores.
-   - CLI utility `npm run soc:calibrate -- --set <id>` computes Pearson correlation, mean absolute error (MAE), and band agreement.
+   - CLI utility `npm run soc:ai:calibration -- gate --set <id> --provider mock` computes Pearson correlation, mean absolute error (MAE), and band agreement.
 3. **Mock Exam Seam:**
    - Typed export `submitExamReport(submission, attemptId)` enforcing strict 1-shot time-boxed submission rules.
 4. **Handler SOC Mode Seam:**

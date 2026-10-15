@@ -1,6 +1,6 @@
 /**
  * CyberBLADE Investigation Query Language: BladeQL
- * Investigation Questions System (SAL1/BTL1-Style Server-Verified Questions)
+ * Investigation Questions System (practical, server-verified questions)
  *
  * Provides leak-free question models, reference query generation, answerability proofs,
  * strict answer normalization, anti-guessing protections, and debrief templates.

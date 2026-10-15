@@ -33,7 +33,7 @@ The template merges the owner's SOC template with the binding teaching style (`d
 
 Flashcards live in `<lesson>.cards.yaml` next to the lesson and only hold facts the author is certain of. Exercises live in `<lesson>.exercises.yaml`; answer keys stay server-side.
 
-**Computed time** = words ÷ 200 wpm (prose), plus 3 min per exercise, plus 1 min per check question, plus 0.5 min per diagram, rounded up. `npm run soc:curriculum:times` prints it, and the linter fails on any mismatch. Lessons over 15 minutes are flagged for splitting (a warning, so the owner decides).
+**Computed time** = words ÷ 200 wpm (prose), plus 3 min per exercise, plus 1 min per check question, plus 0.5 min per diagram, rounded up. `npm run soc:curriculum -- times` prints it, and the linter fails on any mismatch. Lessons over 15 minutes are flagged for splitting (a warning, so the owner decides).
 
 ## 3. Modules and lessons (42 lessons)
 

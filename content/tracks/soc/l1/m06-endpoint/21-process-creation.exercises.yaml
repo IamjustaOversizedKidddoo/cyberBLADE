@@ -19,7 +19,7 @@ exercises:
       - id: parent-of-js
         prompt: "Which program started the script interpreter (pid 3420)? (Type its file name.)"
         answer_type: text
-        accept: ["mailclient.exe"]
+        accept: ["mailclient.exe", "mailclient"]
         normalize: ["case", "whitespace"]
         hints:
           - "Find pid 3420's ppid, then find the line with that pid."

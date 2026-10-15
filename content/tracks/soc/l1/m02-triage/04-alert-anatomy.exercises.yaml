@@ -21,8 +21,8 @@ exercises:
       - id: utc-time
         prompt: "At what time (UTC, HH:MM) was the file downloaded?"
         answer_type: text
-        accept: ["19:42"]
-        normalize: ["whitespace"]
+        accept: ["19:42", "19:42 UTC", "19:42:00", "19:42:00 UTC", "19:42Z", "19:42:00Z"]
+        normalize: ["case", "whitespace"]
         hints:
           - "The raw event time ends in -04:00. Is that zone ahead of UTC or behind it?"
           - "A zone behind UTC needs hours added to reach UTC."
