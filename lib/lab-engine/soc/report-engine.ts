@@ -20,12 +20,14 @@ import type {
 import type { SocReportSubmissionRecord, SocReportEvaluationRecord } from "./types";
 import { recordLearningEvent } from "@/lib/analytics/learning-events";
 import type { SocAttemptRecord } from "./types";
-import { assertExamWritable, examForSocAttempt, isExamSocAttempt } from "./exam/guard";
+import { assertExamWritable, assertNoRunningExam, examForSocAttempt, isExamSocAttempt } from "./exam/guard";
 
 /** Exam attempts reveal grading and model reports only after the exam is submitted. */
 async function assertExamSubmitted(ctx: Ctx, attempt: SocAttemptRecord): Promise<void> {
   const exam = await examForSocAttempt(ctx, attempt);
   if (exam && exam.status !== "submitted") throw new Error("Results are available after the exam is submitted.");
+  // Practice attempts: no model report or grading result while the learner has an exam running (L1-A-10).
+  if (!exam) await assertNoRunningExam(ctx, attempt.userId);
 }
 
 // ---------------------------------------------------------------------------
@@ -222,6 +224,7 @@ export async function submitSocReport(
   if (attempt.userId !== userId) throw new Error("Forbidden: unauthorized attempt access");
   // In an exam the report is graded only when the whole exam is submitted (exam service).
   if (isExamSocAttempt(attempt)) throw new Error("In an exam, the report is submitted with the exam.");
+  await assertNoRunningExam(ctx, userId);
   return submitSocReportGraded(ctx, userId, attempt, reportData, templateId, templateVersion);
 }
 

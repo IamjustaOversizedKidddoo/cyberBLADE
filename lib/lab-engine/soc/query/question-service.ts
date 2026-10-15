@@ -18,7 +18,7 @@ import {
   type QuestionSubmissionResult,
 } from "./question-model";
 import { generateScenarioQuestions, verifyAnswer } from "./questions";
-import { isExamSocAttempt, reserveExamBudget } from "../exam/guard";
+import { assertNoRunningExam, isExamSocAttempt, reserveExamBudget } from "../exam/guard";
 
 /** Every answer response takes at least this long, right or wrong (no timing oracle). */
 export const ANSWER_RESPONSE_FLOOR_MS = 250;
@@ -114,6 +114,7 @@ async function evaluate(
   if (!truth) throw new Error("Unknown question.");
 
   if (isExamSocAttempt(attempt)) return recordExamAnswer(ctx, userId, attempt, input);
+  await assertNoRunningExam(ctx, userId);
 
   const history = (await ctx.repo.listSocQuestionAttempts(attempt.id)).filter((h) => h.questionId === input.questionId);
   const before = stateFor(history);

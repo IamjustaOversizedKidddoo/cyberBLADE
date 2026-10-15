@@ -7,7 +7,9 @@ vi.mock("server-only", () => ({}));
 vi.setConfig({ testTimeout: 60_000 });
 
 import { makeCtx } from "../ai-grading/pipeline-harness";
-import { resolveScenarioForAttempt } from "@/lib/lab-engine/soc/engine";
+import { resolveScenarioForAttempt, startSocSession, submitSocAttempt } from "@/lib/lab-engine/soc/engine";
+import { getSocReportModelReveal, submitSocReport } from "@/lib/lab-engine/soc/report-engine";
+import { sampleReport } from "../ai-grading/helpers";
 import { generateScenarioQuestions } from "@/lib/lab-engine/soc/query/questions";
 import { getQueryWorkspace, submitInvestigationAnswer } from "@/lib/lab-engine/soc/query/question-service";
 import { getExamState, startExam, submitExam } from "@/lib/lab-engine/soc/exam/service";
@@ -52,6 +54,28 @@ describe("L1-A-05: the data export is no oracle during an exam", () => {
     const exam = out.socExams.find((e) => e.examId === s.examId)!;
     expect(exam.variantId).toBeNull();
     expect(JSON.stringify(out)).not.toMatch(/soc-f-[a-z]|shift-[a-z]/);
+  });
+});
+
+describe("L1-A-10: practice is paused while an exam runs", () => {
+  it("refuses new practice, practice scorecards, question marks, report grades and model reports until the exam is submitted", async () => {
+    const ctx = makeCtx({ t: T0 });
+    const U = "u-a10";
+    const practice = await startSocSession(ctx, U, "soc-f-phishing-cred-01");
+    const id = practice.attempt.id;
+    const attempt = (await ctx.repo.getSocAttempt(id))!;
+    const truth = generateScenarioQuestions(await resolveScenarioForAttempt(attempt), attempt.seed, attempt.familyId ?? attempt.scenarioId).serverTruths[0];
+    const exam = await startExam(ctx, U, "investigation");
+
+    const paused = /Finish your exam first/;
+    await expect(startSocSession(ctx, U, "soc-f-outbound-exfil-01")).rejects.toThrow(paused);
+    await expect(submitSocAttempt(ctx, U, id)).rejects.toThrow(paused);
+    await expect(submitInvestigationAnswer(ctx, U, { attemptId: id, questionId: truth.id, answer: truth.referenceAnswer })).rejects.toThrow(paused);
+    await expect(submitSocReport(ctx, U, id, sampleReport())).rejects.toThrow(paused);
+    await expect(getSocReportModelReveal(ctx, U, id)).rejects.toThrow(paused);
+
+    await submitExam(ctx, U, exam.examId);
+    await expect(submitSocAttempt(ctx, U, id)).resolves.toMatchObject({ attemptId: id });
   });
 });
 

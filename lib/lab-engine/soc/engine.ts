@@ -54,7 +54,7 @@ import { shiftProfileSchema, type ShiftProfile } from "./shift-schema";
 import { generateSocVariant, computeScenarioHash, GENERATOR_VERSION } from "./generator";
 import { composeShiftScenario } from "./shift-composer";
 import { newSeed } from "@/lib/generators/rng";
-import { assertExamWritable, isExamSocAttempt } from "./exam/guard";
+import { assertExamWritable, assertNoRunningExam, isExamSocAttempt } from "./exam/guard";
 
 export async function loadSocFamily(familyId: string): Promise<SocFamily> {
   const filePath = path.resolve(`content/soc/families/${familyId}.yaml`);
@@ -105,6 +105,7 @@ export async function startSocSession(
 ): Promise<SocSessionClient> {
   // Exam attempts are created only by the exam service (lib/lab-engine/soc/exam).
   if (isExamSocAttempt({ scenarioId })) throw new Error("Exams are started from the exam lobby.");
+  await assertNoRunningExam(ctx, userId);
   const isFamily = scenarioId.startsWith("soc-f-");
   const isShift = scenarioId.startsWith("shift-");
   let attempt = await ctx.repo.findActiveSocAttempt(userId, scenarioId);
@@ -398,6 +399,7 @@ export async function submitSocAttempt(
   }
   // Exam attempts are graded only by submitting the exam (no feedback before then).
   if (isExamSocAttempt(attempt)) throw new Error("Submit the exam from the exam workspace.");
+  await assertNoRunningExam(ctx, userId);
 
   const scenario = await resolveScenarioForAttempt(attempt);
   const [decisions, cases] = await Promise.all([

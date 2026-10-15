@@ -51,7 +51,9 @@ export async function loadLessons(root = "content"): Promise<Lesson[]> {
 // Content is part of the build; re-read on every call in dev so edits show up immediately.
 let cached: Promise<Lesson[]> | null = null;
 function allLessons(): Promise<Lesson[]> {
-  if (process.env.NODE_ENV !== "production") return loadLessons();
+  // Only `next dev` needs live edits; tests used to pay a full re-read per call (slow and
+  // load-sensitive), so they share the cached load like production.
+  if (process.env.NODE_ENV === "development") return loadLessons();
   cached ??= loadLessons();
   return cached;
 }

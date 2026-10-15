@@ -34,6 +34,17 @@ export async function assertExamWritable(ctx: Ctx, attempt: SocAttemptRecord): P
   return exam;
 }
 
+/**
+ * Practice is paused while the learner has a running exam (L1-A-10): starting a practice attempt
+ * or getting any practice evaluation (scorecard, question marks, report grade, model report) would
+ * hand out verdicts for the same families and shifts the exam uses. Server-side, so every tab and
+ * direct action call is covered.
+ */
+export async function assertNoRunningExam(ctx: Ctx, userId: string): Promise<void> {
+  const exam = await ctx.repo.findActiveSocExam(userId);
+  if (exam && !examTimeIsOver(exam, ctx.now())) throw new Error("Finish your exam first: practice feedback is paused while an exam is in progress.");
+}
+
 export async function examBudgetUsed(ctx: Ctx, socAttemptId: string, kind: SocExamBudgetKind): Promise<number> {
   if (kind === "queries") return (await ctx.repo.listSocQueryLogs(socAttemptId)).length;
   if (kind === "lookups") return (await ctx.repo.listSocEnrichmentLookups(socAttemptId)).length;
