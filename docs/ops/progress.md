@@ -185,3 +185,11 @@ Prerequisite changes from the plan: the plan's Rank 2 core prerequisites for les
 - **Final gates:** lint 0 errors (51 warnings) · typecheck ✓ · check:content ✓ · check:soc ✓ · unit 1728/1728 · security 159/159 · build ✓ · scan:bundle ✓ (76 artefacts) · e2e 153 passed / 1 failed / 24 skipped.
 - **The one e2e failure:** `soc-enrichment` timed out after 5 s under full-suite load and passes alone (2/2). This is a new entry on the load-flake list; it is not touched by this work.
 - **Open owner decisions:** see the final report.
+
+### Entry 12: Stage 1 (exam mode, results, readiness, Handler SOC mode) — in progress
+Design: `docs/design/soc-exams.md`. All exam numbers are provisional (`content/soc/exams/*.yaml`).
+Pre-stage check (2026-10-15): build ✓, scan:bundle ✓ (76 artefacts).
+
+| Part | Scope | Tests | Commit |
+|---|---|---|---|
+| 1 Data layer | exam attempts, answers, outcome self-reports, accommodations; migration 20261015120000 (NOT executed on a hosted DB; executed on PGlite); RLS read-only learner access, no seed column; one active exam per learner; atomic start function; answers frozen after submit; erasure + allowlisted export; local-store parity; flags SOC_EXAMS_ENABLED and SOC_HANDLER_ENABLED | db 77/77, progress + export 84/84 | `d6176ad` |
