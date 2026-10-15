@@ -90,3 +90,17 @@ describe("study plan", () => {
     expect(buildStudyPlan({ exams, threshold: 60, lessonTitle, dueReviewByLesson: due, drillsEnabled: false }).entries[0].reviewDue).toBe(2);
   });
 });
+
+describe("accommodation (admin CLI core)", () => {
+  it("validates input, defaults nothing, and produces an audit line", async () => {
+    const { buildAccommodation } = await import("@/lib/lab-engine/soc/exam/accommodation");
+    const now = new Date("2026-10-15T10:00:00Z");
+    const ok = buildAccommodation({ userId: "u1", multiplier: 1.5, reason: "documented need", setBy: "owner" }, now);
+    expect(ok.record).toEqual({ userId: "u1", multiplier: 1.5, reason: "documented need", setBy: "owner", setAt: now.toISOString() });
+    expect(JSON.parse(ok.audit)).toMatchObject({ action: "accommodation_set", userId: "u1", multiplier: 1.5, setBy: "owner" });
+    expect(JSON.parse(buildAccommodation({ userId: "u1", multiplier: 1, reason: "no longer needed", setBy: "owner" }, now).audit).action).toBe("accommodation_off");
+    for (const bad of [{ userId: "u1", multiplier: 4, reason: "xxxxx", setBy: "ow" }, { userId: "u1", multiplier: 0.5, reason: "xxxxx", setBy: "ow" }, { userId: "u1", multiplier: 1.5, reason: "", setBy: "ow" }, { userId: "", multiplier: 1.5, reason: "xxxxx", setBy: "ow" }, { userId: "u1", multiplier: Number.NaN, reason: "xxxxx", setBy: "ow" }]) {
+      expect(() => buildAccommodation(bad, now)).toThrow();
+    }
+  });
+});
