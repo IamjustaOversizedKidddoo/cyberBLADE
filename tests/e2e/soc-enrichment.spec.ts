@@ -1,11 +1,13 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { randomUUID } from "node:crypto";
 import { onboard } from "./helpers/rank0";
 
 test.describe("SOC Enrichment & Evidence Workbench (E2E & Accessibility)", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/start");
-    await onboard(page, `soc_analyst_${Date.now() % 1_000_000}`);
+    // Random suffix: Date.now()-based handles collided when both projects started in the same ms.
+    await onboard(page, `soc_${randomUUID().replace(/-/g, "").slice(0, 12)}`);
     await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
   });
 
@@ -30,15 +32,10 @@ test.describe("SOC Enrichment & Evidence Workbench (E2E & Accessibility)", () =>
     await expect(firstRow).toBeVisible();
     await firstRow.click();
 
-    // 3. Open Enrichment Drawer via Quick Pivot or Investigate Button
-    const investigateBtn = page.getByRole("button", { name: /Investigate/i }).first();
-    if (await investigateBtn.isVisible()) {
-      await investigateBtn.click();
-    } else {
-      // Open via Tools button in header
-      const toolsBtn = page.getByRole("button", { name: /Tools/i });
-      await toolsBtn.click();
-    }
+    // 3. Open the workbench with the header launcher. `.first()` on /Investigate/ used to match
+    // either the header launcher or the alert panel's button (which runs its own lookup), so which
+    // result rendered last depended on timing; the isVisible() branch did not wait at all.
+    await page.getByTitle("Open Investigation Workbench (i)").click();
 
     // 4. Verify Investigation Workbench opened
     await expect(page.getByText("INVESTIGATION WORKBENCH")).toBeVisible({ timeout: 10_000 });
@@ -97,6 +94,9 @@ test.describe("SOC Enrichment & Evidence Workbench (E2E & Accessibility)", () =>
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/labs/soc/soc-l1-noisy-shift");
     await page.waitForLoadState("domcontentloaded");
+    // Wait for the session to start (same signal and budget as the first test); the alert row
+    // used to be awaited with the 5 s default while the session-start action was still running.
+    await expect(page.getByText("SOC//WORKSPACE")).toBeVisible({ timeout: 15_000 });
 
     const firstRow = page.locator('[data-testid^="alert-row-"]').first();
     await expect(firstRow).toBeVisible();

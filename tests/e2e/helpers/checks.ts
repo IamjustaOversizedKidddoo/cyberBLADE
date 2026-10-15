@@ -10,6 +10,9 @@ async function tryOption(question: Locator, index: number): Promise<boolean> {
 
 /** Answers every Terminal Check question through the UI, trying options in order (no answer keys). */
 export async function answerAllChecks(page: Page): Promise<void> {
+  // Root cause of the load-sensitive rank-2 failure: clicks landed on the server-rendered HTML
+  // before React attached handlers, so data-attempts never moved. Wait for hydration first.
+  await expect(page.locator('[data-hydrated="true"]').first()).toBeAttached({ timeout: 30_000 });
   const questions = page.locator("fieldset[data-attempts]");
   const count = await questions.count();
   expect(count).toBeGreaterThanOrEqual(3);

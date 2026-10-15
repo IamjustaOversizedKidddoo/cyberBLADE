@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
+
+const noopSubscribe = () => () => {};
 import type { PublicQuestion } from "@/lib/content/checks";
 import { IconCheck, IconAlertTriangle, IconRotateCcw } from "@/components/ui/icons";
 
@@ -218,9 +220,12 @@ function Question({
 export function TerminalCheck({ questions, initialPassed, answer, variant = "terminal" }: Props) {
   const [passed, setPassed] = useState(() => new Set(initialPassed));
   const [completed, setCompleted] = useState(false);
+  // "true" only once React has hydrated (server render says "false"), so automated checks never
+  // click before the handlers exist.
+  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
 
   return (
-    <div className="not-prose my-8 space-y-5">
+    <div className="not-prose my-8 space-y-5" data-hydrated={hydrated ? "true" : "false"}>
       <div className="flex items-center gap-2 border-b border-line/60 pb-2">
         <span className="h-2 w-2 rounded-full bg-cyan shadow-[0_0_8px_rgba(15,190,255,0.8)]" />
         <h4 className="font-ui text-xs tracking-widest text-cyan uppercase font-bold">
