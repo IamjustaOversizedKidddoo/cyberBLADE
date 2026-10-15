@@ -103,3 +103,8 @@ export function getServerEnv(): ServerEnv {
 export function resetServerEnvCache(): void {
   cachedEnv = null;
 }
+
+/** Server-action gate (L1-A-06): with the workspace flag off, no SOC workspace action runs. */
+export function assertSocWorkspaceEnabled(): void {
+  if (!isSocWorkspaceEnabled()) throw new Error("The SOC workspace is not enabled.");
+}

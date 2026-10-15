@@ -10,7 +10,7 @@ import { headers } from "next/headers";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 import { checkRateLimit } from "@/lib/progress/rate-limit";
-import { isSocHandlerEnabled } from "@/lib/config/env";
+import { isSocHandlerEnabled, assertSocWorkspaceEnabled } from "@/lib/config/env";
 import { askSocHandler } from "@/lib/handler/soc-mode";
 import type { HandlerResponse } from "@/lib/handler/types";
 
@@ -22,6 +22,7 @@ const inputSchema = z.object({
 });
 
 export async function askSocHandlerAction(raw: unknown): Promise<HandlerResponse> {
+  assertSocWorkspaceEnabled();
   if (!isSocHandlerEnabled()) throw new Error("The Handler is not enabled in the SOC workspace.");
   const input = inputSchema.parse(raw);
   const operator = await requireOperator();

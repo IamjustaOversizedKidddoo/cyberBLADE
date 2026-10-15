@@ -5,6 +5,7 @@
  * Inputs are schema-validated, rate-limited and ownership-checked; unexpected failures return a
  * generic message with a request id (details stay in server logs, never learner text).
  */
+import { assertSocWorkspaceEnabled } from "@/lib/config/env";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { requireOperator } from "@/lib/identity/session";
@@ -41,6 +42,7 @@ function limit(key: string, max: number, windowMs: number): void {
 
 export async function getSocAiResultAction(submissionId: string): Promise<AiResultView> {
   const id = submissionIdSchema.parse(submissionId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   limit(`soc_ai_result:${operator.id}`, 60, 60_000);
   return guarded("result", async () => {
@@ -52,6 +54,7 @@ export async function getSocAiResultAction(submissionId: string): Promise<AiResu
 
 export async function requestSocAiHumanReviewAction(submissionId: string): Promise<{ status: "created" | "already_requested" }> {
   const id = submissionIdSchema.parse(submissionId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   limit(`soc_ai_review_request:${operator.id}`, 3, 60 * 60_000);
   return guarded("review-request", async () => {
@@ -70,12 +73,14 @@ export async function requestSocAiHumanReviewAction(submissionId: string): Promi
 }
 
 export async function getSocAiConsentAction(): Promise<{ granted: boolean; consentVersion: string }> {
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const c = await getAiGradingStore().getConsent(operator.id);
   return { granted: Boolean(c?.granted && c.consentVersion === CALIBRATION_CONSENT_VERSION), consentVersion: CALIBRATION_CONSENT_VERSION };
 }
 
 export async function setSocAiConsentAction(granted: boolean): Promise<{ granted: boolean }> {
+  assertSocWorkspaceEnabled();
   const value = z.boolean().parse(granted);
   const operator = await requireOperator();
   limit(`soc_ai_consent:${operator.id}`, 10, 60 * 60_000);

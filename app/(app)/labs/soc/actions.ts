@@ -24,7 +24,7 @@ import type {
   SocCaseRecord,
   SocEvaluationResult,
 } from "@/lib/lab-engine/soc/types";
-import { isSocEnrichmentEnabled } from "@/lib/config/env";
+import { isSocEnrichmentEnabled, assertSocWorkspaceEnabled } from "@/lib/config/env";
 import { executeEnrichmentLookup } from "@/lib/lab-engine/soc/enrichment/pipeline";
 import {
   enrichmentLookupInputSchema,
@@ -80,6 +80,7 @@ const manageCaseInputSchema = z.discriminatedUnion("action", [
 
 export async function startSocSessionAction(scenarioId: string): Promise<SocSessionClient> {
   const cleanScenarioId = scenarioIdSchema.parse(scenarioId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
 
   const rate = checkRateLimit(`soc_start:${operator.id}`, 10, 10_000);
@@ -93,6 +94,7 @@ export async function startSocSessionAction(scenarioId: string): Promise<SocSess
 
 export async function getSocSessionAction(attemptId: string): Promise<SocSessionClient> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const ctx = getCtx();
   return getSocSession(ctx, operator.id, cleanAttemptId);
@@ -103,10 +105,12 @@ export async function recordSocDecisionAction(
   alertId: string,
   input: z.infer<typeof decisionInputSchema>,
 ): Promise<SocDecisionRecord> {
+  assertSocWorkspaceEnabled();
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
   const cleanAlertId = alertIdSchema.parse(alertId);
   const cleanInput = decisionInputSchema.parse(input);
 
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const rate = checkRateLimit(`soc_decide:${operator.id}`, 30, 10_000);
   if (!rate.allowed) {
@@ -121,9 +125,11 @@ export async function manageSocCaseAction(
   attemptId: string,
   input: ManageCaseInput,
 ): Promise<{ success: boolean; case?: SocCaseRecord }> {
+  assertSocWorkspaceEnabled();
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
   const cleanInput = manageCaseInputSchema.parse(input);
 
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const rate = checkRateLimit(`soc_case:${operator.id}`, 30, 10_000);
   if (!rate.allowed) {
@@ -136,6 +142,7 @@ export async function manageSocCaseAction(
 
 export async function submitSocAttemptAction(attemptId: string): Promise<SocEvaluationResult> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
 
   const rate = checkRateLimit(`soc_submit:${operator.id}`, 5, 10_000);
@@ -149,6 +156,7 @@ export async function submitSocAttemptAction(attemptId: string): Promise<SocEval
 
 export async function abandonSocAttemptAction(attemptId: string): Promise<void> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const ctx = getCtx();
   return abandonSocAttempt(ctx, operator.id, cleanAttemptId);
@@ -157,10 +165,12 @@ export async function abandonSocAttemptAction(attemptId: string): Promise<void> 
 export async function lookupSocEnrichmentAction(
   input: EnrichmentLookupInput,
 ): Promise<EnrichmentLookupResponse> {
+  assertSocWorkspaceEnabled();
   if (!isSocEnrichmentEnabled()) {
     throw new Error("Simulated enrichment investigation tools are currently disabled.");
   }
   const cleanInput = enrichmentLookupInputSchema.parse(input);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const ctx = getCtx();
   return executeEnrichmentLookup(ctx, operator.id, cleanInput);
@@ -170,6 +180,7 @@ export async function listSocEnrichmentLookupsAction(
   attemptId: string,
 ): Promise<SocEnrichmentLookupRecord[]> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const ctx = getCtx();
   const attempts = await ctx.repo.listSocAttempts(operator.id);
@@ -200,6 +211,7 @@ export async function saveSocReportDraftAction(
   templateId = "incident-report-l1",
 ): Promise<SocReportSubmissionRecord> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const rate = checkRateLimit(`soc_report_draft:${operator.id}`, 60, 60_000);
   if (!rate.allowed) {
@@ -215,6 +227,7 @@ export async function submitSocReportAction(
   templateId = "incident-report-l1",
 ): Promise<SocReportSubmissionResult> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const rate = checkRateLimit(`soc_report_submit:${operator.id}`, 10, 60_000);
   if (!rate.allowed) {
@@ -232,6 +245,7 @@ export async function getSocReportDraftAction(
   templateId = "incident-report-l1",
 ): Promise<SocReportSubmissionRecord | null> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const ctx = getCtx();
   return getSocReportDraft(ctx, operator.id, cleanAttemptId, templateId);
@@ -241,8 +255,10 @@ export async function getSocReportResultAction(
   attemptId: string,
   submissionId: string,
 ): Promise<GradingResult | null> {
+  assertSocWorkspaceEnabled();
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
   const cleanSubmissionId = z.string().uuid().parse(submissionId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const ctx = getCtx();
   return getSocReportGradingResult(ctx, operator.id, cleanAttemptId, cleanSubmissionId);
@@ -253,6 +269,7 @@ export async function getSocReportModelRevealAction(
   templateId = "incident-report-l1",
 ): Promise<SocReportData> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const ctx = getCtx();
   return getSocReportModelReveal(ctx, operator.id, cleanAttemptId, templateId);

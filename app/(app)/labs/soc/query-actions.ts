@@ -8,7 +8,7 @@
 import { z } from "zod";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
-import { isSocQueryEnabled } from "@/lib/config/env";
+import { isSocQueryEnabled, assertSocWorkspaceEnabled } from "@/lib/config/env";
 import { executeInvestigationQuery } from "@/lib/lab-engine/soc/query/pipeline";
 import { getQueryWorkspace, submitInvestigationAnswer } from "@/lib/lab-engine/soc/query/question-service";
 import type { QueryExecutionResult } from "@/lib/lab-engine/soc/query/types";
@@ -24,6 +24,7 @@ function assertEnabled(): void {
 export async function getSocQueryWorkspaceAction(attemptId: string): Promise<QueryWorkspaceView> {
   assertEnabled();
   const id = attemptIdSchema.parse(attemptId);
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   return getQueryWorkspace(getCtx(), operator.id, id);
 }
@@ -34,6 +35,7 @@ export async function runSocQueryAction(
   timeRange?: { earliestEpochMs?: number; latestEpochMs?: number },
 ): Promise<QueryExecutionResult> {
   assertEnabled();
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   const { result } = await executeInvestigationQuery(getCtx(), operator.id, {
     attemptId: attemptIdSchema.parse(attemptId),
@@ -50,6 +52,7 @@ export async function submitSocQuestionAnswerAction(
   answer: string | number | string[],
 ): Promise<QuestionSubmissionResult> {
   assertEnabled();
+  assertSocWorkspaceEnabled();
   const operator = await requireOperator();
   return submitInvestigationAnswer(getCtx(), operator.id, {
     attemptId: attemptIdSchema.parse(attemptId),
