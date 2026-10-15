@@ -98,7 +98,13 @@ export async function resolveScenarioForAttempt(attempt: SocAttemptRecord): Prom
   if (attempt.scenarioId.startsWith("shift-") || (attempt.familyId && attempt.familyId.startsWith("shift-"))) {
     const shiftId = attempt.familyId ?? attempt.scenarioId;
     const shiftProfile = await loadSocShift(shiftId);
-    return composeShiftScenario(shiftProfile, attempt.seed, undefined, { generatorVersion: attempt.generatorVersion ?? "1.0.0" });
+    const scenario = composeShiftScenario(shiftProfile, attempt.seed, undefined, { generatorVersion: attempt.generatorVersion ?? "1.0.0" });
+    // Same immutability check as families (L1-A-11): a changed shift or family must not silently
+    // re-grade an existing attempt against different ground truth.
+    if (attempt.scenarioHash && computeScenarioHash(scenario) !== attempt.scenarioHash) {
+      throw new Error(`Scenario hash mismatch for attempt ${attempt.id}: the shift content changed after this attempt started`);
+    }
+    return scenario;
   }
   if (attempt.familyId || attempt.scenarioId.startsWith("soc-f-")) {
     const familyId = attempt.familyId ?? attempt.scenarioId;

@@ -1,0 +1,15 @@
+{
+  "shift-alert-storm@1+gen1.2.0": "0fd5d71bf3465f60d1deaece85cf3591c230ed523b75aeae0b8d9a664b916a04",
+  "shift-night-telemetry-gaps@1+gen1.2.0": "8d2a64b49d709ed609269e621f836123ec86609999b82c8efe0d45f685f885e5",
+  "shift-quiet-day@1+gen1.2.0": "3eefb913e230b69b075f51c63f2ca8b8ccdd5d3358a5ccddf5945c385fe478b3",
+  "shift-standard-mixed@1+gen1.2.0": "b5ac68d0b01bb98ff7fc6631264cab4a4a5f68a6acf5218034ee0416ea897420",
+  "soc-f-alert-fatigue-01@1+gen1.2.0": "4e3217854df91cc7e5e7952fd01f01281658993e0e4158c7991e8aa9f836ce10",
+  "soc-f-attachment-script-01@1+gen1.2.0": "29272d273e6254e1993d8107f2608e2e02ed448eafb6e63a4384ad5f2d513b27",
+  "soc-f-brute-force-auth-01@1+gen1.2.0": "178813ba218d0391b00c27e65984e6239725a06effda838186b6c3d4437d35db",
+  "soc-f-cloud-identity-01@1+gen1.2.0": "5e5fdfbade40644c4ed21208c4461c0b581f005f39b326bff834df2808d09295",
+  "soc-f-insider-policy-01@1+gen1.2.0": "556f4e4c9b9a648713a19b73f50116ab6b1221e307dffc4f71fa4f32da968a6a",
+  "soc-f-mixed-signal-01@1+gen1.2.0": "6f42950957210a698e37aab3716af1e460181011d9893626a5bd4ffdaecc5608",
+  "soc-f-outbound-exfil-01@1+gen1.2.0": "48253c48f59028869d1fa8a94007ed2742b07e6b6cce3106f68f98c0be4fa20c",
+  "soc-f-phishing-cred-01@1+gen1.2.0": "fb73edfb7e96ba9f66ee25fd3cf7974960bc4370e8c63d13e6aa14f6e5cfc3bb",
+  "soc-f-web-attack-data-01@1+gen1.2.0": "1514c11d941eba12158e06626f33df820ba3e7a6e3db5a06c27453601f19823b"
+}
