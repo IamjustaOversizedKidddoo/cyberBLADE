@@ -20,7 +20,8 @@ export interface LearnerQuestion {
   hintCount: number;
   maxAttempts: number;
   attemptsLeft: number;
-  status: "unanswered" | "correct" | "incorrect" | "locked";
+  /** "recorded": exam mode, the answer is saved and not marked until the exam is submitted. */
+  status: "unanswered" | "correct" | "incorrect" | "locked" | "recorded";
   /** Revealed only once the question is solved or locked. */
   debrief: string | null;
   referenceQuery: string | null;
@@ -31,7 +32,7 @@ export interface QuestionSubmissionResult {
   questionId: string;
   isCorrect: boolean;
   attemptsLeft: number;
-  status: "correct" | "incorrect" | "locked";
+  status: "correct" | "incorrect" | "locked" | "recorded";
   pointsAwarded: number;
   debrief: string | null;
   referenceQuery: string | null;

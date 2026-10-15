@@ -54,6 +54,7 @@ import { shiftProfileSchema, type ShiftProfile } from "./shift-schema";
 import { generateSocVariant, computeScenarioHash, GENERATOR_VERSION } from "./generator";
 import { composeShiftScenario } from "./shift-composer";
 import { newSeed } from "@/lib/generators/rng";
+import { assertExamWritable, isExamSocAttempt } from "./exam/guard";
 
 export async function loadSocFamily(familyId: string): Promise<SocFamily> {
   const filePath = path.resolve(`content/soc/families/${familyId}.yaml`);
@@ -102,6 +103,8 @@ export async function startSocSession(
   scenarioId: string,
   options?: { difficulty?: DifficultyLevel },
 ): Promise<SocSessionClient> {
+  // Exam attempts are created only by the exam service (lib/lab-engine/soc/exam).
+  if (isExamSocAttempt({ scenarioId })) throw new Error("Exams are started from the exam lobby.");
   const isFamily = scenarioId.startsWith("soc-f-");
   const isShift = scenarioId.startsWith("shift-");
   let attempt = await ctx.repo.findActiveSocAttempt(userId, scenarioId);
@@ -265,6 +268,7 @@ export async function recordSocDecision(
   if (!attempt) throw new Error("Attempt not found");
   if (attempt.userId !== userId) throw new Error("Forbidden: Attempt does not belong to operator");
   if (attempt.status !== "in_progress") throw new Error("Attempt is already closed");
+  await assertExamWritable(ctx, attempt);
 
   const scenario = await resolveScenarioForAttempt(attempt);
   if (!scenario.alerts.some((a) => a.id === alertId)) {
@@ -319,6 +323,7 @@ export async function manageSocCase(
   if (!attempt) throw new Error("Attempt not found");
   if (attempt.userId !== userId) throw new Error("Forbidden: Attempt does not belong to operator");
   if (attempt.status !== "in_progress") throw new Error("Attempt is already closed");
+  await assertExamWritable(ctx, attempt);
 
   if (input.action === "create") {
     const title = sanitizeText(input.title.trim());
@@ -391,6 +396,8 @@ export async function submitSocAttempt(
   if (attempt.status === "submitted" && attempt.scoreSummary) {
     return attempt.scoreSummary;
   }
+  // Exam attempts are graded only by submitting the exam (no feedback before then).
+  if (isExamSocAttempt(attempt)) throw new Error("Submit the exam from the exam workspace.");
 
   const scenario = await resolveScenarioForAttempt(attempt);
   const [decisions, cases] = await Promise.all([
@@ -438,6 +445,8 @@ export async function abandonSocAttempt(
   if (!attempt) throw new Error("Attempt not found");
   if (attempt.userId !== userId) throw new Error("Forbidden: Attempt does not belong to operator");
   if (attempt.status !== "in_progress") return;
+  // An exam cannot be reset by abandoning its SOC attempt.
+  if (isExamSocAttempt(attempt)) throw new Error("An exam in progress cannot be abandoned.");
 
   await ctx.repo.updateSocAttempt(attemptId, {
     status: "abandoned",

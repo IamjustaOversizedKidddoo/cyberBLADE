@@ -1,0 +1,313 @@
+# Knowledge exam bank (server-only: answers never leave the exam service).
+# Every item states a fact recorded as "certain" in docs/ops/soc-curriculum-claims.md (rows K1-K32).
+# Objective alignment to any certification is UNVERIFIED until a human reviewer maps it.
+# answer: index of the correct option (mcq, log); indices of every correct option (multi);
+# the correct order of option indices (ordering).
+version: 1
+objectiveAlignment: UNVERIFIED
+status: agent-checked
+items:
+  - id: kb-win-4625
+    type: mcq
+    skill: soc_windows_logs
+    claim: K1
+    stem: "In the Windows Security log, which event ID records a failed logon attempt?"
+    options: ["4624", "4625", "4634", "4720"]
+    answer: [1]
+    explanation: "4625 is 'An account failed to log on'. 4624 is a successful logon, 4634 is a logoff and 4720 is a new user account being created."
+
+  - id: kb-win-4624
+    type: mcq
+    skill: soc_windows_logs
+    claim: K1
+    stem: "Which Windows Security event ID records a successful logon?"
+    options: ["4625", "4672", "4624", "1102"]
+    answer: [2]
+    explanation: "4624 is 'An account was successfully logged on'. 4625 is a failure, 4672 is special privileges assigned to a new logon, and 1102 is the audit log being cleared."
+
+  - id: kb-win-4720
+    type: mcq
+    skill: soc_windows_logs
+    claim: K1
+    stem: "An analyst wants to find new user accounts created on a Windows domain. Which Security event ID should they search for?"
+    options: ["4720", "4740", "4688", "4769"]
+    answer: [0]
+    explanation: "4720 is 'A user account was created'. 4740 is an account lockout, 4688 is a new process and 4769 is a Kerberos service ticket request."
+
+  - id: kb-win-1102
+    type: mcq
+    skill: soc_windows_logs
+    claim: K2
+    stem: "Which Windows event ID shows that the Security audit log was cleared, a common sign of an attacker hiding their tracks?"
+    options: ["4625", "1102", "4624", "4738"]
+    answer: [1]
+    explanation: "1102 is 'The audit log was cleared'. Clearing logs is ATT&CK T1070.001 (Clear Windows Event Logs). Admins clear logs rarely, so it deserves a look."
+
+  - id: kb-win-4740
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K1
+    stem: "Which Windows Security event ID records that a user account was locked out?"
+    options: ["4740", "4720", "4672", "4634"]
+    answer: [0]
+    explanation: "4740 is 'A user account was locked out', usually after too many failed passwords. Many lockouts across accounts can point to password guessing."
+
+  - id: kb-win-4688
+    type: mcq
+    skill: soc_endpoint_triage
+    claim: K1
+    stem: "Which Windows Security event ID records that a new process was created (when process-creation auditing is enabled)?"
+    options: ["4624", "4688", "4625", "4740"]
+    answer: [1]
+    explanation: "4688 is 'A new process has been created'. It only appears when process-creation auditing is turned on; command lines need a separate setting."
+
+  - id: kb-win-4672
+    type: mcq
+    skill: soc_windows_logs
+    claim: K1
+    stem: "Which Windows Security event ID records special privileges (such as administrator-level rights) being assigned to a new logon?"
+    options: ["4672", "4625", "4720", "1102"]
+    answer: [0]
+    explanation: "4672 is 'Special privileges assigned to new logon'. It often appears right after a 4624 for an administrative account."
+
+  - id: kb-win-kerberos
+    type: mcq
+    skill: soc_windows_logs
+    claim: K3
+    stem: "On a domain controller, which event ID records a Kerberos authentication ticket (TGT) being requested?"
+    options: ["4769", "4768", "4776", "4624"]
+    answer: [1]
+    explanation: "4768 is a Kerberos TGT request. 4769 is a service ticket request, and 4776 is NTLM credential validation."
+
+  - id: kb-logon-type-10
+    type: mcq
+    skill: soc_windows_logs
+    claim: K4
+    stem: "A 4624 event shows Logon Type 10. What kind of logon was it?"
+    options: ["Interactive (at the keyboard)", "Network (for example, a file share)", "RemoteInteractive (Remote Desktop)", "Service"]
+    answer: [2]
+    explanation: "Logon Type 10 is RemoteInteractive, used by Remote Desktop. Type 2 is interactive, type 3 is network and type 5 is service."
+
+  - id: kb-logon-type-3
+    type: mcq
+    skill: soc_windows_logs
+    claim: K4
+    stem: "Which Windows logon type is recorded when someone connects to a shared folder over the network?"
+    options: ["2", "3", "10", "7"]
+    answer: [1]
+    explanation: "Logon Type 3 is a network logon (such as accessing a file share). Type 2 is interactive, 10 is Remote Desktop, and 7 is unlocking a workstation."
+
+  - id: kb-sysmon-1-3
+    type: multi
+    skill: soc_endpoint_triage
+    claim: K5
+    stem: "Select every TRUE statement about Sysmon event IDs."
+    options: ["Event ID 1 is process creation", "Event ID 3 is a network connection", "Event ID 3 is a failed logon", "Event ID 1 is a file deletion"]
+    answer: [0, 1]
+    explanation: "Sysmon Event ID 1 is process creation and Event ID 3 is a network connection. Sysmon does not record logons; Windows Security event 4625 does."
+
+  - id: kb-ports
+    type: multi
+    skill: soc_network_traffic
+    claim: K6
+    stem: "Select every correct default port mapping."
+    options: ["SSH: 22", "RDP: 3389", "DNS: 53", "HTTPS: 25"]
+    answer: [0, 1, 2]
+    explanation: "SSH uses 22, RDP uses 3389 and DNS uses 53. HTTPS defaults to 443; 25 is SMTP. Remember that a port is a convention, not proof of the protocol."
+
+  - id: kb-rfc1918
+    type: multi
+    skill: soc_network_indicators
+    claim: K7
+    stem: "Select every address that is in a private (RFC 1918) range."
+    options: ["10.4.2.1", "172.20.1.9", "192.168.5.5", "172.32.0.1", "8.8.8.8"]
+    answer: [0, 1, 2]
+    explanation: "The private ranges are 10.0.0.0/8, 172.16.0.0/12 (172.16.0.0 to 172.31.255.255) and 192.168.0.0/16. 172.32.0.1 is just outside the 172.16/12 block; 8.8.8.8 is public."
+
+  - id: kb-sha256-length
+    type: mcq
+    skill: soc_malware_triage
+    claim: K8
+    stem: "A file hash is 64 hexadecimal characters long. Which algorithm most likely produced it?"
+    options: ["MD5", "SHA-1", "SHA-256", "CRC32"]
+    answer: [2]
+    explanation: "SHA-256 produces 256 bits, which is 64 hex characters. MD5 is 32 hex characters, SHA-1 is 40 and CRC32 is 8."
+
+  - id: kb-md5-length
+    type: mcq
+    skill: soc_malware_triage
+    claim: K8
+    stem: "How many hexadecimal characters long is an MD5 hash?"
+    options: ["32", "40", "64", "128"]
+    answer: [0]
+    explanation: "MD5 is 128 bits, which is 32 hex characters (each hex character is 4 bits)."
+
+  - id: kb-attack-t1110
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K9
+    stem: "Which MITRE ATT&CK technique ID is Brute Force?"
+    options: ["T1566", "T1110", "T1059", "T1078"]
+    answer: [1]
+    explanation: "T1110 is Brute Force (its sub-techniques include password guessing and password spraying). T1566 is Phishing, T1059 is Command and Scripting Interpreter and T1078 is Valid Accounts."
+
+  - id: kb-attack-t1566
+    type: mcq
+    skill: soc_phishing_analysis
+    claim: K9
+    stem: "Which MITRE ATT&CK technique ID is Phishing?"
+    options: ["T1566", "T1110", "T1071", "T1053"]
+    answer: [0]
+    explanation: "T1566 is Phishing. T1110 is Brute Force, T1071 is Application Layer Protocol and T1053 is Scheduled Task/Job."
+
+  - id: kb-attack-t1078
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K9
+    stem: "An attacker signs in with a real employee's stolen username and password. Which ATT&CK technique describes using that legitimate account?"
+    options: ["T1059 Command and Scripting Interpreter", "T1078 Valid Accounts", "T1566 Phishing", "T1070 Indicator Removal"]
+    answer: [1]
+    explanation: "T1078 Valid Accounts covers attackers using real credentials. How they got the password (for example phishing) is a separate technique."
+
+  - id: kb-spraying
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K10
+    stem: "What is password spraying?"
+    options: ["Trying many passwords against one account", "Trying one or a few common passwords against many accounts", "Reusing passwords leaked from another site", "Capturing passwords from network traffic"]
+    answer: [1]
+    explanation: "Spraying tries a few common passwords across many accounts, which stays under per-account lockout limits. Many passwords against one account is classic guessing; reusing leaked pairs is credential stuffing."
+
+  - id: kb-nist-lifecycle
+    type: ordering
+    skill: soc_escalation_handoff
+    claim: K11
+    stem: "Put the incident response lifecycle from NIST SP 800-61 Revision 2 in order."
+    options: ["Containment, Eradication and Recovery", "Preparation", "Post-Incident Activity", "Detection and Analysis"]
+    answer: [1, 3, 0, 2]
+    explanation: "Revision 2 runs Preparation, then Detection and Analysis, then Containment, Eradication and Recovery, then Post-Incident Activity (lessons learned), with loops back as needed."
+
+  - id: kb-volatility
+    type: ordering
+    skill: soc_endpoint_triage
+    claim: K12
+    stem: "Order these evidence sources from MOST volatile (collect first) to LEAST volatile, following RFC 3227."
+    options: ["Data on the hard disk", "Archived backup media", "System memory (RAM)", "CPU registers and cache"]
+    answer: [3, 2, 0, 1]
+    explanation: "RFC 3227 says collect the most volatile first: registers and cache, then memory, then disk, then archival media. Memory disappears at power-off; backups last years."
+
+  - id: kb-pyramid
+    type: ordering
+    skill: soc_threat_intel
+    claim: K13
+    stem: "Order these indicator types from EASIEST for an attacker to change to HARDEST, following the Pyramid of Pain."
+    options: ["Tactics, techniques and procedures (TTPs)", "Hash values", "Domain names", "IP addresses"]
+    answer: [1, 3, 2, 0]
+    explanation: "The Pyramid of Pain (David Bianco) runs from hash values (trivial to change), IP addresses, domain names, artifacts and tools, up to TTPs (toughest). Detecting behaviour costs attackers the most."
+
+  - id: kb-tlp-red
+    type: mcq
+    skill: soc_threat_intel
+    claim: K14
+    stem: "Under the Traffic Light Protocol (TLP 2.0), which label is the most restrictive (for the named recipients only)?"
+    options: ["TLP:CLEAR", "TLP:GREEN", "TLP:AMBER", "TLP:RED"]
+    answer: [3]
+    explanation: "TLP:RED is for the named recipients only. TLP:CLEAR has no limit, GREEN is for the community, and AMBER (and AMBER+STRICT) limit sharing to organisations or the recipient's own organisation."
+
+  - id: kb-cia-ddos
+    type: mcq
+    skill: soc_alert_triage
+    claim: K15
+    stem: "A flood of traffic takes a website offline. Which part of the CIA triad is mainly affected?"
+    options: ["Confidentiality", "Integrity", "Availability", "Authenticity"]
+    answer: [2]
+    explanation: "Denial of service attacks availability: legitimate users cannot reach the service. Nothing is necessarily read (confidentiality) or changed (integrity)."
+
+  - id: kb-dmarc
+    type: mcq
+    skill: soc_phishing_analysis
+    claim: K16
+    stem: "Which statement about DMARC is correct?"
+    options: ["DMARC encrypts email in transit", "DMARC passes when the visible From domain aligns with a domain that passed SPF or DKIM", "DMARC replaces the need for SPF and DKIM", "DMARC checks the reputation of links in the message"]
+    answer: [1]
+    explanation: "DMARC builds on SPF and DKIM: it needs one of them to pass for a domain aligned with the visible From address, and the domain's policy (none, quarantine, reject) says what to do on failure."
+
+  - id: kb-fp-definition
+    type: mcq
+    skill: soc_false_positive_id
+    claim: K17
+    stem: "A detection rule fires on activity that is NOT what the rule was designed to catch. What is that alert called?"
+    options: ["True positive", "False positive", "False negative", "True negative"]
+    answer: [1]
+    explanation: "A false positive is an alert that fired when the condition it looks for was not actually present. A false negative is the opposite: a real attack with no alert."
+
+  - id: kb-false-negative
+    type: mcq
+    skill: soc_false_positive_id
+    claim: K17
+    stem: "A real intrusion happened, but no alert fired. What is that called?"
+    options: ["False negative", "False positive", "True positive", "Benign true positive"]
+    answer: [0]
+    explanation: "A false negative is missed malicious activity. It is the most dangerous outcome because nobody looks at it."
+
+  - id: kb-log-spray
+    type: log
+    skill: soc_credential_attacks
+    claim: K18
+    stem: "What does this sequence of Windows Security events most likely show?"
+    log: |
+      09:02:11 4625 Account=alice   Source=203.0.113.50 LogonType=3
+      09:02:12 4625 Account=bob     Source=203.0.113.50 LogonType=3
+      09:02:13 4625 Account=chen    Source=203.0.113.50 LogonType=3
+      09:02:14 4625 Account=dmitri  Source=203.0.113.50 LogonType=3
+      09:02:15 4624 Account=erin    Source=203.0.113.50 LogonType=3
+    options: ["One user mistyping their password", "Password spraying from one address, followed by a successful logon", "A scheduled backup job", "Account lockouts caused by an expired password"]
+    answer: [1]
+    explanation: "Failures (4625) for many different accounts from one source, one second apart, then a success (4624) for another account from the same source fit password spraying that worked. Next: confirm the source and check what erin's session did."
+
+  - id: kb-log-ssh-invalid
+    type: log
+    skill: soc_linux_logs
+    claim: K19
+    stem: "What does this Linux authentication log line tell you?"
+    log: |
+      Oct 15 03:14:07 web01 sshd[2211]: Failed password for invalid user admin from 198.51.100.7 port 51522 ssh2
+    options: ["The user admin exists and typed the wrong password", "Someone tried to log in over SSH as a username that does not exist on this host", "The SSH service crashed", "A successful login as admin"]
+    answer: [1]
+    explanation: "'invalid user' means the username does not exist on the host. Attempts against non-existent common names like admin are typical of automated guessing."
+
+  - id: kb-log-encoded-ps
+    type: log
+    skill: soc_endpoint_triage
+    claim: K20
+    stem: "Why does this process-creation record deserve a closer look?"
+    log: |
+      ParentImage: C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE
+      Image: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+      CommandLine: powershell.exe -NoProfile -EncodedCommand SQBFAFgAIAAoA...
+    options: ["PowerShell is always malicious", "A Word document started PowerShell with an encoded command, which hides what it runs", "The path to PowerShell is wrong", "The command line is too short to matter"]
+    answer: [1]
+    explanation: "Word rarely needs to start PowerShell, and -EncodedCommand hides the script text (ATT&CK T1059.001, T1027). Admin tools sometimes encode too, so decode it and check before deciding."
+
+  - id: kb-log-web-scan
+    type: log
+    skill: soc_web_attacks
+    claim: K21
+    stem: "What does this web server access log most likely show?"
+    log: |
+      198.51.100.23 - - [15/Oct/2026:10:00:01] "GET /admin/ HTTP/1.1" 404
+      198.51.100.23 - - [15/Oct/2026:10:00:01] "GET /wp-login.php HTTP/1.1" 404
+      198.51.100.23 - - [15/Oct/2026:10:00:02] "GET /.env HTTP/1.1" 404
+      198.51.100.23 - - [15/Oct/2026:10:00:02] "GET /phpmyadmin/ HTTP/1.1" 404
+    options: ["A successful data breach", "Automated scanning for common admin pages and files, none of which were found", "A normal user browsing the site", "The web server is down"]
+    answer: [1]
+    explanation: "Many requests for well-known sensitive paths within seconds, all returning 404 (Not Found), is automated discovery. Nothing was found here; a 200 on one of them would change the picture."
+
+  - id: kb-http-codes
+    type: multi
+    skill: soc_web_attacks
+    claim: K22
+    stem: "Select every correct HTTP status code meaning."
+    options: ["200: OK", "401: authentication is required or failed", "403: forbidden", "404: server error"]
+    answer: [0, 1, 2]
+    explanation: "200 is OK, 401 is Unauthorized (authentication needed or failed), 403 is Forbidden and 404 is Not Found. Server errors are the 5xx range."

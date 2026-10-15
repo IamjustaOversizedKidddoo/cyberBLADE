@@ -19,6 +19,14 @@ import type {
 } from "./reports/types";
 import type { SocReportSubmissionRecord, SocReportEvaluationRecord } from "./types";
 import { recordLearningEvent } from "@/lib/analytics/learning-events";
+import type { SocAttemptRecord } from "./types";
+import { assertExamWritable, examForSocAttempt, isExamSocAttempt } from "./exam/guard";
+
+/** Exam attempts reveal grading and model reports only after the exam is submitted. */
+async function assertExamSubmitted(ctx: Ctx, attempt: SocAttemptRecord): Promise<void> {
+  const exam = await examForSocAttempt(ctx, attempt);
+  if (exam && exam.status !== "submitted") throw new Error("Results are available after the exam is submitted.");
+}
 
 // ---------------------------------------------------------------------------
 // Internal: deep-sanitize a SocReportData before storage
@@ -103,6 +111,7 @@ export async function saveSocReportDraft(
   if (attempt.status === "submitted") {
     throw new Error("Attempt is already submitted — draft can no longer be updated");
   }
+  await assertExamWritable(ctx, attempt);
 
   // Check if report for this template is already submitted
   const submissions = await ctx.repo.listSocReportSubmissions(attemptId);
@@ -211,7 +220,24 @@ export async function submitSocReport(
   const attempt = await ctx.repo.getSocAttempt(attemptId);
   if (!attempt) throw new Error("Attempt not found");
   if (attempt.userId !== userId) throw new Error("Forbidden: unauthorized attempt access");
+  // In an exam the report is graded only when the whole exam is submitted (exam service).
+  if (isExamSocAttempt(attempt)) throw new Error("In an exam, the report is submitted with the exam.");
+  return submitSocReportGraded(ctx, userId, attempt, reportData, templateId, templateVersion);
+}
 
+/**
+ * Grades and stores a report without the exam check. Called by submitSocReport and, for exam
+ * attempts, only by the exam service while it submits the exam. Not a server action.
+ */
+export async function submitSocReportGraded(
+  ctx: Ctx,
+  userId: string,
+  attempt: SocAttemptRecord,
+  reportData: SocReportData,
+  templateId = "incident-report-l1",
+  templateVersion = "v1.0.0",
+): Promise<SocReportSubmissionResult> {
+  const attemptId = attempt.id;
   // Enforce 1-shot: check for existing submitted report for this attempt+template
   const existingSubmissions = await ctx.repo.listSocReportSubmissions(attemptId);
   const alreadySubmitted = existingSubmissions.find(
@@ -323,6 +349,7 @@ export async function getSocReportGradingResult(
   const attempt = await ctx.repo.getSocAttempt(attemptId);
   if (!attempt) throw new Error("Attempt not found");
   if (attempt.userId !== userId) throw new Error("Forbidden: unauthorized attempt access");
+  await assertExamSubmitted(ctx, attempt);
 
   const submission = await ctx.repo.getSocReportSubmission(submissionId);
   if (!submission || submission.userId !== userId || submission.status !== "submitted") return null;
@@ -353,6 +380,7 @@ export async function getSocReportModelReveal(
   const attempt = await ctx.repo.getSocAttempt(attemptId);
   if (!attempt) throw new Error("Attempt not found");
   if (attempt.userId !== userId) throw new Error("Forbidden: unauthorized attempt access");
+  await assertExamSubmitted(ctx, attempt);
 
   const submissions = await ctx.repo.listSocReportSubmissions(attemptId);
   const submitted = submissions.find(

@@ -82,3 +82,32 @@ Every claim in an L1 lesson that is not obviously certain gets a row here, so a 
 | 76 | The WHO describes burnout as an occupational phenomenon resulting from chronic workplace stress that has not been successfully managed. | soc-l1-judgment-career-01 | certain | WHO, ICD-11 (QD85) and the WHO statement of 28 May 2019. Paraphrased. |
 | 77 | L1 roles often involve shift work and repetitive triage; common progression paths include Tier 2, IR, detection engineering, threat intel and cloud security; employers value fundamentals, writing and evidence of hands-on work. | soc-l1-judgment-career-01 | unsure | General industry observation; it varies by country, organisation and year, and no single source was checked. Kept generic, with no salaries, timelines or promises. Owner to confirm the framing. |
 | 78 | Anchoring, confirmation bias, automation bias and recency are recognised cognitive biases relevant to analysis. | soc-l1-judgment-career-01 | fairly sure | Standard cognitive-psychology terms (Tversky and Kahneman on anchoring; the human-factors literature on automation bias). "Recency" is used informally here, in the sense of availability or recency effects. |
+
+## Knowledge exam bank (`content/soc/exams/knowledge-bank.yaml`)
+
+Only facts recorded as **certain** are used in exam items. Objective alignment to any certification is **UNVERIFIED** until a reviewer maps it.
+
+| # | Claim | Items | Confidence | Where to verify |
+|---|---|---|---|---|
+| K1 | Windows Security event IDs: 4624 successful logon, 4625 failed logon, 4634 logoff, 4672 special privileges assigned to new logon, 4688 new process created, 4720 user account created, 4738 user account changed, 4740 account locked out. | kb-win-* | certain | Microsoft Learn, "Advanced security audit policy" event reference pages for each ID. |
+| K2 | Event 1102 records that the Security audit log was cleared; clearing event logs is ATT&CK T1070.001. | kb-win-1102 | certain | Microsoft Learn event 1102; attack.mitre.org T1070.001. |
+| K3 | 4768 Kerberos TGT requested, 4769 Kerberos service ticket requested, 4776 NTLM credential validation. | kb-win-kerberos | certain | Microsoft Learn event reference pages 4768, 4769, 4776. |
+| K4 | Logon types: 2 interactive, 3 network, 5 service, 7 unlock, 10 RemoteInteractive (Remote Desktop). | kb-logon-type-* | certain | Microsoft Learn, event 4624 "Logon types" table. |
+| K5 | Sysmon Event ID 1 is process creation and Event ID 3 is network connection. | kb-sysmon-1-3 | certain | Microsoft Sysinternals Sysmon documentation, "Events". |
+| K6 | Default ports: SSH 22, SMTP 25, DNS 53, HTTPS 443, RDP 3389. | kb-ports | certain | IANA Service Name and Transport Protocol Port Number Registry. |
+| K7 | RFC 1918 private ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16. | kb-rfc1918 | certain | RFC 1918 §3. |
+| K8 | Digest lengths: MD5 128 bits (32 hex), SHA-1 160 bits (40 hex), SHA-256 256 bits (64 hex), CRC32 32 bits (8 hex). | kb-sha256-length, kb-md5-length | certain | RFC 1321 (MD5); FIPS 180-4 (SHA-1, SHA-256). |
+| K9 | ATT&CK IDs: T1110 Brute Force, T1566 Phishing, T1059 Command and Scripting Interpreter, T1078 Valid Accounts, T1071 Application Layer Protocol, T1053 Scheduled Task/Job, T1070 Indicator Removal. | kb-attack-* | certain | attack.mitre.org. Re-check on each ATT&CK release. |
+| K10 | Password spraying tries a few common passwords against many accounts (T1110.003); credential stuffing reuses leaked pairs (T1110.004). | kb-spraying | certain | attack.mitre.org T1110.003, T1110.004. |
+| K11 | NIST SP 800-61 Rev. 2 lifecycle: Preparation; Detection and Analysis; Containment, Eradication and Recovery; Post-Incident Activity. | kb-nist-lifecycle | certain | NIST SP 800-61r2 §3. The item names Revision 2 explicitly because Revision 3 (2025) restructures around CSF 2.0 functions. |
+| K12 | RFC 3227 order of volatility: registers/cache, then routing/ARP/process table/kernel stats/memory, temp file systems, disk, remote logging, physical configuration, archival media. | kb-volatility | certain | RFC 3227 §2.1. |
+| K13 | Pyramid of Pain order (easy to hard for the attacker): hash values, IP addresses, domain names, network/host artifacts, tools, TTPs. | kb-pyramid | certain | David Bianco, "The Pyramid of Pain" (2013). |
+| K14 | TLP 2.0 labels: CLEAR, GREEN, AMBER, AMBER+STRICT, RED; RED is for named recipients only. | kb-tlp-red | certain | FIRST TLP 2.0 standard (first.org/tlp). |
+| K15 | Denial of service primarily affects availability. | kb-cia-ddos | certain | NIST SP 800-12 / FIPS 199 definitions of availability. |
+| K16 | DMARC passes on alignment with a domain that passed SPF or DKIM; policies none/quarantine/reject; DMARC does not encrypt. | kb-dmarc | certain | RFC 7489 §3.1, §6.3 (same source as row 5). |
+| K17 | False positive = alert without the condition present; false negative = condition present without an alert. | kb-fp-definition, kb-false-negative | certain | Standard detection terminology (NIST glossary "false positive"); consistent with row 9. |
+| K18 | Many 4625 failures for different accounts from one source followed by a 4624 fits successful password spraying. | kb-log-spray | certain (as an interpretation of the fictional log) | ATT&CK T1110.003 detection notes; event meanings from K1. The explanation tells the learner to confirm before concluding. |
+| K19 | OpenSSH logs "Failed password for invalid user X" when the username does not exist on the host. | kb-log-ssh-invalid | certain | OpenSSH `auth2.c` / `auth.c` log messages ("invalid user"). |
+| K20 | An Office application spawning PowerShell with `-EncodedCommand` is suspicious; encoding hides script text (T1059.001, T1027); admin tools sometimes encode too. | kb-log-encoded-ps | certain | attack.mitre.org T1059.001, T1027; Microsoft `about_PowerShell_exe` (-EncodedCommand). Same basis as row 12. |
+| K21 | Rapid requests for well-known sensitive paths all returning 404 indicate automated discovery that found nothing. | kb-log-web-scan | certain (as an interpretation of the fictional log) | RFC 9110 §15.5.5 (404); ATT&CK T1595.003 (Wordlist Scanning). |
+| K22 | HTTP 200 OK, 401 Unauthorized, 403 Forbidden, 404 Not Found; server errors are 5xx. | kb-http-codes | certain | RFC 9110 §15. |

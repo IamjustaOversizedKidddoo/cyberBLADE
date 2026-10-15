@@ -5,6 +5,7 @@
 
 export const SOC_EXAM_FORMATS = ["alert-queue", "investigation", "knowledge", "mini-queue"] as const;
 export type SocExamFormat = (typeof SOC_EXAM_FORMATS)[number];
+export type SocExamBudgetKind = "queries" | "lookups" | "questionAnswers";
 
 export type SocExamStatus = "active" | "submitted";
 export type SocExamSubmitReason = "learner" | "deadline";
