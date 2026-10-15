@@ -20,6 +20,7 @@ import type {
 import type { SocReportSubmissionRecord, SocReportEvaluationRecord } from "./types";
 import { recordLearningEvent } from "@/lib/analytics/learning-events";
 import type { SocAttemptRecord } from "./types";
+import { reportTemplateIdSchema } from "./reports/report-schema";
 import { assertExamWritable, assertNoRunningExam, examForSocAttempt, isExamSocAttempt } from "./exam/guard";
 
 /** Exam attempts reveal grading and model reports only after the exam is submitted. */
@@ -107,6 +108,7 @@ export async function saveSocReportDraft(
   templateId = "incident-report-l1",
   templateVersion = "v1.0.0",
 ): Promise<SocReportSubmissionRecord> {
+  reportTemplateIdSchema.parse(templateId);
   const attempt = await ctx.repo.getSocAttempt(attemptId);
   if (!attempt) throw new Error("Attempt not found");
   if (attempt.userId !== userId) throw new Error("Forbidden: unauthorized attempt access");
@@ -241,6 +243,8 @@ export async function submitSocReportGraded(
   templateVersion = "v1.0.0",
 ): Promise<SocReportSubmissionResult> {
   const attemptId = attempt.id;
+  // Known templates only: an unknown id would open a fresh "first submission" for the same attempt.
+  reportTemplateIdSchema.parse(templateId);
   // Enforce 1-shot: check for existing submitted report for this attempt+template
   const existingSubmissions = await ctx.repo.listSocReportSubmissions(attemptId);
   const alreadySubmitted = existingSubmissions.find(
