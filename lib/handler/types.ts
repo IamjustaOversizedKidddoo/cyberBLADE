@@ -27,8 +27,22 @@ export type HandlerObjective = {
   solved: boolean;
 };
 
+/** SOC-mode context, built only on the server from the learner's own work (no ground truth). */
+export type SocPromptContext = {
+  scenarioTitle: string;
+  totalAlerts: number;
+  decidedAlertsCount: number;
+  currentAlert?: { id: string; source: string; ruleName: string; severity: string; summary: string; relatedAsset?: string; relatedUser?: string };
+  myDecision?: { disposition: string; severity: string; escalate: boolean; rationale: string };
+  recentQueries: string[];
+  recentLookups: string[];
+  reportExcerpt?: string;
+};
+
 export type HandlerContext = {
-  kind: "lesson" | "lab";
+  /** "soc" is set only by the server-side SOC action; the general Handler action accepts lesson | lab. */
+  kind: "lesson" | "lab" | "soc";
+  soc?: SocPromptContext;
   lessonId?: string;
   lessonTitle?: string;
   module?: string;

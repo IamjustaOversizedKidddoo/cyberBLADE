@@ -7,6 +7,7 @@ import { getCtx } from "@/lib/progress/context";
 import { canAccessRank } from "@/lib/progress/access";
 import { generateLab } from "@/lib/lab-engine/checks";
 import { askHandler, requestProgressiveHint } from "@/lib/handler/service";
+import { getActiveExam } from "@/lib/lab-engine/soc/exam/service";
 import { checkRateLimit } from "@/lib/progress/rate-limit";
 import type { HandlerContext, HandlerMessage, HandlerResponse } from "@/lib/handler/types";
 
@@ -83,6 +84,10 @@ export async function askHandlerAction(rawInput: {
     }
   }
   if (hasActiveChallenge) {
+    parsed.context.isChallenge = true;
+  }
+  // SOC practice exam in progress (Stage 1): same server-side lockout, from any page or tab.
+  if (!parsed.context.isChallenge && (await getActiveExam(ctx, operator.id))) {
     parsed.context.isChallenge = true;
   }
 
