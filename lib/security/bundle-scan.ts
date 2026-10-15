@@ -22,6 +22,9 @@ export const LEAK_RULES: LeakRule[] = [
   // Lesson micro-exercise answer keys (content/tracks/**/*.exercises.yaml `accept` lists) stay server-side.
   { id: "exercise-keys", re: /\\?"accept\\?"\s*:\s*\[/ },
   { id: "hidden-entity-roles", re: /attacker_infra|benign_business|shared_infra/ },
+  // SOC exam answer keys and graders (Stage 1). Exam seeds are covered by seed-in-payload; the
+  // post-submission review is rendered on the server, so none of these names belong in client code.
+  { id: "exam-keys", re: /knowledge-bank\.yaml|loadKnowledgeBank|gradeKnowledgeAnswer|knowledgeItemReview|drawKnowledgeItems|correctOptionIds|objectiveAlignment|buildExamResult|handoffChecks|evaluateReadiness/ },
   // Seeds and family internals
   // Matches plain JSON and the escaped JSON embedded in HTML hydration scripts (\"seed\":).
   { id: "seed-in-payload", re: /\\?"seed\\?"\s*:\s*\\?"/ },
