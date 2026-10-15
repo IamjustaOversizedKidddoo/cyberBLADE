@@ -19,6 +19,7 @@ import {
   type ExamLobbyView,
   type ExamStateView,
 } from "@/lib/lab-engine/soc/exam/service";
+import { getExamInsights, submitExamOutcomeReport, type ExamInsightsView } from "@/lib/lab-engine/soc/exam/insights";
 
 const examIdSchema = z.string().uuid();
 const formatSchema = z.enum(SOC_EXAM_FORMATS);
@@ -63,4 +64,17 @@ export async function submitSocExamAction(examId: string): Promise<ExamStateView
   assertEnabled();
   const operator = await requireOperator();
   return submitExam(getCtx(), operator.id, examIdSchema.parse(examId));
+}
+
+export async function getSocExamInsightsAction(): Promise<ExamInsightsView> {
+  assertEnabled();
+  const operator = await requireOperator();
+  return getExamInsights(getCtx(), operator.id);
+}
+
+/** Optional, consented self-report of a real exam outcome. Stored owner-only; never changes scores. */
+export async function submitSocExamOutcomeAction(input: unknown): Promise<{ saved: true }> {
+  assertEnabled();
+  const operator = await requireOperator();
+  return submitExamOutcomeReport(getCtx(), operator.id, input);
 }
