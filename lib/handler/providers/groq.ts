@@ -70,7 +70,9 @@ export class GroqProvider implements HandlerProvider {
   async generateReply(systemPrompt: string, history: HandlerMessage[], userMessage: string): Promise<string> {
     const messages = [
       { role: "system", content: systemPrompt },
-      ...history.map((m) => ({ role: m.role, content: m.content })),
+      // Only the real system prompt has system authority; history turns are user or assistant
+      // (same mapping as the Gemini provider), whatever role they arrive with (L1-A-13).
+      ...history.map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content })),
       { role: "user", content: userMessage },
     ];
     const opts = { temperature: 0.3, maxTokens: 500, timeoutMs: 8_000 };

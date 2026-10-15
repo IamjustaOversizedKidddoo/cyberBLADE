@@ -12,7 +12,9 @@ import { checkRateLimit } from "@/lib/progress/rate-limit";
 import type { HandlerContext, HandlerMessage, HandlerResponse } from "@/lib/handler/types";
 
 const messageSchema = z.object({
-  role: z.enum(["system", "user", "assistant"]),
+  // Client history may only hold user/assistant turns: a "system" turn from the browser would reach
+  // the model with system authority (L1-A-13).
+  role: z.enum(["user", "assistant"]),
   content: z.string().max(4000),
   timestamp: z.string().optional(),
 });
