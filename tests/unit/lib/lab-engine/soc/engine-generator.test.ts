@@ -5,6 +5,7 @@ vi.mock("server-only", () => ({}));
 import { MemoryProgressRepo } from "@/lib/progress/memory-repo";
 import type { Ctx } from "@/lib/progress/service";
 import { startSocSession, getSocSession, submitSocAttempt, recordSocDecision } from "@/lib/lab-engine/soc/engine";
+import { GENERATOR_VERSION } from "@/lib/lab-engine/soc/generator";
 
 function createMockCtx(): Ctx {
   const repo = new MemoryProgressRepo();
@@ -57,7 +58,7 @@ describe("SOC Engine Integration with Scenario Families", () => {
     expect(rawAttempt).not.toBeNull();
     expect(rawAttempt?.familyId).toBe("soc-f-mixed-signal-01");
     expect(rawAttempt?.familyVersion).toBe(1);
-    expect(rawAttempt?.generatorVersion).toBe("1.0.0");
+    expect(rawAttempt?.generatorVersion).toBe(GENERATOR_VERSION);
     expect(rawAttempt?.difficulty).toBe("intermediate");
     expect(rawAttempt?.scenarioHash).toBeDefined();
     expect(rawAttempt?.seed).toBeDefined();

@@ -23,6 +23,7 @@ import {
 import { loadVocab } from "./vocab";
 import type { ShiftProfile } from "./shift-schema";
 import { GENERATOR_VERSION, computeVariantMetrics } from "./generator";
+import { balanceAlertIocs, usesIocBalancing } from "./ioc-balance";
 import { synthesizeReportGroundTruth } from "./reports/ground-truth-synthesis";
 import { validateSocScenario } from "./validator";
 import {
@@ -96,6 +97,7 @@ export function composeShiftScenario(
   shiftProfile: ShiftProfile,
   seed: string,
   familyMap?: Map<string, SocFamily>,
+  options: { generatorVersion?: string } = {},
 ): SocScenario {
   const catalog = familyMap ?? loadFamilyCatalog();
   const vocab = loadVocab();
@@ -690,8 +692,9 @@ export function composeShiftScenario(
       : Array.from(new Set(participatingFamilies.flatMap((f) => f.metadata.skillsTested)));
 
   const seedHash = crypto.createHash("sha256").update(seed).digest("hex").slice(0, 8);
+  const generatorVersion = options.generatorVersion ?? GENERATOR_VERSION;
 
-  return {
+  const composed: SocScenario = {
     id: `${shiftProfile.id}-${seedHash}`,
     version: shiftProfile.version,
     title: `${shiftProfile.title} (Shift ${seedHash})`,
@@ -703,7 +706,7 @@ export function composeShiftScenario(
     seed,
     variantOf: shiftProfile.id,
     generatorConfig: {
-      generatorVersion: GENERATOR_VERSION,
+      generatorVersion,
       familyVersion: shiftProfile.version,
       difficulty: shiftProfile.difficulty,
     },
@@ -723,6 +726,8 @@ export function composeShiftScenario(
     instantFeedback: false,
     examMode: false,
   };
+  // Version-pinned: attempts created before 1.1.0 keep their original alerts.
+  return usesIocBalancing(generatorVersion) ? balanceAlertIocs(composed) : composed;
 }
 
 /**

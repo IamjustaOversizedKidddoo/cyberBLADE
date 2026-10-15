@@ -16,12 +16,16 @@ import type {
 } from "./family-schema";
 import { loadVocab, type SocVocab } from "./vocab";
 import { synthesizeReportGroundTruth } from "./reports/ground-truth-synthesis";
+import { balanceAlertIocs, usesIocBalancing } from "./ioc-balance";
 
-export const GENERATOR_VERSION = "1.0.0";
+// 1.1.0: IOC balancing on non-true-positive alerts (L1-A-03); attempts keep their pinned version.
+export const GENERATOR_VERSION = "1.1.0";
 
 export type GenerationOptions = {
   maxAttempts?: number;
   shiftStartTime?: string; // Default: 2026-10-12T08:00:00Z
+  /** The attempt's pinned generator version; omitted = current (new attempts). */
+  generatorVersion?: string;
 };
 
 export type GenerationResult = {
@@ -89,7 +93,11 @@ export function generateSocVariant(
     attemptIndex++;
 
     try {
-      const scenario = generateSingleVariant(family, attemptSeed, difficulty, vocab, options.shiftStartTime);
+      const generatorVersion = options.generatorVersion ?? GENERATOR_VERSION;
+      const base = generateSingleVariant(family, attemptSeed, difficulty, vocab, options.shiftStartTime);
+      const pinned = { ...base, generatorConfig: { ...base.generatorConfig!, generatorVersion } };
+      // Version-pinned: attempts created before 1.1.0 keep their original alerts.
+      const scenario = usesIocBalancing(generatorVersion) ? balanceAlertIocs(pinned) : pinned;
       const contentHash = computeScenarioHash(scenario);
 
       return {

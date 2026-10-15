@@ -98,13 +98,13 @@ export async function resolveScenarioForAttempt(attempt: SocAttemptRecord): Prom
   if (attempt.scenarioId.startsWith("shift-") || (attempt.familyId && attempt.familyId.startsWith("shift-"))) {
     const shiftId = attempt.familyId ?? attempt.scenarioId;
     const shiftProfile = await loadSocShift(shiftId);
-    return composeShiftScenario(shiftProfile, attempt.seed);
+    return composeShiftScenario(shiftProfile, attempt.seed, undefined, { generatorVersion: attempt.generatorVersion ?? "1.0.0" });
   }
   if (attempt.familyId || attempt.scenarioId.startsWith("soc-f-")) {
     const familyId = attempt.familyId ?? attempt.scenarioId;
     const family = await loadSocFamily(familyId);
     const difficulty = (attempt.difficulty as DifficultyLevel) ?? "intermediate";
-    const { scenario, contentHash } = generateSocVariant(family, attempt.seed, difficulty);
+    const { scenario, contentHash } = generateSocVariant(family, attempt.seed, difficulty, { generatorVersion: attempt.generatorVersion ?? "1.0.0" });
     if (attempt.scenarioHash && contentHash !== attempt.scenarioHash) {
       throw new Error(`Scenario hash mismatch for attempt ${attempt.id}: expected ${attempt.scenarioHash}, got ${contentHash}`);
     }
