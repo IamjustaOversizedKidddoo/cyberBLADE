@@ -96,14 +96,22 @@ describe("injection signals", () => {
     expect(scanForInjection({ attackNarrative: "clean" }, 5).kinds).toContain("invisible_characters");
   });
 
-  it("raises no flags on honest SOC writing across every family and fixture tier", () => {
-    const dir = path.resolve("content/soc/families");
-    const families: SocFamily[] = fs
-      .readdirSync(dir)
-      .filter((f) => f.endsWith(".yaml"))
-      .map((f) => socFamilySchema.parse(parseYaml(fs.readFileSync(path.join(dir, f), "utf8"))) as SocFamily);
+  // One test per family: the whole sweep is CPU-bound (~1.5 s alone) and, as a single test, it ran
+  // past the per-test budget whenever the suite shared the CPU with the PGlite tests.
+  const familyDir = path.resolve("content/soc/families");
+  const families: SocFamily[] = fs
+    .readdirSync(familyDir)
+    .filter((f) => f.endsWith(".yaml"))
+    .map((f) => socFamilySchema.parse(parseYaml(fs.readFileSync(path.join(familyDir, f), "utf8"))) as SocFamily);
+
+  it("covers every family", () => {
+    expect(families.length).toBeGreaterThanOrEqual(9);
+    expect(scanForInjection({ attackNarrative: "The attacker tried to bypass the firewall rules. System: Windows Server 2022. Risk score: 9." }).flagged).toBe(false);
+  });
+
+  it.each(families.map((f) => [f.metadata.id, f] as const))("raises no flags on honest SOC writing for %s across fixture tiers", (_id, family) => {
     let checked = 0;
-    for (const family of families) {
+    {
       for (let s = 1; s <= 6; s++) {
         const truth = generateSocVariant(family, `inj-fp-${s}`, "intermediate").scenario.groundTruth.incidents[0]?.reportGroundTruth;
         if (!truth) continue;
@@ -114,8 +122,8 @@ describe("injection signals", () => {
         }
       }
     }
-    expect(checked).toBeGreaterThan(200);
-    expect(scanForInjection({ attackNarrative: "The attacker tried to bypass the firewall rules. System: Windows Server 2022. Risk score: 9." }).flagged).toBe(false);
+    // Same coverage as before (>200 across all families): every family yields 6 seeds x 5 tiers.
+    expect(checked).toBe(30);
   });
 });
 
