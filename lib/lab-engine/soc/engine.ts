@@ -4,7 +4,7 @@ import path from "node:path";
 import { parse as parseYaml } from "yaml";
 import { randomUUID } from "node:crypto";
 import type { Ctx } from "@/lib/progress/service";
-import { socScenarioSchema, toClientView, type SocScenario } from "./schema";
+import { socScenarioSchema, toClientView, type SocScenario, type SocScenarioClient } from "./schema";
 import { validateSocScenario } from "./validator";
 import { evaluateSocAttempt } from "./evaluator";
 import { recordLearningEvent } from "@/lib/analytics/learning-events";
@@ -76,6 +76,22 @@ export async function loadSocShift(shiftId: string): Promise<ShiftProfile> {
     throw new Error(`Shift validation failed: ${result.error.issues.map((i) => i.message).join("; ")}`);
   }
   return result.data;
+}
+
+/**
+ * What the learner's browser gets (L1-A-01/02). Generated scenario ids embed the family or shift id
+ * and part of the seed, and titles carry a seed-derived suffix; neither reaches the client. Exam
+ * attempts also get a neutral title and no skill list, because the family title names the incident.
+ */
+export function learnerScenarioView(scenario: SocScenario, attempt: Pick<SocAttemptRecord, "id" | "scenarioId">): SocScenarioClient {
+  const view = toClientView(scenario);
+  const exam = isExamSocAttempt(attempt);
+  return {
+    ...view,
+    id: `scn-${attempt.id.replace(/-/g, "").slice(0, 12)}`,
+    title: exam ? "Exam scenario" : view.title.replace(/\s*\((?:Variant|Shift)\s+[0-9a-f]{4,}\)\s*$/i, ""),
+    skillsTested: exam ? [] : view.skillsTested,
+  };
 }
 
 export async function resolveScenarioForAttempt(attempt: SocAttemptRecord): Promise<SocScenario> {
@@ -209,7 +225,7 @@ export async function startSocSession(
       startedAt: attempt.startedAt,
       submittedAt: attempt.submittedAt,
     },
-    scenario: toClientView(scenario),
+    scenario: learnerScenarioView(scenario, attempt),
     decisions: activeDecisions,
     cases,
     results: attempt.scoreSummary,
@@ -244,7 +260,7 @@ export async function getSocSession(
       startedAt: attempt.startedAt,
       submittedAt: attempt.submittedAt,
     },
-    scenario: toClientView(scenario),
+    scenario: learnerScenarioView(scenario, attempt),
     decisions: activeDecisions,
     cases,
     results: attempt.scoreSummary,
@@ -494,13 +510,13 @@ export async function getSocHandlerContext(
   const scenario = await resolveScenarioForAttempt(attempt);
   const decisions = await ctx.repo.listSocDecisions(attempt.id);
 
-  const clientView = toClientView(scenario);
+  const clientView = learnerScenarioView(scenario, attempt);
   const currentAlert = currentAlertId
     ? clientView.alerts.find((a) => a.id === currentAlertId)
     : undefined;
 
   return {
-    scenarioTitle: scenario.title,
+    scenarioTitle: clientView.title,
     scenarioLevel: scenario.level,
     totalAlerts: scenario.alerts.length,
     decidedAlertsCount: new Set(decisions.map((d) => d.alertId)).size,

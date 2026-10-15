@@ -169,8 +169,8 @@ describe("attempts, seeds and idempotency", () => {
     const seen: string[] = [];
     for (let i = 0; i < 4; i++) {
       const s = await startExam(ctx, U, "mini-queue");
-      seen.push(s.variantId);
-      await submitExam(ctx, U, s.examId);
+      expect(s.variantId).toBeNull(); // withheld while the exam runs (L1-A-02)
+      seen.push((await submitExam(ctx, U, s.examId)).variantId!);
       later(clock, 1);
     }
     const exams = await ctx.repo.listSocExamAttempts(U);

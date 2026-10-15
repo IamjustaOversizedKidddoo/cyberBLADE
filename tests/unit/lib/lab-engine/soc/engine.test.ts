@@ -47,7 +47,9 @@ describe("SOC Engine Service", () => {
 
     expect(session1.attempt.id).toBeDefined();
     expect(session1.attempt.status).toBe("in_progress");
-    expect(session1.scenario.id).toBe(scenarioId);
+    // The client id is opaque (L1-A-01); the attempt still records which scenario was started.
+    expect(session1.scenario.id).toMatch(/^scn-[0-9a-f]{12}$/);
+    expect(session1.attempt.scenarioId).toBe(scenarioId);
 
     // Verify projection is safe: no groundTruth
     expect((session1.scenario as unknown as Record<string, unknown>).groundTruth).toBeUndefined();

@@ -7,7 +7,7 @@ vi.mock("server-only", () => ({}));
 vi.setConfig({ testTimeout: 60_000 });
 
 import { makeCtx } from "../ai-grading/pipeline-harness";
-import { resolveScenarioForAttempt, startSocSession, submitSocAttempt } from "@/lib/lab-engine/soc/engine";
+import { getSocSession, resolveScenarioForAttempt, startSocSession, submitSocAttempt } from "@/lib/lab-engine/soc/engine";
 import { getSocReportModelReveal, submitSocReport } from "@/lib/lab-engine/soc/report-engine";
 import { sampleReport } from "../ai-grading/helpers";
 import { generateScenarioQuestions } from "@/lib/lab-engine/soc/query/questions";
@@ -76,6 +76,33 @@ describe("L1-A-10: practice is paused while an exam runs", () => {
 
     await submitExam(ctx, U, exam.examId);
     await expect(submitSocAttempt(ctx, U, id)).resolves.toMatchObject({ attemptId: id });
+  });
+});
+
+describe("L1-A-01 / L1-A-02: no family id, seed fragment or incident-naming title reaches the browser", () => {
+  it("practice: neither the family id nor any seed fragment is in the session; title has no variant suffix", async () => {
+    const ctx = makeCtx({ t: T0 });
+    for (const id of ["soc-f-phishing-cred-01", "shift-quiet-day"]) {
+      const session = await startSocSession(ctx, `u-a01-${id}`, id);
+      const attempt = (await ctx.repo.getSocAttempt(session.attempt.id))!;
+      const scenarioJson = JSON.stringify(session.scenario);
+      expect(scenarioJson).not.toContain(attempt.seed.slice(0, 6));
+      expect(session.scenario.id).not.toContain(id);
+      expect(session.scenario.title).not.toMatch(/\((Variant|Shift) [0-9a-f]+\)/);
+    }
+  });
+
+  it("exam: neutral title, no skills, no variant in the exam state or session", async () => {
+    const ctx = makeCtx({ t: T0 });
+    const s = await startExam(ctx, "u-a02", "investigation");
+    const session = await getSocSession(ctx, "u-a02", s.socAttemptId!);
+    const exam = (await ctx.repo.getSocExamAttempt(s.examId))!;
+    expect(s.variantId).toBeNull();
+    expect(session.scenario.title).toBe("Exam scenario");
+    expect(session.scenario.skillsTested).toEqual([]);
+    const json = JSON.stringify({ s, scenario: session.scenario });
+    expect(json).not.toContain(exam.variantId);
+    expect(json).not.toContain(exam.seed.slice(0, 6));
   });
 });
 

@@ -33,7 +33,8 @@ export type ExamStateView = {
   examId: string;
   format: SocExamFormat;
   title: string;
-  variantId: string;
+  /** Withheld while the exam runs: it names the scenario family or shift (L1-A-02). */
+  variantId: string | null;
   status: "active" | "submitted";
   startedAt: string;
   deadlineAt: string;
@@ -203,7 +204,7 @@ export async function getExamState(ctx: Ctx, userId: string, examId: string): Pr
     examId: exam.id,
     format: exam.format,
     title: f.title,
-    variantId: exam.variantId,
+    variantId: exam.status === "active" ? null : exam.variantId,
     status: exam.status,
     startedAt: exam.startedAt,
     deadlineAt: exam.deadlineAt,
