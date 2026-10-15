@@ -7,6 +7,7 @@ import fs from "node:fs";
 import { parse as parseYaml } from "yaml";
 import { resolvePracticeTarget, type PracticeCard } from "@/lib/content/practice";
 import { loadSocCoverage } from "@/lib/content/soc-track";
+import { practiceTargetAvailable, type PracticeFlags } from "@/lib/content/practice-availability";
 import type { SocExamAttemptRecord } from "./types";
 
 export type StudyPlanEntry = {
@@ -21,7 +22,8 @@ export type StudyPlanEntry = {
 export type StudyPlan = {
   basedOnExams: number;
   entries: StudyPlanEntry[];
-  miniQueueHref: string;
+  /** null when the timed drill cannot run (workspace switched off). */
+  miniQueueHref: string | null;
   reviewHref: string;
 };
 
@@ -53,6 +55,8 @@ export function buildStudyPlan(input: {
   lessonTitle: (id: string) => string | null;
   dueReviewByLesson: Map<string, number>;
   drillsEnabled: boolean;
+  /** Full flag set (L1-A-07); when given it decides availability for every practice kind. */
+  flags?: PracticeFlags;
   maxEntries?: number;
 }): StudyPlan {
   const coverage = loadSocCoverage();
@@ -65,13 +69,14 @@ export function buildStudyPlan(input: {
       return title ? [{ id, title, href: `/learn/${id}` }] : [];
     });
     const practice = (cov?.practice ?? [])
-      .filter((t) => input.drillsEnabled || !t.startsWith("drill:"))
+      .filter((t) => (input.flags ? practiceTargetAvailable(t, input.flags) : input.drillsEnabled || !t.startsWith("drill:")))
       .map((t) => resolvePracticeTarget(t, input.lessonTitle))
       .filter((c): c is PracticeCard => typeof c !== "string");
     const reviewDue = lessons.reduce((a, l) => a + (input.dueReviewByLesson.get(l.id) ?? 0), 0);
     return { skill, title: socSkillTitle(skill), percent, lessons, reviewDue, practice };
   });
-  return { basedOnExams: input.exams.length, entries, miniQueueHref: "/labs/soc/exams#mini-queue", reviewHref: "/review" };
+  const miniQueueOpen = input.flags ? input.flags.workspace : true;
+  return { basedOnExams: input.exams.length, entries, miniQueueHref: miniQueueOpen ? "/labs/soc/exams#mini-queue" : null, reviewHref: "/review" };
 }
 
 /** Score history per format, oldest first, for the trend view. */

@@ -38,14 +38,11 @@ export default async function SocScenarioPage(
     return (
       <main className="mx-auto max-w-3xl px-4 py-20 text-center space-y-6">
         <div className="rounded-xs border border-warning/40 bg-warning/10 p-8 space-y-4">
-          <span className="font-mono text-xs uppercase tracking-widest text-warning font-bold">
-            FEATURE FLAG: SOC_WORKSPACE_ENABLED = FALSE
-          </span>
           <h1 className="font-mono text-2xl font-bold text-ink">
-            SOC Tier-1 Workspace Under Evaluation
+            The SOC workspace is not open yet
           </h1>
           <p className="text-secondary text-sm leading-relaxed max-w-lg mx-auto">
-            The Phase 3 SOC incident response simulator is currently restricted to staging and preview environments. Contact your CyberBLADE administrator to enable preview flags.
+            Hands-on SOC scenarios are still being reviewed. The lessons are available in the meantime.
           </p>
           <div className="pt-4">
             <Link

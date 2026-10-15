@@ -5,7 +5,8 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { IconBook, IconCheck, IconChevronRight, IconClock } from "@/components/ui/icons";
 import { resolvePracticeTarget } from "@/lib/content/practice";
 import { loadPracticePaths, pathMinutes, practiceMinutes, SOC_TRACK_BASE } from "@/lib/content/soc-curriculum";
-import { isSocQueryEnabled } from "@/lib/config/env";
+import { isSocQueryEnabled, socPracticeFlags } from "@/lib/config/env";
+import { practiceTargetAvailable } from "@/lib/content/practice-availability";
 import { loadSocTrack, skillTitles, socCoverage } from "./track-data";
 
 export const metadata: Metadata = { title: "SOC Analyst L1 · CyberBLADE" };
@@ -22,6 +23,7 @@ export default async function SocTrackPage() {
   const skills = skillTitles();
   const coverage = socCoverage();
   const drillsOn = isSocQueryEnabled();
+  const practiceFlags = socPracticeFlags();
 
   return (
     <main className="min-h-screen bg-canvas pb-24 text-ink">
@@ -104,8 +106,8 @@ export default async function SocTrackPage() {
           </p>
           <ul className="grid gap-4 md:grid-cols-2">
             {paths.map((p) => {
-              // With drills switched off, drill steps are hidden and must not count towards the time either.
-              const steps = drillsOn ? p.steps : p.steps.filter((st) => !("practice" in st && st.practice.startsWith("drill:")));
+              // Steps whose feature is switched off are hidden and do not count towards the time (L1-A-07).
+              const steps = p.steps.filter((st) => !("practice" in st) || practiceTargetAvailable(st.practice, practiceFlags));
               const t = pathMinutes(steps, lessons);
               return (
                 <li key={p.id} className="rounded-sm border border-line bg-surface p-4">
@@ -127,7 +129,7 @@ export default async function SocTrackPage() {
                         );
                       }
                       const card = resolvePracticeTarget(s.practice, (id) => titles.get(id) ?? null);
-                      if (typeof card === "string" || (card.kind === "drill" && !drillsOn)) return null;
+                      if (typeof card === "string") return null;
                       const pm = practiceMinutes(s.practice);
                       return (
                         <li key={i} className="flex items-start gap-2 font-sans text-sm">

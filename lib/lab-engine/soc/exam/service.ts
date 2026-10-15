@@ -7,7 +7,7 @@ import "server-only";
  */
 import type { Ctx } from "@/lib/progress/service";
 import { examStartRefusal } from "@/lib/progress/repo";
-import { isSocQueryEnabled } from "@/lib/config/env";
+import { isSocQueryEnabled, isSocWorkspaceEnabled } from "@/lib/config/env";
 import { newSeed } from "@/lib/generators/rng";
 import { loadSocFamily, loadSocShift, resolveScenarioForAttempt } from "../engine";
 import { composeShiftScenario } from "../shift-composer";
@@ -401,6 +401,7 @@ const REFUSAL_TEXT: Record<string, string> = {
   "exam is active": "Finish your current exam first.",
   "exam is cooling down": "Cooling down after your last attempt of this format.",
   "exam retake limit reached": "Attempt limit for this period reached.",
+  "not open": "Not open yet.",
 };
 
 export async function getExamLobby(ctx: Ctx, userId: string): Promise<ExamLobbyView> {
@@ -415,7 +416,10 @@ export async function getExamLobby(ctx: Ctx, userId: string): Promise<ExamLobbyV
     timeMultiplier: accommodation?.multiplier ?? 1,
     formats: SOC_EXAM_FORMATS.map((format) => {
       const f = config.formats[format];
-      const refusal = examStartRefusal(exams, { attempt: { userId, format }, cooldownMinutes: f.cooldownMinutes, maxAttempts: f.maxAttempts.count, windowDays: f.maxAttempts.windowDays, now });
+      // Scenario formats run in the SOC workspace; with it switched off they are "not open yet"
+      // instead of a Start button that fails (L1-A-07).
+      const closed = format !== "knowledge" && !isSocWorkspaceEnabled();
+      const refusal = closed ? "not open" : examStartRefusal(exams, { attempt: { userId, format }, cooldownMinutes: f.cooldownMinutes, maxAttempts: f.maxAttempts.count, windowDays: f.maxAttempts.windowDays, now });
       return {
         format,
         title: f.title,

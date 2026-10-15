@@ -91,6 +91,32 @@ describe("study plan", () => {
   });
 });
 
+describe("L1-A-07: practice availability follows every SOC flag", () => {
+  it("maps each practice kind to its flags", async () => {
+    const { practiceTargetAvailable } = await import("@/lib/content/practice-availability");
+    const on = { workspace: true, enrichment: true, query: true };
+    const cases: Array<[string, Partial<typeof on>, boolean]> = [
+      ["drill:drill-02", { query: false }, false],
+      ["family:soc-f-phishing-cred-01", { workspace: false }, false],
+      ["shift:shift-quiet-day", { workspace: false }, false],
+      ["report:executive-summary", { workspace: false }, false],
+      ["tool:reputation", { enrichment: false }, false],
+      ["tool:reputation", { workspace: false }, false],
+      ["lesson:core-r1-linux-investigate-01", { workspace: false, enrichment: false, query: false }, true],
+      ["family:soc-f-phishing-cred-01", {}, true],
+    ];
+    for (const [t, off, want] of cases) expect(practiceTargetAvailable(t, { ...on, ...off }), `${t} ${JSON.stringify(off)}`).toBe(want);
+  });
+
+  it("the study plan offers no workspace practice and no mini-queue link when the workspace is off", () => {
+    const exams = [ex({ score: 90, skill: 30 })];
+    const off = buildStudyPlan({ exams, threshold: 60, lessonTitle: (id) => `L ${id}`, dueReviewByLesson: new Map(), drillsEnabled: true, flags: { workspace: false, enrichment: true, query: true } });
+    expect(off.miniQueueHref).toBeNull();
+    expect(off.entries[0].practice.every((p) => p.kind === "drill" || p.kind === "lesson")).toBe(true);
+    expect(off.entries[0].lessons.length).toBeGreaterThan(0);
+  });
+});
+
 describe("accommodation (admin CLI core)", () => {
   it("validates input, defaults nothing, and produces an audit line", async () => {
     const { buildAccommodation } = await import("@/lib/lab-engine/soc/exam/accommodation");

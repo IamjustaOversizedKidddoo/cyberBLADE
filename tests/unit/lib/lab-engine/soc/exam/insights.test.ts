@@ -34,6 +34,23 @@ describe("exam insights", () => {
   });
 });
 
+describe("L1-A-07: exam lobby with the workspace switched off", () => {
+  it("shows scenario formats as not open yet (knowledge stays available)", async () => {
+    const ctx = makeCtx(clock());
+    process.env.SOC_WORKSPACE_ENABLED = "false";
+    try {
+      const { getExamLobby } = await import("@/lib/lab-engine/soc/exam/service");
+      const lobby = await getExamLobby(ctx, "u-lobby-off");
+      for (const f of lobby.formats) {
+        expect(f.available, f.format).toBe(f.format === "knowledge");
+        if (f.format !== "knowledge") expect(f.unavailableReason).toBe("Not open yet.");
+      }
+    } finally {
+      delete process.env.SOC_WORKSPACE_ENABLED;
+    }
+  });
+});
+
 describe("outcome self-report", () => {
   it("requires explicit consent, a generic family and a past date; stores privately; never changes scores", async () => {
     const c = clock();

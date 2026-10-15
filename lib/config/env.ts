@@ -108,3 +108,8 @@ export function resetServerEnvCache(): void {
 export function assertSocWorkspaceEnabled(): void {
   if (!isSocWorkspaceEnabled()) throw new Error("The SOC workspace is not enabled.");
 }
+
+/** Current flags for practice-target availability (lib/content/practice-availability.ts). */
+export function socPracticeFlags(): { workspace: boolean; enrichment: boolean; query: boolean } {
+  return { workspace: isSocWorkspaceEnabled(), enrichment: isSocEnrichmentEnabled(), query: isSocQueryEnabled() };
+}

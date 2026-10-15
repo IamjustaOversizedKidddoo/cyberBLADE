@@ -68,7 +68,7 @@ export default async function SocReadinessPage() {
               ))}
             </ol>
           )}
-          <p className="mt-4 text-secondary">Short on time? Try a <Link href={v.studyPlan.miniQueueHref} className="text-cyan underline underline-offset-4 hover:text-ink">10-minute time-management drill</Link> (practice only).</p>
+          {v.studyPlan.miniQueueHref && <p className="mt-4 text-secondary">Short on time? Try a <Link href={v.studyPlan.miniQueueHref} className="text-cyan underline underline-offset-4 hover:text-ink">10-minute time-management drill</Link> (practice only).</p>}
         </section>
 
         <section className={panel} aria-labelledby="trend">

@@ -8,7 +8,7 @@ import "server-only";
 import { z } from "zod";
 import type { Ctx } from "@/lib/progress/service";
 import { checkRateLimit } from "@/lib/progress/rate-limit";
-import { isSocQueryEnabled } from "@/lib/config/env";
+import { isSocQueryEnabled, socPracticeFlags } from "@/lib/config/env";
 import { loadExamConfig, loadReadinessConfig } from "./config";
 import { evaluateReadiness, type ReadinessResult } from "./readiness";
 import { buildStudyPlan, examTrend, socSkillTitle, type StudyPlan } from "./study-plan";
@@ -41,7 +41,7 @@ export async function getExamInsights(ctx: Ctx, userId: string): Promise<ExamIns
   return {
     trend: examTrend(exams),
     readiness: { ...readiness, lowestSkillTitle: lowest ? socSkillTitle(lowest) : null },
-    studyPlan: buildStudyPlan({ exams: planExams, threshold: cfg.ready.skillFloor, lessonTitle: (id) => titles.get(id) ?? null, dueReviewByLesson: due, drillsEnabled: isSocQueryEnabled() }),
+    studyPlan: buildStudyPlan({ exams: planExams, threshold: cfg.ready.skillFloor, lessonTitle: (id) => titles.get(id) ?? null, dueReviewByLesson: due, drillsEnabled: isSocQueryEnabled(), flags: socPracticeFlags() }),
     outcomeReportsCount: (await ctx.repo.listSocExamOutcomeReports(userId)).length,
   };
 }
