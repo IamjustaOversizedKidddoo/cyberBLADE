@@ -117,7 +117,7 @@ export function ExamRunner({ initial }: { initial: ExamStateView }) {
             onBlur={saveHandoff}
             disabled={closed}
             rows={4}
-            className="mt-2 w-full rounded-xs border border-line bg-void p-3 font-sans text-sm text-ink focus:border-cyan focus:outline-none"
+            className="mt-2 w-full rounded-xs border border-line bg-void p-3 font-sans text-sm text-ink focus:border-cyan focus-visible:outline-2 focus-visible:outline-cyan"
             aria-describedby="handoff-status"
           />
           <div className="mt-1 flex flex-wrap items-center gap-3">
