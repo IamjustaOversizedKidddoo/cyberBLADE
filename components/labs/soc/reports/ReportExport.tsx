@@ -1,6 +1,7 @@
 "use client";
 
 import type { SocReportData } from "@/lib/lab-engine/soc/reports/types";
+import { ModalFocusScope } from "@/components/ui/ModalFocusScope";
 
 interface Props {
   report: SocReportData;
@@ -104,6 +105,7 @@ export function ReportExport({ report, onClose }: Props) {
   };
 
   return (
+    <ModalFocusScope onClose={onClose}>
     <div
       role="dialog"
       aria-modal="true"
@@ -167,5 +169,6 @@ export function ReportExport({ report, onClose }: Props) {
         </div>
       </div>
     </div>
+    </ModalFocusScope>
   );
 }

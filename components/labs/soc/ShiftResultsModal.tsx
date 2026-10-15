@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ModalFocusScope } from "@/components/ui/ModalFocusScope";
 import type { SocEvaluationResult } from "@/lib/lab-engine/soc/types";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -19,6 +20,7 @@ export function ShiftResultsModal({ isOpen, result, onClose, onReturnToLabs }: P
   if (!isOpen) return null;
 
   return (
+    <ModalFocusScope onClose={onClose}>
     <div
       role="dialog"
       aria-modal="true"
@@ -258,5 +260,6 @@ export function ShiftResultsModal({ isOpen, result, onClose, onReturnToLabs }: P
         </div>
       </div>
     </div>
+    </ModalFocusScope>
   );
 }

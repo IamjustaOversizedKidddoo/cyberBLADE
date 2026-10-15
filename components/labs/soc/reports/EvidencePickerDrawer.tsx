@@ -1,6 +1,7 @@
 "use client";
 
 import type { EvidenceAppendixItem } from "@/lib/lab-engine/soc/reports/types";
+import { ModalFocusScope } from "@/components/ui/ModalFocusScope";
 import type { SocAlertClient } from "@/lib/lab-engine/soc/schema";
 
 interface Props {
@@ -33,6 +34,7 @@ export function EvidencePickerDrawer({ isOpen, onClose, alerts, onAddEvidence }:
   };
 
   return (
+    <ModalFocusScope onClose={onClose}>
     <div
       role="dialog"
       aria-modal="true"
@@ -90,5 +92,6 @@ export function EvidencePickerDrawer({ isOpen, onClose, alerts, onAddEvidence }:
         </div>
       </div>
     </div>
+    </ModalFocusScope>
   );
 }

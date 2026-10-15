@@ -1,6 +1,7 @@
 "use client";
 
 import { Kbd } from "@/components/ui/Kbd";
+import { ModalFocusScope } from "@/components/ui/ModalFocusScope";
 import { IconCross } from "@/components/ui/icons";
 
 type Props = {
@@ -24,6 +25,7 @@ export function KeyboardHelpDialog({ isOpen, onClose }: Props) {
   ];
 
   return (
+    <ModalFocusScope onClose={onClose}>
     <div
       role="dialog"
       aria-modal="true"
@@ -69,5 +71,6 @@ export function KeyboardHelpDialog({ isOpen, onClose }: Props) {
         </div>
       </div>
     </div>
+    </ModalFocusScope>
   );
 }

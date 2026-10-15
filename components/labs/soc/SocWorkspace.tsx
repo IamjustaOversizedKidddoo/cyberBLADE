@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/Badge";
 import { IconClock, IconShield } from "@/components/ui/icons";
 import { SocSearchTab } from "./search/SocSearchTab";
 import { SocReportWorkspace } from "./reports/SocReportWorkspace";
+import { ModalFocusScope } from "@/components/ui/ModalFocusScope";
 
 /** Exam mode (Stage 1): the exam page owns submission and the timer; practice feedback stays hidden. */
 export type SocWorkspaceExamMode = {
@@ -525,6 +526,7 @@ export function SocWorkspace({ session, onExit, exam }: Props) {
 
       {/* Submit Confirmation Modal */}
       {isSubmitConfirmOpen && (
+        <ModalFocusScope onClose={() => setIsSubmitConfirmOpen(false)}>
         <div
           role="dialog"
           aria-modal="true"
@@ -570,6 +572,7 @@ export function SocWorkspace({ session, onExit, exam }: Props) {
             </div>
           </div>
         </div>
+        </ModalFocusScope>
       )}
 
       {/* Modals */}

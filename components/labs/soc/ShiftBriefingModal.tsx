@@ -1,6 +1,7 @@
 "use client";
 
 import type { SocScenarioClient } from "@/lib/lab-engine/soc/schema";
+import { ModalFocusScope } from "@/components/ui/ModalFocusScope";
 import { Badge } from "@/components/ui/Badge";
 import { IconClock, IconShield, IconPlay } from "@/components/ui/icons";
 
@@ -14,6 +15,7 @@ export function ShiftBriefingModal({ isOpen, scenario, onStart }: Props) {
   if (!isOpen) return null;
 
   return (
+    <ModalFocusScope onClose={onStart}>
     <div
       role="dialog"
       aria-modal="true"
@@ -90,5 +92,6 @@ export function ShiftBriefingModal({ isOpen, scenario, onStart }: Props) {
         </div>
       </div>
     </div>
+    </ModalFocusScope>
   );
 }

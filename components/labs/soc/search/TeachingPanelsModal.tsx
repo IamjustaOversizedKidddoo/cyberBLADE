@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ModalFocusScope } from "@/components/ui/ModalFocusScope";
 import { BLADEQL_SPEC, type BladeQLSpecCommand, type BladeQLSpecFunction } from "@/lib/lab-engine/soc/query/spec";
 import { Parser } from "@/lib/lab-engine/soc/query/parser";
 
@@ -183,6 +184,7 @@ export function TeachingPanelsModal({
   ];
 
   return (
+    <ModalFocusScope onClose={onClose}>
     <div
       role="dialog"
       aria-modal="true"
@@ -409,5 +411,6 @@ export function TeachingPanelsModal({
         </div>
       </div>
     </div>
+    </ModalFocusScope>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import type { PreSubmitLintResult } from "@/lib/lab-engine/soc/reports/types";
+import { ModalFocusScope } from "@/components/ui/ModalFocusScope";
 
 interface Props {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export function PreSubmitLintModal({
   const hasErrors = (lintResult?.errors.length ?? 0) > 0;
 
   return (
+    <ModalFocusScope onClose={onClose}>
     <div
       role="dialog"
       aria-modal="true"
@@ -135,5 +137,6 @@ export function PreSubmitLintModal({
         </div>
       </div>
     </div>
+    </ModalFocusScope>
   );
 }
