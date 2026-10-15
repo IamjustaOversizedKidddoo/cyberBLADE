@@ -26,7 +26,26 @@ const envSchema = z.object({
   SOC_WORKSPACE_ENABLED: z.string().optional(),
   SOC_ENRICHMENT_ENABLED: z.string().optional(),
   SOC_QUERY_ENABLED: z.string().optional(),
+  SOC_EXAMS_ENABLED: z.string().optional(),
+  SOC_HANDLER_ENABLED: z.string().optional(),
 });
+
+function devDefaultFlag(value: string | undefined): boolean {
+  if (value === "false" || value === "0") return false;
+  if (value === "true" || value === "1") return true;
+  // Default on in development & test, off in production until reviewed
+  return process.env.NODE_ENV !== "production";
+}
+
+/** SOC exam mode (Stage 1). Off in production until reviewed. */
+export function isSocExamsEnabled(): boolean {
+  return devDefaultFlag(process.env.SOC_EXAMS_ENABLED);
+}
+
+/** Handler SOC mode (Stage 1). Off in production until reviewed. */
+export function isSocHandlerEnabled(): boolean {
+  return devDefaultFlag(process.env.SOC_HANDLER_ENABLED);
+}
 
 export function isSocWorkspaceEnabled(): boolean {
   const flag = process.env.SOC_WORKSPACE_ENABLED;

@@ -1,0 +1,51 @@
+# SOC exam formats. PROVISIONAL: every duration, size, budget, cooldown and cap below is a
+# starting point for owner review, not a measured value. The UI labels them provisional.
+# Formats are "in the spirit of" practical exams; none is equivalent to any real exam.
+version: 1
+provisional: true
+formats:
+  alert-queue:
+    title: "Alert queue exam"
+    summary: "Work a full simulated shift: triage the queue, answer investigation questions, and write a handoff note."
+    durationMinutes: 75
+    variants: ["shift-standard-mixed", "shift-alert-storm", "shift-night-telemetry-gaps", "shift-quiet-day"]
+    budgets: { queries: 40, lookups: 30, questionAnswers: 20 }
+    sla: { targetSecondsPerAlert: 90, firstContainmentWithinMinutes: 20 }
+    cooldownMinutes: 120
+    maxAttempts: { count: 3, windowDays: 7 }
+    xp: 200
+    countsForReadiness: true
+    weights: { decisions: 0.6, questions: 0.25, handoff: 0.15 }
+  investigation:
+    title: "Investigation exam"
+    summary: "Investigate one multi-stage incident end to end and write a full incident report."
+    durationMinutes: 150
+    variants: ["soc-f-phishing-cred-01", "soc-f-attachment-script-01", "soc-f-brute-force-auth-01", "soc-f-cloud-identity-01", "soc-f-outbound-exfil-01", "soc-f-web-attack-data-01"]
+    budgets: { queries: 60, lookups: 40, questionAnswers: 20 }
+    cooldownMinutes: 240
+    maxAttempts: { count: 2, windowDays: 7 }
+    xp: 250
+    countsForReadiness: true
+    weights: { decisions: 0.35, questions: 0.25, report: 0.4 }
+  knowledge:
+    title: "Knowledge exam"
+    summary: "A timed set of original questions on SOC concepts, log reading and procedure."
+    durationMinutes: 40
+    itemCount: 25
+    budgets: {}
+    cooldownMinutes: 60
+    maxAttempts: { count: 3, windowDays: 7 }
+    xp: 150
+    countsForReadiness: true
+    weights: { items: 1 }
+  mini-queue:
+    title: "Time-management drill"
+    summary: "A short timed queue: triage as many alerts as you can, well, in 10 minutes. Practice only."
+    durationMinutes: 10
+    variants: ["shift-quiet-day", "shift-standard-mixed"]
+    budgets: { queries: 10, lookups: 10, questionAnswers: 0 }
+    cooldownMinutes: 0
+    maxAttempts: { count: 10, windowDays: 1 }
+    xp: 20
+    countsForReadiness: false
+    weights: { decisions: 1 }

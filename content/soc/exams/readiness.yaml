@@ -1,0 +1,13 @@
+# SOC readiness gate. PROVISIONAL: thresholds are starting points for owner review and have not
+# been calibrated against real exam outcomes. Shown in the UI as provisional.
+version: 1
+provisional: true
+# Use the learner's most recent N submitted exam attempts (formats that count for readiness only).
+windowAttempts: 4
+# The window must include at least this many different formats and different variants.
+minFormats: 2
+minVariants: 2
+ready: { overall: 75, skillFloor: 60, reportFloor: 65 }
+close: { overall: 60, skillFloor: 45, reportFloor: 50 }
+requireWithinTime: true
+requireNoIntegrityFlags: true

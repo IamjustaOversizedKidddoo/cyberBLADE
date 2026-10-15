@@ -51,6 +51,13 @@ async function seedUser(db: PGlite, uid: string, tag: string): Promise<Ids> {
       await one("req", `INSERT INTO public.soc_ai_human_review_requests(submission_id, user_id) VALUES ($1,$2) RETURNING id`, [ids.sub, uid]);
       await tx.query(`INSERT INTO public.soc_ai_calibration_consent(user_id, granted, consent_version) VALUES ($1,true,'c1')`, [uid]);
       await tx.query(`INSERT INTO public.soc_ai_usage_daily(usage_key, submissions_graded) VALUES ($1, 1)`, [`${uid}:2026-10-14`]);
+      // SOC exams (Stage 1); absent in the pre-hardening schema used by the regression test.
+      const hasExams = (await tx.query<{ t: string | null }>(`SELECT to_regclass('public.soc_exam_attempts')::text AS t`)).rows[0].t;
+      if (!hasExams) return;
+      await one("exam_att", `INSERT INTO public.soc_exam_attempts(user_id, format, config_version, variant_id, soc_attempt_id, seed, deadline_at) VALUES ($1,'alert-queue',1,'shift-quiet-day',$2,'EXAMSEED_${tag}', now() + interval '1 hour') RETURNING id`, [uid, ids.att]);
+      await one("exam_ans", `INSERT INTO public.soc_exam_answers(exam_attempt_id, user_id, item_id, answer) VALUES ($1,$2,'handoff','"my note"') RETURNING id`, [ids.exam_att, uid]);
+      await one("exam_out", `INSERT INTO public.soc_exam_outcome_reports(user_id, cert_family, exam_date, passed, consent_version) VALUES ($1,'soc-analyst','2026-10-01',true,'c1') RETURNING id`, [uid]);
+      await tx.query(`INSERT INTO public.soc_exam_accommodations(user_id, multiplier, reason, set_by) VALUES ($1, 1.5, 'documented need', 'admin-cli')`, [uid]);
     },
     true,
   );
@@ -76,8 +83,18 @@ const READABLE: Array<[string, (uid: string) => string]> = [
   ["soc_ai_criterion_grades", (u) => `user_id = '${u}'`],
   ["soc_ai_human_review_requests", (u) => `user_id = '${u}'`],
   ["soc_ai_calibration_consent", (u) => `user_id = '${u}'`],
+  ["soc_exam_attempts", (u) => `user_id = '${u}'`],
+  ["soc_exam_answers", (u) => `user_id = '${u}'`],
 ];
-const SERVICE_ONLY = ["soc_used_seeds", "soc_ai_raw_outputs", "soc_ai_grading_jobs", "soc_ai_review_items", "soc_ai_usage_daily"];
+const SERVICE_ONLY = [
+  "soc_used_seeds",
+  "soc_ai_raw_outputs",
+  "soc_ai_grading_jobs",
+  "soc_ai_review_items",
+  "soc_ai_usage_daily",
+  "soc_exam_outcome_reports",
+  "soc_exam_accommodations",
+];
 
 /** Column used for row counting (avoids SELECT * on column-granted tables). */
 const idCol = (t: string) => (t === "soc_ai_calibration_consent" ? "user_id" : "id");
@@ -144,6 +161,17 @@ describe("learners cannot write grading data (S1/S3)", () => {
     ["rank_challenges insert", (i) => `INSERT INTO public.rank_challenges(user_id, rank, lab_attempt_id, status) VALUES ('${A}',3,'${i.lab}','passed')`],
     ["soc_used_seeds insert", () => `INSERT INTO public.soc_used_seeds(user_id, family_id, seed) VALUES ('${A}','f','s')`],
     ["delete own evidence", (i) => `DELETE FROM public.soc_query_logs WHERE id='${i.qlog}'`],
+    // SOC exams: learners cannot write score, status, deadline, budget-relevant or seed columns
+    ["soc_exam_attempts score", (i) => `UPDATE public.soc_exam_attempts SET result='{"scorePercent":100}' WHERE id='${i.exam_att}'`],
+    ["soc_exam_attempts status", (i) => `UPDATE public.soc_exam_attempts SET status='submitted' WHERE id='${i.exam_att}'`],
+    ["soc_exam_attempts deadline", (i) => `UPDATE public.soc_exam_attempts SET deadline_at = now() + interval '9 hours' WHERE id='${i.exam_att}'`],
+    ["soc_exam_attempts time multiplier", (i) => `UPDATE public.soc_exam_attempts SET time_multiplier = 3 WHERE id='${i.exam_att}'`],
+    ["soc_exam_attempts insert", () => `INSERT INTO public.soc_exam_attempts(user_id, format, config_version, variant_id, seed, deadline_at) VALUES ('${A}','knowledge',1,'bank','s', now())`],
+    ["soc_exam_answers insert", (i) => `INSERT INTO public.soc_exam_answers(exam_attempt_id, user_id, item_id, answer) VALUES ('${i.exam_att}','${A}','k1','"x"')`],
+    ["soc_exam_answers update", (i) => `UPDATE public.soc_exam_answers SET answer='"y"' WHERE id='${i.exam_ans}'`],
+    ["soc_exam_outcome_reports insert", () => `INSERT INTO public.soc_exam_outcome_reports(user_id, cert_family, exam_date, passed, consent_version) VALUES ('${A}','x','2026-10-01',true,'c')`],
+    ["soc_exam_accommodations self-grant", () => `INSERT INTO public.soc_exam_accommodations(user_id, multiplier, reason, set_by) VALUES ('${A}', 3, 'me', 'me')`],
+    ["soc_start_exam_attempt from a learner", () => `SELECT public.soc_start_exam_attempt('${A}','knowledge',1,'bank',gen_random_uuid(),'s','{}',now(),now(),1,0,99,1)`],
   ];
 
   it.each(writes)("refuses: %s", async (_label, sql) => {
@@ -169,6 +197,8 @@ describe("secrets are not readable (S2)", () => {
     ["soc_used_seeds", `SELECT seed FROM public.soc_used_seeds`],
     ["raw AI outputs", `SELECT raw_text FROM public.soc_ai_raw_outputs`],
     ["prompt hashes", `SELECT prompt_hash FROM public.soc_ai_raw_outputs`],
+    ["soc_exam_attempts.seed", `SELECT seed FROM public.soc_exam_attempts`],
+    ["soc_exam_attempts SELECT *", `SELECT * FROM public.soc_exam_attempts`],
   ])("%s is refused", async (_l, sql) => {
     expect(await refused(db, asA, sql)).toMatch(/permission denied/);
   });
@@ -181,6 +211,7 @@ describe("secrets are not readable (S2)", () => {
     const risky = r.rows
       .filter((x) => /seed|truth|answer|raw_text|prompt|model_report|scenario_hash|reference/.test(x.c))
       .filter((x) => !(x.t === "soc_question_attempts" && x.c === "submitted_answer")) // the learner's own answer
+      .filter((x) => !(x.t === "soc_exam_answers" && (x.c === "answer" || x.c === "answered_at"))) // the learner's own exam answer and its time
       .filter((x) => x.c !== "prompt_version") // a version label such as "p1", not prompt text
       .map((x) => `${x.t}.${x.c}`);
     expect(risky).toEqual([]);
