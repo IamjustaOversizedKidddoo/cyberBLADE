@@ -7,6 +7,7 @@ import { logSecurityEvent } from "@/lib/security/audit-logger";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getAiGradingStore } from "@/lib/lab-engine/soc/ai-grading/runtime";
 import { buildLearnerExport } from "./learner-export";
+import { checkRateLimit } from "@/lib/progress/rate-limit";
 
 /**
  * Exports all data held for the authenticated operator as a JSON object (Right to Portability / Access).
@@ -14,6 +15,9 @@ import { buildLearnerExport } from "./learner-export";
 export async function exportUserDataAction() {
   const operator = await requireOperator();
   const ctx = getCtx();
+  if (!checkRateLimit(`data_export:${operator.id}`, 5, 3_600_000).allowed) {
+    throw new Error("You can export your data a few times per hour. Please try again later.");
+  }
 
   // Allowlisted per table (S6): no seeds, scenario hashes, ground truth, raw AI outputs or prompts.
   const progress = await buildLearnerExport(ctx, operator.id, await getAiGradingStore().exportUserData(operator.id));

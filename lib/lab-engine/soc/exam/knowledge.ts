@@ -90,11 +90,18 @@ export function drawKnowledgeItems(bank: KnowledgeBank, count: number, seed: str
   return [...unseen, ...seenItems].slice(0, Math.min(count, bank.items.length)).map((it) => it.id);
 }
 
-const optionId = (seed: string, itemId: string, index: number) => `o${h("opt", seed, itemId, String(index)).slice(0, 10)}`;
+/**
+ * Opaque per-exam key for an item. Bank ids name their topic (and sometimes the answer, e.g. an
+ * event id), so they never leave the server: the learner, the stored answers and the export see
+ * only this key.
+ */
+export const examItemKey = (seed: string, itemId: string) => `q${h("item", seed, itemId).slice(0, 12)}`;
+
+const optionId =(seed: string, itemId: string, index: number) => `o${h("opt", seed, itemId, String(index)).slice(0, 10)}`;
 
 export function knowledgeItemView(item: KnowledgeItem, seed: string): KnowledgeItemView {
   const options = item.options.map((text, i) => ({ id: optionId(seed, item.id, i), text }));
-  return { id: item.id, type: item.type, stem: item.stem, log: item.log ?? null, options: seededOrder(options, seed, (o) => `${item.id}:${o.id}`) };
+  return { id: examItemKey(seed, item.id), type: item.type, stem: item.stem, log: item.log ?? null, options: seededOrder(options, seed, (o) => `${item.id}:${o.id}`) };
 }
 
 /** Maps option ids back to indices; unknown ids make the answer wrong, never an error. */

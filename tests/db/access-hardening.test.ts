@@ -199,6 +199,12 @@ describe("secrets are not readable (S2)", () => {
     ["prompt hashes", `SELECT prompt_hash FROM public.soc_ai_raw_outputs`],
     ["soc_exam_attempts.seed", `SELECT seed FROM public.soc_exam_attempts`],
     ["soc_exam_attempts SELECT *", `SELECT * FROM public.soc_exam_attempts`],
+    // L1-A-04 / L1-A-02: no correctness oracle or scenario identity during an exam
+    ["soc_question_attempts.is_correct", `SELECT is_correct FROM public.soc_question_attempts`],
+    ["soc_question_attempts SELECT *", `SELECT * FROM public.soc_question_attempts`],
+    ["soc_attempts.family_id", `SELECT family_id FROM public.soc_attempts`],
+    ["soc_exam_attempts.variant_id", `SELECT variant_id FROM public.soc_exam_attempts`],
+    ["soc_exam_attempts.item_ids", `SELECT item_ids FROM public.soc_exam_attempts`],
   ])("%s is refused", async (_l, sql) => {
     expect(await refused(db, asA, sql)).toMatch(/permission denied/);
   });

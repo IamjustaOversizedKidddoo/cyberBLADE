@@ -51,7 +51,7 @@ export async function getSocExamStateAction(examId: string): Promise<ExamStateVi
 export async function saveSocExamAnswerAction(examId: string, itemId: string, answer: string[]): Promise<{ saved: true }> {
   assertEnabled();
   const operator = await requireOperator();
-  return saveKnowledgeAnswer(getCtx(), operator.id, examIdSchema.parse(examId), z.string().regex(/^kb-[a-z0-9-]{1,60}$/).parse(itemId), z.array(z.string().max(24)).max(8).parse(answer));
+  return saveKnowledgeAnswer(getCtx(), operator.id, examIdSchema.parse(examId), z.string().regex(/^q[0-9a-f]{12}$/).parse(itemId), z.array(z.string().max(24)).max(8).parse(answer));
 }
 
 export async function saveSocExamHandoffAction(examId: string, text: string): Promise<{ saved: true }> {

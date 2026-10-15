@@ -18,8 +18,14 @@ export async function buildLearnerExport(ctx: Ctx, userId: string, aiFeedback: A
     ctx.repo.listExamReports(userId),
   ]);
 
+  // Exam attempts: exam answers are marked only in the exam result, and nothing that identifies
+  // the scenario or its correctness is exported while the exam is running (L1-A-05).
+  const examBySocAttempt = new Map((await ctx.repo.listSocExamAttempts(userId)).filter((e) => e.socAttemptId).map((e) => [e.socAttemptId!, e]));
+
   const soc = await Promise.all(
     socAttempts.map(async (a) => {
+      const exam = examBySocAttempt.get(a.id);
+      const examRunning = exam?.status === "active" || (!exam && a.scenarioId.startsWith("exam-"));
       const [decisions, cases, queries, questions, lookups, reports] = await Promise.all([
         ctx.repo.listSocDecisions(a.id),
         ctx.repo.listSocCases(a.id),
@@ -32,16 +38,16 @@ export async function buildLearnerExport(ctx: Ctx, userId: string, aiFeedback: A
       const s = a.scoreSummary;
       return {
         attemptId: a.id,
-        scenarioId: a.scenarioId,
+        scenarioId: exam || examRunning ? "exam" : a.scenarioId,
         status: a.status,
         startedAt: a.startedAt,
         submittedAt: a.submittedAt,
         difficulty: a.difficulty ?? null,
-        score: s ? { totalScore: s.totalScore, maxScore: s.maxScore, percentage: s.percentage, passed: s.passed, alertsDecided: s.alertsDecided, alertsTotal: s.alertsTotal } : null,
+        score: s && !examRunning ? { totalScore: s.totalScore, maxScore: s.maxScore, percentage: s.percentage, passed: s.passed, alertsDecided: s.alertsDecided, alertsTotal: s.alertsTotal } : null,
         decisions: decisions.map((d) => ({ alertId: d.alertId, disposition: d.disposition, severity: d.severity, escalate: d.escalate, targetTier: d.targetTier ?? null, rationale: d.rationale, evidenceRefs: d.evidenceRefs ?? [], createdAt: d.createdAt })),
         cases: cases.map((c) => ({ title: c.title, status: c.status, notes: c.notes ?? "", alertIds: c.alertIds ?? [], createdAt: c.createdAt })),
         queries: queries.map((q) => ({ query: q.queryText, resultRowCount: q.resultRowCount, createdAt: q.createdAt })),
-        questionAnswers: questions.map((q) => ({ questionId: q.questionId, answer: q.submittedAnswer, correct: q.isCorrect, createdAt: q.createdAt })),
+        questionAnswers: questions.map((q) => ({ questionId: q.questionId, answer: q.submittedAnswer, correct: exam || examRunning ? null : q.isCorrect, createdAt: q.createdAt })),
         enrichmentLookups: lookups.map((l) => ({ tool: l.tool, entityType: l.entityType, entityValue: l.entityValue, createdAt: l.createdAt })),
         reports: reports.map((r, i) => {
           const ev = evaluations[i];
@@ -75,7 +81,7 @@ export async function buildLearnerExport(ctx: Ctx, userId: string, aiFeedback: A
     examAttempts.map(async (e) => ({
       examId: e.id,
       format: e.format,
-      variantId: e.variantId,
+      variantId: e.status === "active" ? null : e.variantId,
       status: e.status,
       submitReason: e.submitReason,
       startedAt: e.startedAt,

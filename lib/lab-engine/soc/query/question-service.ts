@@ -56,9 +56,11 @@ export async function getQueryWorkspace(ctx: Ctx, userId: string, attemptId: str
     });
     return { questions, fields: [...dataset.fields], sources: [...dataset.sources], eventCount: dataset.eventCount, scenarioNowIso: last };
   }
+  // A submitted exam's answers were stored unmarked: mark them now, for the learner's own review.
+  const marked = isExamSocAttempt(attempt) ? markExamAnswers(history, serverTruths) : history;
 
   const questions = learnerQuestions.map((q) => {
-    const s = stateFor(history.filter((h) => h.questionId === q.id));
+    const s = stateFor(marked.filter((h) => h.questionId === q.id));
     const reveal = s.status === "correct" || s.status === "locked";
     const truth = serverTruths.find((t) => t.id === q.id);
     return {
@@ -111,7 +113,7 @@ async function evaluate(
   const truth = serverTruths.find((t) => t.id === input.questionId);
   if (!truth) throw new Error("Unknown question.");
 
-  if (isExamSocAttempt(attempt)) return recordExamAnswer(ctx, userId, attempt, input, truth);
+  if (isExamSocAttempt(attempt)) return recordExamAnswer(ctx, userId, attempt, input);
 
   const history = (await ctx.repo.listSocQuestionAttempts(attempt.id)).filter((h) => h.questionId === input.questionId);
   const before = stateFor(history);
@@ -161,7 +163,6 @@ async function recordExamAnswer(
   userId: string,
   attempt: SocAttemptRecord,
   input: { attemptId: string; questionId: string; answer: AnswerValue },
-  truth: Parameters<typeof verifyAnswer>[1],
 ): Promise<QuestionSubmissionResult> {
   const release = await reserveExamBudget(ctx, attempt, "questionAnswers");
   try {
@@ -171,7 +172,9 @@ async function recordExamAnswer(
       userId,
       questionId: input.questionId,
       submittedAnswer: JSON.stringify(input.answer).slice(0, 500),
-      isCorrect: verifyAnswer(input.answer, truth).isCorrect,
+      // Never marked while the exam runs: the stored flag is readable through the export and (in
+      // hosted mode) the database, so it would be an oracle. Marking happens at submission.
+      isCorrect: false,
       attemptsUsed: history.length + 1,
       hintsUsed: 0,
     });
@@ -179,6 +182,23 @@ async function recordExamAnswer(
     release();
   }
   return { questionId: input.questionId, isCorrect: false, attemptsLeft: 0, status: "recorded", pointsAwarded: 0, debrief: null, referenceQuery: null };
+}
+
+/** Marks stored exam answers against the server truths (used only after the exam is submitted). */
+export function markExamAnswers(
+  history: SocQuestionAttemptRecord[],
+  truths: Array<Parameters<typeof verifyAnswer>[1] & { id: string }>,
+): SocQuestionAttemptRecord[] {
+  return history.map((h) => {
+    const truth = truths.find((t) => t.id === h.questionId);
+    let answer: AnswerValue | null = null;
+    try {
+      answer = JSON.parse(h.submittedAnswer) as AnswerValue;
+    } catch {
+      answer = null;
+    }
+    return { ...h, isCorrect: !!truth && answer !== null && verifyAnswer(answer, truth).isCorrect };
+  });
 }
 
 function key(input: { attemptId: string; questionId: string }): string {

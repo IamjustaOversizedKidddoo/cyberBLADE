@@ -9,7 +9,10 @@ import { executeInvestigationQuery } from "@/lib/lab-engine/soc/query/pipeline";
 import { executeEnrichmentLookup } from "@/lib/lab-engine/soc/enrichment/pipeline";
 import { getSocReportModelReveal, saveSocReportDraft, submitSocReport } from "@/lib/lab-engine/soc/report-engine";
 import { getExamState, saveHandoffNote, saveKnowledgeAnswer, startExam, submitExam } from "@/lib/lab-engine/soc/exam/service";
-import { knowledgeItemReview, loadKnowledgeBank } from "@/lib/lab-engine/soc/exam/knowledge";
+import { examItemKey, knowledgeItemReview, loadKnowledgeBank } from "@/lib/lab-engine/soc/exam/knowledge";
+
+/** Server-side lookup a test may do: which bank item sits behind an opaque per-exam key. */
+const itemFor = (seed: string, key: string) => loadKnowledgeBank().items.find((i) => examItemKey(seed, i.id) === key)!;
 import { sampleReport } from "../ai-grading/helpers";
 import type { Ctx } from "@/lib/progress/service";
 
@@ -112,7 +115,7 @@ describe("no correctness feedback before submission", () => {
     const bank = loadKnowledgeBank();
     const correct = s.knowledgeItems!.slice(0, 20);
     for (const v of correct) {
-      const item = bank.items.find((i) => i.id === v.id)!;
+      const item = itemFor(seed, v.id);
       expect(await saveKnowledgeAnswer(ctx, U, s.examId, v.id, knowledgeItemReview(item, seed).correctOptionIds)).toEqual({ saved: true });
     }
     await saveKnowledgeAnswer(ctx, U, s.examId, s.knowledgeItems![20].id, ["oforged"]);
@@ -184,8 +187,8 @@ describe("attempts, seeds and idempotency", () => {
     later(clock, 61);
     const second = await startExam(ctx, U, "knowledge");
     const bankSize = loadKnowledgeBank().items.length;
-    const firstIds = new Set(first.knowledgeItems!.map((i) => i.id));
-    const fresh = second.knowledgeItems!.filter((i) => !firstIds.has(i.id)).length;
+    const firstIds = new Set((await ctx.repo.getSocExamAttempt(first.examId))!.itemIds);
+    const fresh = (await ctx.repo.getSocExamAttempt(second.examId))!.itemIds.filter((id) => !firstIds.has(id)).length;
     expect(fresh).toBe(Math.min(25, bankSize - 25));
   });
 
@@ -195,7 +198,7 @@ describe("attempts, seeds and idempotency", () => {
     const s = await startExam(ctx, U, "knowledge");
     const seed = (await ctx.repo.getSocExamAttempt(s.examId))!.seed;
     const bank = loadKnowledgeBank();
-    for (const v of s.knowledgeItems!) await saveKnowledgeAnswer(ctx, U, s.examId, v.id, knowledgeItemReview(bank.items.find((i) => i.id === v.id)!, seed).correctOptionIds);
+    for (const v of s.knowledgeItems!) await saveKnowledgeAnswer(ctx, U, s.examId, v.id, knowledgeItemReview(itemFor(seed, v.id), seed).correctOptionIds);
     const results = await Promise.all([submitExam(ctx, U, s.examId), submitExam(ctx, U, s.examId), submitExam(ctx, U, s.examId)]);
     expect(new Set(results.map((r) => JSON.stringify(r.result))).size).toBe(1);
     const xp = (await ctx.repo.listXpEvents(U)).filter((e) => e.source === `soc_exam:${s.examId}`);
@@ -230,8 +233,12 @@ describe("adversarial inputs", () => {
     const clock = { t: T0 };
     const ctx = makeCtx(clock);
     const s = await startExam(ctx, U, "knowledge");
-    const notDrawn = loadKnowledgeBank().items.find((i) => !s.knowledgeItems!.some((v) => v.id === i.id));
-    if (notDrawn) await expect(saveKnowledgeAnswer(ctx, U, s.examId, notDrawn.id, [])).rejects.toThrow("Unknown exam item");
+    const seed = (await ctx.repo.getSocExamAttempt(s.examId))!.seed;
+    const drawn = (await ctx.repo.getSocExamAttempt(s.examId))!.itemIds;
+    const notDrawn = loadKnowledgeBank().items.find((i) => !drawn.includes(i.id));
+    if (notDrawn) await expect(saveKnowledgeAnswer(ctx, U, s.examId, examItemKey(seed, notDrawn.id), [])).rejects.toThrow("Unknown exam item");
+    // A raw bank id is not accepted either.
+    await expect(saveKnowledgeAnswer(ctx, U, s.examId, drawn[0], [])).rejects.toThrow("Unknown exam item");
     await expect(saveHandoffNote(ctx, U, s.examId, "note")).rejects.toThrow("no handoff note");
   });
 

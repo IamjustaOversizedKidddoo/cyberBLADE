@@ -14,12 +14,13 @@ import { composeShiftScenario } from "../shift-composer";
 import { generateSocVariant, computeScenarioHash, GENERATOR_VERSION } from "../generator";
 import { evaluateSocAttempt } from "../evaluator";
 import { generateScenarioQuestions } from "../query/questions";
+import { markExamAnswers } from "../query/question-service";
 import { submitSocReportGraded } from "../report-engine";
 import type { SocAttemptRecord } from "../types";
 import type { GradingResult } from "../reports/types";
 import { loadExamConfig, type SocExamFormatConfig } from "./config";
 import { EXAM_SCENARIO_PREFIX, examBudgetLimit, examBudgetUsed, examTimeIsOver } from "./guard";
-import { drawKnowledgeItems, gradeKnowledgeAnswer, knowledgeItemReview, knowledgeItemView, loadKnowledgeBank, type KnowledgeAnswer, type KnowledgeItemView } from "./knowledge";
+import { drawKnowledgeItems, examItemKey, gradeKnowledgeAnswer, knowledgeItemReview, knowledgeItemView, loadKnowledgeBank, type KnowledgeAnswer, type KnowledgeItemView } from "./knowledge";
 import { buildExamResult } from "./results";
 import { SOC_EXAM_FORMATS, type SocExamAttemptRecord, type SocExamBudgetKind, type SocExamFormat, type SocExamResult } from "./types";
 
@@ -183,14 +184,15 @@ export async function getExamState(ctx: Ctx, userId: string, examId: string): Pr
     const bank = loadKnowledgeBank();
     const items = exam.itemIds.map((id) => bank.items.find((i) => i.id === id)).filter((i) => !!i);
     knowledgeItems = items.map((item) => {
-      const saved = answerFor(item.id);
+      const saved = answerFor(examItemKey(exam.seed, item.id));
       return { ...knowledgeItemView(item, exam.seed), savedAnswer: Array.isArray(saved) ? (saved as string[]) : null };
     });
     if (exam.status === "submitted") {
       knowledgeReview = Object.fromEntries(
         items.map((item) => {
-          const saved = answerFor(item.id);
-          return [item.id, { ...knowledgeItemReview(item, exam.seed), correct: gradeKnowledgeAnswer(item, exam.seed, Array.isArray(saved) ? (saved as string[]) : null) }];
+          const key = examItemKey(exam.seed, item.id);
+          const saved = answerFor(key);
+          return [key, { ...knowledgeItemReview(item, exam.seed), correct: gradeKnowledgeAnswer(item, exam.seed, Array.isArray(saved) ? (saved as string[]) : null) }];
         }),
       );
     }
@@ -225,9 +227,11 @@ async function assertAnswerable(ctx: Ctx, userId: string, examId: string): Promi
 }
 
 /** Saves (or replaces) a knowledge answer. The response never says whether it is right. */
-export async function saveKnowledgeAnswer(ctx: Ctx, userId: string, examId: string, itemId: string, answer: KnowledgeAnswer): Promise<{ saved: true }> {
+export async function saveKnowledgeAnswer(ctx: Ctx, userId: string, examId: string, itemKey: string, answer: KnowledgeAnswer): Promise<{ saved: true }> {
   const exam = await assertAnswerable(ctx, userId, examId);
-  if (exam.format !== "knowledge" || !exam.itemIds.includes(itemId)) throw new Error("Unknown exam item");
+  // The learner only knows the opaque per-exam key; the answer is stored under that key too.
+  const itemId = exam.format === "knowledge" && exam.itemIds.some((id) => examItemKey(exam.seed, id) === itemKey) ? itemKey : null;
+  if (!itemId) throw new Error("Unknown exam item");
   if (!Array.isArray(answer) || answer.length > 8 || answer.some((a) => typeof a !== "string" || a.length > 24)) throw new Error("Invalid answer");
   await ctx.repo.saveSocExamAnswer({ examAttemptId: exam.id, userId, itemId, answer: JSON.stringify(answer), answeredAt: ctx.now().toISOString() });
   return { saved: true };
@@ -290,7 +294,7 @@ async function finalizeOnce(ctx: Ctx, examId: string, reason: "learner" | "deadl
     input.knowledge = exam.itemIds.flatMap((id) => {
       const item = bank.items.find((i) => i.id === id);
       if (!item) return [];
-      const a = answers.find((x) => x.itemId === id);
+      const a = answers.find((x) => x.itemId === examItemKey(exam.seed, id));
       const parsed = a ? parseAnswer(a.answer) : null;
       return [{ item, correct: gradeKnowledgeAnswer(item, exam.seed, Array.isArray(parsed) ? (parsed as string[]) : null), answeredAt: a?.answeredAt ?? null }];
     });
@@ -322,7 +326,10 @@ async function finalizeOnce(ctx: Ctx, examId: string, reason: "learner" | "deadl
     }
 
     const searchOn = isSocQueryEnabled() && (f.budgets.questionAnswers ?? 0) > 0;
-    const questionsTotal = searchOn ? generateScenarioQuestions(scenario, attempt.seed, attempt.familyId ?? attempt.scenarioId).learnerQuestions.length : null;
+    const questionSet = generateScenarioQuestions(scenario, attempt.seed, attempt.familyId ?? attempt.scenarioId);
+    const questionsTotal = searchOn ? questionSet.learnerQuestions.length : null;
+    // Answers were stored unmarked during the exam; mark them here, at submission.
+    const markedAnswers = markExamAnswers(inTime(questionAttempts), questionSet.serverTruths);
     const handoff = answers.find((a) => a.itemId === HANDOFF_ITEM_ID);
     const handoffParsed = handoff ? parseAnswer(handoff.answer) : null;
 
@@ -335,7 +342,7 @@ async function finalizeOnce(ctx: Ctx, examId: string, reason: "learner" | "deadl
       activity: {
         queries: inTime(queries).map((q) => q.createdAt!).filter(Boolean),
         lookups: inTime(lookups).map((l) => ({ at: l.createdAt!, entity: l.entityValue })),
-        questionAnswers: inTime(questionAttempts).map((q) => ({ at: q.createdAt!, questionId: q.questionId, isCorrect: q.isCorrect })),
+        questionAnswers: markedAnswers.map((q) => ({ at: q.createdAt!, questionId: q.questionId, isCorrect: q.isCorrect })),
       },
       questionsTotal,
       report,

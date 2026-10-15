@@ -38,7 +38,7 @@ describe("exam actions", () => {
     await expect(submitSocExamAction(s.examId)).rejects.toThrow("not found");
     await expect(getSocExamStateAction("../../etc/passwd")).rejects.toThrow();
     await expect(startSocExamAction("final-boss")).rejects.toThrow();
-    await expect(saveSocExamAnswerAction(s.examId, "kb-win-4625", ["x".repeat(500)])).rejects.toThrow();
+    await expect(saveSocExamAnswerAction(s.examId, "kb-win-4625", ["a"])).rejects.toThrow();
   });
 
   it("are off when their flags are off", async () => {
