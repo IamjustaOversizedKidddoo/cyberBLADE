@@ -18,9 +18,11 @@ import {
 
 interface Props {
   session: SocSessionClient;
+  /** Exam mode: "submit" saves the draft; the latest saved draft is graded when the exam is submitted. */
+  examMode?: boolean;
 }
 
-export function SocReportWorkspace({ session }: Props) {
+export function SocReportWorkspace({ session, examMode = false }: Props) {
   const { scenario, attempt } = session;
   const isSubmitted = attempt.status === "submitted";
 
@@ -88,6 +90,10 @@ export function SocReportWorkspace({ session }: Props) {
 
   const handleSubmit = async (data: SocReportData) => {
     setReport(data);
+    if (examMode && !isSubmitted) {
+      await saveSocReportDraftAction(attempt.id, data);
+      return;
+    }
     const subRes = await submitSocReportAction(attempt.id, data);
     setGradingResult(subRes.gradingResult);
     setViewMode("scorecard");
@@ -103,6 +109,11 @@ export function SocReportWorkspace({ session }: Props) {
 
   return (
     <div className="flex h-full min-w-0 w-full flex-col font-mono text-xs bg-canvas text-ink">
+      {examMode && !isSubmitted && (
+        <p className="border-b border-line bg-surface px-4 py-2 font-sans text-sm text-secondary">
+          Exam: save your draft as you go. Your latest saved draft is graded when you submit the exam; there is no separate report submission and no feedback before then.
+        </p>
+      )}
       {/* Sub-navigation bar when evaluated */}
       {gradingResult && (
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-surface px-4 py-2">
