@@ -4,6 +4,8 @@ import type { Ctx } from "@/lib/progress/service";
 import { checkRateLimit } from "@/lib/progress/rate-limit";
 import { resolveScenarioForAttempt } from "../engine";
 import { canonicalizeEntity } from "./detector";
+import type { SocAttemptRecord } from "../types";
+import { assertExamWritable, reserveExamBudget } from "../exam/guard";
 import { generateEnrichment } from "./generator";
 import {
   enrichmentLookupInputSchema,
@@ -79,6 +81,23 @@ export async function executeEnrichmentLookup(
     );
   }
 
+  // Exam attempts: deadline always; a new (non-duplicate) lookup also uses the exam's budget.
+  const release = isDuplicate ? (await assertExamWritable(ctx, attempt), () => undefined) : await reserveExamBudget(ctx, attempt, "lookups");
+  try {
+    return await runLookup(ctx, userId, input, options, { attempt, canonicalValue, isDuplicate, existingLookups, startTime });
+  } finally {
+    release();
+  }
+}
+
+async function runLookup(
+  ctx: Ctx,
+  userId: string,
+  input: EnrichmentLookupInput,
+  options: EnrichmentPipelineOptions,
+  st: { attempt: SocAttemptRecord; canonicalValue: string; isDuplicate: boolean; existingLookups: SocEnrichmentLookupRecord[]; startTime: number },
+): Promise<EnrichmentLookupResponse> {
+  const { attempt, canonicalValue, isDuplicate, existingLookups, startTime } = st;
   // 5. Load scenario deterministically for this attempt
   const scenario = await resolveScenarioForAttempt(attempt);
 

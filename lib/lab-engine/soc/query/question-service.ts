@@ -18,6 +18,7 @@ import {
   type QuestionSubmissionResult,
 } from "./question-model";
 import { generateScenarioQuestions, verifyAnswer } from "./questions";
+import { isExamSocAttempt, reserveExamBudget } from "../exam/guard";
 
 /** Every answer response takes at least this long, right or wrong (no timing oracle). */
 export const ANSWER_RESPONSE_FLOOR_MS = 250;
@@ -45,6 +46,16 @@ export async function getQueryWorkspace(ctx: Ctx, userId: string, attemptId: str
   const { scenario, learnerQuestions, serverTruths } = await questionSet(attempt);
   const dataset = investigationDataset(scenario, attempt.seed);
   const history = await ctx.repo.listSocQuestionAttempts(attempt.id);
+  const last = new Date(datasetEndMs(dataset.events)).toISOString();
+
+  if (isExamSocAttempt(attempt) && attempt.status === "in_progress") {
+    // Exam mode: answers are recorded, never marked, and nothing is revealed before submission.
+    const questions = learnerQuestions.map((q) => {
+      const answered = history.some((h) => h.questionId === q.id);
+      return { ...q, status: answered ? ("recorded" as const) : ("unanswered" as const), attemptsLeft: q.maxAttempts, debrief: null, referenceQuery: null };
+    });
+    return { questions, fields: [...dataset.fields], sources: [...dataset.sources], eventCount: dataset.eventCount, scenarioNowIso: last };
+  }
 
   const questions = learnerQuestions.map((q) => {
     const s = stateFor(history.filter((h) => h.questionId === q.id));
@@ -58,7 +69,6 @@ export async function getQueryWorkspace(ctx: Ctx, userId: string, attemptId: str
       referenceQuery: reveal ? (truth?.referenceQuery ?? null) : null,
     };
   });
-  const last = new Date(datasetEndMs(dataset.events)).toISOString();
   return { questions, fields: [...dataset.fields], sources: [...dataset.sources], eventCount: dataset.eventCount, scenarioNowIso: last };
 }
 
@@ -101,6 +111,8 @@ async function evaluate(
   const truth = serverTruths.find((t) => t.id === input.questionId);
   if (!truth) throw new Error("Unknown question.");
 
+  if (isExamSocAttempt(attempt)) return recordExamAnswer(ctx, userId, attempt, input, truth);
+
   const history = (await ctx.repo.listSocQuestionAttempts(attempt.id)).filter((h) => h.questionId === input.questionId);
   const before = stateFor(history);
   if (before.status === "correct" || before.status === "locked") {
@@ -137,6 +149,36 @@ async function evaluate(
     debrief: reveal ? truth.debrief : null,
     referenceQuery: reveal ? truth.referenceQuery : null,
   };
+}
+
+/**
+ * Exam mode: the answer is stored (the latest answer per question counts at submission) and the
+ * response is the same for right and wrong answers. Each save uses one unit of the exam's
+ * question-answer budget.
+ */
+async function recordExamAnswer(
+  ctx: Ctx,
+  userId: string,
+  attempt: SocAttemptRecord,
+  input: { attemptId: string; questionId: string; answer: AnswerValue },
+  truth: Parameters<typeof verifyAnswer>[1],
+): Promise<QuestionSubmissionResult> {
+  const release = await reserveExamBudget(ctx, attempt, "questionAnswers");
+  try {
+    const history = (await ctx.repo.listSocQuestionAttempts(attempt.id)).filter((h) => h.questionId === input.questionId);
+    await ctx.repo.saveSocQuestionAttempt({
+      attemptId: attempt.id,
+      userId,
+      questionId: input.questionId,
+      submittedAnswer: JSON.stringify(input.answer).slice(0, 500),
+      isCorrect: verifyAnswer(input.answer, truth).isCorrect,
+      attemptsUsed: history.length + 1,
+      hintsUsed: 0,
+    });
+  } finally {
+    release();
+  }
+  return { questionId: input.questionId, isCorrect: false, attemptsLeft: 0, status: "recorded", pointsAwarded: 0, debrief: null, referenceQuery: null };
 }
 
 function key(input: { attemptId: string; questionId: string }): string {

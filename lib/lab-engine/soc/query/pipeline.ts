@@ -7,6 +7,8 @@ import { executeBladeQL } from "./engine";
 import { BLADEQL_VERSION } from "./ast";
 import type { BladeQLEvent, QueryExecutionResult } from "./types";
 import { investigationDataset } from "./investigation-dataset";
+import type { SocAttemptRecord } from "../types";
+import { reserveExamBudget } from "../exam/guard";
 
 export const queryInputSchema = z.object({
   attemptId: z.string().min(1),
@@ -51,6 +53,16 @@ export async function executeInvestigationQuery(
     throw new Error(`Query rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
   }
 
+  // Exam attempts: deadline and per-exam search budget (no-op for practice).
+  const release = await reserveExamBudget(ctx, attempt, "queries");
+  try {
+    return await runQuery(ctx, userId, input, attempt);
+  } finally {
+    release();
+  }
+}
+
+async function runQuery(ctx: Ctx, userId: string, input: QueryInput, attempt: SocAttemptRecord): Promise<QueryResponse> {
   // 3. Resolve scenario deterministically
   const scenario = await resolveScenarioForAttempt(attempt);
 

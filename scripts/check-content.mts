@@ -112,6 +112,30 @@ async function main(): Promise<number> {
     }
   }
 
+  // SOC exams (Stage 1): config, readiness thresholds, knowledge bank and its claims rows.
+  try {
+    const { loadExamConfig, loadReadinessConfig } = await import("@/lib/lab-engine/soc/exam/config");
+    const { loadKnowledgeBank } = await import("@/lib/lab-engine/soc/exam/knowledge");
+    const examConfig = loadExamConfig();
+    loadReadinessConfig();
+    const bank = loadKnowledgeBank();
+    for (const [format, f] of Object.entries(examConfig.formats)) {
+      for (const v of f.variants ?? []) {
+        const file = `content/soc/${v.startsWith("shift-") ? "shifts" : "families"}/${v}.yaml`;
+        await fs.access(file).catch(() => errors.push(`exam format ${format}: variant ${v} has no ${file}`));
+      }
+      if (f.itemCount && f.itemCount > bank.items.length) errors.push(`exam format ${format}: itemCount ${f.itemCount} exceeds the bank (${bank.items.length})`);
+    }
+    const claims = await fs.readFile("docs/ops/soc-curriculum-claims.md", "utf8");
+    for (const item of bank.items) {
+      const row = claims.split("\n").find((l) => l.startsWith(`| ${item.claim} |`));
+      if (!row) errors.push(`knowledge item ${item.id}: claim ${item.claim} has no row in docs/ops/soc-curriculum-claims.md`);
+      else if (!/\|\s*certain\b/.test(row)) errors.push(`knowledge item ${item.id}: claim ${item.claim} is not recorded as certain`);
+    }
+  } catch (err) {
+    errors.push(`failed to check soc exams: ${(err as Error).message}`);
+  }
+
   errors.push(...result.errors);
 
   // SOC L1 track lessons: template, leak scan, indicators, time, prerequisites, coverage, cards.
