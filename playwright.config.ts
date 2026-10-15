@@ -21,6 +21,8 @@ export default defineConfig({
       SOC_WORKSPACE_ENABLED: "true",
       SOC_ENRICHMENT_ENABLED: "true",
       SOC_QUERY_ENABLED: "true",
+      SOC_EXAMS_ENABLED: "true",
+      SOC_HANDLER_ENABLED: "true",
       // AI writing feedback in preview with a deterministic local mock (never a real provider).
       SOC_AI_GRADING_MODE: "preview",
       SOC_AI_PROVIDER: "mock-e2e",

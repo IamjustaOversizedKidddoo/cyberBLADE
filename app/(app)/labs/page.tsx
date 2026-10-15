@@ -5,7 +5,8 @@ import { listLabs } from "@/lib/lab-engine/labs";
 import { getLessons } from "@/lib/content/lessons";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
-import { isSocWorkspaceEnabled } from "@/lib/config/env";
+import Link from "next/link";
+import { isSocExamsEnabled, isSocWorkspaceEnabled } from "@/lib/config/env";
 
 export const metadata: Metadata = { title: "Tactical Labs Range · CyberBLADE" };
 
@@ -59,6 +60,12 @@ export default async function LabsIndexPage() {
         kicker={`> BROWSE & DEPLOY · ${rawLabs.length} SIMULATED LABS · TERMINAL / PACKET / WEBAPP / SIEM / SOC`}
       />
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+        {socEnabled && isSocExamsEnabled() && (
+          <p className="mb-8 flex flex-wrap items-center gap-3 rounded-xs border border-line bg-surface p-4 font-sans text-sm text-secondary">
+            <span>Ready to test yourself under time? SOC practice exams are timed, unproctored and provisional.</span>
+            <Link href="/labs/soc/exams" className="inline-flex min-h-[44px] items-center rounded-xs border border-cyan px-4 font-ui text-cyan hover:bg-cyan/15">Open practice exams</Link>
+          </p>
+        )}
         <LabsDirectory labs={labSummaries} operatorRank={operator.rank} />
       </div>
     </main>

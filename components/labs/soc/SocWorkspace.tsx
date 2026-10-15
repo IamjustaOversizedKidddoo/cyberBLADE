@@ -19,15 +19,22 @@ import { IconClock, IconShield } from "@/components/ui/icons";
 import { SocSearchTab } from "./search/SocSearchTab";
 import { SocReportWorkspace } from "./reports/SocReportWorkspace";
 
+/** Exam mode (Stage 1): the exam page owns submission and the timer; practice feedback stays hidden. */
+export type SocWorkspaceExamMode = {
+  onRequestSubmit: () => void;
+  searchEnabled: boolean;
+};
+
 type Props = {
   session: SocSessionClient;
   onExit?: () => void;
+  exam?: SocWorkspaceExamMode;
 };
 
 type WorkspaceView = "triage" | "search" | "report";
 type MobileTab = "queue" | "detail" | "cases" | "search" | "tools" | "report";
 
-export function SocWorkspace({ session, onExit }: Props) {
+export function SocWorkspace({ session, onExit, exam }: Props) {
   const { scenario, attempt: initialAttempt } = session;
 
   const [attemptStatus, setAttemptStatus] = useState(initialAttempt.status);
@@ -297,7 +304,17 @@ export function SocWorkspace({ session, onExit }: Props) {
           </button>
 
           {/* Status Indicator */}
-          {attemptStatus === "submitted" ? (
+          {exam ? (
+            attemptStatus === "in_progress" && (
+              <button
+                type="button"
+                onClick={exam.onRequestSubmit}
+                className="rounded-xs border border-cyan bg-cyan/20 px-3.5 py-1 text-xs font-bold text-cyan hover:bg-cyan/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan min-h-[32px]"
+              >
+                Submit exam ({decidedCount}/{scenario.alerts.length} triaged)
+              </button>
+            )
+          ) : attemptStatus === "submitted" ? (
             <button
               type="button"
               onClick={() => setIsResultsOpen(true)}
@@ -420,7 +437,11 @@ export function SocWorkspace({ session, onExit }: Props) {
       {/* Main Workspace Body */}
       {workspaceView === "report" ? (
         <main className="flex-1 flex overflow-hidden">
-          <SocReportWorkspace session={session} />
+          <SocReportWorkspace session={session} examMode={Boolean(exam)} />
+        </main>
+      ) : workspaceView === "search" && exam && !exam.searchEnabled ? (
+        <main className="flex-1 p-6 text-sm text-secondary">
+          <p className="max-w-prose">Log search and investigation questions are switched off for this exam. Work from the alert details and the investigation tools; the questions part is shown as not graded.</p>
         </main>
       ) : workspaceView === "search" ? (
         <main className="flex-1 flex overflow-hidden">

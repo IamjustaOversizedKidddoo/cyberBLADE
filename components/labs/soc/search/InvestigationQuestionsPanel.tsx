@@ -156,7 +156,7 @@ export function InvestigationQuestionsPanel({
                   Q{idx + 1}. {q.type.toUpperCase()}
                 </span>
                 <span className="text-[10px] text-muted shrink-0">
-                  {q.points} pts • {q.attemptsLeft} tries
+                  {q.points} pts{q.status === "recorded" ? " • answer saved" : ` • ${q.attemptsLeft} tries`}
                 </span>
               </div>
 
@@ -289,6 +289,11 @@ export function InvestigationQuestionsPanel({
               )}
 
               {/* Status Badges */}
+              {q.status === "recorded" && (
+                <div className="text-secondary text-[11px] mt-1" role="status">
+                  Answer saved. It is marked when you submit the exam; you can change it until then.
+                </div>
+              )}
               {isCorrect && (
                 <div className="text-emerald-400 font-bold text-[11px] flex items-center gap-1 mt-1">
                   ✓ Verified Correct (+{q.points} XP)
