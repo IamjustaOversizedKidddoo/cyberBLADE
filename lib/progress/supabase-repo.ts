@@ -27,6 +27,13 @@ import type {
   SocReportEvaluationRecord,
 } from "@/lib/lab-engine/soc/types";
 import type { SocEnrichmentLookupRecord } from "@/lib/lab-engine/soc/enrichment/types";
+import * as exam from "@/lib/lab-engine/soc/exam/supabase-exam-store";
+import type {
+  SocExamAccommodation,
+  SocExamAnswerRecord,
+  SocExamAttemptRecord,
+  SocExamOutcomeReport,
+} from "@/lib/lab-engine/soc/exam/types";
 
 export class SupabaseProgressRepo implements ProgressRepo {
   private async getClient() {
@@ -1503,6 +1510,56 @@ export class SupabaseProgressRepo implements ProgressRepo {
       versionLabel: data.version_label,
       computedAt: data.computed_at,
     };
+  }
+
+  // --- SOC exam mode (service-role client; see lib/lab-engine/soc/exam/supabase-exam-store.ts) ---
+  private async examClient(): Promise<SupabaseClient> {
+    return (await this.getClient()) as unknown as SupabaseClient;
+  }
+  async createSocExamAttemptAtomic(input: {
+    attempt: Omit<SocExamAttemptRecord, "id">;
+    cooldownMinutes: number;
+    maxAttempts: number;
+    windowDays: number;
+    now: Date;
+  }): Promise<SocExamAttemptRecord> {
+    return exam.createExamAtomic(await this.examClient(), input);
+  }
+  async getSocExamAttempt(id: string) {
+    return exam.getExam(await this.examClient(), id);
+  }
+  async listSocExamAttempts(userId: string) {
+    return exam.listExams(await this.examClient(), userId);
+  }
+  async findActiveSocExam(userId: string) {
+    return exam.findActiveExam(await this.examClient(), userId);
+  }
+  async findSocExamBySocAttempt(socAttemptId: string) {
+    return exam.findExamBySocAttempt(await this.examClient(), socAttemptId);
+  }
+  async setSocExamSocAttempt(id: string, socAttemptId: string) {
+    return exam.setExamSocAttempt(await this.examClient(), id, socAttemptId);
+  }
+  async finalizeSocExamAttempt(id: string, patch: Pick<SocExamAttemptRecord, "submitReason" | "submittedAt" | "result">) {
+    return exam.finalizeExam(await this.examClient(), id, patch);
+  }
+  async saveSocExamAnswer(answer: Omit<SocExamAnswerRecord, "id">) {
+    return exam.saveAnswer(await this.examClient(), answer);
+  }
+  async listSocExamAnswers(examAttemptId: string) {
+    return exam.listAnswers(await this.examClient(), examAttemptId);
+  }
+  async saveSocExamOutcomeReport(report: Omit<SocExamOutcomeReport, "id" | "createdAt">) {
+    return exam.saveOutcome(await this.examClient(), report);
+  }
+  async listSocExamOutcomeReports(userId?: string) {
+    return exam.listOutcomes(await this.examClient(), userId);
+  }
+  async getSocExamAccommodation(userId: string) {
+    return exam.getAccommodation(await this.examClient(), userId);
+  }
+  async setSocExamAccommodation(rec: SocExamAccommodation) {
+    return exam.setAccommodation(await this.examClient(), rec);
   }
 
   async deleteUserData(userId: string): Promise<void> {

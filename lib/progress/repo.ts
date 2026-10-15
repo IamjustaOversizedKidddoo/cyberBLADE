@@ -22,6 +22,29 @@ import type {
   SocReportEvaluationRecord,
 } from "@/lib/lab-engine/soc/types";
 import type { SocEnrichmentLookupRecord } from "@/lib/lab-engine/soc/enrichment/types";
+import type {
+  SocExamAccommodation,
+  SocExamAnswerRecord,
+  SocExamAttemptRecord,
+  SocExamOutcomeReport,
+} from "@/lib/lab-engine/soc/exam/types";
+
+/** Shared exam-start rule (local store and Postgres check the same conditions). */
+export function examStartRefusal(
+  existing: SocExamAttemptRecord[],
+  input: { attempt: Pick<SocExamAttemptRecord, "userId" | "format">; cooldownMinutes: number; maxAttempts: number; windowDays: number; now: Date },
+): string | null {
+  const mine = existing.filter((e) => e.userId === input.attempt.userId);
+  if (mine.some((e) => e.status === "active")) return "exam is active";
+  const sameFormat = mine.filter((e) => e.format === input.attempt.format);
+  const lastDone = sameFormat
+    .filter((e) => e.submittedAt)
+    .sort((a, b) => (a.submittedAt! < b.submittedAt! ? 1 : -1))[0];
+  if (lastDone && input.now.getTime() - new Date(lastDone.submittedAt!).getTime() < input.cooldownMinutes * 60_000) return "exam is cooling down";
+  const windowStart = input.now.getTime() - input.windowDays * 86_400_000;
+  if (sameFormat.filter((e) => new Date(e.startedAt).getTime() >= windowStart).length >= input.maxAttempts) return "exam retake limit reached";
+  return null;
+}
 
 /**
  * Progress storage. Every mutation is a single atomic operation (no read-then-write in callers),
@@ -109,6 +132,38 @@ export interface ProgressRepo {
     evaluation: Omit<SocReportEvaluationRecord, "id">,
   ): Promise<SocReportEvaluationRecord>;
   getSocReportEvaluation(submissionId: string): Promise<SocReportEvaluationRecord | null>;
+
+  // SOC exam mode (Stage 1). All writes come from the server; learners never write these directly.
+  /**
+   * Creates an exam attempt only if the learner has no active exam, the format's cooldown has passed
+   * and the retake cap for the window is not reached; checked and written in one atomic step.
+   * Throws "exam is active" | "exam is cooling down" | "exam retake limit reached".
+   */
+  createSocExamAttemptAtomic(input: {
+    attempt: Omit<SocExamAttemptRecord, "id">;
+    cooldownMinutes: number;
+    maxAttempts: number;
+    windowDays: number;
+    now: Date;
+  }): Promise<SocExamAttemptRecord>;
+  getSocExamAttempt(id: string): Promise<SocExamAttemptRecord | null>;
+  listSocExamAttempts(userId: string): Promise<SocExamAttemptRecord[]>;
+  findActiveSocExam(userId: string): Promise<SocExamAttemptRecord | null>;
+  findSocExamBySocAttempt(socAttemptId: string): Promise<SocExamAttemptRecord | null>;
+  /** Links the SOC attempt created for a scenario exam (only while the exam is active). */
+  setSocExamSocAttempt(id: string, socAttemptId: string): Promise<SocExamAttemptRecord>;
+  /** Atomic active → submitted. `changed` is false if it was already submitted (idempotent). */
+  finalizeSocExamAttempt(
+    id: string,
+    patch: Pick<SocExamAttemptRecord, "submitReason" | "submittedAt" | "result">,
+  ): Promise<{ record: SocExamAttemptRecord; changed: boolean }>;
+  /** Upsert by (examAttemptId, itemId); refused once the exam is submitted. */
+  saveSocExamAnswer(answer: Omit<SocExamAnswerRecord, "id">): Promise<SocExamAnswerRecord>;
+  listSocExamAnswers(examAttemptId: string): Promise<SocExamAnswerRecord[]>;
+  saveSocExamOutcomeReport(report: Omit<SocExamOutcomeReport, "id" | "createdAt">): Promise<SocExamOutcomeReport>;
+  listSocExamOutcomeReports(userId?: string): Promise<SocExamOutcomeReport[]>;
+  getSocExamAccommodation(userId: string): Promise<SocExamAccommodation | null>;
+  setSocExamAccommodation(rec: SocExamAccommodation): Promise<SocExamAccommodation>;
 }
 
 function latestAttempt(d: ProgressData, userId: string, labId: string, mode: AttemptMode): LabAttempt | null {
@@ -563,6 +618,12 @@ export class StoreProgressRepo implements ProgressRepo {
           if (v.userId === userId) delete d.learningEvents[k];
         }
       }
+      // SOC exams (Stage 1)
+      for (const key of ["socExamAttempts", "socExamAnswers", "socExamOutcomeReports"] as const) {
+        const coll = d[key] as Record<string, { userId: string }> | undefined;
+        if (coll) for (const [k, v] of Object.entries(coll)) if (v.userId === userId) delete coll[k];
+      }
+      if (d.socExamAccommodations && Object.hasOwn(d.socExamAccommodations, userId)) delete d.socExamAccommodations[userId];
       const userSocAttemptIds = new Set<string>();
       if (d.socAttempts) {
         for (const [k, v] of Object.entries(d.socAttempts)) {
@@ -719,6 +780,123 @@ export class StoreProgressRepo implements ProgressRepo {
     return (
       Object.values(data.socReportEvaluations ?? {}).find((e) => e.submissionId === submissionId) ?? null
     );
+  }
+
+  // --- SOC exam mode -------------------------------------------------------------------------
+
+  async createSocExamAttemptAtomic(input: {
+    attempt: Omit<SocExamAttemptRecord, "id">;
+    cooldownMinutes: number;
+    maxAttempts: number;
+    windowDays: number;
+    now: Date;
+  }): Promise<SocExamAttemptRecord> {
+    const created: SocExamAttemptRecord = { ...input.attempt, id: randomUUID() };
+    await this.store.update((d) => {
+      d.socExamAttempts ??= {};
+      const refusal = examStartRefusal(Object.values(d.socExamAttempts), input);
+      if (refusal) throw new Error(refusal);
+      d.socExamAttempts[created.id] = created;
+    });
+    return created;
+  }
+
+  async getSocExamAttempt(id: string): Promise<SocExamAttemptRecord | null> {
+    return own((await this.store.read()).socExamAttempts ?? {}, id);
+  }
+
+  async listSocExamAttempts(userId: string): Promise<SocExamAttemptRecord[]> {
+    return Object.values((await this.store.read()).socExamAttempts ?? {})
+      .filter((e) => e.userId === userId)
+      .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
+  }
+
+  async findActiveSocExam(userId: string): Promise<SocExamAttemptRecord | null> {
+    return Object.values((await this.store.read()).socExamAttempts ?? {}).find((e) => e.userId === userId && e.status === "active") ?? null;
+  }
+
+  async findSocExamBySocAttempt(socAttemptId: string): Promise<SocExamAttemptRecord | null> {
+    return Object.values((await this.store.read()).socExamAttempts ?? {}).find((e) => e.socAttemptId === socAttemptId) ?? null;
+  }
+
+  async setSocExamSocAttempt(id: string, socAttemptId: string): Promise<SocExamAttemptRecord> {
+    let out: SocExamAttemptRecord | null = null;
+    await this.store.update((d) => {
+      const cur = own(d.socExamAttempts ?? {}, id);
+      if (!cur) throw new Error("Exam attempt not found");
+      if (cur.status !== "active") throw new Error("exam is closed");
+      cur.socAttemptId ??= socAttemptId;
+      out = cur;
+    });
+    return out!;
+  }
+
+  async finalizeSocExamAttempt(
+    id: string,
+    patch: Pick<SocExamAttemptRecord, "submitReason" | "submittedAt" | "result">,
+  ): Promise<{ record: SocExamAttemptRecord; changed: boolean }> {
+    let out: { record: SocExamAttemptRecord; changed: boolean } | null = null;
+    await this.store.update((d) => {
+      const cur = own(d.socExamAttempts ?? {}, id);
+      if (!cur) throw new Error("Exam attempt not found");
+      if (cur.status === "submitted") {
+        out = { record: cur, changed: false };
+        return;
+      }
+      Object.assign(cur, patch, { status: "submitted" as const });
+      out = { record: cur, changed: true };
+    });
+    return out!;
+  }
+
+  async saveSocExamAnswer(answer: Omit<SocExamAnswerRecord, "id">): Promise<SocExamAnswerRecord> {
+    let out: SocExamAnswerRecord | null = null;
+    await this.store.update((d) => {
+      const exam = own(d.socExamAttempts ?? {}, answer.examAttemptId);
+      if (!exam || exam.userId !== answer.userId) throw new Error("Exam attempt not found");
+      if (exam.status !== "active") throw new Error("exam is closed");
+      d.socExamAnswers ??= {};
+      const existing = Object.values(d.socExamAnswers).find((a) => a.examAttemptId === answer.examAttemptId && a.itemId === answer.itemId);
+      if (existing) {
+        existing.answer = answer.answer;
+        existing.answeredAt = answer.answeredAt;
+        out = existing;
+      } else {
+        const rec = { ...answer, id: randomUUID() };
+        d.socExamAnswers[rec.id] = rec;
+        out = rec;
+      }
+    });
+    return out!;
+  }
+
+  async listSocExamAnswers(examAttemptId: string): Promise<SocExamAnswerRecord[]> {
+    return Object.values((await this.store.read()).socExamAnswers ?? {}).filter((a) => a.examAttemptId === examAttemptId);
+  }
+
+  async saveSocExamOutcomeReport(report: Omit<SocExamOutcomeReport, "id" | "createdAt">): Promise<SocExamOutcomeReport> {
+    const rec: SocExamOutcomeReport = { ...report, id: randomUUID(), createdAt: new Date().toISOString() };
+    await this.store.update((d) => {
+      d.socExamOutcomeReports ??= {};
+      d.socExamOutcomeReports[rec.id] = rec;
+    });
+    return rec;
+  }
+
+  async listSocExamOutcomeReports(userId?: string): Promise<SocExamOutcomeReport[]> {
+    return Object.values((await this.store.read()).socExamOutcomeReports ?? {}).filter((r) => !userId || r.userId === userId);
+  }
+
+  async getSocExamAccommodation(userId: string): Promise<SocExamAccommodation | null> {
+    return own((await this.store.read()).socExamAccommodations ?? {}, userId);
+  }
+
+  async setSocExamAccommodation(rec: SocExamAccommodation): Promise<SocExamAccommodation> {
+    await this.store.update((d) => {
+      d.socExamAccommodations ??= {};
+      d.socExamAccommodations[rec.userId] = rec;
+    });
+    return rec;
   }
 }
 

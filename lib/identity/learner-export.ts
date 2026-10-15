@@ -65,6 +65,30 @@ export async function buildLearnerExport(ctx: Ctx, userId: string, aiFeedback: A
     }),
   );
 
+  // SOC exam mode (Stage 1): no seed; results are the learner's own scores and diagnostics.
+  const [examAttempts, examOutcomes, accommodation] = await Promise.all([
+    ctx.repo.listSocExamAttempts(userId),
+    ctx.repo.listSocExamOutcomeReports(userId),
+    ctx.repo.getSocExamAccommodation(userId),
+  ]);
+  const socExams = await Promise.all(
+    examAttempts.map(async (e) => ({
+      examId: e.id,
+      format: e.format,
+      variantId: e.variantId,
+      status: e.status,
+      submitReason: e.submitReason,
+      startedAt: e.startedAt,
+      deadlineAt: e.deadlineAt,
+      submittedAt: e.submittedAt,
+      timeMultiplier: e.timeMultiplier,
+      result: e.result
+        ? { scorePercent: e.result.scorePercent, components: e.result.components, perSkill: e.result.perSkill, timeAnalysis: e.result.timeAnalysis, integrityFlags: e.result.integrityFlags }
+        : null,
+      answers: (await ctx.repo.listSocExamAnswers(e.id)).map((a) => ({ itemId: a.itemId, answer: a.answer, answeredAt: a.answeredAt })),
+    })),
+  );
+
   return {
     lessons,
     labAttempts: labAttempts.map((l) => ({ labId: l.labId, mode: l.mode, objectivesSolved: l.objectivesSolved, hintsUsed: l.hintsUsed, startedAt: l.startedAt, completedAt: l.completedAt, failedAt: l.failedAt })),
@@ -72,6 +96,9 @@ export async function buildLearnerExport(ctx: Ctx, userId: string, aiFeedback: A
     reviewItems,
     examReports,
     soc,
+    socExams,
+    socExamOutcomeReports: examOutcomes.map((o) => ({ certFamily: o.certFamily, examDate: o.examDate, passed: o.passed, createdAt: o.createdAt })),
+    socExamAccommodation: accommodation ? { multiplier: accommodation.multiplier, setAt: accommodation.setAt } : null,
     aiFeedback,
   };
 }

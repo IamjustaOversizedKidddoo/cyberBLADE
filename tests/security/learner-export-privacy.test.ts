@@ -42,6 +42,40 @@ describe("S6: learner export", () => {
       expect(json, key).not.toContain(key);
     }
   });
+
+  it("includes SOC exam attempts, answers and the learner's own outcome reports, never the exam seed", async () => {
+    const { ctx } = await richUser();
+    const now = new Date("2026-10-14T11:00:00Z");
+    const exam = await ctx.repo.createSocExamAttemptAtomic({
+      attempt: {
+        userId: U,
+        format: "knowledge",
+        configVersion: 1,
+        variantId: "bank",
+        socAttemptId: null,
+        seed: "EXAM_SECRET_SEED_123",
+        itemIds: ["k1"],
+        status: "active",
+        submitReason: null,
+        startedAt: now.toISOString(),
+        deadlineAt: new Date(now.getTime() + 3_600_000).toISOString(),
+        timeMultiplier: 1,
+        submittedAt: null,
+        result: null,
+      },
+      cooldownMinutes: 0,
+      maxAttempts: 9,
+      windowDays: 7,
+      now,
+    });
+    await ctx.repo.saveSocExamAnswer({ examAttemptId: exam.id, userId: U, itemId: "k1", answer: "[1]", answeredAt: now.toISOString() });
+    await ctx.repo.saveSocExamOutcomeReport({ userId: U, certFamily: "soc-analyst", examDate: "2026-10-01", passed: true, consentVersion: "c1" });
+    const out = await buildLearnerExport(ctx, U, { grades: [], humanReviewRequests: [], calibrationConsent: null });
+    expect(out.socExams).toHaveLength(1);
+    expect(out.socExams[0].answers).toEqual([{ itemId: "k1", answer: "[1]", answeredAt: now.toISOString() }]);
+    expect(out.socExamOutcomeReports).toEqual([{ certFamily: "soc-analyst", examDate: "2026-10-01", passed: true, createdAt: expect.any(String) }]);
+    expect(JSON.stringify(out)).not.toContain("EXAM_SECRET_SEED_123");
+  });
 });
 
 describe("S6: local erasure", () => {
