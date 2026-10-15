@@ -205,3 +205,40 @@ Root cause 3 (soc-enrichment): every repo read and write goes through one per-fi
 - `npm run check:soc` validates only the single static scenario (`soc-l1-noisy-shift.yaml`); families and shifts are covered by separate scripts (`check:soc:families`, `check:soc:shifts`) that are not part of the documented gate list.
 - The SOC Handler prompt context includes `scenarioTitle` (L1-A-01: family title + seed prefix) and learner free text (rationale, report excerpt) sent to the provider; no ground truth is included (`lib/handler/soc-mode.ts:24-45`).
 - `ExamStateView.variantId` is also exported in the account export (`learner-export.ts:82`); after submission this is fine.
+
+## Resolution (fix pass, 2026-10-15)
+
+Every fix has a regression test that fails without it (listed in the commit). Commits are on local `main`.
+
+| ID | Sev | Status | Commit / reason |
+|---|---|---|---|
+| L1-A-04 | Critical | Fixed | `a298f93`: exam answers stored unmarked and marked only at submission; migration `20261015180000` removes learner SELECT on `is_correct`, `family_id`, `variant_id`, `item_ids` (PGlite-tested, not applied to any hosted DB). Also found during the fix: knowledge item ids named their answers (e.g. `kb-win-4625`); replaced by opaque per-exam keys. |
+| L1-A-05 | Critical | Fixed | `a298f93`: export shows no correctness, score or variant for exam attempts while running (exam answers are marked in the exam result); export rate-limited. |
+| L1-A-01 | High | Fixed | `dee4cfa`: learner scenario view has an opaque id and no seed-derived suffix. |
+| L1-A-03 | High | Fixed | `868f65c`: generator 1.1.0 attaches observables to non-true-positive alerts; pooled precision of "has IOC" < 0.5. Attempts stay pinned to their generator version. |
+| L1-A-09 | High | Partly fixed | `e4d31f2`: generator 1.2.0 draws true-positive indicator values per seed (no value in > 15% of variants). **Deferred:** rule name -> verdict mapping; needs authored benign twins of malicious rules in every family plus expert review (content work, L). |
+| L1-A-10 | High | Fixed | `df64ebd`: practice start, scorecards, question marks, report grading and model reports pause while an exam runs. |
+| L1-A-02 | Medium | Fixed | `dee4cfa`: exam state withholds the variant while running; exam scenario title "Exam scenario", no skill list. |
+| L1-A-06 | Medium | Fixed | `20b3838`: workspace flag gates every SOC server action (sweep test). |
+| L1-A-07 | Medium | Fixed | `e959821`: one availability rule for lesson cards, track paths and minutes, study plan, exam lobby; learner-facing off-state copy. |
+| L1-A-08 | Medium | Fixed | `14678cb`: test-only fixture endpoint replaces file rewrites (lost updates); hydration marker for checks; enrichment spec waits on the session signal, exact launcher, no isVisible branch, random handles. Store-level read queue left as is (see L1-A-20 note). |
+| L1-A-11 | Medium | Fixed | `ea6583a`: shift hash check; `content/soc/published-hashes.json` + `npm run soc:pin-hashes` + test. |
+| L1-A-12 | Medium | Fixed | `ba4bdbb`: runtime report schema, known template ids only (engine and actions). |
+| L1-A-13 | Medium | Fixed | `250bc73`: client history cannot carry system turns; Groq maps roles like Gemini. (Guardrail tightened, on the owner's fix instruction.) |
+| L1-A-15 | Medium | Fixed | `155d797`: shared `ModalFocusScope` on all SOC aria-modal dialogs; sweep test. |
+| L1-A-14 | Medium | Deferred | Nonce CSP needs every page rendered dynamically; 25 pages are static today and their inline bootstrap scripts would be blocked. Owner decision (performance vs CSP); path: per-request nonce in `proxy.ts` + `connection()` in the root layout, verified by the e2e suite. |
+| L1-A-17 | Low | Fixed | `7ee926a` (the `brute` item is multiple choice, so the defanged variant cannot occur). |
+| L1-A-22 | Low | Fixed | `7ee926a`: `npm run verify`; doc commands corrected. |
+| L1-A-23 | Low | Fixed | `7ee926a`: `csvCell()` helper. |
+| L1-A-24 | Info | Fixed | `7ee926a`: #77 generalised in the lesson; #10/#50 sourced or classified; cert-name comment and "official" wording removed. |
+| L1-A-25 | Info | Partly fixed | `check:soc` now runs family and shift checks; SOC Handler context uses the learner view title (L1-A-01). `lintSocReport` dead-code note left. |
+| L1-A-16 | Low | Deferred | Response-scan harness (M). The new regression tests cover the specific leaks found; a generic scanner over every action is follow-up work. |
+| L1-A-18 | Low | Deferred | Evidence entries for older SOC screens (M; screenshots + critique per screen). |
+| L1-A-19 | Low | Proposed | `git rm --cached -r docs/design/screenshots docs/visual` + `.gitignore` (about 11.4 MB); owner decision, history rewrite optional. |
+| L1-A-20 | Low | Deferred | Per-process limits: move counters to Postgres/KV before the hosted launch. |
+| L1-A-21 | Low | Deferred | `gray-matter` replacement changes front-matter parsing (dates); needs a content diff check. |
+
+Found during the fix pass (not in the original audit):
+- Handler tests wrote into the developer's real `.data/handler-usage.json`; usage accumulated across runs until the global spend ceiling silently switched later runs to the offline provider. Fixed: per-worker throwaway data dir in `vitest.setup.ts` (`e4d31f2`).
+- Two load-sensitive unit tests (injection sweep, exercise rate limit) fixed at the root: per-family split, and lesson content re-read only under `next dev` (`c0e073e`, `df64ebd`). Generator cold-start benchmark: warm-up + fastest of 5 (`868f65c`).
+- `rank-1-challenge.spec.ts` failed once in three targeted runs (rank-up screen not shown within 20 s after the last submit under load). Not investigated to root cause yet; suspected client refresh after the final submit.
