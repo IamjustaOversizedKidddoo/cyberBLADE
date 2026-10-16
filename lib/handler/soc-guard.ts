@@ -12,6 +12,7 @@ const INPUT_RULES: Array<{ category: SocGuardCategory; re: RegExp }> = [
   { category: "verdict_confirmation", re: /\b(is|was|isn'?t)\s+(this|it|that|alert\s+\S+|the\s+alert)\s+(really\s+|actually\s+)?(an?\s+)?(true|false|benign)[\s-]*(true[\s-]*)?positive/i },
   { category: "verdict_confirmation", re: /\b(tp|fp|btp)\s*(or|\/|vs\.?)\s*(tp|fp|btp)\b/i },
   { category: "verdict_confirmation", re: /\b(confirm|validate|check|verify)\s+(my|the|this)\s+(verdict|disposition|decision|triage|classification|severity|escalation)/i },
+  { category: "verdict_confirmation", re: /\b(confirm|validate|check|verify)\s+(if|whether)\s+.*(malicious|benign|true[\s-]positive|false[\s-]positive)\b/i },
   // Only a bare "am I right?" (a concept check like "am I right that SPF breaks on forwarding?" passes).
   { category: "verdict_confirmation", re: /\b(am|was)\s+i\s+(right|correct|wrong)\s*\??\s*$/i },
   { category: "verdict_confirmation", re: /\b(is|was)\s+my\s+(verdict|disposition|decision|answer|triage|classification)\s+(right|correct|wrong|ok|okay|good|accurate)/i },
@@ -24,12 +25,15 @@ const INPUT_RULES: Array<{ category: SocGuardCategory; re: RegExp }> = [
   { category: "report_verification", re: /\b(report|handoff)\s+(check|verify|review)\s+(karo|kar|kardo|kar\s+do|kijiye)\b/i },
   { category: "ioc_listing", re: /\b(list|give|show|tell|dump|enumerate)\s+(me\s+)?(all\s+)?(the\s+)?(iocs?|indicators(\s+of\s+compromise)?|malicious\s+(ips?|domains?|hashes|urls?))\b/i },
   { category: "ioc_listing", re: /\b(iocs?|indicators)\b.*\b(bata|batao|batado|list\s+karo|de\s+do|do\s+na)\b/i },
-  { category: "answer_seeking", re: /\b(what('?s| is)|tell\s+me|give\s+me|show\s+me)\s+(the\s+)?(correct\s+|right\s+|final\s+|expected\s+)?(answer|verdict|disposition|solution)\b/i },
+  { category: "answer_seeking", re: /\b(what('?s|\s+is|\s+was)|tell\s+me|give\s+me|show\s+me|reveal|output|display|print)\s+(the\s+)?(correct\s+|right\s+|final\s+|expected\s+|ground\s+truth\s+|true\s+)?(answer|verdict|disposition|solution|ground\s+truth)\b/i },
+  { category: "answer_seeking", re: /\b(dump|list|show|give|tell|reveal|print)\s+(me\s+)?(all\s+)?(the\s+)?(hold[\s-]*out(\s+test)?\s+(cases?|variants?|samples?)|hidden\s+(test\s+)?(cases?|variants?|alerts?|samples?)|ground\s+truth(\s+telemetry)?)\b/i },
+  { category: "answer_seeking", re: /\bwhat\s+are\s+the\s+(hold[\s-]*out(\s+test)?\s+(cases?|variants?|samples?)|hidden\s+(test\s+)?(cases?|variants?|alerts?))\b/i },
   { category: "answer_seeking", re: /\b(answer|jawab|verdict|solution)\s+(bata|batao|batado|do|de\s+do)\b/i },
   { category: "exam_pretend", re: /\b(exam|test|assessment)\s+(is\s+|has\s+)?(over|ended|finished|done|khatam|khtm)\b/i },
   { category: "exam_pretend", re: /\b(pretend|imagine|assume)\b.*\b(exam|test|submitted|graded)\b/i },
+  { category: "exam_pretend", re: /\b(ignore\s+(all\s+)?previous\s+instructions|system\s+override|debug\s+mode)\b/i },
   { category: "rule_seeking", re: /\b(write|give|generate|create|make|compose|draft)\s+(me\s+)?(a\s+|the\s+)?(detection\s+rule|sigma\s+rule|yara\s+rule|bladeql\s+rule|rule\s+query)\b/i },
-  { category: "rule_seeking", re: /\bwhat\s+(rule|detection\s+rule|query)\s+(should|can)\s+i\s+(write|use|submit)\b/i },
+  { category: "rule_seeking", re: /\bwhat\s+(rule|detection\s+rule|query|rule\s+query)\s+(should|can|do)\s+i\s+(write|use|submit)\b/i },
   { category: "rule_seeking", re: /\b(detection\s+rule|rule\s+query)\b.*\b(bana|banao|banado|likh|likho|de\s+do|do\s+na)\b/i },
 ];
 
