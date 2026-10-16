@@ -31,7 +31,8 @@ export default function GlobalError({
             The error was isolated to prevent state leakage. You can retry mounting the current view or return to the operations dashboard.
           </p>
           {error.digest && (
-            <p className="text-muted text-xs">INCIDENT REF: {error.digest}</p>
+            // Same id the server logs (with the request id) in instrumentation onRequestError.
+            <p className="text-muted text-xs">Reference: {error.digest}</p>
           )}
         </div>
         <div className="flex flex-wrap gap-4 pt-2">
