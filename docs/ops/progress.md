@@ -241,6 +241,26 @@ Full gates (2026-10-16):
 - test:e2e ✓ (20 passed, 2 skipped: onboarding, terminal lab, knowledge & scenario exams, feedback widget)
 - Migration `20261016120000_beta_hardening.sql` executed on PGlite only, NOT on any hosted database.
 
+**Entry 15 corrections and re-verification (beta session, 2026-10-16, on HEAD `e33528a`, which includes the L2 commits made by a separate session):**
+- Correction: lessons are not public. The smoke test asserts that anonymous visitors are redirected to sign-in; the 404 leak check uses `/legal/<missing>`.
+- Found by running the smoke test against a production-like `next start` (unit tests call handlers directly, so they missed it). The proxy redirected every cookieless request to `/start`, which broke `/auth/callback` (hosted sign-in could never finish), `/api/health`, `/api/ready`, `/api/cron/*` (Vercel Cron), `/robots.txt`, `/help` and `/accessibility`. Fixed with an explicit public allow-list in `lib/identity/routes.ts`; the tests also confirm that look-alike paths still need a cookie.
+- `/api/ready` reports 503 (not 429) when the limiter is down, because it fails closed.
+- Gates re-run:
+  - lint ✓ (0 errors, 53 warnings)
+  - typecheck ✓
+  - check:content ✓
+  - check:soc ✓
+  - test ✓ 2103/2103
+  - test:security ✓ 257/257
+  - test:db ✓ 109/109
+  - production-like `next build` ✓ (unreachable Supabase URL, random secrets)
+  - scan:bundle ✓ (88 artifacts; 12 pattern rules + 2 real secret values)
+  - `npm run smoke -- http://localhost:3200` ✓ 16/16 checks in 18 requests
+  - production start with a bad `CRON_SECRET` refuses: it names the variable, not the value, and every request gets a 500
+  - e2e (desktop) ✓ 11 passed / 1 skipped (mobile-only): onboarding, feedback widget, Rank 0 lessons, lab terminal, knowledge and scenario exam start-to-results
+- Synthetic restore: 100 learners, 39 tables, 800 rows, 4.0 s total (load 3.4 s, checks 0.6 s).
+- Not run: `staging:verify` (needs the owner's staging project; the same checks pass on PGlite), `db:backup` (no pg_dump here, and no hosted DB), any hosted migration.
+
 ### Entry 16: SOC Level 2 (L2) Exam Formats & Hardening — Stage 1 Build (2026-10-16)
 Additive implementation reusing L1 exam infrastructure:
 1. **L2 Exam Formats:**

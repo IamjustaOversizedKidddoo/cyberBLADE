@@ -44,7 +44,7 @@ describe("postgres rate-limit backend", () => {
 
   it("fails closed when the backend errors or is unavailable", async () => {
     const broken = postgresBackend(() => ({ rpc: async () => ({ data: null, error: { message: "connection refused" } }) }));
-    expect((await broken.hit("k", 100, 1000)).allowed).toBe(false);
+    expect(await broken.hit("k", 100, 1000)).toMatchObject({ allowed: false, unavailable: true });
     await expect(postgresBackend(() => null).hit("k", 100, 1000)).rejects.toThrow("unavailable");
   });
 });
