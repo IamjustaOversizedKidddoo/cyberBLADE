@@ -38,7 +38,9 @@
     "beta:feedback": "tsx --conditions=react-server scripts/beta-feedback-export.mts",
     "ops:daily": "tsx scripts/ops-daily-summary.mts",
     "db:backup": "tsx scripts/db-backup.mts",
-    "db:restore-check": "tsx scripts/db-restore-check.mts"
+    "db:restore-check": "tsx scripts/db-restore-check.mts",
+    "staging:verify": "tsx scripts/staging-verify.mts",
+    "smoke": "tsx scripts/smoke.mts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
