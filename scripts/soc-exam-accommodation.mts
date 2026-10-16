@@ -23,7 +23,7 @@ async function main() {
   try {
     built = buildAccommodation({ userId: arg("user"), multiplier: Number(arg("multiplier")), reason: arg("reason"), setBy: arg("by") }, new Date());
   } catch (e) {
-    console.error("Invalid input. Need --user, --multiplier (1-3; 1 = off), --reason (5-200 chars), --by.");
+    console.error("Invalid input. Need --user, --multiplier (1-2; 1 = off), --reason (5-200 chars), --by.");
     console.error(e instanceof Error ? e.message : e);
     process.exit(1);
   }

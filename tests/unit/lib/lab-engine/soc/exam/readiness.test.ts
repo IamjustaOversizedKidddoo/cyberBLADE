@@ -125,7 +125,7 @@ describe("accommodation (admin CLI core)", () => {
     expect(ok.record).toEqual({ userId: "u1", multiplier: 1.5, reason: "documented need", setBy: "owner", setAt: now.toISOString() });
     expect(JSON.parse(ok.audit)).toMatchObject({ action: "accommodation_set", userId: "u1", multiplier: 1.5, setBy: "owner" });
     expect(JSON.parse(buildAccommodation({ userId: "u1", multiplier: 1, reason: "no longer needed", setBy: "owner" }, now).audit).action).toBe("accommodation_off");
-    for (const bad of [{ userId: "u1", multiplier: 4, reason: "xxxxx", setBy: "ow" }, { userId: "u1", multiplier: 0.5, reason: "xxxxx", setBy: "ow" }, { userId: "u1", multiplier: 1.5, reason: "", setBy: "ow" }, { userId: "", multiplier: 1.5, reason: "xxxxx", setBy: "ow" }, { userId: "u1", multiplier: Number.NaN, reason: "xxxxx", setBy: "ow" }]) {
+    for (const bad of [{ userId: "u1", multiplier: 4, reason: "xxxxx", setBy: "ow" }, { userId: "u1", multiplier: 2.5, reason: "over the x2 cap", setBy: "ow" }, { userId: "u1", multiplier: 0.5, reason: "xxxxx", setBy: "ow" }, { userId: "u1", multiplier: 1.5, reason: "", setBy: "ow" }, { userId: "", multiplier: 1.5, reason: "xxxxx", setBy: "ow" }, { userId: "u1", multiplier: Number.NaN, reason: "xxxxx", setBy: "ow" }]) {
       expect(() => buildAccommodation(bad, now)).toThrow();
     }
   });
