@@ -26,7 +26,9 @@ export const LEAK_RULES: LeakRule[] = [
   { id: "hidden-entity-roles", re: /attacker_infra|benign_business|shared_infra/ },
   // SOC exam answer keys and graders (Stage 1). Exam seeds are covered by seed-in-payload; the
   // post-submission review is rendered on the server, so none of these names belong in client code.
-  { id: "exam-keys", re: /knowledge-bank\.yaml|loadKnowledgeBank|gradeKnowledgeAnswer|knowledgeItemReview|drawKnowledgeItems|correctOptionIds|objectiveAlignment|buildExamResult|handoffChecks|evaluateReadiness/ },
+  { id: "exam-keys", re: /knowledge-bank(-l2)?\.yaml|loadKnowledgeBank|knowledgeBankForFormat|gradeKnowledgeAnswer|knowledgeItemReview|drawKnowledgeItems|correctOptionIds|objectiveAlignment|buildExamResult|handoffChecks|evaluateReadiness/ },
+  // Detection rule challenge ground truth, hold-out variants and scoping rubrics (Stage 1 L2).
+  { id: "rule-ground-truth", re: /evaluateDetectionRuleChallenge|deriveHoldOutSeeds|holdOutEvents|benignEvents|scoping-report-l2-rubric/ },
   // Seeds and family internals
   // Matches plain JSON and the escaped JSON embedded in HTML hydration scripts (\"seed\":).
   { id: "seed-in-payload", re: /\\?"seed\\?"\s*:\s*\\?"/ },
