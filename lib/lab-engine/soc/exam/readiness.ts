@@ -38,7 +38,7 @@ export function evaluateReadiness(allExams: SocExamAttemptRecord[], counts: (for
 
   const formats = new Set(recent.map((e) => e.format));
   // Distinct scenarios (shift or family) across scenario-based exams; knowledge draws are not variants.
-  const variants = new Set(recent.filter((e) => e.format !== "knowledge").map((e) => e.variantId));
+  const variants = new Set(recent.filter((e) => !e.format.startsWith("knowledge")).map((e) => e.variantId));
   const overall = recent.length ? Math.round(recent.reduce((a, e) => a + e.result!.scorePercent, 0) / recent.length) : 0;
   const skills = skillAverages(recent);
   const lowest = [...skills].sort((a, b) => a[1] - b[1])[0];

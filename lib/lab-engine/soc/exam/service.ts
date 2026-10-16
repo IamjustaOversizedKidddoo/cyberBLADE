@@ -7,7 +7,7 @@ import "server-only";
  */
 import type { Ctx } from "@/lib/progress/service";
 import { examStartRefusal } from "@/lib/progress/repo";
-import { isSocQueryEnabled, isSocReportsEnabled, isSocWorkspaceEnabled } from "@/lib/config/env";
+import { isSocL2Enabled, isSocQueryEnabled, isSocReportsEnabled, isSocRulesEnabled, isSocWorkspaceEnabled } from "@/lib/config/env";
 import { newSeed } from "@/lib/generators/rng";
 import { loadSocFamily, loadSocShift, resolveScenarioForAttempt } from "../engine";
 import { composeShiftScenario } from "../shift-composer";
@@ -117,6 +117,9 @@ async function ensureSocAttempt(ctx: Ctx, exam: SocExamAttemptRecord): Promise<S
 
 export async function startExam(ctx: Ctx, userId: string, format: SocExamFormat): Promise<ExamStateView> {
   if (!SOC_EXAM_FORMATS.includes(format)) throw new Error("Unknown exam format");
+  const isL2 = format === "investigation-l2" || format === "detection-rule" || format === "knowledge-l2";
+  if (isL2 && !isSocL2Enabled()) throw new Error("SOC L2 exams are not open yet.");
+  if (format === "detection-rule" && !isSocRulesEnabled()) throw new Error("Detection rule challenges are not open yet.");
   const config = loadExamConfig();
   const f = config.formats[format];
   const now = ctx.now();
@@ -487,7 +490,10 @@ export async function getExamLobby(ctx: Ctx, userId: string): Promise<ExamLobbyV
       // Scenario formats run in the SOC workspace; with it switched off they are "not open yet"
       // instead of a Start button that fails (L1-A-07).
       // The investigation format grades a written report, so it also needs the report editor.
-      const closed = (format !== "knowledge" && !isSocWorkspaceEnabled()) || ("report" in f.weights && !isSocReportsEnabled());
+      const isL2 = format === "investigation-l2" || format === "detection-rule" || format === "knowledge-l2";
+      const l2Closed = isL2 && !isSocL2Enabled();
+      const rulesClosed = format === "detection-rule" && !isSocRulesEnabled();
+      const closed = l2Closed || rulesClosed || (!isKnowledgeFormat(format) && !isSocWorkspaceEnabled()) || ("report" in f.weights && !isSocReportsEnabled());
       const refusal = closed ? "not open" : examStartRefusal(exams, { attempt: { userId, format }, cooldownMinutes: f.cooldownMinutes, maxAttempts: f.maxAttempts.count, windowDays: f.maxAttempts.windowDays, now });
       return {
         format,

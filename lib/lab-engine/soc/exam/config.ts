@@ -60,6 +60,11 @@ export const readinessConfigSchema = z.object({
 });
 export type ReadinessConfig = z.infer<typeof readinessConfigSchema>;
 
-export function loadReadinessConfig(root = ROOT): ReadinessConfig {
+export function loadReadinessConfig(level: "l1" | "l2" | string = "l1", root = ROOT): ReadinessConfig {
+  const fileName = level === "l2" ? "readiness-l2.yaml" : "readiness.yaml";
+  const filePath = path.join(root, fileName);
+  if (fs.existsSync(filePath)) {
+    return readinessConfigSchema.parse(parseYaml(fs.readFileSync(filePath, "utf8")));
+  }
   return readinessConfigSchema.parse(parseYaml(fs.readFileSync(path.join(root, "readiness.yaml"), "utf8")));
 }

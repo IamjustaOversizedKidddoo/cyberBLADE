@@ -114,6 +114,32 @@ export function ExamResultView({ state, skillTitles }: { state: ExamStateView; s
             </ul>
           </section>
         )}
+        {r.ruleChallenge && (
+          <section className={panel} aria-labelledby="h-rule-challenge">
+            <h2 id="h-rule-challenge" className={h2}>Detection Rule Evaluation · {r.ruleChallenge.scorePercent}%</h2>
+            <div className="mt-2 space-y-3">
+              <p className="flex items-center gap-2 text-ink">
+                {r.ruleChallenge.passed ? <IconCheck className="h-5 w-5 text-success" aria-hidden="true" /> : <IconCross className="h-5 w-5 text-danger" aria-hidden="true" />}
+                <strong>{r.ruleChallenge.passed ? "Passed Challenge Criteria" : "Did Not Meet Challenge Thresholds"}</strong>
+              </p>
+              <dl className="mt-2">
+                <Row label="Hold-out incident recall" value={`${r.ruleChallenge.holdOutDetected} / ${r.ruleChallenge.holdOutTotal} (${r.ruleChallenge.recallPercent}%)`} />
+                <Row label="Benign decoy trigger rate (FPR)" value={`${r.ruleChallenge.benignTriggered} / ${r.ruleChallenge.benignTotal} (${r.ruleChallenge.falsePositiveRatePercent}%)`} />
+                <Row label="Precision" value={`${r.ruleChallenge.precisionPercent}%`} />
+              </dl>
+              {r.ruleChallenge.feedback.length > 0 && (
+                <div className="mt-3 space-y-1 rounded-xs border border-line/60 bg-void/50 p-3">
+                  <p className="font-ui text-xs uppercase tracking-wider text-muted">Rule Quality & Diagnostics</p>
+                  <ul className="mt-1 list-disc space-y-1 pl-4 text-xs text-secondary">
+                    {r.ruleChallenge.feedback.map((f, i) => (
+                      <li key={i}>{f}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
       </div>
 
       <section className={panel} aria-labelledby="h-flags">

@@ -14,9 +14,12 @@ import { evaluateReadiness, type ReadinessResult } from "./readiness";
 import { buildStudyPlan, examTrend, socSkillTitle, type StudyPlan } from "./study-plan";
 import { getActiveExam } from "./service";
 
+const isL2Format = (f: string) => f === "investigation-l2" || f === "detection-rule" || f === "knowledge-l2";
+
 export type ExamInsightsView = {
   trend: ReturnType<typeof examTrend>;
   readiness: ReadinessResult & { lowestSkillTitle: string | null };
+  readinessL2: ReadinessResult & { lowestSkillTitle: string | null };
   studyPlan: StudyPlan;
   outcomeReportsCount: number;
 };
@@ -24,12 +27,16 @@ export type ExamInsightsView = {
 export async function getExamInsights(ctx: Ctx, userId: string): Promise<ExamInsightsView> {
   await getActiveExam(ctx, userId); // finalises an expired exam first
   const config = loadExamConfig();
-  const cfg = loadReadinessConfig();
+  const cfgL1 = loadReadinessConfig("l1");
+  const cfgL2 = loadReadinessConfig("l2");
   const exams = await ctx.repo.listSocExamAttempts(userId);
-  const readiness = evaluateReadiness(exams, (f) => config.formats[f as keyof typeof config.formats]?.countsForReadiness ?? false, cfg);
-  const recent = exams.filter((e) => readiness.examIds.includes(e.id));
+
+  const readiness = evaluateReadiness(exams, (f) => !isL2Format(f) && (config.formats[f as keyof typeof config.formats]?.countsForReadiness ?? false), cfgL1);
+  const readinessL2 = evaluateReadiness(exams, (f) => isL2Format(f) && (config.formats[f as keyof typeof config.formats]?.countsForReadiness ?? false), cfgL2);
+
+  const recent = exams.filter((e) => readiness.examIds.includes(e.id) || readinessL2.examIds.includes(e.id));
   // The study plan also uses mini-queue drills, which do not count for readiness.
-  const planExams = recent.length ? recent : exams.filter((e) => e.status === "submitted").slice(0, cfg.windowAttempts);
+  const planExams = recent.length ? recent : exams.filter((e) => e.status === "submitted").slice(0, cfgL1.windowAttempts);
 
   const lessons = await ctx.content.getLessons();
   const titles = new Map(lessons.map((l) => [l.id, l.title]));
@@ -38,10 +45,13 @@ export async function getExamInsights(ctx: Ctx, userId: string): Promise<ExamIns
   for (const r of await ctx.repo.listReviewItems(userId)) if (r.dueAt <= now) due.set(r.lessonId, (due.get(r.lessonId) ?? 0) + 1);
 
   const lowest = readiness.criteria.find((c) => c.id === "skill_floor")?.detail.match(/Lowest skill: (\S+)/)?.[1] ?? null;
+  const lowestL2 = readinessL2.criteria.find((c) => c.id === "skill_floor")?.detail.match(/Lowest skill: (\S+)/)?.[1] ?? null;
+
   return {
     trend: examTrend(exams),
     readiness: { ...readiness, lowestSkillTitle: lowest ? socSkillTitle(lowest) : null },
-    studyPlan: buildStudyPlan({ exams: planExams, threshold: cfg.ready.skillFloor, lessonTitle: (id) => titles.get(id) ?? null, dueReviewByLesson: due, drillsEnabled: isSocQueryEnabled(), flags: socPracticeFlags() }),
+    readinessL2: { ...readinessL2, lowestSkillTitle: lowestL2 ? socSkillTitle(lowestL2) : null },
+    studyPlan: buildStudyPlan({ exams: planExams, threshold: cfgL1.ready.skillFloor, lessonTitle: (id) => titles.get(id) ?? null, dueReviewByLesson: due, drillsEnabled: isSocQueryEnabled(), flags: socPracticeFlags() }),
     outcomeReportsCount: (await ctx.repo.listSocExamOutcomeReports(userId)).length,
   };
 }

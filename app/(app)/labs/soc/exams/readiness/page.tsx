@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { HeroBand } from "@/components/theme/HeroBand";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
-import { isSocExamsEnabled } from "@/lib/config/env";
+import { isSocExamsEnabled, isSocL2Enabled } from "@/lib/config/env";
 import { getExamInsights } from "@/lib/lab-engine/soc/exam/insights";
 import { loadExamConfig } from "@/lib/lab-engine/soc/exam/config";
 import { OutcomeReportForm } from "@/components/labs/soc/exams/OutcomeReportForm";
@@ -21,20 +21,22 @@ export default async function SocReadinessPage() {
   const v = await getExamInsights(getCtx(), operator.id);
   const titles = loadExamConfig().formats;
   const r = v.readiness;
+  const r2 = v.readinessL2;
+  const l2Enabled = isSocL2Enabled();
 
   return (
     <main>
       <HeroBand title="readiness_check" kicker="> PROVISIONAL · BASED ON YOUR RECENT PRACTICE EXAMS" />
       <div className="mx-auto max-w-4xl space-y-8 px-4 py-10 font-sans text-sm sm:px-6">
-        <section className={panel} aria-labelledby="state">
-          <p className="font-ui text-xs uppercase tracking-widest text-muted">Provisional readiness check</p>
-          <h2 id="state" className="mt-1 flex items-center gap-2 font-ui text-xl text-ink">
+        <section className={panel} aria-labelledby="state-l1">
+          <p className="font-ui text-xs uppercase tracking-widest text-muted">Provisional readiness check · Level 1</p>
+          <h2 id="state-l1" className="mt-1 flex items-center gap-2 font-ui text-xl text-ink">
             {r.state === "ready" ? <IconCheck className="h-5 w-5 text-success" aria-hidden="true" /> : <IconCircle className="h-4 w-4 text-cyan" aria-hidden="true" />}
             {STATE_TEXT[r.state]}
           </h2>
           {r.statement && <p className="mt-3 max-w-prose text-base text-ink">{r.statement}</p>}
           <p className="mt-3 max-w-prose text-secondary">
-            This check uses your {r.examIds.length ? `${r.examIds.length} most recent counted` : "recent"} practice exams. Its thresholds are provisional and have not yet been checked against real exam results. Practice exams are unproctored and are not equivalent to any real exam.
+            This check uses your {r.examIds.length ? `${r.examIds.length} most recent counted` : "recent"} Level 1 practice exams. Its thresholds are provisional and have not yet been checked against real exam results. Practice exams are unproctored and are not equivalent to any real exam.
           </p>
           <ul className="mt-4 space-y-2">
             {r.criteria.map((c) => (
@@ -45,6 +47,28 @@ export default async function SocReadinessPage() {
             ))}
           </ul>
         </section>
+
+        {l2Enabled && (
+          <section className={panel} aria-labelledby="state-l2">
+            <p className="font-ui text-xs uppercase tracking-widest text-muted">Provisional readiness check · Level 2</p>
+            <h2 id="state-l2" className="mt-1 flex items-center gap-2 font-ui text-xl text-ink">
+              {r2.state === "ready" ? <IconCheck className="h-5 w-5 text-success" aria-hidden="true" /> : <IconCircle className="h-4 w-4 text-cyan" aria-hidden="true" />}
+              {STATE_TEXT[r2.state]}
+            </h2>
+            {r2.statement && <p className="mt-3 max-w-prose text-base text-ink">{r2.statement}</p>}
+            <p className="mt-3 max-w-prose text-secondary">
+              This check uses your {r2.examIds.length ? `${r2.examIds.length} most recent counted` : "recent"} Level 2 practice exams (scoping, rule engineering, and knowledge). Its thresholds are provisional and have not yet been checked against real exam results. Practice exams are unproctored and are not equivalent to any real exam.
+            </p>
+            <ul className="mt-4 space-y-2">
+              {r2.criteria.map((c) => (
+                <li key={c.id} className="flex items-start gap-2">
+                  {c.met ? <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" /> : <IconInfo className="mt-0.5 h-4 w-4 shrink-0 text-cyan" aria-hidden="true" />}
+                  <span><strong className="font-semibold text-ink">{c.met ? "Met" : "Not met yet"}:</strong> <span className="text-ink">{c.label}.</span> <span className="text-secondary">{c.detail}</span></span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <section className={panel} aria-labelledby="plan">
           <h2 id="plan" className="font-ui text-base text-ink">Study plan</h2>

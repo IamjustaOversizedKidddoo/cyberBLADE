@@ -7,11 +7,12 @@
 import { z } from "zod";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
-import { isSocExamsEnabled, isSocWorkspaceEnabled } from "@/lib/config/env";
+import { isSocExamsEnabled, isSocL2Enabled, isSocRulesEnabled, isSocWorkspaceEnabled } from "@/lib/config/env";
 import { SOC_EXAM_FORMATS } from "@/lib/lab-engine/soc/exam/types";
 import {
   getExamLobby,
   getExamState,
+  saveDetectionRuleAnswer,
   saveHandoffNote,
   saveKnowledgeAnswer,
   startExam,
@@ -44,7 +45,10 @@ export async function getSocExamLobbyAction(): Promise<ExamLobbyView> {
 export async function startSocExamAction(format: string): Promise<ExamStateView> {
   assertEnabled();
   const f = formatSchema.parse(format);
-  if (f !== "knowledge" && !isSocWorkspaceEnabled()) throw new Error("The SOC workspace is not enabled.");
+  const isL2 = f === "investigation-l2" || f === "detection-rule" || f === "knowledge-l2";
+  if (isL2 && !isSocL2Enabled()) throw new Error("SOC L2 exams are not open yet.");
+  if (f === "detection-rule" && !isSocRulesEnabled()) throw new Error("Detection rule challenges are not open yet.");
+  if (f !== "knowledge" && f !== "knowledge-l2" && !isSocWorkspaceEnabled()) throw new Error("The SOC workspace is not enabled.");
   const operator = await requireOperator();
   await throttle(operator.id, "start", 5, 60_000);
   return startExam(getCtx(), operator.id, f);
@@ -90,3 +94,20 @@ export async function submitSocExamOutcomeAction(input: unknown): Promise<{ save
   const operator = await requireOperator();
   return submitExamOutcomeReport(getCtx(), operator.id, input);
 }
+
+export async function saveSocExamDetectionRuleAction(examId: string, rule: unknown): Promise<{ saved: true }> {
+  assertEnabled();
+  const operator = await requireOperator();
+  await throttle(operator.id, "detection_rule", 30, 60_000);
+  const ruleSchema = z.object({
+    title: z.string().min(1).max(120),
+    description: z.string().max(1000).optional(),
+    severity: z.enum(["low", "medium", "high", "critical"]),
+    tactic: z.string().max(64).optional(),
+    technique: z.string().max(64).optional(),
+    query: z.string().min(1).max(4000),
+  });
+  const parsed = ruleSchema.parse(rule);
+  return saveDetectionRuleAnswer(getCtx(), operator.id, examIdSchema.parse(examId), parsed);
+}
+

@@ -9,6 +9,7 @@ import { getSocSessionAction } from "@/app/(app)/labs/soc/actions";
 import { SocWorkspace } from "@/components/labs/soc/SocWorkspace";
 import { ExamTimerHud } from "./ExamTimerHud";
 import { KnowledgeItemsForm } from "./KnowledgeItemsForm";
+import { DetectionRuleEditor } from "./DetectionRuleEditor";
 import { BUDGET_NAMES } from "./format";
 
 const HANDOFF_MAX = 3000;
@@ -96,12 +97,16 @@ export function ExamRunner({ initial }: { initial: ExamStateView }) {
             Limits: {budgets.map(([k, b]) => `${BUDGET_NAMES[k] ?? k} ${b!.limit}`).join(" · ")} (each use counts)
           </p>
         )}
-        {initial.format === "knowledge" && (
+        {(initial.format === "knowledge" || initial.format === "knowledge-l2" || initial.format === "detection-rule") && (
           <button type="button" onClick={openConfirm} disabled={closed} className="min-h-[44px] rounded-xs border border-cyan bg-cyan/20 px-4 font-ui text-sm font-semibold text-cyan hover:bg-cyan/30 disabled:opacity-50">
             Submit exam
           </button>
         )}
       </div>
+
+      {initial.format === "detection-rule" && (
+        <DetectionRuleEditor examId={initial.examId} disabled={closed} />
+      )}
 
       {initial.format === "alert-queue" && (
         <details className="border-b border-line bg-surface px-4 py-3" open>
@@ -132,7 +137,9 @@ export function ExamRunner({ initial }: { initial: ExamStateView }) {
       )}
 
       <div className="flex-1">
-        {initial.format === "knowledge" && initial.knowledgeItems && <KnowledgeItemsForm examId={initial.examId} items={initial.knowledgeItems} disabled={closed} />}
+        {(initial.format === "knowledge" || initial.format === "knowledge-l2") && initial.knowledgeItems && (
+          <KnowledgeItemsForm examId={initial.examId} items={initial.knowledgeItems} disabled={closed} />
+        )}
         {initial.socAttemptId &&
           (loadError ? (
             <p role="alert" className="m-4 rounded-xs border border-danger/40 bg-danger/10 p-4 text-sm text-ink">
@@ -156,7 +163,8 @@ export function ExamRunner({ initial }: { initial: ExamStateView }) {
             <li>You can&apos;t change any answer after submitting.</li>
             <li>Your score, debriefs and model answers appear straight after, for you only.</li>
             {initial.format === "alert-queue" && <li>Your handoff note is saved with the exam.</li>}
-            {initial.format === "investigation" && <li>Your latest saved report draft is graded. Save it first if you changed it.</li>}
+            {(initial.format === "investigation" || initial.format === "investigation-l2") && <li>Your latest saved report draft is graded. Save it first if you changed it.</li>}
+            {initial.format === "detection-rule" && <li>Your latest saved detection rule is evaluated against hidden hold-outs and benign twins.</li>}
           </ul>
           {submitError && (
             <p role="alert" className="text-sm text-ink">

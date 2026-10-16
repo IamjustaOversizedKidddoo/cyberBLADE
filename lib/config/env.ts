@@ -28,6 +28,8 @@ const envSchema = z.object({
   SOC_QUERY_ENABLED: z.string().optional(),
   SOC_EXAMS_ENABLED: z.string().optional(),
   SOC_HANDLER_ENABLED: z.string().optional(),
+  SOC_L2_ENABLED: z.string().optional(),
+  SOC_RULES_ENABLED: z.string().optional(),
 });
 
 function devDefaultFlag(value: string | undefined): boolean {
@@ -40,6 +42,16 @@ function devDefaultFlag(value: string | undefined): boolean {
 /** SOC exam mode (Stage 1). Off in production until reviewed. */
 export function isSocExamsEnabled(): boolean {
   return devDefaultFlag(process.env.SOC_EXAMS_ENABLED);
+}
+
+/** SOC L2 exams and track features. Off in production until reviewed. */
+export function isSocL2Enabled(): boolean {
+  return devDefaultFlag(process.env.SOC_L2_ENABLED);
+}
+
+/** SOC detection rule challenge tools. Off in production until reviewed. */
+export function isSocRulesEnabled(): boolean {
+  return devDefaultFlag(process.env.SOC_RULES_ENABLED);
 }
 
 /** Incident report editor and grading (beta flag set). Off in production until set. */

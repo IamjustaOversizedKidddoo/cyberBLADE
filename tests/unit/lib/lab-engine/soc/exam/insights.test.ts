@@ -42,8 +42,9 @@ describe("L1-A-07: exam lobby with the workspace switched off", () => {
       const { getExamLobby } = await import("@/lib/lab-engine/soc/exam/service");
       const lobby = await getExamLobby(ctx, "u-lobby-off");
       for (const f of lobby.formats) {
-        expect(f.available, f.format).toBe(f.format === "knowledge");
-        if (f.format !== "knowledge") expect(f.unavailableReason).toBe("Not open yet.");
+        const isKnowledge = f.format === "knowledge" || f.format === "knowledge-l2";
+        expect(f.available, f.format).toBe(isKnowledge);
+        if (!isKnowledge) expect(f.unavailableReason).toBe("Not open yet.");
       }
     } finally {
       delete process.env.SOC_WORKSPACE_ENABLED;
