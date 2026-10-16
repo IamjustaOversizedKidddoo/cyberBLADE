@@ -188,6 +188,8 @@ export function buildExamResult(input: ExamResultInput): SocExamResult {
       benignTotal: rc.benignTotal,
       recallPercent: rc.recallPercent,
       precisionPercent: rc.precisionPercent,
+      falsePositiveRatePercent: rc.falsePositiveRatePercent,
+      passed: rc.passed,
       scorePercent: rc.scorePercent,
       feedback: rc.feedback,
     };

@@ -19,6 +19,7 @@ describe("SOC Detection Rule Evaluator", () => {
       summary: "PowerShell download cradle",
       relatedAsset: "WS-01",
       relatedUser: "jdoe",
+      linkedRawEvents: [],
       relatedIocs: [
         { type: "ip", value: "198.51.100.1" },
         { type: "__proto__" as any, value: "polluted" },
@@ -28,7 +29,14 @@ describe("SOC Detection Rule Evaluator", () => {
         __proto__: { admin: true } as any,
         constructor: "polluted" as any,
       },
-      groundTruth: { kind: "true_positive" },
+      groundTruth: {
+        kind: "true_positive",
+        correctDisposition: "true_positive",
+        correctSeverity: "HIGH",
+        correctEscalation: true,
+        acceptableAlternatives: [],
+        debrief: "Simulated test",
+      },
     };
 
     const evt = alertToBladeQLEvent(maliciousAlert);

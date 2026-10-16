@@ -115,6 +115,8 @@ export type SocExamResult = {
     benignTotal: number;
     recallPercent: number;
     precisionPercent: number;
+    falsePositiveRatePercent: number;
+    passed: boolean;
     scorePercent: number;
     feedback: string[];
   } | null;

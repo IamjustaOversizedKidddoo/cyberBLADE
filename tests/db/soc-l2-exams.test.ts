@@ -176,6 +176,6 @@ describe("soc_detection_rules two-user RLS", () => {
       false,
     );
     expect(svcCheck2.rows).toHaveLength(1);
-    expect(svcCheck2.rows[0].id).toBe(rule2Id);
+    expect((svcCheck2.rows[0] as { id: string }).id).toBe(rule2Id);
   });
 });

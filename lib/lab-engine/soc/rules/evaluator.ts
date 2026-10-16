@@ -49,7 +49,8 @@ export function alertToBladeQLEvent(alert: SocAlert): BladeQLEvent {
   }
 
   for (const ioc of alert.relatedIocs ?? []) {
-    if (ioc.type === "__proto__" || ioc.type === "constructor" || ioc.type === "prototype") continue;
+    const iocType = ioc.type as string;
+    if (iocType === "__proto__" || iocType === "constructor" || iocType === "prototype") continue;
     row[ioc.type] = ioc.value;
     if (ioc.type === "ip" && !row.src_ip) row.src_ip = ioc.value;
     if (ioc.type === "hash" && !row.sha256) row.sha256 = ioc.value;
@@ -158,7 +159,7 @@ export async function evaluateDetectionRuleChallenge(
   try {
     // 1. Evaluate against hidden hold-out variants (True Positive Recall)
     const holdOutResult = executeBladeQL(queryTrimmed, holdOutEvents, {
-      budgets: { maxEventsIn: 10000, maxEventsOut: 1000, maxRegexMatches: 5000, maxExecutionTimeMs: 2000 },
+      budgets: { maxEventsScanned: 10000, maxResultRows: 1000, maxWallClockSafetyMs: 2000 },
     });
     const matchedHoldOutIds = new Set(
       holdOutResult.events.map((e) => (e.alert_id as string) || (e._raw as string)),
@@ -169,7 +170,7 @@ export async function evaluateDetectionRuleChallenge(
 
     // 2. Evaluate against benign twins (False Positive Avoidance)
     const benignResult = executeBladeQL(queryTrimmed, benignEvents, {
-      budgets: { maxEventsIn: 10000, maxEventsOut: 1000, maxRegexMatches: 5000, maxExecutionTimeMs: 2000 },
+      budgets: { maxEventsScanned: 10000, maxResultRows: 1000, maxWallClockSafetyMs: 2000 },
     });
     const matchedBenignIds = new Set(
       benignResult.events.map((e) => (e.alert_id as string) || (e._raw as string)),

@@ -189,19 +189,27 @@ describe("context, tiers and lockout", () => {
   it("includes learner's own detection rules in L2 context and isolates from others", async () => {
     const { ctx, userId, attemptId } = await practice();
     await ctx.repo.saveSocDetectionRule({
+      examAttemptId: null,
       userId,
       title: "My Custom Detection Rule",
+      description: "Test rule description",
       severity: "high",
       tactic: "TA0008",
       technique: "T1021.002",
       query: 'severity == "HIGH"',
+      testResults: null,
     });
     // Another learner's rule
     await ctx.repo.saveSocDetectionRule({
+      examAttemptId: null,
       userId: "u-other-learner-99",
       title: "Other Learner Secret Rule",
+      description: "Secret rule description",
       severity: "critical",
+      tactic: "TA0006",
+      technique: "T1003",
       query: 'rule_name =~ "Secret"',
+      testResults: null,
     });
 
     const soc = await buildSocPromptContext(ctx, userId, attemptId);
