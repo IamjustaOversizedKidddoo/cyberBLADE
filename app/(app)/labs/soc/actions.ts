@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
-import { checkRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 import {
   startSocSession,
   getSocSession,
@@ -83,7 +83,7 @@ export async function startSocSessionAction(scenarioId: string): Promise<SocSess
   assertSocWorkspaceEnabled();
   const operator = await requireOperator();
 
-  const rate = checkRateLimit(`soc_start:${operator.id}`, 10, 10_000);
+  const rate = await rateLimit(`soc_start:${operator.id}`, 10, 10_000);
   if (!rate.allowed) {
     throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
   }
@@ -112,7 +112,7 @@ export async function recordSocDecisionAction(
 
   assertSocWorkspaceEnabled();
   const operator = await requireOperator();
-  const rate = checkRateLimit(`soc_decide:${operator.id}`, 30, 10_000);
+  const rate = await rateLimit(`soc_decide:${operator.id}`, 30, 10_000);
   if (!rate.allowed) {
     throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
   }
@@ -131,7 +131,7 @@ export async function manageSocCaseAction(
 
   assertSocWorkspaceEnabled();
   const operator = await requireOperator();
-  const rate = checkRateLimit(`soc_case:${operator.id}`, 30, 10_000);
+  const rate = await rateLimit(`soc_case:${operator.id}`, 30, 10_000);
   if (!rate.allowed) {
     throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
   }
@@ -145,7 +145,7 @@ export async function submitSocAttemptAction(attemptId: string): Promise<SocEval
   assertSocWorkspaceEnabled();
   const operator = await requireOperator();
 
-  const rate = checkRateLimit(`soc_submit:${operator.id}`, 5, 10_000);
+  const rate = await rateLimit(`soc_submit:${operator.id}`, 5, 10_000);
   if (!rate.allowed) {
     throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
   }
@@ -214,7 +214,7 @@ export async function saveSocReportDraftAction(
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
   assertSocWorkspaceEnabled();
   const operator = await requireOperator();
-  const rate = checkRateLimit(`soc_report_draft:${operator.id}`, 60, 60_000);
+  const rate = await rateLimit(`soc_report_draft:${operator.id}`, 60, 60_000);
   if (!rate.allowed) {
     throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
   }
@@ -230,7 +230,7 @@ export async function submitSocReportAction(
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
   assertSocWorkspaceEnabled();
   const operator = await requireOperator();
-  const rate = checkRateLimit(`soc_report_submit:${operator.id}`, 10, 60_000);
+  const rate = await rateLimit(`soc_report_submit:${operator.id}`, 10, 60_000);
   if (!rate.allowed) {
     throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
   }

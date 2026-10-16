@@ -6,7 +6,7 @@
  */
 import { z } from "zod";
 import { requireOperator } from "@/lib/identity/session";
-import { checkRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 import { canAccessRank } from "@/lib/progress/access";
 import { getLesson } from "@/lib/content/lessons";
 import { loadExercises } from "@/lib/content/exercises-server";
@@ -28,7 +28,7 @@ export async function checkLessonExerciseAction(
   const operator = await requireOperator();
   const [lid, eid, qid] = [slug.parse(lessonId), slug.parse(exerciseId), slug.parse(questionId)];
   const value = z.string().max(500).parse(answer);
-  const rate = checkRateLimit(`lesson_exercise:${operator.id}`, 30, 60_000);
+  const rate = await rateLimit(`lesson_exercise:${operator.id}`, 30, 60_000);
   if (!rate.allowed) throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
 
   const lesson = await getLesson(lid);

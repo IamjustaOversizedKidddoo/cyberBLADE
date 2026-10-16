@@ -5,7 +5,7 @@ import "server-only";
  * counts and lockouts survive reloads and cannot be reset from the browser.
  */
 import type { Ctx } from "@/lib/progress/service";
-import { checkRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 import { resolveScenarioForAttempt } from "../engine";
 import type { SocAttemptRecord, SocQuestionAttemptRecord } from "../types";
 import { investigationDataset } from "./investigation-dataset";
@@ -105,8 +105,8 @@ async function evaluate(
   const attempt = await ownedAttempt(ctx, userId, input.attemptId);
   if (attempt.status !== "in_progress") throw new Error("This attempt is closed.");
 
-  const perQuestion = checkRateLimit(`soc_q_answer:${userId}:${key(input)}`, 1, 1500);
-  const perUser = checkRateLimit(`soc_q_answer_user:${userId}`, 30, 60_000);
+  const perQuestion = await rateLimit(`soc_q_answer:${userId}:${key(input)}`, 1, 1500);
+  const perUser = await rateLimit(`soc_q_answer_user:${userId}`, 30, 60_000);
   if (!perQuestion.allowed || !perUser.allowed) throw new Error("Rate limit exceeded: Please wait before submitting another answer.");
 
   const { serverTruths } = await questionSet(attempt);

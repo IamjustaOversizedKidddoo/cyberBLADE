@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import type { Ctx } from "@/lib/progress/service";
-import { checkRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 import { resolveScenarioForAttempt } from "../engine";
 import { executeBladeQL } from "./engine";
 import { BLADEQL_VERSION } from "./ast";
@@ -48,7 +48,7 @@ export async function executeInvestigationQuery(
   }
 
   // 2. Rate limiting (60 queries per minute per user)
-  const rate = checkRateLimit(`soc_query_min:${userId}`, 60, 60_000);
+  const rate = await rateLimit(`soc_query_min:${userId}`, 60, 60_000);
   if (!rate.allowed) {
     throw new Error(`Query rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
   }

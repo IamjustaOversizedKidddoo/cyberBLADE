@@ -10,7 +10,7 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
-import { checkRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 import { logSecurityEvent } from "@/lib/security/audit-logger";
 import type { AiResultView } from "@/lib/lab-engine/soc/ai-grading/compose";
 import { CALIBRATION_CONSENT_VERSION } from "@/lib/lab-engine/soc/ai-grading/calibration/packets";
@@ -35,8 +35,8 @@ async function guarded<T>(label: string, fn: (requestId: string) => Promise<T>):
   }
 }
 
-function limit(key: string, max: number, windowMs: number): void {
-  const rate = checkRateLimit(key, max, windowMs);
+async function limit(key: string, max: number, windowMs: number): Promise<void> {
+  const rate = await rateLimit(key, max, windowMs);
   if (!rate.allowed) throw new Error(`Rate limit exceeded. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s.`);
 }
 
@@ -44,7 +44,7 @@ export async function getSocAiResultAction(submissionId: string): Promise<AiResu
   const id = submissionIdSchema.parse(submissionId);
   assertSocWorkspaceEnabled();
   const operator = await requireOperator();
-  limit(`soc_ai_result:${operator.id}`, 60, 60_000);
+  await limit(`soc_ai_result:${operator.id}`, 60, 60_000);
   return guarded("result", async () => {
     const view = await getAiResultForLearner(getCtx(), operator.id, id);
     if (view.criteria.some((c) => c.displayStatus === "pending")) scheduleAiWorker();
@@ -56,7 +56,7 @@ export async function requestSocAiHumanReviewAction(submissionId: string): Promi
   const id = submissionIdSchema.parse(submissionId);
   assertSocWorkspaceEnabled();
   const operator = await requireOperator();
-  limit(`soc_ai_review_request:${operator.id}`, 3, 60 * 60_000);
+  await limit(`soc_ai_review_request:${operator.id}`, 3, 60 * 60_000);
   return guarded("review-request", async () => {
     const ctx = getCtx();
     const submission = await ctx.repo.getSocReportSubmission(id);
@@ -83,7 +83,7 @@ export async function setSocAiConsentAction(granted: boolean): Promise<{ granted
   assertSocWorkspaceEnabled();
   const value = z.boolean().parse(granted);
   const operator = await requireOperator();
-  limit(`soc_ai_consent:${operator.id}`, 10, 60 * 60_000);
+  await limit(`soc_ai_consent:${operator.id}`, 10, 60 * 60_000);
   return guarded("consent", async () => {
     await getAiGradingStore().setConsent({ userId: operator.id, granted: value, consentVersion: CALIBRATION_CONSENT_VERSION, updatedAt: new Date().toISOString() });
     await logSecurityEvent({ userId: operator.id, eventType: value ? "soc_ai.calibration_consent_granted" : "soc_ai.calibration_consent_revoked", metadata: { consentVersion: CALIBRATION_CONSENT_VERSION } });

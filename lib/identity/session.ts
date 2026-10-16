@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { OPERATOR_COOKIE } from "./constants";
 import { getOperatorStore } from "./operator-store";
 import type { Operator } from "./types";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export { OPERATOR_COOKIE };
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
@@ -13,6 +15,13 @@ const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 export const getCurrentOperator = cache(async (): Promise<Operator | null> => {
   const id = (await cookies()).get(OPERATOR_COOKIE)?.value;
   if (!id) return null;
+  // Hosted: the operator cookie is only a pointer; it must match the signed-in Supabase user
+  // (defence in depth on top of the operators RLS policy, which already limits reads to auth.uid()).
+  if (isSupabaseConfigured()) {
+    const supabase = await createServerSupabaseClient();
+    const { data } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+    if (!data.user || data.user.id !== id) return null;
+  }
   return getOperatorStore().get(id);
 });
 

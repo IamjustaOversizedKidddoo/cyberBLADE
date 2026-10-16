@@ -7,7 +7,7 @@ import "server-only";
  */
 import { z } from "zod";
 import type { Ctx } from "@/lib/progress/service";
-import { checkRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 import { isSocQueryEnabled, socPracticeFlags } from "@/lib/config/env";
 import { loadExamConfig, loadReadinessConfig } from "./config";
 import { evaluateReadiness, type ReadinessResult } from "./readiness";
@@ -63,7 +63,7 @@ export async function submitExamOutcomeReport(ctx: Ctx, userId: string, raw: unk
   const date = Date.parse(`${input.examDate}T00:00:00Z`);
   const now = ctx.now().getTime();
   if (!Number.isFinite(date) || date > now || date < Date.parse("2020-01-01T00:00:00Z")) throw new Error("Enter the date you took the exam (not in the future).");
-  if (!checkRateLimit(`soc_exam_outcome:${userId}`, 5, 3_600_000).allowed) throw new Error("Too many reports. Please try again later.");
+  if (!(await rateLimit(`soc_exam_outcome:${userId}`, 5, 3_600_000)).allowed) throw new Error("Too many reports. Please try again later.");
   if ((await ctx.repo.listSocExamOutcomeReports(userId)).length >= MAX_OUTCOME_REPORTS) throw new Error("You have reached the limit of outcome reports.");
   await ctx.repo.saveSocExamOutcomeReport({ userId, certFamily: input.certFamily, examDate: input.examDate, passed: input.passed, consentVersion: OUTCOME_CONSENT_VERSION });
   return { saved: true };

@@ -24,8 +24,10 @@ export function assertSafeStorageMode(): void {
 
   // Refuse local-first file storage in production (fail loudly)
   // Only explicitly designated test harnesses (e.g. Playwright local runner) may bypass
-  const isTestHarness = process.env.NODE_ENV === "test" || process.env.CYBERBLADE_ALLOW_LOCAL_E2E === "true";
-  if (process.env.NODE_ENV === "production" && !isSupabaseConfigured() && !isTestHarness) {
+  // Never on Vercel: a deployment there is always hosted-only, whatever the harness flag says.
+  const onVercel = process.env.VERCEL === "1";
+  const isTestHarness = !onVercel && (process.env.NODE_ENV === "test" || process.env.CYBERBLADE_ALLOW_LOCAL_E2E === "true");
+  if ((process.env.NODE_ENV === "production" || onVercel) && !isSupabaseConfigured() && !isTestHarness) {
     throw new Error(
       "PRODUCTION SECURITY VIOLATION: Local-first JSON file storage cannot be active in production (NODE_ENV=production). Valid NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required.",
     );

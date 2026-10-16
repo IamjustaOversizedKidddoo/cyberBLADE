@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
-import { checkSubmissionRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 import { submitObjective } from "@/lib/progress/service";
 import { generateLab } from "@/lib/lab-engine/checks";
 import { dispatchHttpRequest } from "@/lib/lab-engine/webapp/simulator";
@@ -16,9 +16,9 @@ export async function submitObjectiveAction(attemptId: string, objectiveId: stri
   const [a, o, text] = args.parse([attemptId, objectiveId, answer]);
   const operator = await requireOperator();
 
-  const rateLimit = checkSubmissionRateLimit(`sub:${operator.id}`);
-  if (!rateLimit.allowed) {
-    throw new Error(`Rate limit exceeded: too many submissions. Please wait ${Math.ceil(rateLimit.retryAfterMs / 1000)}s before trying again.`);
+  const rate = await rateLimit(`sub:${operator.id}`, 10, 10_000);
+  if (!rate.allowed) {
+    throw new Error(`Rate limit exceeded: too many submissions. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s before trying again.`);
   }
 
   return submitObjective(getCtx(), operator.id, a, o, text);

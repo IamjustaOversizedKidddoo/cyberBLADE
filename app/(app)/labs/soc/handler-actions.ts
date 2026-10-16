@@ -9,7 +9,7 @@ import { z } from "zod";
 import { headers } from "next/headers";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
-import { checkRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 import { isSocHandlerEnabled, assertSocWorkspaceEnabled } from "@/lib/config/env";
 import { askSocHandler } from "@/lib/handler/soc-mode";
 import type { HandlerResponse } from "@/lib/handler/types";
@@ -28,7 +28,7 @@ export async function askSocHandlerAction(raw: unknown): Promise<HandlerResponse
   const operator = await requireOperator();
   const forwardedFor = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
   const isTest = process.env.NODE_ENV === "test" || process.env.CYBERBLADE_ALLOW_LOCAL_E2E === "true";
-  const ip = checkRateLimit(`handler:ip:${forwardedFor}`, isTest ? 1000 : 30, 60_000);
+  const ip = await rateLimit(`handler:ip:${forwardedFor}`, isTest ? 1000 : 30, 60_000);
   if (!ip.allowed) {
     return { reply: `[TRANSMISSION THROTTLED] Please wait ${Math.ceil(ip.retryAfterMs / 1000)}s before transmitting again.`, blocked: true, providerUsed: "heuristic" };
   }

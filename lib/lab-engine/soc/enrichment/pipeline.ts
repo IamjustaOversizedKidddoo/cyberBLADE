@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import type { Ctx } from "@/lib/progress/service";
-import { checkRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 import { resolveScenarioForAttempt } from "../engine";
 import { canonicalizeEntity } from "./detector";
 import type { SocAttemptRecord } from "../types";
@@ -56,7 +56,7 @@ export async function executeEnrichmentLookup(
   }
 
   // 3. Rate limiting (60 queries per minute per user)
-  const minuteRate = checkRateLimit(`soc_enrichment_min:${userId}`, 60, 60_000);
+  const minuteRate = await rateLimit(`soc_enrichment_min:${userId}`, 60, 60_000);
   if (!minuteRate.allowed) {
     throw new Error(
       `[${requestId}] Enrichment lookup rate limit exceeded. Please wait ${Math.ceil(

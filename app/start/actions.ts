@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getOperatorStore } from "@/lib/identity/operator-store";
 import { setOperatorCookie } from "@/lib/identity/session";
 import { parseStartForm } from "@/lib/identity/validation";
-import { checkRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 import { verifyCaptchaToken } from "@/lib/security/captcha";
 
 export type StartState = { errors: { handle?: string; agree?: string }; handle: string };
@@ -17,8 +17,8 @@ export async function startOperator(_prev: StartState, formData: FormData): Prom
   // Throttling: Max 10 account registrations per minute per IP (relaxed in test harness)
   const isTest = process.env.NODE_ENV === "test" || process.env.CYBERBLADE_ALLOW_LOCAL_E2E === "true";
   const limit = isTest ? 1000 : 10;
-  const rateLimit = checkRateLimit(`account:create:ip:${forwardedFor}`, limit, 60_000);
-  if (!rateLimit.allowed) {
+  const rate = await rateLimit(`account:create:ip:${forwardedFor}`, limit, 60_000);
+  if (!rate.allowed) {
     return {
       errors: { handle: "Registration velocity limit reached. Please wait a minute before creating an operator." },
       handle: String(formData.get("handle") ?? ""),

@@ -6,7 +6,7 @@ import { createServerSupabaseClient } from "./server";
 import { clearOperatorCookie } from "@/lib/identity/session";
 import { safeNextPath } from "@/lib/identity/routes";
 
-import { checkRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 
 export async function signInWithMagicLink(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
@@ -21,8 +21,8 @@ export async function signInWithMagicLink(formData: FormData) {
   const forwardedFor = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
 
   // Rate limit by IP (5/min) and by target email (3/min)
-  const ipLimit = checkRateLimit(`auth:magic:ip:${forwardedFor}`, 5, 60_000);
-  const emailLimit = checkRateLimit(`auth:magic:email:${email}`, 3, 60_000);
+  const ipLimit = await rateLimit(`auth:magic:ip:${forwardedFor}`, 5, 60_000);
+  const emailLimit = await rateLimit(`auth:magic:email:${email}`, 3, 60_000);
 
   if (!ipLimit.allowed || !emailLimit.allowed) {
     return { error: "Too many sign-in attempts. Please wait a moment before trying again." };

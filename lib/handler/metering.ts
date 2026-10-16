@@ -1,4 +1,6 @@
 import { createJsonStore, dataPath, type JsonStore } from "@/lib/storage/json-store";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { SupabaseHandlerUsageStore } from "./supabase-usage-store";
 
 export type HandlerDailyUsage = {
   requests: number;
@@ -89,21 +91,33 @@ export class MemoryHandlerUsageStore implements HandlerUsageStore {
   }
 }
 
-let activeStore: HandlerUsageStore = new FileHandlerUsageStore();
+// Hosted: Postgres (atomic, shared by every serverless instance). The file store is local only;
+// on Vercel the filesystem is read-only, so file-based metering would silently enforce nothing.
+let override: HandlerUsageStore | null = null;
+let hostedOrFile: HandlerUsageStore | null = null;
+const activeStoreRef = (): HandlerUsageStore => {
+  if (override) return override;
+  hostedOrFile ??= isSupabaseConfigured() ? new SupabaseHandlerUsageStore() : new FileHandlerUsageStore();
+  return hostedOrFile;
+};
+const activeStore: HandlerUsageStore = {
+  getUsage: (u, d) => activeStoreRef().getUsage(u, d),
+  recordUsage: (u, d, i, o) => activeStoreRef().recordUsage(u, d, i, o),
+};
 
 export function setHandlerUsageStore(store: HandlerUsageStore): void {
-  activeStore = store;
+  override = store;
 }
 
 export function getHandlerUsageStore(): HandlerUsageStore {
-  return activeStore;
+  return activeStoreRef();
 }
 
 export function getTodayDateString(now = new Date()): string {
   return now.toISOString().slice(0, 10);
 }
 
-const GLOBAL_USER_ID = "__global_daily_ceiling__";
+export const GLOBAL_USER_ID = "__global_daily_ceiling__";
 
 export async function checkGlobalDailySpendCeiling(now = new Date()): Promise<boolean> {
   const maxTokens = Number(process.env.HANDLER_GLOBAL_DAILY_TOKEN_LIMIT) || 500_000;

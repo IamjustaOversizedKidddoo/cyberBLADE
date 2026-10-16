@@ -8,7 +8,7 @@ import { canAccessRank } from "@/lib/progress/access";
 import { generateLab } from "@/lib/lab-engine/checks";
 import { askHandler, requestProgressiveHint } from "@/lib/handler/service";
 import { getActiveExam } from "@/lib/lab-engine/soc/exam/service";
-import { checkRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 import type { HandlerContext, HandlerMessage, HandlerResponse } from "@/lib/handler/types";
 
 const messageSchema = z.object({
@@ -61,7 +61,7 @@ export async function askHandlerAction(rawInput: {
   const forwardedFor = headersList.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
   const isTest = process.env.NODE_ENV === "test" || process.env.CYBERBLADE_ALLOW_LOCAL_E2E === "true";
   const ipLimit = isTest ? 1000 : 30;
-  const ipCheck = checkRateLimit(`handler:ip:${forwardedFor}`, ipLimit, 60_000);
+  const ipCheck = await rateLimit(`handler:ip:${forwardedFor}`, ipLimit, 60_000);
   if (!ipCheck.allowed) {
     return {
       reply: `[TRANSMISSION THROTTLED] Network request velocity limit reached. Please wait ${Math.ceil(ipCheck.retryAfterMs / 1000)}s before transmitting again.`,

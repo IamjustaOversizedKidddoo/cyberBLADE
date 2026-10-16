@@ -6,7 +6,7 @@ import { requireOperator } from "@/lib/identity/session";
 import { canAccessRank } from "@/lib/progress/access";
 import { abandonChallenge, startChallenge, submitChallengeObjective } from "@/lib/progress/challenge";
 import { getCtx } from "@/lib/progress/context";
-import { checkSubmissionRateLimit } from "@/lib/progress/rate-limit";
+import { rateLimit } from "@/lib/security/rate-limit";
 
 const rankSchema = z.number().int().min(0).max(2);
 
@@ -29,9 +29,9 @@ export async function submitChallengeObjectiveAction(attemptId: string, objectiv
   const [a, o, text] = z.tuple([z.string().min(1).max(100), z.string().min(1).max(50), z.string().max(500)]).parse([attemptId, objectiveId, answer]);
   const operator = await requireOperator();
 
-  const rateLimit = checkSubmissionRateLimit(`sub:${operator.id}`);
-  if (!rateLimit.allowed) {
-    throw new Error(`Rate limit exceeded: too many submissions. Please wait ${Math.ceil(rateLimit.retryAfterMs / 1000)}s before trying again.`);
+  const rate = await rateLimit(`sub:${operator.id}`, 10, 10_000);
+  if (!rate.allowed) {
+    throw new Error(`Rate limit exceeded: too many submissions. Please wait ${Math.ceil(rate.retryAfterMs / 1000)}s before trying again.`);
   }
 
   return submitChallengeObjective(getCtx(), operator.id, a, o, text);
