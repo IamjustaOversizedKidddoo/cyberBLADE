@@ -208,3 +208,7 @@ Generator 1.1.0 (IOC balancing) and 1.2.0 (per-seed indicator values); existing 
 Test isolation: vitest uses a throwaway data dir per worker (Handler tests had been writing into `.data/handler-usage.json`).
 Note: Stage 1 commit hashes cited in Entry 12 were rewritten outside this session (same messages, new hashes; see `git log`).
 Full gates after `8d54b30`: lint ✓ (0 errors, 53 warnings), typecheck ✓, check:content ✓, check:soc ✓ (scenario + 9 families + 4 shifts), test ✓ 1965/1965, test:security ✓ 180/180, build ✓, scan:bundle ✓ (79 artefacts), test:e2e ✓ 158 passed / 24 skipped.
+
+### Entry 14: L2 prompt, interrupted by the owner after the quick fixes (2026-10-16)
+Done and committed: (a) 10-minute drill uses beginner family queues (`cca2fd1`); (b) evidence screenshots untracked (`d632370`); (c) `docs/ops/decisions.md` with the accepted L1 audit decisions, accommodation capped at x2 (`31f2c11`).
+Not started: Part A plan (`docs/design/soc-l2.md`), Part B pilot lessons. Design notes gathered for later: rule-name twins need versioned family snapshots so old attempts keep loading their pinned family version (today `loadSocFamily` reads only the current YAML).
