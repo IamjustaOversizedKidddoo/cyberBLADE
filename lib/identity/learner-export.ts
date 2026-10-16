@@ -72,10 +72,11 @@ export async function buildLearnerExport(ctx: Ctx, userId: string, aiFeedback: A
   );
 
   // SOC exam mode (Stage 1): no seed; results are the learner's own scores and diagnostics.
-  const [examAttempts, examOutcomes, accommodation] = await Promise.all([
+  const [examAttempts, examOutcomes, accommodation, detectionRules] = await Promise.all([
     ctx.repo.listSocExamAttempts(userId),
     ctx.repo.listSocExamOutcomeReports(userId),
     ctx.repo.getSocExamAccommodation(userId),
+    ctx.repo.listSocDetectionRules(userId),
   ]);
   const socExams = await Promise.all(
     examAttempts.map(async (e) => ({
@@ -103,6 +104,17 @@ export async function buildLearnerExport(ctx: Ctx, userId: string, aiFeedback: A
     examReports,
     soc,
     socExams,
+    socDetectionRules: detectionRules.map((r) => ({
+      id: r.id,
+      examAttemptId: r.examAttemptId,
+      title: r.title,
+      description: r.description,
+      severity: r.severity,
+      tactic: r.tactic,
+      technique: r.technique,
+      query: r.query,
+      submittedAt: r.submittedAt,
+    })),
     socExamOutcomeReports: examOutcomes.map((o) => ({ certFamily: o.certFamily, examDate: o.examDate, passed: o.passed, createdAt: o.createdAt })),
     socExamAccommodation: accommodation ? { multiplier: accommodation.multiplier, setAt: accommodation.setAt } : null,
     aiFeedback,

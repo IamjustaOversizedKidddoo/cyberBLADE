@@ -3,7 +3,15 @@
  * never sent to the browser and its column is not granted to learners in Postgres.
  */
 
-export const SOC_EXAM_FORMATS = ["alert-queue", "investigation", "knowledge", "mini-queue"] as const;
+export const SOC_EXAM_FORMATS = [
+  "alert-queue",
+  "investigation",
+  "knowledge",
+  "mini-queue",
+  "investigation-l2",
+  "detection-rule",
+  "knowledge-l2",
+] as const;
 export type SocExamFormat = (typeof SOC_EXAM_FORMATS)[number];
 export type SocExamBudgetKind = "queries" | "lookups" | "questionAnswers";
 
@@ -96,7 +104,48 @@ export type SocExamResult = {
   thoroughness: { queries: number; lookups: number; distinctEntitiesLookedUp: number; questionsAnswered: number; questionsTotal: number } | null;
   report: { totalPercent: number; criteria: Array<{ id: string; label: string; status: "graded" | "not_graded"; percent: number | null; note?: string }> } | null;
   knowledge: { correct: number; total: number; byType: Record<string, { correct: number; total: number }> } | null;
+  ruleChallenge?: {
+    title: string;
+    technique: string;
+    tactic: string;
+    query: string;
+    holdOutDetected: number;
+    holdOutTotal: number;
+    benignTriggered: number;
+    benignTotal: number;
+    recallPercent: number;
+    precisionPercent: number;
+    scorePercent: number;
+    feedback: string[];
+  } | null;
   integrityFlags: IntegrityFlag[];
   budgetsUsed: Record<string, { used: number; limit: number }>;
   submitReason: SocExamSubmitReason;
+};
+
+export type SocRuleTestResult = {
+  holdOutTotal: number;
+  holdOutDetected: number;
+  benignTotal: number;
+  benignTriggered: number;
+  recallPercent: number;
+  precisionPercent: number;
+  falsePositiveRatePercent: number;
+  passed: boolean;
+  scorePercent: number;
+  feedback: string[];
+};
+
+export type SocDetectionRuleRecord = {
+  id: string;
+  examAttemptId: string | null;
+  userId: string;
+  title: string;
+  description: string;
+  severity: "low" | "medium" | "high" | "critical";
+  tactic: string;
+  technique: string;
+  query: string;
+  testResults: SocRuleTestResult | null;
+  submittedAt: string;
 };

@@ -32,7 +32,7 @@ export const examConfigSchema = z
     formats: z.object(Object.fromEntries(SOC_EXAM_FORMATS.map((f) => [f, formatSchema])) as Record<SocExamFormat, typeof formatSchema>),
   })
   .refine((c) => SOC_EXAM_FORMATS.every((f) => Math.abs(Object.values(c.formats[f].weights).reduce((a, b) => a + b, 0) - 1) < 1e-9), "weights must sum to 1")
-  .refine((c) => SOC_EXAM_FORMATS.every((f) => (f === "knowledge" ? !!c.formats[f].itemCount : (c.formats[f].variants?.length ?? 0) > 0)), "scenario formats need variants; knowledge needs itemCount");
+  .refine((c) => SOC_EXAM_FORMATS.every((f) => (f === "knowledge" || f === "knowledge-l2" ? !!c.formats[f].itemCount : (c.formats[f].variants?.length ?? 0) > 0)), "scenario formats need variants; knowledge needs itemCount");
 
 export type SocExamConfig = z.infer<typeof examConfigSchema>;
 export type SocExamFormatConfig = SocExamConfig["formats"][SocExamFormat];

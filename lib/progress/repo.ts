@@ -27,6 +27,7 @@ import type {
   SocExamAnswerRecord,
   SocExamAttemptRecord,
   SocExamOutcomeReport,
+  SocDetectionRuleRecord,
 } from "@/lib/lab-engine/soc/exam/types";
 
 /** Shared exam-start rule (local store and Postgres check the same conditions). */
@@ -164,6 +165,8 @@ export interface ProgressRepo {
   listSocExamOutcomeReports(userId?: string): Promise<SocExamOutcomeReport[]>;
   getSocExamAccommodation(userId: string): Promise<SocExamAccommodation | null>;
   setSocExamAccommodation(rec: SocExamAccommodation): Promise<SocExamAccommodation>;
+  saveSocDetectionRule(rule: Omit<SocDetectionRuleRecord, "id" | "submittedAt">): Promise<SocDetectionRuleRecord>;
+  listSocDetectionRules(userId: string, examAttemptId?: string): Promise<SocDetectionRuleRecord[]>;
 }
 
 function latestAttempt(d: ProgressData, userId: string, labId: string, mode: AttemptMode): LabAttempt | null {
@@ -897,6 +900,26 @@ export class StoreProgressRepo implements ProgressRepo {
       d.socExamAccommodations[rec.userId] = rec;
     });
     return rec;
+  }
+
+  async saveSocDetectionRule(rule: Omit<SocDetectionRuleRecord, "id" | "submittedAt">): Promise<SocDetectionRuleRecord> {
+    const rec: SocDetectionRuleRecord = {
+      ...rule,
+      id: randomUUID(),
+      submittedAt: new Date().toISOString(),
+    };
+    await this.store.update((d) => {
+      d.socDetectionRules ??= {};
+      d.socDetectionRules[rec.id] = rec;
+    });
+    return rec;
+  }
+
+  async listSocDetectionRules(userId: string, examAttemptId?: string): Promise<SocDetectionRuleRecord[]> {
+    const all = Object.values((await this.store.read()).socDetectionRules ?? {});
+    return all
+      .filter((r) => r.userId === userId && (!examAttemptId || r.examAttemptId === examAttemptId))
+      .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
   }
 }
 

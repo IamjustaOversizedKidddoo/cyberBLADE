@@ -11,6 +11,7 @@ import type {
   SocExamAttemptRecord,
   SocExamOutcomeReport,
   SocExamResult,
+  SocDetectionRuleRecord,
 } from "./types";
 
 type Row = Record<string, unknown>;
@@ -197,4 +198,49 @@ export async function setAccommodation(c: Client, rec: SocExamAccommodation): Pr
     "set accommodation",
   );
   return rec;
+}
+
+export const detectionRuleFromRow = (r: Row): SocDetectionRuleRecord => ({
+  id: r.id as string,
+  examAttemptId: (r.exam_attempt_id as string | null) ?? null,
+  userId: r.user_id as string,
+  title: r.title as string,
+  description: (r.description as string) ?? "",
+  severity: r.severity as SocDetectionRuleRecord["severity"],
+  tactic: (r.tactic as string) ?? "",
+  technique: (r.technique as string) ?? "",
+  query: r.query as string,
+  testResults: (r.test_results as SocDetectionRuleRecord["testResults"]) ?? null,
+  submittedAt: iso(r.submitted_at)!,
+});
+
+export async function saveDetectionRule(
+  c: Client,
+  rule: Omit<SocDetectionRuleRecord, "id" | "submittedAt">,
+): Promise<SocDetectionRuleRecord> {
+  const row = check(
+    await c
+      .from("soc_detection_rules")
+      .insert({
+        exam_attempt_id: rule.examAttemptId,
+        user_id: rule.userId,
+        title: rule.title,
+        description: rule.description,
+        severity: rule.severity,
+        tactic: rule.tactic,
+        technique: rule.technique,
+        query: rule.query,
+        test_results: rule.testResults,
+      })
+      .select()
+      .single(),
+    "save detection rule",
+  );
+  return detectionRuleFromRow(row as Row);
+}
+
+export async function listDetectionRules(c: Client, userId: string, examAttemptId?: string): Promise<SocDetectionRuleRecord[]> {
+  let q = c.from("soc_detection_rules").select("*").eq("user_id", userId).order("submitted_at", { ascending: false });
+  if (examAttemptId) q = q.eq("exam_attempt_id", examAttemptId);
+  return (check(await q, "list detection rules") as Row[]).map(detectionRuleFromRow);
 }

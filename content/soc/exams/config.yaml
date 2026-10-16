@@ -51,3 +51,38 @@ formats:
     xp: 20
     countsForReadiness: false
     weights: { decisions: 1 }
+  investigation-l2:
+    title: "L2 Investigation exam (Multi-stage scoping)"
+    summary: "Investigate an advanced multi-stage attack across endpoints and identity, scope the compromise boundaries, and deliver a comprehensive incident scoping report."
+    durationMinutes: 180
+    variants: ["soc-f-phishing-cred-01", "soc-f-attachment-script-01", "soc-f-brute-force-auth-01", "soc-f-cloud-identity-01", "soc-f-outbound-exfil-01", "soc-f-web-attack-data-01"]
+    difficulty: advanced
+    budgets: { queries: 80, lookups: 50, questionAnswers: 25 }
+    cooldownMinutes: 240
+    maxAttempts: { count: 2, windowDays: 7 }
+    xp: 300
+    countsForReadiness: true
+    weights: { decisions: 0.25, questions: 0.25, report: 0.5 }
+  detection-rule:
+    title: "Detection engineering challenge"
+    summary: "Author and test a detection rule against an observed attack pattern. Graded on hidden hold-out variants and benign twins."
+    durationMinutes: 60
+    variants: ["soc-f-attachment-script-01", "soc-f-phishing-cred-01", "soc-f-brute-force-auth-01", "soc-f-web-attack-data-01"]
+    difficulty: intermediate
+    budgets: { queries: 30, lookups: 20, questionAnswers: 0 }
+    cooldownMinutes: 120
+    maxAttempts: { count: 3, windowDays: 7 }
+    xp: 200
+    countsForReadiness: true
+    weights: { ruleDetection: 0.5, falsePositiveControl: 0.35, ruleQuality: 0.15 }
+  knowledge-l2:
+    title: "L2 Knowledge exam"
+    summary: "An advanced timed exam covering detection engineering, digital forensics, Active Directory attack paths, memory analysis, and scoping methodology."
+    durationMinutes: 45
+    itemCount: 25
+    budgets: {}
+    cooldownMinutes: 60
+    maxAttempts: { count: 3, windowDays: 7 }
+    xp: 200
+    countsForReadiness: true
+    weights: { items: 1 }

@@ -33,6 +33,7 @@ import type {
   SocExamAnswerRecord,
   SocExamAttemptRecord,
   SocExamOutcomeReport,
+  SocDetectionRuleRecord,
 } from "@/lib/lab-engine/soc/exam/types";
 
 export class SupabaseProgressRepo implements ProgressRepo {
@@ -1560,6 +1561,12 @@ export class SupabaseProgressRepo implements ProgressRepo {
   }
   async setSocExamAccommodation(rec: SocExamAccommodation) {
     return exam.setAccommodation(await this.examClient(), rec);
+  }
+  async saveSocDetectionRule(rule: Omit<SocDetectionRuleRecord, "id" | "submittedAt">) {
+    return exam.saveDetectionRule(await this.examClient(), rule);
+  }
+  async listSocDetectionRules(userId: string, examAttemptId?: string) {
+    return exam.listDetectionRules(await this.examClient(), userId, examAttemptId);
   }
 
   async deleteUserData(userId: string): Promise<void> {
