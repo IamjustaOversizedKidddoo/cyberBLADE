@@ -66,6 +66,7 @@ Apply the files in `supabase/migrations/` in filename order. Use either `supabas
 20261015120000_phase_3_soc_exams.sql
 20261015180000_phase_3_soc_l1_audit_fixes.sql
 20261016120000_beta_hardening.sql
+20261016180000_soc_l2_exams.sql   (L2 schema; the feature stays off with SOC_L2_ENABLED=false)
 ```
 
 All of these were executed on PGlite in tests (`npm run test:db`). **None has been executed against a hosted database.** Rollback notes are in each file's header. A bad migration is handled by the runbook below.
