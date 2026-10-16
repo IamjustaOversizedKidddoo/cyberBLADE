@@ -240,3 +240,36 @@ Full gates (2026-10-16):
 - scan:bundle ✓ (88 client artifacts, 0 leaks across 11 pattern rules and secret values)
 - test:e2e ✓ (20 passed, 2 skipped: onboarding, terminal lab, knowledge & scenario exams, feedback widget)
 - Migration `20261016120000_beta_hardening.sql` executed on PGlite only, NOT on any hosted database.
+
+### Entry 16: SOC Level 2 (L2) Exam Formats & Hardening — Stage 1 Build (2026-10-16)
+Additive implementation reusing L1 exam infrastructure:
+1. **L2 Exam Formats:**
+   - `investigation-l2`: Multi-stage investigation exam with incident scoping report template (`scoping-report-l2.yaml`) & rubric (`scoping-report-l2-rubric.yaml`).
+   - `detection-rule`: Detection rule engineering challenge evaluated against hidden hold-out variants and benign twins via pure server evaluator (`lib/lab-engine/soc/rules/evaluator.ts`) with zero client oracle before submission; protected against ReDoS and prototype pollution.
+   - `knowledge-l2`: 25 authored questions (K23–K45) in `content/soc/exams/knowledge-bank-l2.yaml`; claims logged in `docs/ops/soc-curriculum-claims.md` with objective alignment explicitly marked `UNVERIFIED`.
+2. **Readiness Gate & UI:**
+   - Provisional readiness criteria in `content/soc/exams/readiness-l2.yaml` using exact wording (*"Your recent practice meets our provisional readiness criteria. This is an estimate, not a guarantee of passing any exam."*).
+   - Rule editor UI (`DetectionRuleEditor.tsx`), keyboard-accessible test tab, post-submission quality feedback (recall, precision, FPR), evidence log in `docs/design/evidence/soc-l2-exams.md`. Works with drills off.
+3. **Handler L2 Context & Defenses:**
+   - Learner-visible queries, lookups, and detection rules (`myDetectionRules`) exposed to Handler.
+   - `rule_seeking` category in `soc-guard.ts` providing Socratic redirects without model calls or verdict reveals.
+   - 61 unit tests covering attacks, prompt injection, and over-refusal in `tests/unit/lib/handler/soc-mode.test.ts`.
+4. **Data Layer & Migrations:**
+   - Additive migration `20261016180000_soc_l2_exams.sql` (format constraint expansion, `soc_detection_rules` table with RLS, atomic start function, updated `delete_user_account()`).
+   - PGlite two-user tests (`tests/db/soc-l2-exams.test.ts`, 8/8 passed). Local store parity, deletion and export allowlists extended.
+5. **Security & Leaks:**
+   - Added `rule-ground-truth` leak rule and extended `exam-keys` in `lib/security/bundle-scan.ts`.
+   - Feature flags `SOC_L2_ENABLED` and `SOC_RULES_ENABLED` configured and defaulted to false in production.
+
+Full gates:
+- lint ✓ (0 errors, 53 pre-existing warnings)
+- typecheck ✓ (0 errors)
+- check:content ✓
+- check:soc ✓ (1 scenario, 9 families, 4 shifts)
+- test ✓ 2103/2103
+- test:security ✓ 257/257
+- test:db ✓ 109/109 (PGlite)
+- build ✓ (Next.js Turbopack)
+- scan:bundle ✓ (88 client artifacts, 0 leaks across 12 pattern rules)
+- test:e2e ✓ (`tests/e2e/soc-exams.spec.ts` 4/4 passed)
+- Migration `20261016180000_soc_l2_exams.sql` executed on PGlite only, NOT on any hosted database.
