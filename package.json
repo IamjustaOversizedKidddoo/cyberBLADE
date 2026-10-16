@@ -36,7 +36,9 @@
     "soc:pin-hashes": "tsx scripts/soc-pin-hashes.mts",
     "beta:invites": "tsx --conditions=react-server scripts/beta-invites.mts",
     "beta:feedback": "tsx --conditions=react-server scripts/beta-feedback-export.mts",
-    "ops:daily": "tsx scripts/ops-daily-summary.mts"
+    "ops:daily": "tsx scripts/ops-daily-summary.mts",
+    "db:backup": "tsx scripts/db-backup.mts",
+    "db:restore-check": "tsx scripts/db-restore-check.mts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

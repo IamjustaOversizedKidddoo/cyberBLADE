@@ -9,24 +9,7 @@ import { PGlite, type Transaction } from "@electric-sql/pglite";
 import { pgcrypto } from "@electric-sql/pglite/contrib/pgcrypto";
 import { uuid_ossp } from "@electric-sql/pglite/contrib/uuid_ossp";
 
-const BOOTSTRAP = `
-CREATE ROLE anon NOLOGIN;
-CREATE ROLE authenticated NOLOGIN;
-CREATE ROLE service_role NOLOGIN BYPASSRLS;
-CREATE SCHEMA auth;
-CREATE TABLE auth.users (id uuid PRIMARY KEY, email text);
-CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS
-  $$ SELECT nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
-CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS
-  $$ SELECT nullif(current_setting('request.jwt.claim.role', true), '') $$;
-GRANT USAGE ON SCHEMA public, auth TO anon, authenticated, service_role;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA auth TO anon, authenticated, service_role;
-GRANT SELECT ON auth.users TO service_role;
--- Supabase's default privileges on the public schema (this is why column-level REVOKEs alone do nothing).
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon, authenticated, service_role;
-`;
+import { SUPABASE_BOOTSTRAP_SQL as BOOTSTRAP } from "@/lib/db/supabase-bootstrap";
 
 export const MIGRATIONS_DIR = path.resolve("supabase/migrations");
 
