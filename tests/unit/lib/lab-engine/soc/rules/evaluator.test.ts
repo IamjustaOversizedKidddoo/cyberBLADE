@@ -125,4 +125,56 @@ describe("SOC Detection Rule Evaluator", () => {
     expect(typeof res.scorePercent).toBe("number");
     expect(Array.isArray(res.feedback)).toBe(true);
   });
+
+  it("penalizes wildcard-everything rules with 100% false positive rate and fails challenge", async () => {
+    const res = await evaluateDetectionRuleChallenge(
+      "soc-f-attachment-script-01",
+      "parent-seed-test-1",
+      {
+        title: "Wildcard Everything Rule",
+        severity: "high",
+        tactic: "TA0002",
+        technique: "T1059.001",
+        query: `source != "nonexistent_source"`,
+      },
+    );
+
+    // Matches everything: high recall, but 100% false positive rate
+    expect(res.recallPercent).toBe(100);
+    expect(res.falsePositiveRatePercent).toBe(100);
+    expect(res.passed).toBe(false); // Fails because FPR > 15%
+    expect(res.feedback.some((f) => f.includes("false positive"))).toBe(true);
+  });
+
+  it("detects and fails rules that overfit to specific alert IDs of visible samples", async () => {
+    const res = await evaluateDetectionRuleChallenge(
+      "soc-f-attachment-script-01",
+      "parent-seed-test-1",
+      {
+        title: "Overfitted Rule",
+        severity: "high",
+        tactic: "TA0002",
+        technique: "T1059.001",
+        query: `alert_id == "visible-alert-123"`,
+      },
+    );
+
+    // Holdouts use derived seeds, so specific alert IDs from another seed match nothing
+    expect(res.recallPercent).toBe(0);
+    expect(res.passed).toBe(false);
+  });
+
+  it("is strictly deterministic across multiple runs with identical inputs", async () => {
+    const rule = {
+      title: "Deterministic Rule Test",
+      severity: "high" as const,
+      tactic: "TA0002",
+      technique: "T1059.001",
+      query: `severity == "HIGH"`,
+    };
+    const run1 = await evaluateDetectionRuleChallenge("soc-f-attachment-script-01", "seed-det-42", rule);
+    const run2 = await evaluateDetectionRuleChallenge("soc-f-attachment-script-01", "seed-det-42", rule);
+
+    expect(run1).toEqual(run2);
+  });
 });
