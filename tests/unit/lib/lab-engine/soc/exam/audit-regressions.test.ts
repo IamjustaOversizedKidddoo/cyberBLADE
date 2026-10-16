@@ -117,4 +117,13 @@ describe("knowledge item ids never leave the server", () => {
     for (const item of loadKnowledgeBank().items) expect(json).not.toContain(item.id);
     expect(s.knowledgeItems!.every((i) => /^q[0-9a-f]{12}$/.test(i.id))).toBe(true);
   });
+
+  it("knowledge-l2 bank is valid with UNVERIFIED objective alignment and opaque keys", async () => {
+    const l2Bank = loadKnowledgeBank("content/soc/exams/knowledge-bank-l2.yaml");
+    expect(l2Bank.objectiveAlignment).toBe("UNVERIFIED");
+    expect(l2Bank.items.length).toBeGreaterThanOrEqual(25);
+    for (const item of l2Bank.items) {
+      expect(item.claim).toMatch(/^K\d+$/);
+    }
+  });
 });

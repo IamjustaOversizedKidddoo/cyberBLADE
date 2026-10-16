@@ -57,11 +57,17 @@ export type KnowledgeItemView = {
 /** A learner answer: chosen option ids (mcq/log: one; multi: any; ordering: all, in order). */
 export type KnowledgeAnswer = string[];
 
-let cached: KnowledgeBank | null = null;
+const bankCache = new Map<string, KnowledgeBank>();
+export function knowledgeBankForFormat(format: string): string {
+  return format === "knowledge-l2" ? "content/soc/exams/knowledge-bank-l2.yaml" : "content/soc/exams/knowledge-bank.yaml";
+}
+
 export function loadKnowledgeBank(file = "content/soc/exams/knowledge-bank.yaml"): KnowledgeBank {
-  if (cached && file === "content/soc/exams/knowledge-bank.yaml") return cached;
-  const bank = knowledgeBankSchema.parse(parseYaml(fs.readFileSync(path.resolve(file), "utf8")));
-  if (file === "content/soc/exams/knowledge-bank.yaml") cached = bank;
+  const resolved = path.resolve(file);
+  const hit = bankCache.get(resolved);
+  if (hit) return hit;
+  const bank = knowledgeBankSchema.parse(parseYaml(fs.readFileSync(resolved, "utf8")));
+  bankCache.set(resolved, bank);
   return bank;
 }
 

