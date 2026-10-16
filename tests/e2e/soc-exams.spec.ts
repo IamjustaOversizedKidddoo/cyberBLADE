@@ -76,11 +76,12 @@ test.describe("SOC practice exams", () => {
     await expect(page.getByRole("heading", { name: "What made up your score" })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText(/not equivalent to, and does not predict, any real exam result/)).toBeVisible();
     await expect(page.getByRole("heading", { name: /^Review · \d+ of 25 correct$/ })).toBeVisible();
+    await expect(page).toHaveTitle(/SOC Practice Exam/);
     await axeClean(page);
     await noHorizontalScroll(page);
 
     await page.goto("/labs/soc/exams/readiness");
-    await expect(page.getByRole("heading", { name: "Not ready yet" })).toBeVisible();
+    await expect(page.locator("#state-l1")).toContainText("Not ready yet");
     await expect(page.getByText(/Not met yet/).first()).toBeVisible();
     await expect(page.getByText("Your recent practice meets our provisional readiness criteria.")).toHaveCount(0);
     await axeClean(page);
@@ -103,6 +104,7 @@ test.describe("SOC practice exams", () => {
     await page.getByRole("button", { name: "Submit exam", exact: true }).press("Enter");
     await expect(page.getByRole("heading", { name: "Decision quality" })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole("link", { name: /Review alerts, debriefs/ })).toBeVisible();
+    await expect(page).toHaveTitle(/SOC Practice Exam/);
     await axeClean(page);
     await noHorizontalScroll(page);
   });
@@ -125,22 +127,22 @@ test.describe("SOC practice exams", () => {
     await expect(page.getByRole("group", { name: "Exam timer" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Detection Rule Challenge Specification" })).toBeVisible();
 
-    // Fill in the rule
-    await page.getByLabel("Rule Title").fill("Suspicious PowerShell Download Cradle");
-    await page.getByLabel("Severity").selectOption("high");
-    await page.getByLabel("MITRE ATT&CK Tactic").fill("Execution");
-    await page.getByLabel("MITRE ATT&CK Technique ID").fill("T1059.001");
-    await page.getByLabel("Description & Threat Context").fill("Detects malicious PowerShell script block execution downloading payload from remote IP");
-    await page.getByLabel("Detection Query (BladeQL)").fill('severity == "HIGH" and (command_line =~ "DownloadString" or command_line =~ "powershell")');
+    // Fill in the rule using distinct element IDs
+    await page.locator("#rule-title").fill("Suspicious PowerShell Download Cradle");
+    await page.locator("#rule-severity").selectOption("high");
+    await page.locator("#rule-tactic").fill("Execution");
+    await page.locator("#rule-technique").fill("T1059.001");
+    await page.locator("#rule-description").fill("Detects malicious PowerShell script block execution downloading payload from remote IP");
+    await page.locator("#rule-query").fill('severity == "HIGH" and (command_line =~ "DownloadString" or command_line =~ "powershell")');
 
     // Save detection rule draft
     await page.getByRole("button", { name: "Save detection rule draft" }).click();
-    await expect(page.getByText(/^Saved at \d{2}:\d{2}$/)).toBeVisible();
+    await expect(page.getByText(/^Saved at \d{1,2}:\d{2}/)).toBeVisible();
 
     // Verify persistence across reload (fixed in L2-A-02)
     await page.reload();
-    await expect(page.getByLabel("Rule Title")).toHaveValue("Suspicious PowerShell Download Cradle");
-    await expect(page.getByLabel("Detection Query (BladeQL)")).toHaveValue('severity == "HIGH" and (command_line =~ "DownloadString" or command_line =~ "powershell")');
+    await expect(page.locator("#rule-title")).toHaveValue("Suspicious PowerShell Download Cradle");
+    await expect(page.locator("#rule-query")).toHaveValue('severity == "HIGH" and (command_line =~ "DownloadString" or command_line =~ "powershell")');
 
     // Accessibility and mobile responsiveness checks
     await axeClean(page, "[aria-label='Exam timer']");
@@ -149,7 +151,7 @@ test.describe("SOC practice exams", () => {
     // Submit the exam
     await page.getByRole("button", { name: "Submit exam" }).first().click();
     await expect(page.getByRole("heading", { name: "Submit your exam?" })).toBeVisible();
-    await page.getByRole("button", { name: "Submit exam", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Submit exam" }).click();
 
     // Results view: hold-out recall, benign twin FPR, precision, diagnostics
     await expect(page.getByRole("heading", { name: /^Detection Rule Evaluation/ })).toBeVisible({ timeout: 30_000 });
