@@ -13,6 +13,8 @@ const formatSchema = z.object({
   summary: z.string().min(1),
   durationMinutes: z.number().int().min(1).max(600),
   variants: z.array(z.string().regex(/^(shift-|soc-f-)[a-z0-9-]+$/)).optional(),
+  /** Family variants only: generation difficulty (sets the queue size). Default intermediate. */
+  difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
   itemCount: z.number().int().min(1).max(100).optional(),
   budgets: z.object({ queries: z.number().int().min(0).optional(), lookups: z.number().int().min(0).optional(), questionAnswers: z.number().int().min(0).optional() }),
   sla: z.object({ targetSecondsPerAlert: z.number().positive(), firstContainmentWithinMinutes: z.number().positive() }).optional(),

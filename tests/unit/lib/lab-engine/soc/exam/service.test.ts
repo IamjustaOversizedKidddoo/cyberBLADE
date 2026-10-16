@@ -163,6 +163,14 @@ describe("attempts, seeds and idempotency", () => {
     await expect(abandonSocAttempt(ctx, U, s.socAttemptId!)).rejects.toThrow("cannot be abandoned");
   });
 
+  it("the 10-minute drill is a small queue (beginner family profile), not a full shift", async () => {
+    const ctx = makeCtx({ t: T0 });
+    const s = await startExam(ctx, "u-mini-size", "mini-queue");
+    const session = await getSocSession(ctx, "u-mini-size", s.socAttemptId!);
+    expect(session.scenario.alerts.length).toBeLessThanOrEqual(35);
+    expect((await ctx.repo.getSocAttempt(s.socAttemptId!))!.difficulty).toBe("beginner");
+  });
+
   it("seeds never repeat per (learner, format) and variants rotate least-used first", async () => {
     const clock = { t: T0 };
     const ctx = makeCtx(clock);
@@ -175,8 +183,8 @@ describe("attempts, seeds and idempotency", () => {
     }
     const exams = await ctx.repo.listSocExamAttempts(U);
     expect(new Set(exams.map((e) => e.seed)).size).toBe(4);
-    expect(seen.slice(0, 2).sort()).toEqual(["shift-quiet-day", "shift-standard-mixed"]);
-    expect(seen.slice(2, 4).sort()).toEqual(["shift-quiet-day", "shift-standard-mixed"]);
+    expect(seen.slice(0, 2).sort()).toEqual(["soc-f-brute-force-auth-01", "soc-f-phishing-cred-01"]);
+    expect(seen.slice(2, 4).sort()).toEqual(["soc-f-brute-force-auth-01", "soc-f-phishing-cred-01"]);
   });
 
   it("knowledge draws unseen items first", async () => {

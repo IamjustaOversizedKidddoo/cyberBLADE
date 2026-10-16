@@ -98,8 +98,9 @@ async function createExamSocAttempt(ctx: Ctx, exam: SocExamAttemptRecord): Promi
     return ctx.repo.createSocAttempt({ ...base, familyId: exam.variantId, familyVersion: shift.version, difficulty: shift.difficulty, scenarioHash: computeScenarioHash(scenario) });
   }
   const family = await loadSocFamily(exam.variantId);
-  const { contentHash } = generateSocVariant(family, exam.seed, "intermediate");
-  return ctx.repo.createSocAttempt({ ...base, familyId: exam.variantId, familyVersion: family.metadata.version, difficulty: "intermediate", scenarioHash: contentHash });
+  const difficulty = formatConfig(exam.format).difficulty ?? "intermediate";
+  const { contentHash } = generateSocVariant(family, exam.seed, difficulty);
+  return ctx.repo.createSocAttempt({ ...base, familyId: exam.variantId, familyVersion: family.metadata.version, difficulty, scenarioHash: contentHash });
 }
 
 /** Scenario exams get their SOC attempt at start; if that step failed, the next read retries it. */

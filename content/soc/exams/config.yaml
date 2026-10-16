@@ -42,7 +42,9 @@ formats:
     title: "Time-management drill"
     summary: "A short timed queue: triage as many alerts as you can, well, in 10 minutes. Practice only."
     durationMinutes: 10
-    variants: ["shift-quiet-day", "shift-standard-mixed"]
+    # Small queues (beginner profile: about 30 alerts, one incident) instead of full shifts (60-85).
+    variants: ["soc-f-phishing-cred-01", "soc-f-brute-force-auth-01"]
+    difficulty: beginner
     budgets: { queries: 10, lookups: 10, questionAnswers: 0 }
     cooldownMinutes: 0
     maxAttempts: { count: 10, windowDays: 1 }

@@ -17,7 +17,10 @@ import { loadKnowledgeBank } from "@/lib/lab-engine/soc/exam/knowledge";
 import { buildLearnerExport } from "@/lib/identity/learner-export";
 import type { Ctx } from "@/lib/progress/service";
 
-const T0 = new Date("2026-10-15T09:00:00Z");
+// Anchored to the real clock: the repo stamps question attempts with the wall clock, and only work
+// stamped before the exam deadline counts. A fixed past date made this test fail once the real date
+// passed it (it passed on the day it was written).
+const T0 = new Date();
 
 async function investigationWithCorrectAnswer(ctx: Ctx, userId: string) {
   const s = await startExam(ctx, userId, "investigation");
