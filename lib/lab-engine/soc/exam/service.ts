@@ -7,7 +7,7 @@ import "server-only";
  */
 import type { Ctx } from "@/lib/progress/service";
 import { examStartRefusal } from "@/lib/progress/repo";
-import { isSocQueryEnabled, isSocWorkspaceEnabled } from "@/lib/config/env";
+import { isSocQueryEnabled, isSocReportsEnabled, isSocWorkspaceEnabled } from "@/lib/config/env";
 import { newSeed } from "@/lib/generators/rng";
 import { loadSocFamily, loadSocShift, resolveScenarioForAttempt } from "../engine";
 import { composeShiftScenario } from "../shift-composer";
@@ -44,6 +44,7 @@ export type ExamStateView = {
   timeMultiplier: number;
   socAttemptId: string | null;
   searchEnabled: boolean;
+  reportsEnabled: boolean;
   budgets: Partial<Record<SocExamBudgetKind, { used: number; limit: number }>>;
   knowledgeItems: Array<KnowledgeItemView & { savedAnswer: KnowledgeAnswer | null }> | null;
   handoffNote: string | null;
@@ -214,6 +215,7 @@ export async function getExamState(ctx: Ctx, userId: string, examId: string): Pr
     timeMultiplier: exam.timeMultiplier,
     socAttemptId: exam.socAttemptId,
     searchEnabled: isSocQueryEnabled(),
+    reportsEnabled: isSocReportsEnabled(),
     budgets,
     knowledgeItems,
     handoffNote: typeof handoff === "string" ? handoff : null,
@@ -419,7 +421,8 @@ export async function getExamLobby(ctx: Ctx, userId: string): Promise<ExamLobbyV
       const f = config.formats[format];
       // Scenario formats run in the SOC workspace; with it switched off they are "not open yet"
       // instead of a Start button that fails (L1-A-07).
-      const closed = format !== "knowledge" && !isSocWorkspaceEnabled();
+      // The investigation format grades a written report, so it also needs the report editor.
+      const closed = (format !== "knowledge" && !isSocWorkspaceEnabled()) || ("report" in f.weights && !isSocReportsEnabled());
       const refusal = closed ? "not open" : examStartRefusal(exams, { attempt: { userId, format }, cooldownMinutes: f.cooldownMinutes, maxAttempts: f.maxAttempts.count, windowDays: f.maxAttempts.windowDays, now });
       return {
         format,

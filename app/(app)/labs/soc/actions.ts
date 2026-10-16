@@ -24,7 +24,7 @@ import type {
   SocCaseRecord,
   SocEvaluationResult,
 } from "@/lib/lab-engine/soc/types";
-import { isSocEnrichmentEnabled, assertSocWorkspaceEnabled } from "@/lib/config/env";
+import { isSocEnrichmentEnabled, assertSocWorkspaceEnabled, assertSocReportsEnabled } from "@/lib/config/env";
 import { executeEnrichmentLookup } from "@/lib/lab-engine/soc/enrichment/pipeline";
 import {
   enrichmentLookupInputSchema,
@@ -213,6 +213,7 @@ export async function saveSocReportDraftAction(
 ): Promise<SocReportSubmissionRecord> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
   assertSocWorkspaceEnabled();
+  assertSocReportsEnabled();
   const operator = await requireOperator();
   const rate = await rateLimit(`soc_report_draft:${operator.id}`, 60, 60_000);
   if (!rate.allowed) {
@@ -229,6 +230,7 @@ export async function submitSocReportAction(
 ): Promise<SocReportSubmissionResult> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
   assertSocWorkspaceEnabled();
+  assertSocReportsEnabled();
   const operator = await requireOperator();
   const rate = await rateLimit(`soc_report_submit:${operator.id}`, 10, 60_000);
   if (!rate.allowed) {
@@ -247,6 +249,7 @@ export async function getSocReportDraftAction(
 ): Promise<SocReportSubmissionRecord | null> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
   assertSocWorkspaceEnabled();
+  assertSocReportsEnabled();
   const operator = await requireOperator();
   const ctx = getCtx();
   return getSocReportDraft(ctx, operator.id, cleanAttemptId, templateId);
@@ -259,7 +262,7 @@ export async function getSocReportResultAction(
   assertSocWorkspaceEnabled();
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
   const cleanSubmissionId = z.string().uuid().parse(submissionId);
-  assertSocWorkspaceEnabled();
+  assertSocReportsEnabled();
   const operator = await requireOperator();
   const ctx = getCtx();
   return getSocReportGradingResult(ctx, operator.id, cleanAttemptId, cleanSubmissionId);
@@ -271,6 +274,7 @@ export async function getSocReportModelRevealAction(
 ): Promise<SocReportData> {
   const cleanAttemptId = attemptIdSchema.parse(attemptId);
   assertSocWorkspaceEnabled();
+  assertSocReportsEnabled();
   const operator = await requireOperator();
   const ctx = getCtx();
   return getSocReportModelReveal(ctx, operator.id, cleanAttemptId, templateId);

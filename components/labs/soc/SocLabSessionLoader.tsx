@@ -8,9 +8,10 @@ import { SocWorkspace } from "./SocWorkspace";
 type Props = {
   scenarioId: string;
   onExit?: () => void;
+  reportsEnabled?: boolean;
 };
 
-export function SocLabSessionLoader({ scenarioId, onExit }: Props) {
+export function SocLabSessionLoader({ scenarioId, onExit, reportsEnabled = true }: Props) {
   const [session, setSession] = useState<SocSessionClient | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,5 +66,5 @@ export function SocLabSessionLoader({ scenarioId, onExit }: Props) {
     );
   }
 
-  return <SocWorkspace session={session} onExit={onExit} />;
+  return <SocWorkspace session={session} onExit={onExit} reportsEnabled={reportsEnabled} />;
 }

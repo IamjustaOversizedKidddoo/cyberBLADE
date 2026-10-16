@@ -139,7 +139,7 @@ export function ExamRunner({ initial }: { initial: ExamStateView }) {
               {loadError}
             </p>
           ) : session ? (
-            <SocWorkspace session={session} exam={{ onRequestSubmit: openConfirm, searchEnabled: initial.searchEnabled }} />
+            <SocWorkspace session={session} exam={{ onRequestSubmit: openConfirm, searchEnabled: initial.searchEnabled }} reportsEnabled={initial.reportsEnabled} />
           ) : (
             <p className="p-6 font-ui text-sm text-muted" role="status">
               Loading the exam workspace…

@@ -42,6 +42,15 @@ export function isSocExamsEnabled(): boolean {
   return devDefaultFlag(process.env.SOC_EXAMS_ENABLED);
 }
 
+/** Incident report editor and grading (beta flag set). Off in production until set. */
+export function isSocReportsEnabled(): boolean {
+  return devDefaultFlag(process.env.SOC_REPORTS_ENABLED);
+}
+
+export function assertSocReportsEnabled(): void {
+  if (!isSocReportsEnabled()) throw new Error("Incident reports are not enabled.");
+}
+
 /** Handler SOC mode (Stage 1). Off in production until reviewed. */
 export function isSocHandlerEnabled(): boolean {
   return devDefaultFlag(process.env.SOC_HANDLER_ENABLED);
@@ -110,6 +119,6 @@ export function assertSocWorkspaceEnabled(): void {
 }
 
 /** Current flags for practice-target availability (lib/content/practice-availability.ts). */
-export function socPracticeFlags(): { workspace: boolean; enrichment: boolean; query: boolean } {
-  return { workspace: isSocWorkspaceEnabled(), enrichment: isSocEnrichmentEnabled(), query: isSocQueryEnabled() };
+export function socPracticeFlags(): { workspace: boolean; enrichment: boolean; query: boolean; reports: boolean } {
+  return { workspace: isSocWorkspaceEnabled(), enrichment: isSocEnrichmentEnabled(), query: isSocQueryEnabled(), reports: isSocReportsEnabled() };
 }

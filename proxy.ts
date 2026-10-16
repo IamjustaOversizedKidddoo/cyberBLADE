@@ -5,8 +5,26 @@ import { createServerClient } from "@supabase/ssr";
 import { getSupabaseEnv, isSupabaseConfigured } from "@/lib/supabase/config";
 import type { Database } from "@/lib/supabase/types";
 
+const flagOn = (v: string | undefined) => v === "true" || v === "1";
+const REQUEST_ID = /^[A-Za-z0-9-]{8,64}$/;
+
 // Cookie presence only; pages call requireOperator() for the real lookup.
 export async function proxy(request: NextRequest) {
+  // Request id: kept if the platform sent a well-formed one, otherwise generated. Server code reads
+  // it from the request headers; it is returned to the client and shown on error pages.
+  const incomingId = request.headers.get("x-request-id");
+  const requestId = incomingId && REQUEST_ID.test(incomingId) ? incomingId : crypto.randomUUID();
+  request.headers.set("x-request-id", requestId);
+
+  // Kill switch: every route except the health check answers 503 with Retry-After.
+  if (flagOn(process.env.MAINTENANCE_MODE) && request.nextUrl.pathname !== "/api/health") {
+    const retryAfter = String(Number(process.env.MAINTENANCE_RETRY_AFTER_SECONDS) || 600);
+    return new NextResponse("CyberBLADE is down for maintenance. Please try again soon.", {
+      status: 503,
+      headers: { "content-type": "text/plain; charset=utf-8", "retry-after": retryAfter, "cache-control": "no-store", "x-request-id": requestId, "x-robots-tag": "noindex, nofollow" },
+    });
+  }
+
   const decision = resolveRoute({
     pathname: request.nextUrl.pathname,
     search: request.nextUrl.search,
@@ -89,6 +107,11 @@ export async function proxy(request: NextRequest) {
   response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
   response.headers.set("Cross-Origin-Resource-Policy", "same-origin");
+  response.headers.set("x-request-id", requestId);
+
+  // Closed beta: keep every page out of search engines (BETA_NOINDEX, default on while invite-only).
+  const noindex = process.env.BETA_NOINDEX !== undefined ? flagOn(process.env.BETA_NOINDEX) : flagOn(process.env.BETA_INVITE_ONLY);
+  if (noindex) response.headers.set("X-Robots-Tag", "noindex, nofollow");
 
   // Prevent caching of sensitive learner state on authenticated or app routes
   const isSensitiveRoute =
@@ -98,7 +121,10 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname.startsWith("/labs") ||
     request.nextUrl.pathname.startsWith("/challenge") ||
     request.nextUrl.pathname.startsWith("/readiness") ||
-    request.nextUrl.pathname.startsWith("/session");
+    request.nextUrl.pathname.startsWith("/session") ||
+    request.nextUrl.pathname.startsWith("/account") ||
+    request.nextUrl.pathname.startsWith("/beta-notice") ||
+    request.nextUrl.pathname.startsWith("/api/");
 
   if (isSensitiveRoute) {
     response.headers.set("Cache-Control", "private, no-cache, no-store, must-revalidate");

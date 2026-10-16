@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireOperator } from "@/lib/identity/session";
-import { isSocWorkspaceEnabled } from "@/lib/config/env";
+import { isSocReportsEnabled, isSocWorkspaceEnabled } from "@/lib/config/env";
 import { loadSocFamily, loadSocScenario, loadSocShift } from "@/lib/lab-engine/soc/engine";
 import { SocLabSessionLoader } from "@/components/labs/soc/SocLabSessionLoader";
 import { HandlerDrawer } from "@/components/handler/HandlerDrawer";
@@ -67,7 +67,7 @@ export default async function SocScenarioPage(
   return (
     <div className="min-h-screen bg-void">
       <div className="p-2 sm:p-4">
-        <SocLabSessionLoader scenarioId={scenarioId} />
+        <SocLabSessionLoader scenarioId={scenarioId} reportsEnabled={isSocReportsEnabled()} />
       </div>
 
       <HandlerDrawer

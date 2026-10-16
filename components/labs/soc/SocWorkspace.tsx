@@ -31,12 +31,14 @@ type Props = {
   session: SocSessionClient;
   onExit?: () => void;
   exam?: SocWorkspaceExamMode;
+  /** SOC_REPORTS_ENABLED, decided on the server; false shows a notice instead of the editor. */
+  reportsEnabled?: boolean;
 };
 
 type WorkspaceView = "triage" | "search" | "report";
 type MobileTab = "queue" | "detail" | "cases" | "search" | "tools" | "report";
 
-export function SocWorkspace({ session, onExit, exam }: Props) {
+export function SocWorkspace({ session, onExit, exam, reportsEnabled = true }: Props) {
   const { scenario, attempt: initialAttempt } = session;
 
   const [attemptStatus, setAttemptStatus] = useState(initialAttempt.status);
@@ -444,7 +446,11 @@ export function SocWorkspace({ session, onExit, exam }: Props) {
       </div>
 
       {/* Main Workspace Body */}
-      {workspaceView === "report" ? (
+      {workspaceView === "report" && !reportsEnabled ? (
+        <main className="flex-1 p-6 text-sm text-secondary">
+          <p className="max-w-prose">The incident report editor is not open yet. Triage, cases and the investigation tools work as usual.</p>
+        </main>
+      ) : workspaceView === "report" ? (
         <main className="flex-1 flex overflow-hidden">
           <SocReportWorkspace session={session} examMode={Boolean(exam)} />
         </main>
