@@ -211,7 +211,20 @@ export async function getExamState(ctx: Ctx, userId: string, examId: string): Pr
 
   const handoff = answerFor(HANDOFF_ITEM_ID);
   const ruleRaw = answerFor(DETECTION_RULE_ITEM_ID);
-  const detectionRule = typeof ruleRaw === "object" && ruleRaw !== null ? (ruleRaw as Record<string, unknown>) : null;
+  let detectionRule: ExamStateView["detectionRule"] = null;
+  if (typeof ruleRaw === "object" && ruleRaw !== null) {
+    const r = ruleRaw as Record<string, unknown>;
+    if (typeof r.title === "string" && typeof r.query === "string") {
+      detectionRule = {
+        title: r.title,
+        description: typeof r.description === "string" ? r.description : "",
+        severity: (["low", "medium", "high", "critical"].includes(r.severity as string) ? r.severity : "medium") as "low" | "medium" | "high" | "critical",
+        tactic: typeof r.tactic === "string" ? r.tactic : "",
+        technique: typeof r.technique === "string" ? r.technique : "",
+        query: r.query,
+      };
+    }
+  }
   return {
     examId: exam.id,
     format: exam.format,
