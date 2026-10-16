@@ -211,7 +211,7 @@ export async function getExamState(ctx: Ctx, userId: string, examId: string): Pr
 
   const handoff = answerFor(HANDOFF_ITEM_ID);
   const ruleRaw = answerFor(DETECTION_RULE_ITEM_ID);
-  const detectionRule = typeof ruleRaw === "object" && ruleRaw !== null ? (ruleRaw as any) : null;
+  const detectionRule = typeof ruleRaw === "object" && ruleRaw !== null ? (ruleRaw as Record<string, unknown>) : null;
   return {
     examId: exam.id,
     format: exam.format,

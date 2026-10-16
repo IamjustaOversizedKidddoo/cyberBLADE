@@ -104,7 +104,7 @@ export function DetectionRuleEditor({ examId, disabled, initialRule }: Props) {
             id="rule-severity"
             disabled={disabled || saving}
             value={severity}
-            onChange={(e) => setSeverity(e.target.value as any)}
+            onChange={(e) => setSeverity(e.target.value as "low" | "medium" | "high" | "critical")}
             className="w-full rounded-xs border border-line bg-void px-3 py-2 font-sans text-xs text-ink focus:border-cyan focus-visible:outline-2 focus-visible:outline-cyan"
           >
             <option value="low">Low</option>

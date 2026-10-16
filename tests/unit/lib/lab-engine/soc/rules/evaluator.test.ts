@@ -22,12 +22,12 @@ describe("SOC Detection Rule Evaluator", () => {
       linkedRawEvents: [],
       relatedIocs: [
         { type: "ip", value: "198.51.100.1" },
-        { type: "__proto__" as any, value: "polluted" },
+        { type: "__proto__" as unknown as "ip", value: "polluted" },
       ],
       rawFields: {
         command_line: "powershell -enc ...",
-        __proto__: { admin: true } as any,
-        constructor: "polluted" as any,
+        __proto__: { admin: true } as unknown as string,
+        constructor: "polluted" as unknown as string,
       },
       groundTruth: {
         kind: "true_positive",
@@ -45,7 +45,7 @@ describe("SOC Detection Rule Evaluator", () => {
     expect(evt.command_line).toBe("powershell -enc ...");
     expect(evt.src_ip).toBe("198.51.100.1");
     // Verify no prototype pollution
-    expect((Object.prototype as any).admin).toBeUndefined();
+    expect((Object.prototype as Record<string, unknown>).admin).toBeUndefined();
     expect(Object.getPrototypeOf(evt)).toBe(Object.prototype);
   });
 
