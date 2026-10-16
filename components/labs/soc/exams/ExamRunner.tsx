@@ -105,7 +105,7 @@ export function ExamRunner({ initial }: { initial: ExamStateView }) {
       </div>
 
       {initial.format === "detection-rule" && (
-        <DetectionRuleEditor examId={initial.examId} disabled={closed} />
+        <DetectionRuleEditor examId={initial.examId} disabled={closed} initialRule={initial.detectionRule ?? undefined} />
       )}
 
       {initial.format === "alert-queue" && (

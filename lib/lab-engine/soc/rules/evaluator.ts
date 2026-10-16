@@ -101,7 +101,7 @@ export async function evaluateDetectionRuleChallenge(
   // Fallback protection if scenario generator generated no distinct benign events
   if (holdOutEvents.length === 0) {
     holdOutEvents.push({
-      _time: new Date().toISOString(),
+      _time: "2026-10-16T12:00:00.000Z",
       _raw: `${familyId} simulated true positive`,
       rule_name: "Simulated-Incident",
       source: "EDR",
@@ -112,7 +112,7 @@ export async function evaluateDetectionRuleChallenge(
   }
   if (benignEvents.length === 0) {
     benignEvents.push({
-      _time: new Date().toISOString(),
+      _time: "2026-10-16T12:00:00.000Z",
       _raw: `Benign routine maintenance`,
       rule_name: "Benign-Maintenance",
       source: "EDR",

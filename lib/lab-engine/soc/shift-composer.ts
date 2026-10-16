@@ -74,12 +74,12 @@ function formatIsoTime(epochMs: number): string {
  * Load all registered families from disk
  */
 export function loadFamilyCatalog(familiesDir?: string): Map<string, SocFamily> {
-  const dir = familiesDir ?? path.resolve("content/soc/families");
+  const dir = familiesDir ?? path.join(process.cwd(), "content", "soc", "families");
   const map = new Map<string, SocFamily>();
-  const files = fs.readdirSync(dir).filter((f) => f.endsWith(".yaml") || f.endsWith(".yml"));
+  const files = fs.readdirSync(/*turbopackIgnore: true*/ dir).filter((f) => f.endsWith(".yaml") || f.endsWith(".yml"));
 
   for (const f of files) {
-    const rawContent = fs.readFileSync(path.join(dir, f), "utf8");
+    const rawContent = fs.readFileSync(/*turbopackIgnore: true*/ path.join(/*turbopackIgnore: true*/ dir, f), "utf8");
     const parsed = socFamilySchema.safeParse(parseYaml(rawContent));
     if (parsed.success) {
       map.set(parsed.data.metadata.id, parsed.data);

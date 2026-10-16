@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  outputFileTracingIncludes: {
+    "/api/**/*": ["./content/**/*"],
+    "/labs/**/*": ["./content/**/*"],
+  },
   async redirects() {
     return [
       // A path learners guess for the rank challenge.
