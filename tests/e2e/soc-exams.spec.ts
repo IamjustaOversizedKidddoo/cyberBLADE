@@ -106,4 +106,60 @@ test.describe("SOC practice exams", () => {
     await axeClean(page);
     await noHorizontalScroll(page);
   });
+
+  test("L2 detection-rule challenge: lobby, rule specification, draft persistence, submit, hold-out and benign twin results", async ({ page }) => {
+    await onboard(page);
+    await page.goto("/labs/soc/exams");
+    await expect(page.getByRole("heading", { name: "How practice exams work" })).toBeVisible();
+
+    const startBtn = page.getByRole("button", { name: "Start detection engineering challenge" });
+    await expect(startBtn).toBeVisible();
+    await tabTo(page, startBtn);
+    await page.keyboard.press("Enter");
+
+    await expect(page.getByRole("heading", { name: "Start detection engineering challenge now?" })).toBeVisible();
+    await page.getByRole("button", { name: "Start the clock" }).press("Enter");
+    await expect(page).toHaveURL(/\/labs\/soc\/exams\/[0-9a-f-]{36}$/);
+
+    // Verify Timer and Detection Rule Editor
+    await expect(page.getByRole("group", { name: "Exam timer" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Detection Rule Challenge Specification" })).toBeVisible();
+
+    // Fill in the rule
+    await page.getByLabel("Rule Title").fill("Suspicious PowerShell Download Cradle");
+    await page.getByLabel("Severity").selectOption("high");
+    await page.getByLabel("MITRE ATT&CK Tactic").fill("Execution");
+    await page.getByLabel("MITRE ATT&CK Technique ID").fill("T1059.001");
+    await page.getByLabel("Description & Threat Context").fill("Detects malicious PowerShell script block execution downloading payload from remote IP");
+    await page.getByLabel("Detection Query (BladeQL)").fill('severity == "HIGH" and (command_line =~ "DownloadString" or command_line =~ "powershell")');
+
+    // Save detection rule draft
+    await page.getByRole("button", { name: "Save detection rule draft" }).click();
+    await expect(page.getByText(/^Saved at \d{2}:\d{2}$/)).toBeVisible();
+
+    // Verify persistence across reload (fixed in L2-A-02)
+    await page.reload();
+    await expect(page.getByLabel("Rule Title")).toHaveValue("Suspicious PowerShell Download Cradle");
+    await expect(page.getByLabel("Detection Query (BladeQL)")).toHaveValue('severity == "HIGH" and (command_line =~ "DownloadString" or command_line =~ "powershell")');
+
+    // Accessibility and mobile responsiveness checks
+    await axeClean(page, "[aria-label='Exam timer']");
+    await noHorizontalScroll(page);
+
+    // Submit the exam
+    await page.getByRole("button", { name: "Submit exam" }).first().click();
+    await expect(page.getByRole("heading", { name: "Submit your exam?" })).toBeVisible();
+    await page.getByRole("button", { name: "Submit exam", exact: true }).click();
+
+    // Results view: hold-out recall, benign twin FPR, precision, diagnostics
+    await expect(page.getByRole("heading", { name: /^Detection Rule Evaluation/ })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("Hold-out incident recall")).toBeVisible();
+    await expect(page.getByText("Benign decoy trigger rate (FPR)")).toBeVisible();
+    await expect(page.getByText("Precision")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "What made up your score" })).toBeVisible();
+
+    await axeClean(page);
+    await noHorizontalScroll(page);
+  });
 });
+
