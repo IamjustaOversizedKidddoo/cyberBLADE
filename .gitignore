@@ -51,3 +51,8 @@ next-env.d.ts
 # Local copy of the 10k-websites skill (installed user-level in ~/.claude/skills)
 /10k-websites/
 .agents/
+
+# Screenshots are evidence, kept outside git (standing rule 9; L1-A-19). Files stay on disk.
+/docs/design/screenshots/
+/docs/visual/before/*.png
+/docs/visual/after/*.png
