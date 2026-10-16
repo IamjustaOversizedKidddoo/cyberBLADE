@@ -87,7 +87,7 @@ describe("SOC L2 Scoping Report Rubric Grader Quality", () => {
         correctSeverity: "HIGH",
         correctEscalation: true,
         acceptableAlternatives: [
-          { disposition: "true_positive", severity: "CRITICAL", partialCredit: 0.9 },
+          { disposition: "true_positive", severity: "CRITICAL", reason: "Acceptable escalation", scoreMultiplier: 0.9 },
         ],
         debrief: "Lateral movement via PsExec",
       },
@@ -248,7 +248,7 @@ describe("SOC L2 Scoping Report Rubric Grader Quality", () => {
     const gamed2: SocReportData = {
       ...gt.modelReport,
       verdict: {
-        disposition: "benign_positive",
+        disposition: "benign_true_positive",
         severity: "INFO",
         confidence: "low",
         justification: "Benign authorized scan.",
