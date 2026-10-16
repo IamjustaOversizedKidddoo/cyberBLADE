@@ -299,7 +299,8 @@ export async function submitSocReportGraded(
   );
 
   // 4. Grade
-  const gradingResult = await gradeReport(submittedRecord.id, sanitized, groundTruth);
+  const rubricId = templateId === "scoping-report-l2" ? "scoping-report-l2-rubric" : "incident-report-l1-rubric";
+  const gradingResult = await gradeReport(submittedRecord.id, sanitized, groundTruth, { rubricId });
 
   // 5. Persist evaluation (model report NOT stored — ground-truth containment)
   const evaluationRecord: Omit<SocReportEvaluationRecord, "id"> = {

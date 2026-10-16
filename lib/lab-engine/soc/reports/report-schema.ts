@@ -7,7 +7,7 @@
 import { z } from "zod";
 import { SOC_DISPOSITIONS, SOC_SEVERITIES } from "../schema";
 
-export const REPORT_TEMPLATE_IDS = ["incident-report-l1"] as const;
+export const REPORT_TEMPLATE_IDS = ["incident-report-l1", "scoping-report-l2"] as const;
 export const reportTemplateIdSchema = z.enum(REPORT_TEMPLATE_IDS);
 
 const short = z.string().max(200);

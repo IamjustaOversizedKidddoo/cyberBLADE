@@ -1,0 +1,111 @@
+# SOC L2 Scoping Report Rubric
+# Evaluates multi-stage incident investigations with high emphasis on compromise boundary accuracy.
+rubricId: scoping-report-l2-rubric
+version: "1.0.0"
+provisionalNotice: >
+  Provisional scoring; weights and bands will be calibrated against
+  practitioner graders in a future release. Current weights reflect
+  Tier-2 scoping priorities.
+
+criteria:
+  - id: incident_scoping
+    title: "Compromise Boundary & Scoping Accuracy"
+    graderType: deterministic
+    weight: 0.35
+    maxPoints: 35
+    skillTags: ["scoping", "asset-attribution"]
+    feedbackBands:
+      - minScore: 30
+        feedbackTemplate: "Exemplary scoping: all affected hosts and identities accurately bounded without false attributions."
+      - minScore: 20
+        feedbackTemplate: "Good scoping precision, but minor gaps remain in identified compromised assets or accounts."
+      - minScore: 10
+        feedbackTemplate: "Partial scoping: key compromised systems were omitted, or clean systems were falsely attributed."
+      - minScore: 0
+        feedbackTemplate: "Scoping boundaries were largely inaccurate. Review the telemetry to track attacker movement."
+    teachingNotes: >
+      Accurate scoping determines the containment perimeter. Missing compromised
+      systems allows adversaries to persist; including clean systems causes
+      unnecessary business disruption.
+
+  - id: verdict_accuracy
+    title: "Verdict & Severity Correctness"
+    graderType: deterministic
+    weight: 0.20
+    maxPoints: 20
+    skillTags: ["triage", "classification"]
+    feedbackBands:
+      - minScore: 20
+        feedbackTemplate: "Correct disposition and severity assigned based on multi-stage attack impact."
+      - minScore: 12
+        feedbackTemplate: "Correct disposition identified; review severity rating against affected asset criticality."
+      - minScore: 5
+        feedbackTemplate: "Partial credit for acceptable alternative disposition."
+      - minScore: 0
+        feedbackTemplate: "Incorrect verdict. Re-examine the alert telemetry and investigation questions."
+    teachingNotes: >
+      Verdicts anchor the investigation. Correct disposition drives the entire response process.
+
+  - id: timeline_accuracy
+    title: "Chronological Incident Timeline"
+    graderType: deterministic
+    weight: 0.15
+    maxPoints: 15
+    skillTags: ["timeline", "chronology"]
+    feedbackBands:
+      - minScore: 13
+        feedbackTemplate: "Precise timeline reconstructing chronological order across hosts and logs."
+      - minScore: 8
+        feedbackTemplate: "Timeline captured most key milestones, but some ordering inconsistencies were detected."
+      - minScore: 0
+        feedbackTemplate: "Timeline missing key attacker actions or poorly ordered."
+    teachingNotes: >
+      Reconstructing the chronological order is vital to establishing root cause and dwell time.
+
+  - id: ioc_extraction
+    title: "Indicator of Compromise (IoC) Extraction"
+    graderType: deterministic
+    weight: 0.10
+    maxPoints: 10
+    skillTags: ["ioc-handling", "enrichment"]
+    feedbackBands:
+      - minScore: 9
+        feedbackTemplate: "Complete IoC extraction: all validated indicators extracted and properly typed."
+      - minScore: 5
+        feedbackTemplate: "Key indicators extracted, but some secondary network or endpoint artifacts were missed."
+      - minScore: 0
+        feedbackTemplate: "Critical indicators missing from the report."
+    teachingNotes: >
+      IoCs drive perimeter blocks and threat hunting across enterprise logs.
+
+  - id: technique_mapping
+    title: "MITRE ATT&CK Mapping"
+    graderType: deterministic
+    weight: 0.10
+    maxPoints: 10
+    skillTags: ["mitre-attack", "attribution"]
+    feedbackBands:
+      - minScore: 9
+        feedbackTemplate: "Accurate ATT&CK technique mapping matching observed multi-stage adversary tactics."
+      - minScore: 5
+        feedbackTemplate: "Partial mapping; some technique IDs did not correspond to observed evidence."
+      - minScore: 0
+        feedbackTemplate: "ATT&CK techniques omitted or incorrectly mapped."
+    teachingNotes: >
+      Mapping observed activity to ATT&CK tactics clarifies the adversary's playbook.
+
+  - id: response_actions
+    title: "Response & Containment Actions"
+    graderType: deterministic
+    weight: 0.10
+    maxPoints: 10
+    skillTags: ["containment", "remediation"]
+    feedbackBands:
+      - minScore: 9
+        feedbackTemplate: "Prioritized containment and scoping actions with strong operational justification."
+      - minScore: 5
+        feedbackTemplate: "Acceptable containment actions, but consider phasing actions to prevent alerting the attacker."
+      - minScore: 0
+        feedbackTemplate: "Inappropriate response actions that risk evidence destruction or failed containment."
+    teachingNotes: >
+      Containment actions must be balanced against business disruption and evidence preservation.

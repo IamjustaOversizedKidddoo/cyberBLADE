@@ -6,7 +6,7 @@
 import type { SocEvaluationResult, SocDecisionRecord } from "../types";
 import type { SocAlertSource } from "../schema";
 import type { GradingResult } from "../reports/types";
-import type { IntegrityFlag, SkillScore, SocExamAttemptRecord, SocExamResult } from "./types";
+import type { IntegrityFlag, SkillScore, SocExamAttemptRecord, SocExamResult, SocRuleTestResult } from "./types";
 import type { SocExamFormatConfig } from "./config";
 import type { KnowledgeItem } from "./knowledge";
 
@@ -25,6 +25,9 @@ export const COMPONENT_LABEL: Record<string, string> = {
   handoff: "Handoff note",
   report: "Incident report",
   items: "Knowledge items",
+  ruleDetection: "Attack variant detection (Recall)",
+  falsePositiveControl: "Benign twin noise control",
+  ruleQuality: "Detection engineering quality",
 };
 
 export type ExamResultInput = {
@@ -45,6 +48,7 @@ export type ExamResultInput = {
   reportState: "graded" | "absent" | "not_applicable";
   handoffText: string | null;
   knowledge: Array<{ item: KnowledgeItem; correct: boolean; answeredAt: string | null }> | null;
+  ruleChallenge?: (SocRuleTestResult & { title: string; technique: string; tactic: string; query: string }) | null;
 };
 
 const pct = (earned: number, possible: number) => (possible > 0 ? Math.round((earned / possible) * 100) : 0);
@@ -143,6 +147,10 @@ export function buildExamResult(input: ExamResultInput): SocExamResult {
       const totalPercent = pct(input.report.earnedGradedPoints, input.report.availableGradedPoints);
       report = { totalPercent, criteria };
       addSkill(skills, "soc_documentation", input.report.earnedGradedPoints, input.report.availableGradedPoints);
+      const scopingCrit = input.report.criterionResults["incident_scoping"];
+      if (scopingCrit && scopingCrit.status === "graded") {
+        addSkill(skills, "soc_scope_assessment", scopingCrit.score, scopingCrit.maxScore);
+      }
       components.push({ id: "report", label: COMPONENT_LABEL.report, percent: totalPercent, weight: weight("report"), graded: true, note: input.report.isFullyGraded ? undefined : "Some criteria are not graded; the percentage covers graded criteria only." });
     } else {
       addSkill(skills, "soc_documentation", 0, 1);
@@ -163,6 +171,59 @@ export function buildExamResult(input: ExamResultInput): SocExamResult {
     const correct = input.knowledge.filter((k) => k.correct).length;
     knowledge = { correct, total: input.knowledge.length, byType };
     components.push({ id: "items", label: COMPONENT_LABEL.items, percent: pct(correct, input.knowledge.length), weight: weight("items"), graded: true });
+  }
+
+  // Detection rule challenge
+  let ruleChallenge: SocExamResult["ruleChallenge"] = null;
+  if (input.ruleChallenge) {
+    const rc = input.ruleChallenge;
+    ruleChallenge = {
+      title: rc.title,
+      technique: rc.technique,
+      tactic: rc.tactic,
+      query: rc.query,
+      holdOutDetected: rc.holdOutDetected,
+      holdOutTotal: rc.holdOutTotal,
+      benignTriggered: rc.benignTriggered,
+      benignTotal: rc.benignTotal,
+      recallPercent: rc.recallPercent,
+      precisionPercent: rc.precisionPercent,
+      scorePercent: rc.scorePercent,
+      feedback: rc.feedback,
+    };
+    addSkill(skills, "soc_threat_intel", rc.holdOutDetected, rc.holdOutTotal);
+    addSkill(skills, "soc_false_positive_id", rc.benignTotal - rc.benignTriggered, rc.benignTotal);
+    addSkill(skills, "soc_siem_correlation", rc.scorePercent, 100);
+
+    const fpControlPercent = Math.max(0, 100 - rc.falsePositiveRatePercent);
+    components.push({
+      id: "ruleDetection",
+      label: COMPONENT_LABEL.ruleDetection,
+      percent: rc.recallPercent,
+      weight: weight("ruleDetection"),
+      graded: true,
+      note: `Detected ${rc.holdOutDetected}/${rc.holdOutTotal} hidden hold-out attack variants.`,
+    });
+    components.push({
+      id: "falsePositiveControl",
+      label: COMPONENT_LABEL.falsePositiveControl,
+      percent: fpControlPercent,
+      weight: weight("falsePositiveControl"),
+      graded: true,
+      note: `Triggered ${rc.benignTriggered}/${rc.benignTotal} benign twins (${rc.falsePositiveRatePercent}% false positive rate).`,
+    });
+    components.push({
+      id: "ruleQuality",
+      label: COMPONENT_LABEL.ruleQuality,
+      percent: rc.scorePercent,
+      weight: weight("ruleQuality"),
+      graded: true,
+      note: rc.feedback.join(" "),
+    });
+  } else if ("ruleDetection" in config.weights) {
+    components.push({ id: "ruleDetection", label: COMPONENT_LABEL.ruleDetection, percent: 0, weight: weight("ruleDetection"), graded: true, note: "No detection rule submitted." });
+    components.push({ id: "falsePositiveControl", label: COMPONENT_LABEL.falsePositiveControl, percent: 0, weight: weight("falsePositiveControl"), graded: true, note: "No detection rule submitted." });
+    components.push({ id: "ruleQuality", label: COMPONENT_LABEL.ruleQuality, percent: 0, weight: weight("ruleQuality"), graded: true, note: "No detection rule submitted." });
   }
 
   const graded = components.filter((c) => c.graded && c.weight > 0);
@@ -243,6 +304,7 @@ export function buildExamResult(input: ExamResultInput): SocExamResult {
     thoroughness,
     report,
     knowledge,
+    ruleChallenge,
     integrityFlags,
     budgetsUsed,
     submitReason: input.submitReason,

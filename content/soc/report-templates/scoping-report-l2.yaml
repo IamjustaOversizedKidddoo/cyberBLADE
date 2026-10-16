@@ -1,0 +1,98 @@
+id: scoping-report-l2
+version: "1.0.0"
+title: "SOC Tier-2 Comprehensive Incident Scoping Report"
+description: "Advanced multi-stage incident scoping documentation establishing compromise boundaries, lateral movement, affected assets, and forensic evidence."
+applicableScenarios:
+  - "*"
+sections:
+  - id: header
+    title: "Incident Header & Case Metadata"
+    type: header
+    required: true
+    guidance: "Record core tracking metadata: give the report an informative, descriptive title identifying the attack family and affected zone, link your working case ID, and confirm analyst attribution."
+    fieldLimits:
+      titleMaxLength: 160
+
+  - id: executive_summary
+    title: "Executive Scoping Summary"
+    type: free_text
+    required: true
+    guidance: "Provide an executive summary detailing the attack narrative, entry point, compromised perimeter, lateral movement spread, and current containment status across enterprise assets."
+    fieldLimits:
+      minLength: 50
+      maxLength: 1200
+
+  - id: verdict_and_severity
+    title: "Triage Verdict & Severity Justification"
+    type: verdict
+    required: true
+    guidance: "Select confirmed disposition, assign an objective severity rating based on blast radius and privilege compromise, and document analytical confidence."
+    fieldLimits:
+      justificationMinLength: 30
+      justificationMaxLength: 800
+
+  - id: scope_and_impact
+    title: "Scope & Compromise Boundaries"
+    type: scope_picker
+    required: true
+    guidance: "Itemize every compromised host, server, domain controller, and user identity across internal subnets. High accuracy is essential: do not omit victim systems or include uncompromised assets."
+    fieldLimits:
+      maxAssets: 50
+      maxUsers: 50
+      impactStatementMaxLength: 800
+
+  - id: timeline
+    title: "Chronological Incident Timeline"
+    type: timeline_table
+    required: true
+    guidance: "Reconstruct the sequence of critical events in chronological order with timestamps, descriptions, data sources, and supporting evidence references."
+    fieldLimits:
+      minRows: 2
+      maxRows: 50
+      rowDescriptionMaxLength: 300
+
+  - id: indicators_of_compromise
+    title: "Indicators of Compromise (IoCs)"
+    type: ioc_table
+    required: true
+    guidance: "Extract validated malicious indicators (IPs, domains, hashes, URLs, commands). Defang external network indicators (e.g. 198.51.100[.]44) and assign tactical roles."
+    fieldLimits:
+      minRows: 1
+      maxRows: 50
+
+  - id: attack_narrative
+    title: "Attack Path & Lateral Movement Analysis"
+    type: free_text
+    required: true
+    guidance: "Detail the technical mechanics of the adversary's progression: initial access vector, credential access, execution mechanisms, lateral movement pathways, and persistence installations."
+    fieldLimits:
+      minLength: 50
+      maxLength: 4000
+
+  - id: techniques
+    title: "MITRE ATT&CK Mapping"
+    type: technique_picker
+    required: true
+    guidance: "Map observed techniques against the MITRE ATT&CK framework with specific rationale for each mapping."
+    fieldLimits:
+      minTechniques: 1
+      maxTechniques: 15
+      rationaleMaxLength: 400
+
+  - id: response_actions
+    title: "Containment, Eradication & Scoping Actions"
+    type: action_checklist
+    required: true
+    guidance: "Specify prioritized response actions based on the established compromise boundaries. Avoid premature host containment that risks tipping off adversaries before full scoping."
+    fieldLimits:
+      minActions: 1
+      maxActions: 20
+      rationaleMaxLength: 400
+
+  - id: escalation_handoff
+    title: "Handoff & Remediation Sign-off"
+    type: handoff
+    required: true
+    guidance: "Document recommended escalation tier, urgency level, forensic image preservation status, and next operational steps."
+    fieldLimits:
+      summaryMaxLength: 1000

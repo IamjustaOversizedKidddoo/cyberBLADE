@@ -20,12 +20,14 @@ import type { SocAttemptRecord } from "../types";
 import type { GradingResult } from "../reports/types";
 import { loadExamConfig, type SocExamFormatConfig } from "./config";
 import { EXAM_SCENARIO_PREFIX, examBudgetLimit, examBudgetUsed, examTimeIsOver } from "./guard";
-import { drawKnowledgeItems, examItemKey, gradeKnowledgeAnswer, knowledgeItemReview, knowledgeItemView, loadKnowledgeBank, type KnowledgeAnswer, type KnowledgeItemView } from "./knowledge";
+import { drawKnowledgeItems, examItemKey, gradeKnowledgeAnswer, knowledgeBankForFormat, knowledgeItemReview, knowledgeItemView, loadKnowledgeBank, type KnowledgeAnswer, type KnowledgeItemView } from "./knowledge";
+import { evaluateDetectionRuleChallenge, type DetectionRuleInput } from "../rules/evaluator";
 import { buildExamResult } from "./results";
 import { SOC_EXAM_FORMATS, type SocExamAttemptRecord, type SocExamBudgetKind, type SocExamFormat, type SocExamResult } from "./types";
 
 export const HANDOFF_ITEM_ID = "handoff";
 export const HANDOFF_MAX_CHARS = 3000;
+export const DETECTION_RULE_ITEM_ID = "detection-rule";
 /** Exams submitted at or above this score earn the format's XP (once per exam). */
 export const EXAM_XP_MIN_SCORE = 50;
 
@@ -48,6 +50,7 @@ export type ExamStateView = {
   budgets: Partial<Record<SocExamBudgetKind, { used: number; limit: number }>>;
   knowledgeItems: Array<KnowledgeItemView & { savedAnswer: KnowledgeAnswer | null }> | null;
   handoffNote: string | null;
+  detectionRule: { title: string; description: string; severity: "low" | "medium" | "high" | "critical"; tactic: string; technique: string; query: string } | null;
   /** Only after submission. */
   result: SocExamResult | null;
   /** Only after submission: the learner's own knowledge review. */
@@ -55,7 +58,8 @@ export type ExamStateView = {
 };
 
 const formatConfig = (format: SocExamFormat): SocExamFormatConfig => loadExamConfig().formats[format];
-const isScenarioFormat = (format: SocExamFormat) => format !== "knowledge";
+const isKnowledgeFormat = (format: SocExamFormat) => format === "knowledge" || format === "knowledge-l2";
+const isScenarioFormat = (format: SocExamFormat) => !isKnowledgeFormat(format);
 
 async function ownedExam(ctx: Ctx, userId: string, examId: string): Promise<SocExamAttemptRecord> {
   const exam = typeof examId === "string" ? await ctx.repo.getSocExamAttempt(examId) : null;
@@ -123,9 +127,10 @@ export async function startExam(ctx: Ctx, userId: string, format: SocExamFormat)
 
   let variantId = "bank";
   let itemIds: string[] = [];
-  if (format === "knowledge") {
+  if (isKnowledgeFormat(format)) {
     const seen = [...previous].reverse().flatMap((e) => e.itemIds);
-    itemIds = drawKnowledgeItems(loadKnowledgeBank(), f.itemCount ?? 25, seed, seen);
+    const bankFile = knowledgeBankForFormat(format);
+    itemIds = drawKnowledgeItems(loadKnowledgeBank(bankFile), f.itemCount ?? 25, seed, seen);
   } else {
     variantId = pickVariant(f.variants ?? [], previous, seed);
   }
@@ -183,8 +188,8 @@ export async function getExamState(ctx: Ctx, userId: string, examId: string): Pr
 
   let knowledgeItems: ExamStateView["knowledgeItems"] = null;
   let knowledgeReview: ExamStateView["knowledgeReview"] = null;
-  if (exam.format === "knowledge") {
-    const bank = loadKnowledgeBank();
+  if (isKnowledgeFormat(exam.format)) {
+    const bank = loadKnowledgeBank(knowledgeBankForFormat(exam.format));
     const items = exam.itemIds.map((id) => bank.items.find((i) => i.id === id)).filter((i) => !!i);
     knowledgeItems = items.map((item) => {
       const saved = answerFor(examItemKey(exam.seed, item.id));
@@ -202,6 +207,8 @@ export async function getExamState(ctx: Ctx, userId: string, examId: string): Pr
   }
 
   const handoff = answerFor(HANDOFF_ITEM_ID);
+  const ruleRaw = answerFor(DETECTION_RULE_ITEM_ID);
+  const detectionRule = typeof ruleRaw === "object" && ruleRaw !== null ? (ruleRaw as any) : null;
   return {
     examId: exam.id,
     format: exam.format,
@@ -219,6 +226,7 @@ export async function getExamState(ctx: Ctx, userId: string, examId: string): Pr
     budgets,
     knowledgeItems,
     handoffNote: typeof handoff === "string" ? handoff : null,
+    detectionRule,
     result: exam.status === "submitted" ? exam.result : null,
     knowledgeReview,
   };
@@ -234,7 +242,7 @@ async function assertAnswerable(ctx: Ctx, userId: string, examId: string): Promi
 export async function saveKnowledgeAnswer(ctx: Ctx, userId: string, examId: string, itemKey: string, answer: KnowledgeAnswer): Promise<{ saved: true }> {
   const exam = await assertAnswerable(ctx, userId, examId);
   // The learner only knows the opaque per-exam key; the answer is stored under that key too.
-  const itemId = exam.format === "knowledge" && exam.itemIds.some((id) => examItemKey(exam.seed, id) === itemKey) ? itemKey : null;
+  const itemId = isKnowledgeFormat(exam.format) && exam.itemIds.some((id) => examItemKey(exam.seed, id) === itemKey) ? itemKey : null;
   if (!itemId) throw new Error("Unknown exam item");
   if (!Array.isArray(answer) || answer.length > 8 || answer.some((a) => typeof a !== "string" || a.length > 24)) throw new Error("Invalid answer");
   await ctx.repo.saveSocExamAnswer({ examAttemptId: exam.id, userId, itemId, answer: JSON.stringify(answer), answeredAt: ctx.now().toISOString() });
@@ -248,6 +256,34 @@ export async function saveHandoffNote(ctx: Ctx, userId: string, examId: string, 
   if (typeof text !== "string") throw new Error("Invalid handoff note");
   const clean = text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").slice(0, HANDOFF_MAX_CHARS);
   await ctx.repo.saveSocExamAnswer({ examAttemptId: exam.id, userId, itemId: HANDOFF_ITEM_ID, answer: JSON.stringify(clean), answeredAt: ctx.now().toISOString() });
+  return { saved: true };
+}
+
+/** Saves the detection rule draft (latest save counts). */
+export async function saveDetectionRuleAnswer(
+  ctx: Ctx,
+  userId: string,
+  examId: string,
+  rule: { title: string; description?: string; severity: "low" | "medium" | "high" | "critical"; tactic?: string; technique?: string; query: string },
+): Promise<{ saved: true }> {
+  const exam = await assertAnswerable(ctx, userId, examId);
+  if (exam.format !== "detection-rule") throw new Error("This exam has no detection rule challenge");
+  if (!rule || typeof rule.query !== "string" || !rule.title) throw new Error("Invalid detection rule payload");
+  const clean = {
+    title: String(rule.title).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, 120),
+    description: String(rule.description ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, 1000),
+    severity: (["low", "medium", "high", "critical"].includes(rule.severity) ? rule.severity : "medium") as "low" | "medium" | "high" | "critical",
+    tactic: String(rule.tactic ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, 64),
+    technique: String(rule.technique ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, 64),
+    query: String(rule.query).slice(0, 4000),
+  };
+  await ctx.repo.saveSocExamAnswer({
+    examAttemptId: exam.id,
+    userId,
+    itemId: DETECTION_RULE_ITEM_ID,
+    answer: JSON.stringify(clean),
+    answeredAt: ctx.now().toISOString(),
+  });
   return { saved: true };
 }
 
@@ -293,8 +329,8 @@ async function finalizeOnce(ctx: Ctx, examId: string, reason: "learner" | "deadl
     knowledge: null,
   };
 
-  if (exam.format === "knowledge") {
-    const bank = loadKnowledgeBank();
+  if (isKnowledgeFormat(exam.format)) {
+    const bank = loadKnowledgeBank(knowledgeBankForFormat(exam.format));
     input.knowledge = exam.itemIds.flatMap((id) => {
       const item = bank.items.find((i) => i.id === id);
       if (!item) return [];
@@ -322,9 +358,11 @@ async function finalizeOnce(ctx: Ctx, examId: string, reason: "learner" | "deadl
     let report: GradingResult | null = null;
     let reportState: "graded" | "absent" | "not_applicable" = "not_applicable";
     if ("report" in f.weights) {
-      const draft = (await ctx.repo.listSocReportSubmissions(attempt.id)).find((r) => r.templateId === "incident-report-l1");
+      const targetTemplate = exam.format === "investigation-l2" ? "scoping-report-l2" : "incident-report-l1";
+      const submissions = await ctx.repo.listSocReportSubmissions(attempt.id);
+      const draft = submissions.find((r) => r.templateId === targetTemplate) || submissions.find((r) => r.templateId === "incident-report-l1");
       if (draft) {
-        report = (await submitSocReportGraded(ctx, exam.userId, attempt, draft.reportData)).gradingResult;
+        report = (await submitSocReportGraded(ctx, exam.userId, attempt, draft.reportData, draft.templateId)).gradingResult;
         reportState = "graded";
       } else reportState = "absent";
     }
@@ -336,6 +374,33 @@ async function finalizeOnce(ctx: Ctx, examId: string, reason: "learner" | "deadl
     const markedAnswers = markExamAnswers(inTime(questionAttempts), questionSet.serverTruths);
     const handoff = answers.find((a) => a.itemId === HANDOFF_ITEM_ID);
     const handoffParsed = handoff ? parseAnswer(handoff.answer) : null;
+
+    if (exam.format === "detection-rule") {
+      const ruleRaw = answers.find((a) => a.itemId === DETECTION_RULE_ITEM_ID);
+      const parsedRule = ruleRaw ? parseAnswer(ruleRaw.answer) : null;
+      if (parsedRule && typeof parsedRule === "object") {
+        const ruleInput = parsedRule as DetectionRuleInput;
+        const testResults = await evaluateDetectionRuleChallenge(exam.variantId, exam.seed, ruleInput);
+        input.ruleChallenge = {
+          ...testResults,
+          title: ruleInput.title ?? "Untitled Rule",
+          technique: ruleInput.technique ?? "",
+          tactic: ruleInput.tactic ?? "",
+          query: ruleInput.query ?? "",
+        };
+        await ctx.repo.saveSocDetectionRule({
+          examAttemptId: exam.id,
+          userId: exam.userId,
+          title: ruleInput.title ?? "Untitled Rule",
+          description: ruleInput.description ?? "",
+          severity: ruleInput.severity ?? "medium",
+          tactic: ruleInput.tactic ?? "",
+          technique: ruleInput.technique ?? "",
+          query: ruleInput.query ?? "",
+          testResults,
+        });
+      }
+    }
 
     input = {
       ...input,
