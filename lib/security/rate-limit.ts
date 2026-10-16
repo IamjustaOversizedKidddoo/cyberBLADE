@@ -12,7 +12,8 @@ import { isProductionDeployment } from "@/lib/config/runtime-config";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { log } from "@/lib/observability/logger";
 
-export type RateLimitResult = { allowed: boolean; remaining: number; retryAfterMs: number };
+/** `unavailable` marks a fail-closed refusal (limiter backend down), so health checks can say so. */
+export type RateLimitResult = { allowed: boolean; remaining: number; retryAfterMs: number; unavailable?: true };
 
 export interface RateLimitBackend {
   readonly name: "memory" | "postgres";
@@ -41,7 +42,7 @@ export function postgresBackend(getClient: () => RpcClient | null): RateLimitBac
       if (error || !row) {
         // Fail closed: without a working limiter, refuse rather than allow unlimited attempts.
         log.error("rate limit backend failed", { reason: error?.message ?? "no row" });
-        return { allowed: false, remaining: 0, retryAfterMs: 5_000 };
+        return { allowed: false, remaining: 0, retryAfterMs: 5_000, unavailable: true };
       }
       return { allowed: row.allowed, remaining: Math.max(0, max - row.hits), retryAfterMs: row.retry_after_ms };
     },

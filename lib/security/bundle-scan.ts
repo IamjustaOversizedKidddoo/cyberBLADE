@@ -10,6 +10,8 @@ import path from "node:path";
 export interface LeakRule {
   id: string;
   re: RegExp;
+  /** Never echo the match (it is a real secret value). */
+  redact?: boolean;
 }
 
 export const LEAK_RULES: LeakRule[] = [
@@ -35,6 +37,27 @@ export const LEAK_RULES: LeakRule[] = [
   { id: "secrets", re: /SUPABASE_SERVICE_ROLE_KEY|GROQ_API_KEY|GEMINI_API_KEY|gsk_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{30,}/ },
   { id: "flag-values", re: /\b(?:CYBER)?BLADE\{[A-Za-z0-9_-]{6,}\}|\bFLAG\{[A-Za-z0-9_-]{6,}\}/ },
 ];
+
+/** Server-only variables whose actual values must never appear in client output. */
+export const SERVER_SECRET_VARS = [
+  "SUPABASE_SERVICE_ROLE_KEY",
+  "CRON_SECRET",
+  "GROQ_API_KEY",
+  "GEMINI_API_KEY",
+  "CAPTCHA_SECRET_KEY",
+  "ERROR_REPORTER_DSN",
+  "BACKUP_ENCRYPTION_KEY",
+  "SUPABASE_DB_URL",
+];
+
+/** Rules matching the real values of server secrets set at scan time (run with the build's env). */
+export function secretValueRules(env: Record<string, string | undefined> = process.env): LeakRule[] {
+  return SERVER_SECRET_VARS.filter((n) => (env[n]?.length ?? 0) >= 16).map((n) => ({
+    id: `secret-value:${n}`,
+    re: new RegExp(env[n]!.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    redact: true,
+  }));
+}
 
 export interface LeakHit {
   file: string;
@@ -62,7 +85,8 @@ export function scanForLeaks(roots: string[], rules: LeakRule[] = LEAK_RULES): {
       const m = rule.re.exec(text);
       if (m) {
         const at = m.index;
-        hits.push({ file, rule: rule.id, excerpt: text.slice(Math.max(0, at - 40), at + m[0].length + 40).replace(/\s+/g, " ") });
+        const excerpt = rule.redact ? "[secret value withheld]" : text.slice(Math.max(0, at - 40), at + m[0].length + 40).replace(/\s+/g, " ");
+        hits.push({ file, rule: rule.id, excerpt });
       }
     }
   }

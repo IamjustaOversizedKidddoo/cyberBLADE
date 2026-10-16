@@ -19,7 +19,7 @@ function fakeFetch(site: Site) {
   return async (url: string, init?: RequestInit) => {
     const u = new URL(url);
     const key = `${init?.method ?? "GET"} ${u.pathname}`;
-    const hit = site[key] ?? (u.pathname.startsWith("/no-such-page") ? site["GET /404"] : undefined) ?? { status: 404, body: "Not found" };
+    const hit = site[key] ?? (u.pathname.startsWith("/legal/no-such-page") ? site["GET /404"] : undefined) ?? { status: 404, body: "Not found" };
     return new Response(hit.body ?? "", { status: hit.status ?? 200, headers: { ...goodHeaders, ...hit.headers } });
   };
 }

@@ -45,10 +45,10 @@ export function FeedbackDialog({ kind = "general", contentRef, label, className 
         <form onSubmit={send} className="space-y-3 p-5 font-sans text-sm">
           <h2 id={`${id}-title`} className="font-ui text-base">{TITLE[kind]}</h2>
           <label htmlFor={`${id}-text`} className="block text-secondary">
-            What happened, or what should change? Please don't include personal information.
+            What happened, or what should change? Please don&rsquo;t include personal information.
           </label>
           <textarea id={`${id}-text`} value={message} onChange={(e) => setMessage(e.target.value)} maxLength={2000} rows={5} required className="w-full rounded-xs border border-line bg-void p-3 text-ink focus:border-cyan focus-visible:outline-2 focus-visible:outline-cyan" />
-          <p className="text-xs text-muted">{message.length}/2000 · sent with this page's address{contentRef ? " and which item it is about" : ""}</p>
+          <p className="text-xs text-muted">{message.length}/2000 · sent with this page&rsquo;s address{contentRef ? " and which item it is about" : ""}</p>
           <p role="status" className="min-h-[1.25rem] text-secondary">{state.text}</p>
           <div className="flex flex-wrap justify-end gap-2">
             <button type="button" onClick={() => dialog.current?.close()} className="min-h-[44px] rounded-xs border border-line px-4 font-ui text-ink hover:bg-surface-hover">Close</button>

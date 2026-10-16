@@ -27,7 +27,10 @@ async function databaseOk(): Promise<"ok" | "fail" | "local"> {
 
 export async function GET(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (!(await rateLimit(`ready:${ip}`, 30, 60_000)).allowed) return NextResponse.json({ error: "rate limited" }, { status: 429 });
+  const rate = await rateLimit(`ready:${ip}`, 30, 60_000);
+  // A limiter that is down means the database is down: report not-ready rather than "rate limited".
+  if (rate.unavailable) return NextResponse.json({ ready: false, checks: { config: "ok", database: "fail" } }, { status: 503, headers: { "cache-control": "no-store" } });
+  if (!rate.allowed) return NextResponse.json({ error: "rate limited" }, { status: 429 });
   const config = runtimeConfigIssues().length === 0 ? "ok" : "fail";
   const database = await databaseOk();
   const ready = config === "ok" && database !== "fail";

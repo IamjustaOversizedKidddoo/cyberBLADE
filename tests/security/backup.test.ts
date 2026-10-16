@@ -5,7 +5,6 @@ import {
   authUserColumns,
   backupFileName,
   bundleDumps,
-  countInserts,
   decryptBackup,
   encryptBackup,
   makeManifest,

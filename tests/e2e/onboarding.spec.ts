@@ -54,3 +54,18 @@ test("dashboard has no horizontal scroll", async ({ page }) => {
   }));
   expect(scrollWidth).toBeLessThanOrEqual(innerWidth);
 });
+
+test("feedback widget opens, sends feedback, and shows reference id", async ({ page }) => {
+  await page.goto("/start");
+  await onboard(page, `e2e_${(Date.now() + 4) % 1_000_000}`);
+  await expect(page).toHaveURL(/\/dashboard$/, { timeout: 15_000 });
+
+  await page.getByRole("button", { name: "Feedback", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.locator("textarea").fill("Test feedback message from E2E");
+  await dialog.getByRole("button", { name: "Send", exact: true }).click();
+  await expect(dialog.getByText(/Thank you\. Reference:/)).toBeVisible();
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await expect(dialog).not.toBeVisible();
+});

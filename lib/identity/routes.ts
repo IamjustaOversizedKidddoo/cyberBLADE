@@ -1,7 +1,21 @@
 const DEFAULT_AFTER_START = "/dashboard";
 
-const PUBLIC_EXACT = new Set(["/", "/start", "/credits"]);
-const PUBLIC_PREFIXES = ["/legal/", "/verify/", "/session/"];
+// Reachable without an operator cookie. The auth callback must be (a new user has no cookie yet);
+// health/ready/cron carry their own controls (no data / rate limit / CRON_SECRET), and crawlers
+// must be able to read robots.txt for the beta's noindex to work.
+const PUBLIC_EXACT = new Set([
+  "/",
+  "/start",
+  "/credits",
+  "/help",
+  "/accessibility",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/manifest.webmanifest",
+  "/api/health",
+  "/api/ready",
+]);
+const PUBLIC_PREFIXES = ["/legal/", "/verify/", "/session/", "/auth/", "/api/cron/"];
 
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_EXACT.has(pathname) || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));

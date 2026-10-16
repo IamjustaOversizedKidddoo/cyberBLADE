@@ -51,7 +51,8 @@ export async function runSmoke(baseUrl: string, fetchImpl: Fetch = fetch, opts: 
   const loc = lesson.r.headers.get("location") ?? "";
   add("lessons are not served to anonymous visitors (redirect to sign-in)", lesson.r.status >= 300 && lesson.r.status < 400 && /\/(start|session)/.test(loc), `${lesson.r.status} ${loc}`);
 
-  const missing = await get(`/no-such-page-${Date.now()}`);
+  // Unknown paths redirect anonymous visitors to sign-in; a missing page under a public prefix is a real 404.
+  const missing = await get(`/legal/no-such-page-${Date.now()}`);
   add("404 page is a 404 and leaks nothing", missing.r.status === 404 && !LEAK_RE.test(missing.body), `${missing.r.status} ${LEAK_RE.exec(missing.body)?.[0] ?? ""}`);
 
   const badAction = await get("/start", { method: "POST", headers: { "next-action": "0".repeat(42), "content-type": "text/plain" }, body: "[]" });

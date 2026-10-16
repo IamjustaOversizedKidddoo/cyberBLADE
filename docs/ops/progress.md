@@ -212,3 +212,31 @@ Full gates after `8d54b30`: lint ✓ (0 errors, 53 warnings), typecheck ✓, che
 ### Entry 14: L2 prompt, interrupted by the owner after the quick fixes (2026-10-16)
 Done and committed: (a) 10-minute drill uses beginner family queues (`cca2fd1`); (b) evidence screenshots untracked (`d632370`); (c) `docs/ops/decisions.md` with the accepted L1 audit decisions, accommodation capped at x2 (`31f2c11`).
 Not started: Part A plan (`docs/design/soc-l2.md`), Part B pilot lessons. Design notes gathered for later: rule-name twins need versioned family snapshots so old attempts keep loading their pinned family version (today `loadSocFamily` reads only the current YAML).
+
+### Entry 15: Closed-beta production readiness (Vercel + Supabase) (2026-10-16)
+Goal: make the application production-ready and safe to deploy for an invite-only closed beta (20–100 learners) on Vercel with hosted Supabase. No external deployment was run; all verification done locally with PGlite and Playwright.
+
+Scope completed across the 10 requirements:
+1. **Hosted-only in production:** Typed runtime config validation (`lib/config/runtime-config.ts`) failing fast on startup with specific messages for missing/invalid server and public vars; refuses local-JSON-store mode in production or on Vercel; `.env.example` updated and verified.
+2. **Serverless-safe rate limits:** Pluggable rate limiter backend (`lib/security/rate-limit.ts`) backed by Postgres table `rate_limit_buckets` and atomic stored procedure `rate_limit_hit()` in `supabase/migrations/20261016120000_beta_hardening.sql`; fail-closed behavior; in-memory backend preserved for local dev.
+3. **Background jobs:** Idempotent cron routes (`/api/cron/cleanup`, `/api/cron/ai-grading`) protected by `CRON_SECRET` with constant-time comparison, rate-limited, time-boxed; `vercel.json` configured with Hobby-compatible daily crons; AI grading off by default.
+4. **Beta access & feedback:** Invite-only signups behind `BETA_INVITE_ONLY` with hashed limited-use codes, uniform timing errors, audit logging, and admin CLI (`npm run beta:invites`); timestamped beta notice acknowledgement; accessible feedback widget in app shell (`FeedbackDialog`) plus "report a problem" on checks, exam questions, and scenarios; grouped feedback export CLI (`npm run beta:feedback`); `/help` page and account deletion/export extended to all beta tables.
+5. **Beta flags & maintenance:** Tested flag set (`BETA_INVITE_ONLY=true`, `SOC_L2=false`, `AI_GRADING=false`, etc.); `MAINTENANCE_MODE` returns 503 + Retry-After (health route exempt); `noindex` header, robots.txt, and empty sitemap during beta.
+6. **Observability:** Structured JSON logger with request IDs, error page references (`Reference: <digest>`); redaction of tokens, cookies, emails, IPs, flags, and model outputs; `ErrorReporter` interface with no-op default and scrubbed Sentry adapter; `/api/health` and `/api/ready` with minimal rate-limited outputs; daily spend summary script (`npm run ops:daily`).
+7. **Backups & recovery:** Encrypted logical backup script (`npm run db:backup` via `pg_dump`, AES-256-GCM + gzip, SHA-256 manifest); Docker-free restore checker (`npm run db:restore-check`) loading into throwaway PGlite with RLS and isolation probes (~4 s for 100 learners); provider backup terms documented.
+8. **Staging verification & smoke:** `npm run staging:verify` (two throwaway users; cross-user read/write refusal on all 36 learner tables, immutable scores/grades/XP/seeds, unmarked active exams, clean deletion); `npm run smoke -- <baseUrl>` (~20 read-only requests: health, ready, security headers, noindex, sign-in, public lessons, 404 leakage checks).
+9. **Preview/prod hygiene & deploy guide:** Comprehensive manual guide in `docs/ops/deploy-vercel.md` with verified limits, dependency order, rollback procedures, kill switches, and incident runbooks.
+10. **Bundle security:** `scripts/scan-client-bundle.mts` updated with `secretValueRules` to ensure server-only secret values are never included in static or client bundles.
+
+Full gates (2026-10-16):
+- lint ✓ (0 errors, 53 pre-existing warnings)
+- typecheck ✓
+- check:content ✓ (80 lessons, 34 labs, 27 objectives)
+- check:soc ✓ (1 scenario, 9 families with 50 seeds, 4 shifts with 50 seeds)
+- test ✓ 2078/2078
+- test:security ✓ 256/256
+- test:db ✓ 101/101 (PGlite)
+- build ✓ (Next.js Turbopack)
+- scan:bundle ✓ (88 client artifacts, 0 leaks across 11 pattern rules and secret values)
+- test:e2e ✓ (20 passed, 2 skipped: onboarding, terminal lab, knowledge & scenario exams, feedback widget)
+- Migration `20261016120000_beta_hardening.sql` executed on PGlite only, NOT on any hosted database.

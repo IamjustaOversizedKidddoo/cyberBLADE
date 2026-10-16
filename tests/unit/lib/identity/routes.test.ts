@@ -25,6 +25,20 @@ test("no cookie → start with next", () => {
   });
 });
 
+test.each(["/auth/callback", "/api/health", "/api/ready", "/api/cron/cleanup", "/api/cron/ai-grading", "/robots.txt", "/sitemap.xml", "/help", "/accessibility"])(
+  "%s is reachable without a cookie (it has its own controls)",
+  (pathname) => {
+    expect(resolveRoute({ pathname, hasOperatorCookie: false })).toBeNull();
+  },
+);
+
+test.each(["/api/other", "/apihealth", "/api/health/x", "/auth", "/helpdesk", "/beta-notice", "/account", "/learn/core-r0-comp-hardware-01"])(
+  "%s still needs a cookie",
+  (pathname) => {
+    expect(resolveRoute({ pathname, hasOperatorCookie: false })).not.toBeNull();
+  },
+);
+
 test("no cookie → next keeps the query string (deep links)", () => {
   expect(resolveRoute({ pathname: "/labs/core-r0-terminal-lab-01", search: "?lesson=x", hasOperatorCookie: false })).toEqual({
     redirect: "/start?next=%2Flabs%2Fcore-r0-terminal-lab-01%3Flesson%3Dx",

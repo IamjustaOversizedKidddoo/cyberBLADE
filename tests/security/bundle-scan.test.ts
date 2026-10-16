@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { LEAK_RULES, clientArtifactRoots, scanForLeaks } from "@/lib/security/bundle-scan";
+import { LEAK_RULES, clientArtifactRoots, scanForLeaks, secretValueRules } from "@/lib/security/bundle-scan";
 
 function fixture(files: Record<string, string>): string {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bundle-scan-"));
@@ -35,6 +35,16 @@ describe("bundle leak scanner", () => {
   it.each(Object.entries(PLANTED))("catches %s", (rule, body) => {
     const dir = fixture({ "static/chunks/a.js": `!function(){${body}}()` });
     expect(scanForLeaks([dir]).hits.map((h) => h.rule)).toContain(rule);
+  });
+
+  it("catches the real value of a server secret without echoing it", () => {
+    const value = "svc_" + "x9Q2".repeat(10);
+    const dir = fixture({ "static/chunks/a.js": `const k="${value}";` });
+    const rules = secretValueRules({ SUPABASE_SERVICE_ROLE_KEY: value, CRON_SECRET: "short" });
+    expect(rules.map((r) => r.id)).toEqual(["secret-value:SUPABASE_SERVICE_ROLE_KEY"]);
+    const hits = scanForLeaks([dir], rules).hits;
+    expect(hits).toHaveLength(1);
+    expect(hits[0].excerpt).not.toContain(value);
   });
 
   it("scans prerendered HTML and RSC payloads, not only JS", () => {

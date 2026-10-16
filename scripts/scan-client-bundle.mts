@@ -4,14 +4,15 @@
  *   npm run scan:bundle
  */
 import fs from "node:fs";
-import { clientArtifactRoots, scanForLeaks } from "../lib/security/bundle-scan";
+import { LEAK_RULES, clientArtifactRoots, scanForLeaks, secretValueRules } from "../lib/security/bundle-scan";
 
 if (!fs.existsSync(".next/static")) {
   console.error("scan:bundle needs a build: run `npm run build` first.");
   process.exit(1);
 }
 
-const { files, hits } = scanForLeaks(clientArtifactRoots());
+const valueRules = secretValueRules();
+const { files, hits } = scanForLeaks(clientArtifactRoots(), [...LEAK_RULES, ...valueRules]);
 if (files < 10) {
   console.error(`scan:bundle scanned only ${files} files; the build output looks incomplete.`);
   process.exit(1);
@@ -21,4 +22,4 @@ if (hits.length) {
   for (const h of hits.slice(0, 50)) console.error(` - [${h.rule}] ${h.file}: …${h.excerpt}…`);
   process.exit(1);
 }
-console.log(`scan:bundle OK: ${files} client artifacts, no leaks.`);
+console.log(`scan:bundle OK: ${files} client artifacts, no leaks (${LEAK_RULES.length} pattern rules + ${valueRules.length} secret values from the environment).`);
