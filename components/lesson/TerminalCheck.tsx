@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
+import { FeedbackDialog } from "@/components/feedback/FeedbackDialog";
 
 const noopSubscribe = () => () => {};
 import type { PublicQuestion } from "@/lib/content/checks";
@@ -16,6 +17,8 @@ type Props = {
   initialPassed: string[];
   answer: (questionId: string, optionIndex: number) => Promise<CheckResult>;
   variant?: CheckVariant;
+  /** When set, each question offers "Report a problem" (feedback tied to lessonId:questionId). */
+  lessonId?: string;
 };
 
 const LEGEND_CLASS: Record<CheckVariant, string> = {
@@ -29,12 +32,14 @@ function Question({
   answer,
   onResult,
   variant,
+  lessonId,
 }: {
   q: PublicQuestion;
   passed: boolean;
   answer: Props["answer"];
   onResult: (r: CheckResult) => void;
   variant: CheckVariant;
+  lessonId?: string;
 }) {
   const [choice, setChoice] = useState<number | null>(null);
   const [result, setResult] = useState<CheckResult | null>(null);
@@ -211,13 +216,21 @@ function Question({
             {error}
           </span>
         )}
+        {lessonId && (
+          <FeedbackDialog
+            kind="lesson_check"
+            contentRef={{ lessonId, questionId: q.id }}
+            label="Report a problem"
+            className="min-h-[44px] px-2 font-ui text-xs text-muted underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-cyan"
+          />
+        )}
       </div>
     </fieldset>
   );
 }
 
 /** Terminal Check: answers are graded on the server; the browser never has the answer key. */
-export function TerminalCheck({ questions, initialPassed, answer, variant = "terminal" }: Props) {
+export function TerminalCheck({ questions, initialPassed, answer, variant = "terminal", lessonId }: Props) {
   const [passed, setPassed] = useState(() => new Set(initialPassed));
   const [completed, setCompleted] = useState(false);
   // "true" only once React has hydrated (server render says "false"), so automated checks never
@@ -240,6 +253,7 @@ export function TerminalCheck({ questions, initialPassed, answer, variant = "ter
           passed={passed.has(q.id)}
           answer={answer}
           variant={variant}
+          lessonId={lessonId}
           onResult={(r) => {
             if (r.correct) setPassed((s) => new Set(s).add(q.id));
             if (r.lessonCompleted) setCompleted(true);

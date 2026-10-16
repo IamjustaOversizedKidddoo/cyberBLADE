@@ -33,7 +33,9 @@
     "scan:bundle": "tsx scripts/scan-client-bundle.mts",
     "soc:exam-calibration": "tsx scripts/soc-exam-calibration.mts",
     "soc:exam-accommodation": "tsx --conditions=react-server scripts/soc-exam-accommodation.mts",
-    "soc:pin-hashes": "tsx scripts/soc-pin-hashes.mts"
+    "soc:pin-hashes": "tsx scripts/soc-pin-hashes.mts",
+    "beta:invites": "tsx --conditions=react-server scripts/beta-invites.mts",
+    "beta:feedback": "tsx --conditions=react-server scripts/beta-feedback-export.mts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

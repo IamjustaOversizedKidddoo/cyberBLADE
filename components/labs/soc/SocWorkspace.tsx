@@ -19,6 +19,7 @@ import { IconClock, IconShield } from "@/components/ui/icons";
 import { SocSearchTab } from "./search/SocSearchTab";
 import { SocReportWorkspace } from "./reports/SocReportWorkspace";
 import { ModalFocusScope } from "@/components/ui/ModalFocusScope";
+import { FeedbackDialog } from "@/components/feedback/FeedbackDialog";
 
 /** Exam mode (Stage 1): the exam page owns submission and the timer; practice feedback stays hidden. */
 export type SocWorkspaceExamMode = {
@@ -293,6 +294,13 @@ export function SocWorkspace({ session, onExit, exam }: Props) {
             <IconShield className="h-3.5 w-3.5" />
             <span>Investigate</span>
           </button>
+
+          <FeedbackDialog
+            kind="scenario"
+            contentRef={{ attemptId: session.attempt.id }}
+            label="Report a problem"
+            className="rounded-xs border border-line bg-surface-raised px-2.5 py-1 text-xs text-muted hover:text-ink focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan"
+          />
 
           {/* Keyboard Shortcuts Dialog Button */}
           <button

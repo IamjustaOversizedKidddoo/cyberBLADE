@@ -7,8 +7,12 @@ import { setOperatorCookie } from "@/lib/identity/session";
 import { parseStartForm } from "@/lib/identity/validation";
 import { rateLimit } from "@/lib/security/rate-limit";
 import { verifyCaptchaToken } from "@/lib/security/captcha";
+import { randomUUID } from "node:crypto";
+import { isBetaInviteOnly } from "@/lib/beta";
+import { checkInviteCode, redeemInviteCode } from "@/lib/beta/invite-flow";
+import { INVITE_ERROR } from "@/lib/beta/codes";
 
-export type StartState = { errors: { handle?: string; agree?: string }; handle: string };
+export type StartState = { errors: { handle?: string; agree?: string; invite?: string }; handle: string };
 
 export async function startOperator(_prev: StartState, formData: FormData): Promise<StartState> {
   const headersList = await headers();
@@ -39,7 +43,17 @@ export async function startOperator(_prev: StartState, formData: FormData): Prom
   if (!result.ok) {
     return { errors: result.errors, handle: String(formData.get("handle") ?? "") };
   }
+
+  // Closed beta: redeem the invite atomically for the new id before the operator exists.
+  const id = randomUUID();
+  if (isBetaInviteOnly()) {
+    const code = await checkInviteCode(String(formData.get("invite") ?? ""));
+    if (!code || !(await redeemInviteCode(code, id))) {
+      return { errors: { invite: INVITE_ERROR }, handle: String(formData.get("handle") ?? "") };
+    }
+  }
   const operator = await getOperatorStore().create({
+    id,
     handle: result.handle,
     ethicsAcceptedAt: new Date().toISOString(),
   });

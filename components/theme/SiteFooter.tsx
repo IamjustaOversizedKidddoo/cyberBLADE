@@ -64,6 +64,8 @@ export function SiteFooter() {
         <div className="col-span-2 bg-void px-6 py-8 md:col-span-2">
           <SystemLabel className="mb-4 block text-cyan">LEGAL & SEC</SystemLabel>
           <ul className="space-y-2 text-sm text-secondary">
+            <li><Link href="/help" className="hover:text-cyan transition-colors">Help</Link></li>
+            <li><Link href="/account" className="hover:text-cyan transition-colors">Account &amp; your data</Link></li>
             <li><Link href="/legal/ethical-use" className="hover:text-cyan transition-colors">Ethical use</Link></li>
             <li><Link href="/accessibility" className="hover:text-cyan transition-colors">Accessibility</Link></li>
             <li><Link href="/credits" className="hover:text-cyan transition-colors">Credits</Link></li>

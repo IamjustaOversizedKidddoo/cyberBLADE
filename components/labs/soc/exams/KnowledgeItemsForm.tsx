@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { saveSocExamAnswerAction } from "@/app/(app)/labs/soc/exams/actions";
 import type { ExamStateView } from "@/lib/lab-engine/soc/exam/service";
+import { FeedbackDialog } from "@/components/feedback/FeedbackDialog";
 
 type Item = NonNullable<ExamStateView["knowledgeItems"]>[number];
 
@@ -128,6 +129,12 @@ export function KnowledgeItemsForm({ examId, items, disabled }: { examId: string
               <p className="mt-2 font-ui text-xs text-muted" aria-live="off">
                 {st === "saving" ? "Saving…" : st === "saved" ? "Saved" : st === "error" ? "Not saved — try again" : chosen.length ? "Saved earlier" : "Not answered yet"}
               </p>
+              <FeedbackDialog
+                kind="exam_question"
+                contentRef={{ examId, itemKey: item.id }}
+                label="Report a problem with this question"
+                className="mt-1 min-h-[44px] font-ui text-xs text-muted underline underline-offset-4 hover:text-ink focus-visible:outline-2 focus-visible:outline-cyan"
+              />
             </li>
           );
         })}

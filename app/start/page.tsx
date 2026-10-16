@@ -6,6 +6,8 @@ import { NoiseLayer } from "@/components/art/NoiseLayer";
 import { SystemLabel } from "@/components/art/SystemLabel";
 import { Scanlines } from "@/components/theme/Scanlines";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { isBetaInviteOnly } from "@/lib/beta";
+import { INVITE_ERROR } from "@/lib/beta/codes";
 import { safeNextPath } from "@/lib/identity/routes";
 import { BRAND } from "@/lib/brand";
 import { StartForm } from "./StartForm";
@@ -22,7 +24,7 @@ const INTAKE_FIELDS = [
 ] as const;
 
 export default async function StartPage(props: PageProps<"/start">) {
-  const { next } = await props.searchParams;
+  const { next, error } = await props.searchParams;
   const isHosted = isSupabaseConfigured();
   return (
     <>
@@ -102,6 +104,8 @@ export default async function StartPage(props: PageProps<"/start">) {
                 <StartForm
                   next={safeNextPath(typeof next === "string" ? next : null)}
                   isHosted={isHosted}
+                  inviteOnly={isBetaInviteOnly()}
+                  notice={error === "invite_required" ? INVITE_ERROR : error ? "Sign-in did not complete. Please try again." : null}
                 />
               </div>
             </div>

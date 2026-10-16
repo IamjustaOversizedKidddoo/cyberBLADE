@@ -4,6 +4,8 @@ import { getOperatorStore } from "@/lib/identity/operator-store";
 import { setOperatorCookie } from "@/lib/identity/session";
 import { safeNextPath } from "@/lib/identity/routes";
 import { isReservedHandle } from "@/lib/identity/validation";
+import { isBetaInviteOnly } from "@/lib/beta";
+import { redeemStashedInvite } from "@/lib/beta/invite-flow";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -32,6 +34,15 @@ export async function GET(request: Request) {
   const userId = data.user.id;
   const store = getOperatorStore();
   let operator = await store.get(userId);
+
+  if (!operator && isBetaInviteOnly()) {
+    // Closed beta: a new learner needs the invite code they entered before signing in. Without
+    // it the session is ended and no operator (and so no access) is created.
+    if (!(await redeemStashedInvite(userId))) {
+      await supabase.auth.signOut().catch(() => undefined);
+      return NextResponse.redirect(`${origin}/start?error=invite_required`);
+    }
+  }
 
   if (!operator) {
     const emailPrefix = data.user.email?.split("@")[0] || `op_${userId.slice(0, 8)}`;

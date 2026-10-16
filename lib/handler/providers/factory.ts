@@ -4,6 +4,7 @@ import { GroqProvider } from "./groq";
 import { HeuristicProvider } from "./heuristic";
 import type { CompletionRequest, CompletionResult, HandlerProvider } from "./types";
 import { ProviderCircuitBreaker } from "../circuit-breaker";
+import { log } from "@/lib/observability/logger";
 
 const circuitBreakers = new Map<string, ProviderCircuitBreaker>();
 
@@ -102,7 +103,7 @@ export class ResilientHandlerProvider implements HandlerProvider {
         cb.recordSuccess();
         this._lastUsedProvider = provider.name;
         if (process.env.HANDLER_DEBUG_LOGS === "true") {
-          console.info(`[Handler Telemetry] Provider executed successfully: ${provider.name}`);
+          log.info("handler provider ok", { provider: provider.name });
         }
         return reply;
       } catch (err: unknown) {
@@ -110,7 +111,7 @@ export class ResilientHandlerProvider implements HandlerProvider {
         const isQuota = errMsg.includes("429") || errMsg.includes("quota") || errMsg.includes("SAFETY");
         cb.recordFailure(Date.now(), isQuota);
         if (process.env.HANDLER_DEBUG_LOGS === "true") {
-          console.warn(`[Handler Telemetry] Provider ${provider.name} failed: ${errMsg}. Advancing to next provider.`);
+          log.warn("handler provider failed, trying next", { provider: provider.name, error: errMsg.slice(0, 200) });
         }
       }
     }

@@ -17,6 +17,7 @@ import { CALIBRATION_CONSENT_VERSION } from "@/lib/lab-engine/soc/ai-grading/cal
 import { requestHumanReview } from "@/lib/lab-engine/soc/ai-grading/review";
 import { getAiGradingStore, getAiResultForLearner } from "@/lib/lab-engine/soc/ai-grading/runtime";
 import { scheduleAiWorker } from "./ai-schedule";
+import { log } from "@/lib/observability/logger";
 
 const submissionIdSchema = z.string().uuid();
 
@@ -30,7 +31,7 @@ async function guarded<T>(label: string, fn: (requestId: string) => Promise<T>):
   } catch (err) {
     const msg = err instanceof Error ? err.message : "";
     if (LEARNER_SAFE.test(msg)) throw err;
-    console.error(`[soc-ai] ${label} failed ref=${requestId}: ${msg.slice(0, 200)}`);
+    log.error("soc-ai action failed", { requestId, action: label, error: msg.slice(0, 200) });
     throw new Error(`Something went wrong. Reference: ${requestId}`);
   }
 }

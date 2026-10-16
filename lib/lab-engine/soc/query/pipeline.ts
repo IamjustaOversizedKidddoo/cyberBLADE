@@ -9,6 +9,7 @@ import type { BladeQLEvent, QueryExecutionResult } from "./types";
 import { investigationDataset } from "./investigation-dataset";
 import type { SocAttemptRecord } from "../types";
 import { reserveExamBudget } from "../exam/guard";
+import { log } from "@/lib/observability/logger";
 
 export const queryInputSchema = z.object({
   attemptId: z.string().min(1),
@@ -116,7 +117,7 @@ async function runQuery(ctx: Ctx, userId: string, input: QueryInput, attempt: So
     logId = logged.id;
   } catch (err) {
     // Audit logging failure should not crash execution in offline mode
-    console.error("Failed to save soc query log:", err);
+    log.error("soc query log save failed", { error: err instanceof Error ? err.message.slice(0, 200) : "unknown" });
   }
 
   return {

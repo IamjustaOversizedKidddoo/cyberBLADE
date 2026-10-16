@@ -17,9 +17,10 @@ export class FileOperatorStore implements OperatorStore {
     return data.operators[id] ?? null;
   }
 
-  async create(input: { handle: string; ethicsAcceptedAt: string }): Promise<Operator> {
+  async create(input: { handle: string; ethicsAcceptedAt: string; id?: string }): Promise<Operator> {
     const operator: Operator = {
-      id: randomUUID(),
+      // A caller-chosen id lets an invite be redeemed for the account before it is created.
+      id: input.id ?? randomUUID(),
       handle: input.handle,
       rank: 0,
       ethicsAcceptedAt: input.ethicsAcceptedAt,

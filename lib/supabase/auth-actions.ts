@@ -7,6 +7,9 @@ import { clearOperatorCookie } from "@/lib/identity/session";
 import { safeNextPath } from "@/lib/identity/routes";
 
 import { rateLimit } from "@/lib/security/rate-limit";
+import { isBetaInviteOnly } from "@/lib/beta";
+import { checkInviteCode, stashInviteCode } from "@/lib/beta/invite-flow";
+import { INVITE_ERROR } from "@/lib/beta/codes";
 
 export async function signInWithMagicLink(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
@@ -33,9 +36,11 @@ export async function signInWithMagicLink(formData: FormData) {
     return { error: "Supabase authentication is not configured in this environment." };
   }
 
-  const host = headersList.get("host") || "localhost:3000";
-  const proto = headersList.get("x-forwarded-proto") || "http";
-  const origin = `${proto}://${host}`;
+  // Closed beta: a code entered here is checked now and redeemed when the new account is created.
+  const inviteError = await prepareInvite(formData.get("invite"));
+  if (inviteError) return { error: inviteError };
+
+  const origin = await siteOrigin();
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
@@ -51,16 +56,38 @@ export async function signInWithMagicLink(formData: FormData) {
   return { success: true, message: "If an account exists for this email, a sign-in link has been sent. Check your inbox." };
 }
 
-export async function signInWithOAuth(provider: "google" | "github", next = "/dashboard") {
+/**
+ * Redirect origin for auth emails and OAuth. The configured site URL wins: building it from the
+ * Host header would let a forged header steer sign-in links (Supabase also enforces its redirect
+ * allow-list, which must list only the real domains).
+ */
+async function siteOrigin(): Promise<string> {
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
+  if (configured) return configured;
+  const h = await headers();
+  return `${h.get("x-forwarded-proto") || "http"}://${h.get("host") || "localhost:3000"}`;
+}
+
+/** Returns an error message, or null when there is no code or the code is usable (then stashed). */
+async function prepareInvite(raw: FormDataEntryValue | string | null | undefined): Promise<string | null> {
+  const code = typeof raw === "string" ? raw.trim() : "";
+  if (!isBetaInviteOnly() || !code) return null;
+  const checked = await checkInviteCode(code);
+  if (!checked) return INVITE_ERROR;
+  await stashInviteCode(checked);
+  return null;
+}
+
+export async function signInWithOAuth(provider: "google" | "github", next = "/dashboard", invite?: string): Promise<{ error: string } | void> {
   const supabase = await createServerSupabaseClient();
   if (!supabase) {
     throw new Error("Supabase authentication is not configured.");
   }
 
-  const headersList = await headers();
-  const host = headersList.get("host") || "localhost:3000";
-  const proto = headersList.get("x-forwarded-proto") || "http";
-  const origin = `${proto}://${host}`;
+  const inviteError = await prepareInvite(typeof invite === "string" ? invite.slice(0, 40) : undefined);
+  if (inviteError) return { error: inviteError };
+
+  const origin = await siteOrigin();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,

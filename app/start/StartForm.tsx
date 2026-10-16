@@ -7,7 +7,7 @@ import { startOperator, type StartState } from "./actions";
 
 const INITIAL: StartState = { errors: {}, handle: "" };
 
-export function StartForm({ next, isHosted }: { next: string; isHosted?: boolean }) {
+export function StartForm({ next, isHosted, inviteOnly, notice }: { next: string; isHosted?: boolean; inviteOnly?: boolean; notice?: string | null }) {
   const [state, action, pending] = useActionState(startOperator, INITIAL);
   const [draftHandle, setDraftHandle] = useState(() => {
     if (typeof window !== "undefined") {
@@ -48,6 +48,14 @@ export function StartForm({ next, isHosted }: { next: string; isHosted?: boolean
         </div>
       </div>
 
+      {notice && (
+        <p role="alert" className="border border-warning/50 bg-warning/10 p-3 font-sans text-sm text-ink">
+          {notice}
+        </p>
+      )}
+
+      {/* Hosted sign-in creates the account through Supabase Auth; the handle form is local only. */}
+      {!isHosted && (
       <form action={action} className="space-y-6" noValidate>
         <input type="hidden" name="next" value={next} />
 
@@ -76,6 +84,32 @@ export function StartForm({ next, isHosted }: { next: string; isHosted?: boolean
             </p>
           )}
         </div>
+
+        {inviteOnly && (
+          <div className="space-y-2">
+            <label htmlFor="invite" className="block text-ink font-sans font-semibold text-sm">
+              Invite code
+            </label>
+            <p id="invite-hint" className="font-sans text-sm text-secondary">CyberBLADE is in a closed beta. Enter the code from your invitation (for example ABCD-EFGH-JKMN-PQRS).</p>
+            <input
+              id="invite"
+              name="invite"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              maxLength={40}
+              required
+              aria-describedby={state.errors.invite ? "invite-hint invite-error" : "invite-hint"}
+              aria-invalid={state.errors.invite ? true : undefined}
+              className="w-full min-h-[44px] border border-line bg-void px-3 font-mono text-sm uppercase text-ink outline-none focus:border-cyan focus-visible:outline-2 focus-visible:outline-cyan"
+            />
+            {state.errors.invite && (
+              <p id="invite-error" role="alert" className="text-sm font-mono text-danger font-semibold">
+                ⚠ {state.errors.invite}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Step 2: Ethical agreement box */}
         <div className="space-y-2">
@@ -121,8 +155,9 @@ export function StartForm({ next, isHosted }: { next: string; isHosted?: boolean
           {pending ? "Starting…" : "Start"}
         </button>
       </form>
+      )}
 
-      {isHosted && <HostedAuthSection nextPath={next} />}
+      {isHosted && <HostedAuthSection nextPath={next} inviteOnly={inviteOnly} />}
     </div>
   );
 }

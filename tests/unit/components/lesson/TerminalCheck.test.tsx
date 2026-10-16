@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { vi } from "vitest";
+vi.mock("@/app/(app)/feedback/actions", () => ({ submitFeedbackAction: vi.fn(async () => ({ ok: true, requestId: "r" })) }));
 import { TerminalCheck } from "@/components/lesson/TerminalCheck";
 
 const questions = [

@@ -2,6 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { Json } from "@/lib/supabase/types";
 import { createHash } from "node:crypto";
+import { log } from "@/lib/observability/logger";
 
 export type AuditSeverity = "info" | "warn" | "security_alert";
 
@@ -48,15 +49,5 @@ export async function logSecurityEvent(event: AuditEventInput): Promise<void> {
   }
 
   // Structured local security log
-  console.info(
-    JSON.stringify({
-      level: severity,
-      tag: "AUDIT_EVENT",
-      eventType: event.eventType,
-      userId: event.userId ?? "anonymous",
-      ipHash,
-      metadata,
-      timestamp: new Date().toISOString(),
-    })
-  );
+  log.info("AUDIT_EVENT", { severity, eventType: event.eventType, userId: event.userId ?? "anonymous", ipHash, metadata });
 }

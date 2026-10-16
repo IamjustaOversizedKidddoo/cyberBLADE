@@ -7,6 +7,9 @@ import { logSecurityEvent } from "@/lib/security/audit-logger";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getAiGradingStore } from "@/lib/lab-engine/soc/ai-grading/runtime";
 import { buildLearnerExport } from "./learner-export";
+import { getBetaStore } from "@/lib/beta";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { rateLimit } from "@/lib/security/rate-limit";
 
 /**
@@ -32,6 +35,11 @@ export async function exportUserDataAction() {
       createdAt: operator.createdAt,
     },
     progress,
+    // Beta (allowlisted): own feedback and notice acknowledgements. Invite codes are never included.
+    beta: {
+      noticeAcknowledgements: await getBetaStore().noticeAcksForUser(operator.id),
+      feedback: (await getBetaStore().listFeedbackForUser(operator.id)).map((f) => ({ kind: f.kind, contentId: f.contentId, route: f.route, message: f.message, requestId: f.requestId, createdAt: f.createdAt })),
+    },
   };
 }
 
@@ -57,8 +65,21 @@ export async function deleteAccountAction() {
   // AI grading rows, raw outputs, review items, requests, consent and usage counters.
   await getAiGradingStore().deleteUserData(operator.id);
 
+  // Beta data (local store; hosted rows go in delete_user_account).
+  await getBetaStore().deleteUser(operator.id);
+
   // 3. Cascade deletion in operator store
   await ctx.operators.delete(operator.id);
+
+  // Hosted: also remove the Supabase Auth user, so the sign-in identity (email) is gone too.
+  const admin = isSupabaseConfigured() ? createAdminClient() : null;
+  if (admin) {
+    try {
+      await admin.auth.admin.deleteUser(operator.id);
+    } catch {
+      // Logged by the audit event above; the owner can remove a leftover auth user by hand.
+    }
+  }
 
   // 4. Invalidate Supabase session if present
   const supabase = await createServerSupabaseClient();

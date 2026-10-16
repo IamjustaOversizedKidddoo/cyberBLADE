@@ -8,6 +8,7 @@ import { after } from "next/server";
 import { getCtx } from "@/lib/progress/context";
 import { enqueueAiGrading, processAiGradingJobs } from "@/lib/lab-engine/soc/ai-grading/pipeline";
 import { buildAiPipelineDeps } from "@/lib/lab-engine/soc/ai-grading/runtime";
+import { log } from "@/lib/observability/logger";
 
 /** Runs due jobs after the response is sent (also re-kicks stalled jobs on later reads). */
 export function scheduleAiWorker(): void {
@@ -15,7 +16,7 @@ export function scheduleAiWorker(): void {
     try {
       await processAiGradingJobs(buildAiPipelineDeps(getCtx()), { limit: 12 });
     } catch (err) {
-      console.error(`[soc-ai] background grading failed: ${err instanceof Error ? err.message.slice(0, 200) : "unknown"}`);
+      log.error("soc-ai background grading failed", { error: err instanceof Error ? err.message.slice(0, 200) : "unknown" });
     }
   });
 }
@@ -26,6 +27,6 @@ export async function enqueueAiGradingAfterSubmit(submissionId: string): Promise
     const r = await enqueueAiGrading(buildAiPipelineDeps(getCtx()), submissionId);
     if (r.enqueued > 0) scheduleAiWorker();
   } catch (err) {
-    console.error(`[soc-ai] enqueue failed: ${err instanceof Error ? err.message.slice(0, 200) : "unknown"}`);
+    log.error("soc-ai enqueue failed", { error: err instanceof Error ? err.message.slice(0, 200) : "unknown" });
   }
 }
