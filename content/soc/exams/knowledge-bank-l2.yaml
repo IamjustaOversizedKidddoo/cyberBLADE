@@ -330,3 +330,283 @@ items:
     ]
     answer: [0]
     explanation: "The query abuses the proxy parameter to force the server to query the link-local cloud metadata address (169.254.169.254), attempting to extract IAM temporary security credentials (SSRF, ATT&CK T1552.005)."
+
+  - id: kb-l2-dcsync
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K46
+    stem: "Which Active Directory extended right is exploited by an attacker performing a DCSync attack to replicate user password hashes?"
+    options: [
+      "DS-Replication-Get-Changes-All",
+      "Reset-Password",
+      "GenericAll on Domain Users",
+      "Write-Account-Restrictions"
+    ]
+    answer: [0]
+    explanation: "DCSync impersonates a Domain Controller using the Directory Replication Service Remote Protocol (MS-DRSR), requiring DS-Replication-Get-Changes and DS-Replication-Get-Changes-All permissions to replicate credentials including the KRBTGT hash."
+
+  - id: kb-l2-usn-journal
+    type: mcq
+    skill: soc_windows_logs
+    claim: K47
+    stem: "In NTFS forensic analysis, what primary investigative intelligence is provided by the Update Sequence Number ($UsnJrnl) journal?"
+    options: [
+      "A chronological record of file and directory metadata modifications (creations, deletions, renames) even if files were subsequently purged",
+      "Full plaintext contents of web browser HTTP POST submissions",
+      "Memory dumps of suspended processes during an operating system crash",
+      "Active firewall state tables and routing table cache"
+    ]
+    answer: [0]
+    explanation: "The NTFS USN Journal ($UsnJrnl:$J) tracks filesystem changes and reason masks (file create, delete, rename, data overwrite) with timestamps, helping analysts identify files staged or anti-forensically wiped by an adversary."
+
+  - id: kb-l2-mft-timestomping
+    type: mcq
+    skill: soc_windows_logs
+    claim: K48
+    stem: "When an attacker uses a timestomping utility to alter file timestamps on an NTFS volume, which attribute is typically spoofed while leaving the other intact?"
+    options: [
+      "$STANDARD_INFORMATION timestamps are altered; $FILE_NAME timestamps retain original metadata",
+      "$FILE_NAME timestamps are altered; $DATA streams are erased",
+      "$SECURITY_DESCRIPTOR is overwritten with null bytes",
+      "$BITMAP allocation clusters are reversed"
+    ]
+    answer: [0]
+    explanation: "Timestomping tools running in user mode update the $STANDARD_INFORMATION attribute via standard Win32 SetFileTime APIs. The $FILE_NAME attribute is managed directly by the NTFS filesystem driver and reflects the true modification time."
+
+  - id: kb-l2-srum-forensics
+    type: mcq
+    skill: soc_endpoint_triage
+    claim: K49
+    stem: "What forensic telemetry stored in Windows SRUM (SRUDB.dat) is invaluable for validating suspected data exfiltration?"
+    options: [
+      "Historical network bytes sent and received per application and user SID over a 30-day window",
+      "Plaintext passwords entered into RDP login dialogs",
+      "Decrypted TLS session pre-master keys",
+      "Cached DNS responses from the local hosts file"
+    ]
+    answer: [0]
+    explanation: "The Windows System Resource Usage Monitor (SRUM, stored in C:\\Windows\\System32\\sru\\SRUDB.dat) logs application execution history, CPU usage, and network data transferred (bytes sent/received) categorized by application binary path and user SID."
+
+  - id: kb-l2-kerberos-unconstrained
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K50
+    stem: "Why does Unconstrained Kerberos Delegation pose a critical security risk when a domain computer is compromised?"
+    options: [
+      "Authenticating users forward their complete Ticket Granting Ticket (TGT) to the server, which caches it in LSASS memory where an adversary can extract it",
+      "It disables Kerberos preauthentication across the entire Active Directory domain",
+      "It allows any standard user to add themselves to the Domain Admins group via LDAP",
+      "It permits unauthenticated anonymous SMB connections to administrative file shares"
+    ]
+    answer: [0]
+    explanation: "With Unconstrained Delegation (TRUSTED_FOR_DELEGATION), whenever a user connects to the server, their forwardable TGT is stored in LSASS. If an attacker has local administrative access to that host, they can dump the TGT and impersonate the user anywhere in the domain."
+
+  - id: kb-l2-adminsdholder
+    type: mcq
+    skill: soc_credential_attacks
+    claim: K51
+    stem: "How do adversaries leverage the Active Directory AdminSDHolder object for stealthy enterprise persistence?"
+    options: [
+      "They add a backdoor Access Control Entry (ACE) to AdminSDHolder, which the SDProp process automatically propagates to all protected administrative accounts every 60 minutes",
+      "They change the default port of Domain Controller replication from 389 to 4444",
+      "They disable the KRBTGT password rotation policy",
+      "They forge an Active Directory Certificate Services root CA certificate"
+    ]
+    answer: [0]
+    explanation: "The Security Descriptor Propagator (SDProp) runs periodically on the PDC Emulator to compare permissions of protected accounts against the AdminSDHolder container. Modifying AdminSDHolder's ACL ensures any injected rights are consistently reapplied."
+
+  - id: kb-l2-linux-ldpreload
+    type: mcq
+    skill: soc_linux_logs
+    claim: K52
+    stem: "On Linux systems, how is the LD_PRELOAD environment variable or /etc/ld.so.preload abused for userland persistence?"
+    options: [
+      "Forces the dynamic linker to load an attacker-controlled shared object before any standard C library functions, intercepting system calls",
+      "Recompiles the Linux kernel upon system restart",
+      "Clears the bash shell history file (/dev/null redirection)",
+      "Directly modifies the physical hardware MAC address of the network interface"
+    ]
+    answer: [0]
+    explanation: "LD_PRELOAD specifies libraries to be loaded first by the dynamic linker (ld.so). Adversaries leverage this to hook library calls (such as open, readdir, or connect) to hide processes, files, or network sockets from system diagnostic utilities like ps and ls."
+
+  - id: kb-l2-linux-pam-backdoor
+    type: mcq
+    skill: soc_linux_logs
+    claim: K53
+    stem: "When analyzing Linux authentication mechanisms, what is the impact of an adversary modifying /etc/pam.d/common-auth?"
+    options: [
+      "Can introduce a backdoor authentication module or master password accepted for any local or SSH user account",
+      "Prevents root from accessing the system console",
+      "Forces all user passwords to be stored in cleartext in /var/log/auth.log",
+      "Terminates all active network connections immediately"
+    ]
+    answer: [0]
+    explanation: "Pluggable Authentication Modules (PAM) govern authentication policies on Linux. Modifying PAM configurations or deploying a trojanized pam_unix.so allows adversaries to define backdoor master passwords that authenticate successfully for any system account."
+
+  - id: kb-l2-domain-fronting
+    type: mcq
+    skill: soc_network_indicators
+    claim: K54
+    stem: "How does an adversary successfully execute a Domain Fronting technique through a Content Delivery Network (CDN)?"
+    options: [
+      "Specifies a benign permitted domain in the TLS SNI header while routing to a malicious backend domain via the HTTP Host header inside the encrypted tunnel",
+      "Registers a typosquatted domain name identical to the corporate victim",
+      "Intercepts and modifies DNS responses in transit using ARP spoofing",
+      "Injects malicious JavaScript into the CDN's static CSS files"
+    ]
+    answer: [0]
+    explanation: "Domain Fronting takes advantage of CDNs that host multiple customers behind shared IP addresses. Network perimeter filters only inspect the outer TLS SNI header (which lists an approved domain), while the CDN terminates TLS and routes traffic according to the inner HTTP Host header."
+
+  - id: kb-l2-ja3-fingerprint
+    type: mcq
+    skill: soc_network_traffic
+    claim: K55
+    stem: "In network security monitoring, what specific components of a TLS Client Hello packet are hashed to generate a JA3 fingerprint?"
+    options: [
+      "TLS Version, Accepted Ciphers, List of Extensions, Elliptic Curves, and Elliptic Curve Point Formats",
+      "Source IP address, Destination IP address, TCP Source Port, and Payload Byte Length",
+      "The SHA-256 hash of the server's X.509 SSL Certificate",
+      "The MD5 checksum of the transferred HTTP body payload"
+    ]
+    answer: [0]
+    explanation: "JA3 concatenates decimal values of TLS Version, Cipher Suites, Extensions, Supported Elliptic Curves, and Curve Point Formats in the Client Hello message, hashing the resulting string with MD5 to fingerprint the client application implementation."
+
+  - id: kb-l2-doh-exfiltration
+    type: mcq
+    skill: soc_network_indicators
+    claim: K56
+    stem: "Why does an adversary utilize DNS over HTTPS (DoH) for command and control or data staging rather than standard DNS?"
+    options: [
+      "DoH encapsulates DNS queries in standard HTTPS traffic over TCP port 443, concealing query contents and bypassing enterprise DNS inspection and sinkholes",
+      "DoH operates at the data link layer without requiring an IP address",
+      "DoH automatically compresses files into encrypted zip archives",
+      "DoH queries are impossible for web proxy firewalls to route"
+    ]
+    answer: [0]
+    explanation: "Standard DNS runs unencrypted over UDP 53, allowing network security appliances to log domain lookups and sinkhole malicious domains. DoH (RFC 8484) wraps queries inside TLS encrypted HTTPS sessions to public resolvers, blinding perimeter DNS monitoring."
+
+  - id: kb-l2-volatility-vadinfo
+    type: mcq
+    skill: soc_endpoint_triage
+    claim: K57
+    stem: "In Volatility memory analysis, which plugin inspects Virtual Address Descriptor (VAD) trees to locate executable memory regions unbacked by disk files?"
+    options: [
+      "vadinfo",
+      "netscan",
+      "hivelist",
+      "cmdline"
+    ]
+    answer: [0]
+    explanation: "The `vadinfo` plugin traverses the VAD tree of an EPROCESS structure to identify memory segments allocated with executable permissions (such as PAGE_EXECUTE_READWRITE) that lack backing image files on disk, a strong signature of injected shellcode."
+
+  - id: kb-l2-sigma-condition
+    type: mcq
+    skill: soc_siem_correlation
+    claim: K58
+    stem: "In a generic Sigma detection rule YAML definition, which top-level attribute specifies the logical evaluation between named selection identifiers?"
+    options: [
+      "detection.condition",
+      "logsource.category",
+      "tags.mitre",
+      "falsepositives.rules"
+    ]
+    answer: [0]
+    explanation: "In Sigma specifications, the `detection` section contains search identifier maps (e.g. `selection`, `filter`) and a mandatory `condition` expression (e.g. `selection and not filter` or `1 of selection*`) establishing the Boolean trigger logic."
+
+  - id: kb-l2-yara-modifiers
+    type: multi
+    skill: soc_malware_triage
+    claim: K59
+    stem: "Which of the following are valid string modifiers in YARA rules for matching binary and text artifacts? (Select all that apply)"
+    options: [
+      "nocase (case-insensitive matching)",
+      "wide (UTF-16LE 2-byte character matching)",
+      "xor (searches for single-byte XOR encoded variants)",
+      "encrypt (encrypts the rule before execution)"
+    ]
+    answer: [0, 1, 2]
+    explanation: "YARA supports modifiers including `nocase` (ignores case), `wide` (inserts null byte between characters for 16-bit wide strings), `ascii` (default 8-bit), and `xor` (brute-forces single byte XOR keys). `encrypt` is not a YARA keyword."
+
+  - id: kb-l2-aws-assumerole
+    type: mcq
+    skill: soc_cloud_identity
+    claim: K60
+    stem: "When an attacker invokes AWS STS 'AssumeRole', what security artifacts are returned to enable authenticated API actions?"
+    options: [
+      "An Access Key ID, a Secret Access Key, and a Session Token valid for a temporary duration",
+      "A permanent IAM user password and MFA hardware token seed",
+      "An SSH private key stored in Amazon S3",
+      "A TLS root certificate signed by Amazon Trust Services"
+    ]
+    answer: [0]
+    explanation: "AWS Security Token Service (STS) `AssumeRole` returns temporary security credentials consisting of an Access Key ID (beginning with `ASIA`), a Secret Access Key, and a session token valid between 15 minutes and 12 hours depending on role configuration."
+
+  - id: kb-l2-entra-oauth-consent
+    type: mcq
+    skill: soc_cloud_identity
+    claim: K61
+    stem: "What characterizes an 'illicit consent grant' attack against Microsoft Entra ID (Azure AD) enterprise tenants?"
+    options: [
+      "A phishing link prompts a user to authorize a malicious third-party OAuth app, granting it persistent API access to their mailbox and OneDrive without capturing their credentials",
+      "An attacker cracks the NTLM hash of the tenant administrator account",
+      "An insider deletes the Azure AD Connect synchronization server",
+      "A threat actor generates a forged Kerberos TGT using the on-premises KRBTGT key"
+    ]
+    answer: [0]
+    explanation: "Illicit consent phishing abuses OAuth 2.0 authorization flows. When an unsuspecting user consents to an application requesting permissions like `Mail.Read` or `Files.ReadWrite`, the attacker receives tokens granting direct Graph API access without needing the victim's password or triggering MFA."
+
+  - id: kb-l2-named-pipe-psexec
+    type: mcq
+    skill: soc_endpoint_triage
+    claim: K62
+    stem: "What network protocol and mechanism does Sysinternals PsExec primarily use to instantiate a service and stream I/O on a remote Windows target?"
+    options: [
+      "Named Pipes over Server Message Block (SMB) on TCP port 445 connecting to the Service Control Manager (svcctl)",
+      "Raw Telnet over TCP port 23",
+      "SNMP Trap messages over UDP port 162",
+      "HTTP POST web requests over TCP port 80"
+    ]
+    answer: [0]
+    explanation: "PsExec connects to the remote target's ADMIN$ share over SMB (port 445), copies its service executable (`PSEXESVC.exe`), uses the Service Control Manager RPC named pipe (`\\pipe\\svcctl`) to register and start the service, and uses named pipes for stdin/stdout communication."
+
+  - id: kb-l2-prefetch-hash
+    type: mcq
+    skill: soc_windows_logs
+    claim: K63
+    stem: "What forensic evidence can an analyst recover from a Windows Prefetch file (e.g., CMD.EXE-AC83C588.pf)?"
+    options: [
+      "The executable run count, last 8 execution timestamps, referenced DLL paths, and an executable path hash",
+      "Full network packet captures generated during process execution",
+      "The cleartext Windows login password of the executing user",
+      "The physical sector location of deleted file clusters on the hard drive"
+    ]
+    answer: [0]
+    explanation: "Windows Prefetch files record performance optimization metadata, including total execution count, up to 8 timestamps of recent runs (Windows 8+), full list of files and DLLs loaded within the first 10 seconds of launch, and a hash of the file's path."
+
+  - id: kb-l2-linux-systemd-timer
+    type: mcq
+    skill: soc_linux_logs
+    claim: K64
+    stem: "Why are adversaries increasingly utilizing Linux systemd timers instead of traditional cron jobs for scheduled persistence?"
+    options: [
+      "Systemd timers support sub-second timing, event-triggered execution, and are frequently overlooked by security analysts monitoring only standard /etc/cron* directories",
+      "Systemd timers run in hardware microcode and cannot be viewed with administrative rights",
+      "Systemd timers automatically disable the Linux kernel audit framework",
+      "Systemd timers do not require root privileges to bind to privileged network ports"
+    ]
+    answer: [0]
+    explanation: "Systemd timers (`.timer` units triggering corresponding `.service` files) are part of modern Linux init systems. They provide fine-grained scheduling and service management, and persist independently of crontab files, making them effective persistence mechanisms."
+
+  - id: kb-l2-detection-precision-recall
+    type: mcq
+    skill: soc_alert_triage
+    claim: K65
+    stem: "In detection engineering, what is the consequence of loosening a detection rule's filter conditions to maximize True Positive recall?"
+    options: [
+      "Precision decreases due to an increase in False Positives triggered by benign operational noise, accelerating alert fatigue",
+      "The SIEM query engine refuses to parse the rule syntax",
+      "All historical log data is purged from the SIEM index",
+      "Adversary command lines are automatically encrypted"
+    ]
+    answer: [0]
+    explanation: "Loosening filter conditions (e.g. using broad wildcards like `cmd.exe *`) increases Recall (detecting more malicious variations) but dramatically reduces Precision (increasing benign matches), overwhelming Tier-1 analysts with false positive noise."
