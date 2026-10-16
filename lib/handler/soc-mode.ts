@@ -24,11 +24,12 @@ export const SOC_EXAM_LOCKOUT_MESSAGE =
 /** Builds the SOC prompt context from the learner's own records only. */
 export async function buildSocPromptContext(ctx: Ctx, userId: string, attemptId: string, alertId?: string): Promise<SocPromptContext> {
   const base = await getSocHandlerContext(ctx, userId, attemptId, alertId);
-  const [decisions, queries, lookups, reports] = await Promise.all([
+  const [decisions, queries, lookups, reports, rules] = await Promise.all([
     ctx.repo.listSocDecisions(attemptId),
     ctx.repo.listSocQueryLogs(attemptId),
     ctx.repo.listSocEnrichmentLookups(attemptId),
     ctx.repo.listSocReportSubmissions(attemptId),
+    ctx.repo.listSocDetectionRules(userId),
   ]);
   const mine = alertId ? [...decisions].reverse().find((d) => d.alertId === alertId) : undefined;
   const report = reports.find((r) => r.userId === userId);
@@ -41,6 +42,7 @@ export async function buildSocPromptContext(ctx: Ctx, userId: string, attemptId:
     recentQueries: queries.filter((q) => q.userId === userId).slice(-5).map((q) => q.queryText),
     recentLookups: lookups.filter((l) => l.userId === userId).slice(-5).map((l) => `${l.tool} ${l.entityType} ${l.entityValue}`),
     reportExcerpt: report ? JSON.stringify(report.reportData).slice(0, 800) : undefined,
+    myDetectionRules: rules.slice(-5).map((r) => ({ id: r.id, title: r.title, severity: r.severity, query: r.query })),
   };
 }
 

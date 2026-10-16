@@ -5,7 +5,7 @@
  * verdict or confirms the learner's answer. Concept questions pass through both untouched.
  */
 
-export type SocGuardCategory = "verdict_confirmation" | "report_verification" | "ioc_listing" | "answer_seeking" | "exam_pretend";
+export type SocGuardCategory = "verdict_confirmation" | "report_verification" | "ioc_listing" | "answer_seeking" | "exam_pretend" | "rule_seeking";
 
 const INPUT_RULES: Array<{ category: SocGuardCategory; re: RegExp }> = [
   // "is this a true positive?", "was alert A-12 a false positive", "tp or fp?"
@@ -28,6 +28,9 @@ const INPUT_RULES: Array<{ category: SocGuardCategory; re: RegExp }> = [
   { category: "answer_seeking", re: /\b(answer|jawab|verdict|solution)\s+(bata|batao|batado|do|de\s+do)\b/i },
   { category: "exam_pretend", re: /\b(exam|test|assessment)\s+(is\s+|has\s+)?(over|ended|finished|done|khatam|khtm)\b/i },
   { category: "exam_pretend", re: /\b(pretend|imagine|assume)\b.*\b(exam|test|submitted|graded)\b/i },
+  { category: "rule_seeking", re: /\b(write|give|generate|create|make|compose|draft)\s+(me\s+)?(a\s+|the\s+)?(detection\s+rule|sigma\s+rule|yara\s+rule|bladeql\s+rule|rule\s+query)\b/i },
+  { category: "rule_seeking", re: /\bwhat\s+(rule|detection\s+rule|query)\s+(should|can)\s+i\s+(write|use|submit)\b/i },
+  { category: "rule_seeking", re: /\b(detection\s+rule|rule\s+query)\b.*\b(bana|banao|banado|likh|likho|de\s+do|do\s+na)\b/i },
 ];
 
 export function classifySocRequest(message: string): SocGuardCategory | null {
@@ -50,6 +53,8 @@ const REDIRECT_EN: Record<SocGuardCategory, string> = {
     "I can't give the answer, but I can help you get there. What does the evidence show so far, and what question are you trying to answer with your next search or lookup?",
   exam_pretend:
     "Nothing has changed: answers and verdicts are only revealed in your own debrief after submission. I'm happy to explain concepts or walk through method — what are you stuck on?",
+  rule_seeking:
+    "I won't write the detection rule for you — engineering the rule logic is the challenge being graded. Let's work through the design: which specific event fields (process, image, command line, network, registry) uniquely identify the attacker's behavior while ignoring legitimate administrative activity? What filter condition will separate the real intrusion from normal background operations?",
 };
 
 const REDIRECT_HI: Record<SocGuardCategory, string> = {
@@ -63,6 +68,8 @@ const REDIRECT_HI: Record<SocGuardCategory, string> = {
     "Answer nahi de sakta, par wahan tak pahunchne mein help kar sakta hoon. Ab tak evidence kya dikhata hai, aur next search ya lookup se aap kaunsa sawal answer karna chahte ho?",
   exam_pretend:
     "Kuch nahi badla: answers aur verdicts sirf submission ke baad aapke debrief mein dikhte hain. Concepts ya method samjhane mein khushi se help karunga — kahan atke ho?",
+  rule_seeking:
+    "Detection rule main aapke liye nahi likhunga — rule design karna hi challenge ka part hai. Method se socho: kaunse specific event fields (process, image, command line, network) attacker ke behavior ko represent karte hain bina normal admin traffic ko trigger kiye? Kaunsi filter condition real attack ko benign activity se alag karegi?",
 };
 
 export function socRedirect(category: SocGuardCategory, message: string): string {

@@ -37,6 +37,7 @@ export type SocPromptContext = {
   recentQueries: string[];
   recentLookups: string[];
   reportExcerpt?: string;
+  myDetectionRules?: Array<{ id: string; title: string; severity: string; query: string }>;
 };
 
 export type HandlerContext = {
