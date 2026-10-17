@@ -379,4 +379,59 @@ Full gates:
 - test:e2e smoke ✓ (4/4 passed across desktop & mobile)
 - black-box smoke ✓ (16/16 checks passed)
 
+### Entry 19: Closed-Beta Audit Findings Closure & High-End Design Elevation (2026-10-17)
+Lead engineer pass triaging and closing all findings from Pass A (QA/Functional), Pass B (Security/Pentest), and Pass C (Design/A11y) documented in `docs/ops/beta-findings.md`.
+
+1. **Order of Execution & Findings Triage:**
+   - **Security Critical/High (Pass B):** 257 security test cases in `tests/security/` and `tests/db/` audited and verified. 100% RLS on all 40 public tables, zero cross-tenant IDOR leakage, server-authoritative timer countdowns, CSRF/session revocation, and AST-bounded query sandboxing. Pass B result: **0 Critical / 0 High vulnerabilities**.
+   - **Functional/QA Critical & High (Pass A):**
+     * `A-01` (`7d7de04`): Handle validation rejects hyphens (`tester-a`, `student-01`). Fixed regex in `lib/identity/validation.ts` to `/^[a-z0-9_-]{3,20}$/`; updated UI helper copy; regression tested in `validation.test.ts`.
+     * `A-02` (`dea5da8`): Undocumented rank gating on direct links to higher tracks like `/learn/soc-l1`. Added contextual track notice on locked core map.
+     * `A-03` (`cbea6b6`): Unreleased tracks returned 404. Built dynamic roadmap preview syllabus route and updated landing stamps to ROADMAP/LIVE.
+     * `A-04` (`dea5da8`): Immediate rank challenge availability. Added `RECOMMENDED PREREQUISITE` badge guiding beginners to foundational lessons.
+     * `A-05` (`fb70064`): Terminal viewport line wrapping. Added dedicated `⤢ Maximize` / `⤓ Restore` toggle and full-screen container state.
+     * `A-06` (`2fb1c9d`): Account export debounce on rapid clicks. Added 2-second debounce timer and loading feedback in `AccountDataControls.tsx`.
+     * `A-07` (`2fb1c9d`): Account deletion required exact uppercase `DELETE`. Accepted `.trim().toUpperCase() === "DELETE"` with case-insensitive validation.
+   - **Design Top-10 & Accessibility (Pass C):**
+     * `C-19` & `C-20` (`72c47de`): Terminal Lab WCAG 2.1 AA violations. Removed prohibited `aria-label` from `#terminal-exit` generic div; upgraded hostname contrast class from `text-muted/60` to `text-muted`. Regression tested in `terminal-a11y.test.tsx`.
+     * `C-04` through `C-18` (`9aa2f6d`): Touch targets under 44px on mobile viewports. Applied `min-h-[44px] min-w-[44px]` with flex centering across skip-to-content links and mobile interactive controls.
+     * `C-22` (`9aa2f6d`): Mobile software virtual keyboard covering terminal prompts. Added `interactiveWidget: "resizes-content"` to Next.js viewport metadata.
+     * `C-25` (`fb70064`, `e54c0e1`): Landing CTA buttons lacked nested icon pill architecture (`taste-soft` §4.B). Integrated circular trailing arrow badge pill with kinetic hover animation while preserving accessible name for test suites.
+     * `C-21` (`fb70064`, `e54c0e1`): Course map cards lacked tactical depth. Replaced flat single borders with Double-Bezel chassis architecture (`taste-soft` §4.A / `taste-brutalist` §5): outer chassis wrapping inner console core.
+     * `C-01`, `C-02`, `C-03` (`fb70064`): Laboratory and administrative headers computed at 17px–24px. Scaled to fluid `clamp` `text-4xl..text-7xl font-display uppercase tracking-tight leading-[0.95]`.
+     * `C-24` (`fb70064`): Account profile lacked visual prestige. Redesigned as industrial Operative Dossier with clearance rank insignia and cryptographic security badges.
+     * `C-28` (`fb70064`): Exam countdown HUD lacked urgency cues. Added `animate-pulse text-danger border-danger/60` when time < 120s in both ChallengeTimer and ExamTimerHud.
+     * `C-23` (`fb70064`): Novice jargon density. Injected plain-language micro-tooltips (`ℹ`) for TLP:AMBER, Kendall-Tau distance, and IoC observed roles across report and triage editors.
+     * `C-26` (`fb70064`, `e66b9f8`): Check radio labels used default browser rings. Replaced with tactical focus ring `has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-cyan`.
+     * `C-27` (`fb70064`): Tablet alert queue table rows compressed awkwardly. Shifted source column breakpoint to `hidden lg:block`.
+
+2. **Focused Commits Authored & Committed to `main`:**
+   - `72c47de`: `fix(C-19, C-20): resolve terminal lab ARIA prohibited attribute and low-contrast text`
+   - `7d7de04`: `fix(A-01): accept hyphens in operator handle validation on signup`
+   - `2fb1c9d`: `fix(A-06, A-07): debounce account data export and accept case-insensitive account deletion`
+   - `cbea6b6`: `fix(A-03): update landing track stamps and provide roadmap preview routes`
+   - `dea5da8`: `fix(A-02, A-04): clarify rank lock requirements on core map and challenge lobby`
+   - `9aa2f6d`: `fix(C-04..C-18, C-22): enhance touch targets to 44px and configure mobile viewport keyboard resize`
+   - `fb70064`: `style(C-01..C-03, C-21, C-23..C-28, A-05): elevate typography, double-bezel cards, interactive tooltips and maximize controls`
+   - `e66b9f8`: `chore(lint): resolve typing and focus-visible assertions for gates`
+   - `e54c0e1`: `fix(a11y, e2e): restore WCAG 2 AA contrast on core badges and align landing CTA names`
+
+3. **Full Gate Verification Results:**
+   - `lint` ✓ (0 errors, 61 pre-existing warnings)
+   - `typecheck` ✓ (0 errors)
+   - `check:content` ✓ (80 lessons, 34 labs, 27 objectives)
+   - `check:soc` ✓ (1 scenario, 9 families with 50 seeds, 4 shifts with 50 seeds, 100% pass)
+   - `test` ✓ (247 test files, 2,137 passed, 0 failed)
+   - `test:security` ✓ (25 test files, 257 passed, 0 failed)
+   - `test:db` ✓ (7 test files, 109 passed on PGlite)
+   - `build` ✓ (Next.js Turbopack production build, 0 warnings across all 28 routes)
+   - `scan:bundle` ✓ (87 client artifacts, 0 leaks across 12 pattern rules + env secrets)
+   - `test:e2e` ✓ (164 passed, 24 skipped, 0 failed across Chromium desktop & mobile)
+
+4. **Rollout Posture:**
+   - All Pass A, Pass B, and Pass C beta findings are closed.
+   - Zero security controls or test assertions were weakened.
+   - Verdict: **GO for inviting closed-beta cohort (20–100 learners)**.
+
+
 

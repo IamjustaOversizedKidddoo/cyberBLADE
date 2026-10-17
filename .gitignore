@@ -54,5 +54,6 @@ next-env.d.ts
 
 # Screenshots are evidence, kept outside git (standing rule 9; L1-A-19). Files stay on disk.
 /docs/design/screenshots/
+/docs/ops/screenshots/
 /docs/visual/before/*.png
 /docs/visual/after/*.png
