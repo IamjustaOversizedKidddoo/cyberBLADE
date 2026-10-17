@@ -27,7 +27,10 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = { themeColor: "#000000" };
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  interactiveWidget: "resizes-content",
+};
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -38,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <a
           href="#main"
-          className="sr-only z-[100] border-2 border-cyan bg-void px-4 py-2 font-ui text-cyan focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
+          className="sr-only z-[100] min-h-[44px] min-w-[44px] inline-flex items-center justify-center border-2 border-cyan bg-void px-4 py-2 font-ui text-cyan focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
         >
           Skip to content
         </a>
