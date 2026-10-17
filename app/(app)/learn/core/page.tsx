@@ -14,6 +14,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { RankBadge } from "@/components/ui/Badge";
 import { IconCheck, IconChevronRight, IconLock, IconPlay, IconClock, IconTerminal } from "@/components/ui/icons";
 import { loadTrackConfig } from "@/lib/content/soc-track";
+import { loadPentestTrackConfig } from "@/lib/content/pentest-track";
 
 export const metadata: Metadata = { title: "Curriculum Roadmap · CyberBLADE" };
 
@@ -227,6 +228,7 @@ export default async function CoreMapPage(props: PageProps<"/learn/core">) {
 
   const next = nextMission(operator.rank, current.lessons, progress);
   const socTrack = loadTrackConfig();
+  const pentestTrack = loadPentestTrackConfig();
 
   return (
     <main className="min-h-screen bg-canvas text-ink pb-20">
@@ -241,7 +243,7 @@ export default async function CoreMapPage(props: PageProps<"/learn/core">) {
             <p className="font-semibold">{lockedNotice(lockedRank)}</p>
             {lockedRank === 1 && (
               <p className="text-secondary text-[11px] font-sans">
-                Notice: Specialized career tracks (such as SOC Analyst L1) require clearance Rank 1 (Operator). Complete Rank 0 lessons and capstone to unlock.
+                Notice: Specialized career tracks (such as SOC Analyst L1 or Penetration Tester L1) require clearance Rank 1 (Operator). Complete Rank 0 lessons and capstone to unlock.
               </p>
             )}
           </div>
@@ -256,6 +258,22 @@ export default async function CoreMapPage(props: PageProps<"/learn/core">) {
             <span>
               <span className="block font-mono text-[11px] font-bold uppercase tracking-wider text-cyan">Job track</span>
               <span className="block font-sans text-[16px] font-semibold text-ink">SOC Analyst L1</span>
+            </span>
+            <span className="inline-flex items-center gap-1 font-ui text-sm text-cyan">
+              Open track <IconChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+          </Link>
+        )}
+
+        {/* Penetration Testing L1 track (config-gated behind PENTEST_ENABLED, additive) */}
+        {pentestTrack.enabled && canAccessRank(operator.rank, pentestTrack.min_core_rank) && (
+          <Link
+            href="/learn/pentest-l1"
+            className="flex min-h-[44px] flex-wrap items-center justify-between gap-3 rounded-sm border border-line bg-surface p-4 transition-colors duration-150 hover:border-cyan/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
+          >
+            <span>
+              <span className="block font-mono text-[11px] font-bold uppercase tracking-wider text-cyan">Job track</span>
+              <span className="block font-sans text-[16px] font-semibold text-ink">Penetration Tester L1</span>
             </span>
             <span className="inline-flex items-center gap-1 font-ui text-sm text-cyan">
               Open track <IconChevronRight className="h-3.5 w-3.5" aria-hidden="true" />

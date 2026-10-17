@@ -7,6 +7,7 @@ import { GlossaryTerm } from "@/components/lesson/GlossaryTerm";
 import { buildGlossary, groupModules, SOC_TRACK_BASE, tooltipTerms } from "@/lib/content/soc-curriculum";
 import { keyTermsOf } from "@/lib/content/soc-lesson-lint";
 import { loadTrackConfig } from "@/lib/content/soc-track";
+import { loadPentestTrackConfig } from "@/lib/content/pentest-track";
 import { remarkGlossary } from "@/lib/content/remark-glossary";
 import { HandlerDrawer } from "@/components/handler/HandlerDrawer";
 import { Callout } from "@/components/lesson/Callout";
@@ -53,9 +54,18 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
   if (!lesson) {
     const track = TRACKS.find((t) => t.id === lessonId);
     if (track) {
+      if (track.id === "pentest") {
+        const pentestTrack = loadPentestTrackConfig();
+        if (pentestTrack.enabled) redirect("/learn/pentest-l1");
+      }
       return <TrackRoadmapPreview track={track} />;
     }
     notFound();
+  }
+
+  if (lesson.track === "pentest") {
+    const pentestTrack = loadPentestTrackConfig();
+    if (!pentestTrack.enabled) notFound();
   }
 
   const operator = await requireOperator();
@@ -66,7 +76,7 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
     ctx.repo.getLessonProgress(operator.id, lesson.id),
     getLessons({ rank: lesson.rank, track: lesson.track }),
     loadExercises(lesson.id),
-    lesson.practice?.length || lesson.track === "soc" ? getLessons() : Promise.resolve([]),
+    lesson.practice?.length || lesson.track === "soc" || lesson.track === "pentest" ? getLessons() : Promise.resolve([]),
   ]);
   // Track lessons (SOC L1): exercises are checked server-side; practice targets resolve to real pages.
   const exercises = exerciseSet ? toPublicExercises(exerciseSet) : {};

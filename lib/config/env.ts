@@ -30,6 +30,8 @@ const envSchema = z.object({
   SOC_HANDLER_ENABLED: z.string().optional(),
   SOC_L2_ENABLED: z.string().optional(),
   SOC_RULES_ENABLED: z.string().optional(),
+  // Penetration Testing Track Feature Flag (default false, server-side gated)
+  PENTEST_ENABLED: z.string().optional(),
 });
 
 function devDefaultFlag(value: string | undefined): boolean {
@@ -37,6 +39,12 @@ function devDefaultFlag(value: string | undefined): boolean {
   if (value === "true" || value === "1") return true;
   // Default on in development & test, off in production until reviewed
   return process.env.NODE_ENV !== "production";
+}
+
+/** Penetration Testing track L1. Default false; server-side gated. */
+export function isPentestEnabled(): boolean {
+  const flag = process.env.PENTEST_ENABLED;
+  return flag === "true" || flag === "1";
 }
 
 /** SOC exam mode (Stage 1). Off in production until reviewed. */

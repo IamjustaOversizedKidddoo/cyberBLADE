@@ -102,8 +102,8 @@ export async function validateContent(input: ContentInput): Promise<{ errors: st
   }
 
   for (const lesson of input.lessons) {
-    // Track lessons (SOC L1) follow their own template, checked by lib/content/soc-lesson-lint.ts.
-    errors.push(...(lesson.track === "soc" ? [] : structureErrors(lesson)), ...(await mdxErrors(lesson)));
+    // Track lessons (SOC and Pentest L1) follow their own template.
+    errors.push(...(lesson.track === "soc" || lesson.track === "pentest" ? [] : structureErrors(lesson)), ...(await mdxErrors(lesson)));
 
     const checks = input.checks.get(lesson.id);
     if (!checks) errors.push(`${lesson.id}: no checks file`);
