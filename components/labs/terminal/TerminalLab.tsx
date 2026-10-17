@@ -330,7 +330,7 @@ export default function TerminalLab({ world, objectives, onSubmit }: Props) {
             <span className="font-ui text-xs font-bold tracking-wider uppercase text-ink">
               {isWindows ? "POWERSHELL 7 // WIN-NODE" : "BASH SHELL // LINUX-NODE"}
             </span>
-            <span className="text-muted/60 text-[10px] hidden sm:inline">
+            <span className="text-muted text-[10px] hidden sm:inline">
               ({world.hostname})
             </span>
           </div>
@@ -524,7 +524,6 @@ export default function TerminalLab({ world, objectives, onSubmit }: Props) {
         ref={exitTargetRef}
         tabIndex={-1}
         className="sr-only"
-        aria-label="End of terminal container"
       />
     </div>
   );
