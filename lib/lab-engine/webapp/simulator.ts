@@ -103,6 +103,12 @@ export function dispatchHttpRequest(input: {
     case "r2_capstone":
       res = handleR2Capstone(req, env, cookies);
       break;
+    case "pentest_web_portal":
+      res = handlePentestWebPortal(req, env, cookies);
+      break;
+    case "pentest_capstone_portal":
+      res = handlePentestCapstonePortal(req, env, cookies);
+      break;
     default:
       res = {
         status: 404,
@@ -803,6 +809,178 @@ function handleR2Capstone(
 </body>
 </html>`,
   };
+}
+
+// -----------------------------------------------------------------------------
+// 5. Pentest L1 Web Attacks Portal (SQLi Auth Bypass & LFI Traversal)
+// -----------------------------------------------------------------------------
+function handlePentestWebPortal(
+  req: HttpRequest,
+  env: WebAppEnv,
+  cookies: Record<string, string>,
+): HttpResponse {
+  const flags = env.config.flags as Record<string, string>;
+
+  if (req.path === "/" || req.path === "") {
+    return {
+      status: 200,
+      statusText: "OK",
+      headers: { "Content-Type": "text/html" },
+      body: `<!DOCTYPE html><html><head><title>Apex Systems Gateway</title><style>body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:2rem;}a{color:#58a6ff;}</style></head><body><h1>APEX CORP // INTERNAL GATEWAY</h1><p>Active internal endpoints:</p><ul><li><a href="/login">Staff Access Portal</a></li><li><a href="/document?file=welcome.txt">Public Briefing Archive</a></li></ul></body></html>`,
+    };
+  }
+
+  if (req.method === "GET" && req.path === "/login") {
+    return {
+      status: 200,
+      statusText: "OK",
+      headers: { "Content-Type": "text/html" },
+      body: `<!DOCTYPE html><html><head><title>Staff Login</title><style>body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:2rem;}.card{background:#161b22;padding:2rem;max-width:400px;margin:auto;}input,button{width:100%;padding:8px;margin:8px 0;box-sizing:border-box;}</style></head><body><div class="card"><h2>STAFF AUTHENTICATION</h2><form method="POST" action="/login"><input type="text" name="username" placeholder="Username" required /><input type="password" name="password" placeholder="Password" required /><button type="submit">LOGIN</button></form></div></body></html>`,
+    };
+  }
+
+  if (req.method === "POST" && req.path === "/login") {
+    const form = parseFormBody(req.body);
+    const u = form.username || "";
+    const p = form.password || "";
+    const isSqli =
+      u.includes("' OR 1=1") ||
+      u.includes("' or 1=1") ||
+      u.includes("' OR '1'='1") ||
+      u.includes("' or '1'='1") ||
+      u.includes("admin' --") ||
+      u.includes("admin' #") ||
+      p.includes("' OR 1=1");
+
+    if (isSqli) {
+      return {
+        status: 302,
+        statusText: "Found",
+        headers: {
+          "Set-Cookie": "staff_session=valid_token; Path=/; HttpOnly",
+          Location: "/dashboard",
+        },
+        body: `<p>Logged in. Redirecting to <a href="/dashboard">dashboard</a>...</p>`,
+      };
+    }
+    return {
+      status: 401,
+      statusText: "Unauthorized",
+      headers: { "Content-Type": "text/html" },
+      body: `<h3>Authentication Failed: Invalid credentials</h3><a href="/login">Try again</a>`,
+    };
+  }
+
+  if (req.method === "GET" && req.path === "/dashboard") {
+    if (cookies.staff_session) {
+      return {
+        status: 200,
+        statusText: "OK",
+        headers: { "Content-Type": "text/html" },
+        body: `<!DOCTYPE html><html><head><title>Staff Dashboard</title><style>body{background:#0d1117;color:#3fb950;font-family:monospace;padding:2rem;}</style></head><body><h1>ACCESS GRANTED // ADMINISTRATOR</h1><p>SQL Injection Auth Bypass Verified!</p><div style="border:1px solid #3fb950;padding:1rem;">AUTH FLAG: <strong>${flags.flag_auth}</strong></div></body></html>`,
+      };
+    }
+    return {
+      status: 302,
+      statusText: "Found",
+      headers: { Location: "/login" },
+      body: `<a href="/login">Redirecting to login</a>`,
+    };
+  }
+
+  if (req.method === "GET" && req.path === "/document") {
+    const file = req.query.file || "";
+    if (file.includes("..") || file.includes("etc/passwd") || file.includes("passwd")) {
+      return {
+        status: 200,
+        statusText: "OK",
+        headers: { "Content-Type": "text/plain" },
+        body: `root:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\noperator:x:1000:1000:Operator,,,:/home/operator:/bin/bash\n# LFI EXPLOIT FLAG: ${flags.flag_lfi}`,
+      };
+    }
+    return {
+      status: 200,
+      statusText: "OK",
+      headers: { "Content-Type": "text/plain" },
+      body: `Welcome to Apex Systems.\nAll activities on this network are audited.\nAuthorized access only.`,
+    };
+  }
+
+  return {
+    status: 404,
+    statusText: "Not Found",
+    headers: { "Content-Type": "text/html" },
+    body: `<h1>404 Not Found</h1>`,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// 6. Pentest L1 Capstone Portal
+// -----------------------------------------------------------------------------
+function handlePentestCapstonePortal(
+  req: HttpRequest,
+  env: WebAppEnv,
+  cookies: Record<string, string>,
+): HttpResponse {
+  const flags = env.config.flags as Record<string, string>;
+
+  if (req.path === "/" || req.path === "") {
+    return {
+      status: 200,
+      statusText: "OK",
+      headers: { "Content-Type": "text/html" },
+      body: `<!DOCTYPE html><html><head><title>Apex Command Core</title><style>body{background:#090d13;color:#7ee787;font-family:monospace;padding:2rem;}a{color:#58a6ff;}</style></head><body><h1>APEX ENTERPRISE CORE // VAPT TARGET</h1><p>Engage authorized test protocol:</p><ul><li><a href="/recon">Reconnaissance Directory</a></li><li><a href="/login">Executive Vault</a></li></ul></body></html>`,
+    };
+  }
+
+  if (req.method === "GET" && req.path === "/recon") {
+    return {
+      status: 200,
+      statusText: "OK",
+      headers: { "Content-Type": "text/html" },
+      body: `<!DOCTYPE html><html><body style="background:#090d13;color:#c9d1d9;font-family:monospace;padding:2rem;"><h2>SYSTEM RECON REPOSITORY</h2><p>Identified internal asset: 198.51.100.25 (SMB/HTTP)</p><p>RECON FLAG: <strong>${flags.flag_recon}</strong></p></body></html>`,
+    };
+  }
+
+  if (req.method === "GET" && req.path === "/login") {
+    return {
+      status: 200,
+      statusText: "OK",
+      headers: { "Content-Type": "text/html" },
+      body: `<!DOCTYPE html><html><body style="background:#090d13;color:#c9d1d9;font-family:monospace;padding:2rem;"><form method="POST" action="/login"><input type="text" name="username" placeholder="Username" /><input type="password" name="password" placeholder="Password" /><button type="submit">ENTER</button></form></body></html>`,
+    };
+  }
+
+  if (req.method === "POST" && req.path === "/login") {
+    const form = parseFormBody(req.body);
+    const u = form.username || "";
+    if (u.includes("' OR 1=1") || u.includes("admin' --") || u.includes("' or 1=1")) {
+      return {
+        status: 302,
+        statusText: "Found",
+        headers: {
+          "Set-Cookie": "capstone_auth=admin_ok; Path=/; HttpOnly",
+          Location: "/admin/secrets",
+        },
+        body: `<p>Redirecting...</p>`,
+      };
+    }
+    return { status: 401, statusText: "Unauthorized", headers: { "Content-Type": "text/html" }, body: `<p>Failed</p>` };
+  }
+
+  if (req.method === "GET" && req.path === "/admin/secrets") {
+    if (cookies.capstone_auth === "admin_ok") {
+      return {
+        status: 200,
+        statusText: "OK",
+        headers: { "Content-Type": "text/html" },
+        body: `<!DOCTYPE html><html><body style="background:#090d13;color:#3fb950;font-family:monospace;padding:2rem;"><h1>EXECUTIVE SECRETS ARCHIVE</h1><p>FULL COMPROMISE ACHIEVED!</p><p>CAPSTONE EXPLOIT FLAG: <strong>${flags.flag_exploit}</strong></p></body></html>`,
+      };
+    }
+    return { status: 302, statusText: "Found", headers: { Location: "/login" }, body: `<p>Login first</p>` };
+  }
+
+  return { status: 404, statusText: "Not Found", headers: { "Content-Type": "text/html" }, body: `<h1>404 Not Found</h1>` };
 }
 
 function escapeHtml(str: string): string {

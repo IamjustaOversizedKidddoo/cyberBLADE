@@ -23,6 +23,14 @@ import { r2Challenge } from "./webapp/r2-challenge";
 import { siemInvestigation } from "./siem/siem-investigation";
 import { socScenario } from "./soc/soc-scenario";
 
+import { pentestPacketScan } from "./packet/pentest-packet-scan";
+import { pentestServicesEnum } from "./terminal/pentest-services-enum";
+import { pentestWebAttacks } from "./webapp/pentest-web-attacks";
+import { pentestHashcrack } from "./terminal/pentest-hashcrack";
+import { pentestLinuxPrivesc } from "./terminal/pentest-linux-privesc";
+import { pentestPivotAnalysis } from "./packet/pentest-pivot-analysis";
+import { pentestCapstone } from "./webapp/pentest-capstone";
+
 export type GeneratorOutput = { env: LabEnv; answers: Record<string, string> };
 
 // Params come from lab.yaml, so generators validate what they read.
@@ -51,4 +59,11 @@ export const GENERATORS: Record<string, Generator> = {
   r2_challenge: r2Challenge,
   siem_investigation: siemInvestigation,
   soc_scenario: socScenario,
+  pentest_packet_scan: pentestPacketScan,
+  pentest_services_enum: pentestServicesEnum,
+  pentest_web_attacks: pentestWebAttacks,
+  pentest_hashcrack: pentestHashcrack,
+  pentest_linux_privesc: pentestLinuxPrivesc,
+  pentest_pivot_analysis: pentestPivotAnalysis,
+  pentest_capstone: pentestCapstone,
 };

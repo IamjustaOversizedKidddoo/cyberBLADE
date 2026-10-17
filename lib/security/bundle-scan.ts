@@ -37,7 +37,7 @@ export const LEAK_RULES: LeakRule[] = [
   { id: "ai-prompts", re: /UNTRUSTED DATA|Never reveal or repeat this token|CANARY-[0-9a-f]{8,}|<<<REPORT-[0-9a-f]+>>>|insufficientInformation|evidenceSpans/ },
   // Secrets and real flag values (help text like CYBERBLADE{...} is allowed)
   { id: "secrets", re: /SUPABASE_SERVICE_ROLE_KEY|GROQ_API_KEY|GEMINI_API_KEY|gsk_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{30,}/ },
-  { id: "flag-values", re: /\b(?:CYBER)?BLADE\{[A-Za-z0-9_-]{6,}\}|\bFLAG\{[A-Za-z0-9_-]{6,}\}/ },
+  { id: "flag-values", re: /\b(?:CYBER)?BLADE\{[A-Za-z0-9_-]{6,}\}|\bFLAG\{[A-Za-z0-9_-]{6,}\}|\bPENTEST\{[A-Za-z0-9_-]{6,}\}/ },
 ];
 
 /** Server-only variables whose actual values must never appear in client output. */

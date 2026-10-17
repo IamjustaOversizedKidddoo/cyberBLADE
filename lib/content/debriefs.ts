@@ -210,6 +210,48 @@ export const LAB_DEBRIEFS: Record<string, LabDebrief> = {
     commonMistake: "Running unfiltered wildcard queries that exceed memory limits instead of constraining time and source index early.",
     goFurther: "Build automated threat hunting queries utilizing aggregation pipes and statistical anomaly thresholds.",
   },
+  "pentest-m03-pkt-scan-01": {
+    concept: "TCP port scanning signatures, half-open SYN vs full connect scans, and flag extraction.",
+    realWorld: "Penetration testers verify target firewall filtering states and identify active perimeter services.",
+    commonMistake: "Failing to distinguish between half-open SYN probes and completed three-way handshakes in packet pcaps.",
+    goFurther: "Inspect TCP window sizes and IP ID sequence predictability to identify remote operating systems.",
+  },
+  "pentest-m04-term-services-01": {
+    concept: "Network service enumeration and anonymous SMB share access inspection.",
+    realWorld: "Auditing Windows and Samba network file shares for unauthenticated sensitive data exposure.",
+    commonMistake: "Overlooking non-default open shares by only checking administrative C$ and ADMIN$ listings.",
+    goFurther: "Use smbclient and rpcclient to query domain password policies and enumerate Active Directory users.",
+  },
+  "pentest-m06-web-attacks-01": {
+    concept: "Web application vulnerabilities including SQL injection auth bypass and local file inclusion traversal.",
+    realWorld: "Exploiting input sanitization failures in login forms and file download endpoints during web assessments.",
+    commonMistake: "Testing only single-quote payloads and forgetting comment syntax to truncate backend database queries.",
+    goFurther: "Analyze how URL encoding and double encoding bypass naive Web Application Firewall (WAF) regexes.",
+  },
+  "pentest-m08-term-hashcrack-01": {
+    concept: "Cryptographic hash identification, dictionary attacks, and rule-based password cracking.",
+    realWorld: "Evaluating corporate credential hygiene by cracking recovered database hashes against wordlists.",
+    commonMistake: "Running brute force without first identifying the correct hash format, salt delimiter, or hash mode.",
+    goFurther: "Generate targeted wordlists using mental patterns, seasons, and company name permutation rules.",
+  },
+  "pentest-m09-term-privesc-01": {
+    concept: "Linux local privilege escalation via SUID binary abuse and sudo misconfigurations.",
+    realWorld: "Elevating from initial low-privilege shell access to root during white-box host security reviews.",
+    commonMistake: "Failing to inspect sudo -l permissions before attempting complex kernel exploit vectors.",
+    goFurther: "Review GTFOBins for living-off-the-land techniques using system utilities like find, vim, and tar.",
+  },
+  "pentest-m10-pkt-pivot-01": {
+    concept: "Lateral movement, SSH port forwarding, and pivoting through multi-homed compromise points.",
+    realWorld: "Routing assessment traffic through isolated jump boxes to reach internal non-routable segments.",
+    commonMistake: "Confusing local port forwarding (-L) with dynamic SOCKS proxy forwarding (-D) topologies.",
+    goFurther: "Chain Proxychains with nmap to scan and exploit segmented internal database tiers seamlessly.",
+  },
+  "pentest-m12-capstone-01": {
+    concept: "End-to-end practical penetration testing workflow from enumeration through exploitation and reporting.",
+    realWorld: "Executing an end-to-end commercial penetration testing engagement adhering strictly to scope.",
+    commonMistake: "Jumping directly into exploitation tools without methodically documenting enumerated vulnerabilities.",
+    goFurther: "Draft a formal remediation report correlating findings with CVSS base scores and defensive fixes.",
+  },
 };
 
 export function getLabDebrief(labId: string): LabDebrief | undefined {

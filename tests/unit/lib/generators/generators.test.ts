@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { GENERATORS } from "@/lib/generators";
 import { createRng } from "@/lib/generators/rng";
 
-describe("generator property tests across all 20 generators", () => {
+describe("generator property tests across all generators", () => {
   const generatorEntries = Object.entries(GENERATORS);
 
   it("registers all distinct generators", () => {
-    expect(generatorEntries.length).toBe(21);
+    expect(generatorEntries.length).toBe(28);
   });
 
   for (const [name, generator] of generatorEntries) {
@@ -34,7 +34,7 @@ describe("generator property tests across all 20 generators", () => {
             expect(val.trim().length).toBeGreaterThan(0);
 
             // If the answer is a flag, verify it has matching braces
-            if (val.startsWith("CYBERBLADE{") || val.startsWith("NEON{")) {
+            if (val.startsWith("CYBERBLADE{") || val.startsWith("NEON{") || val.startsWith("PENTEST{")) {
               expect(val.endsWith("}")).toBe(true);
             }
           }

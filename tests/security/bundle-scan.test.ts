@@ -38,6 +38,12 @@ describe("bundle leak scanner", () => {
     expect(scanForLeaks([dir]).hits.map((h) => h.rule)).toContain(rule);
   });
 
+  it("catches PENTEST-formatted lab flags", () => {
+    const dir = fixture({ "static/chunks/p.js": 'const flag = "PENTEST{sqli_bypass_99a8b7c6}";' });
+    const hits = scanForLeaks([dir]).hits;
+    expect(hits.map((h) => h.rule)).toContain("flag-values");
+  });
+
   it("catches the real value of a server secret without echoing it", () => {
     const value = "svc_" + "x9Q2".repeat(10);
     const dir = fixture({ "static/chunks/a.js": `const k="${value}";` });
