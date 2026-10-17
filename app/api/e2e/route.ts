@@ -17,6 +17,9 @@ import { e2eFixturesAllowed } from "@/lib/e2e/fixtures-guard";
 const bodySchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("promote"), rank: z.number().int().min(0).max(5) }),
   z.object({ action: z.literal("complete-rank-lessons"), rank: z.number().int().min(0).max(5) }),
+  z.object({ action: z.literal("pass-challenge"), rank: z.number().int().min(0).max(5) }),
+  z.object({ action: z.literal("pass-soc-exam") }),
+  z.object({ action: z.literal("revoke-certificate"), credentialId: z.string(), reason: z.string().optional() }),
 ]);
 
 export async function POST(request: NextRequest) {
@@ -29,6 +32,30 @@ export async function POST(request: NextRequest) {
   if (parsed.data.action === "promote") {
     await ctx.operators.setRank(operator.id, parsed.data.rank);
     return NextResponse.json({ ok: true, rank: parsed.data.rank });
+  }
+  if (parsed.data.action === "pass-challenge") {
+    await ctx.repo.createChallenge({
+      userId: operator.id,
+      rank: parsed.data.rank,
+      labAttemptId: `e2e-attempt-${parsed.data.rank}`,
+      status: "passed",
+      finishedAt: ctx.now().toISOString(),
+    });
+    return NextResponse.json({ ok: true, challengePassed: parsed.data.rank });
+  }
+  if (parsed.data.action === "pass-soc-exam") {
+    await ctx.repo.saveSocExamOutcomeReport({
+      userId: operator.id,
+      certFamily: "soc-l1",
+      examDate: "2026-10-17",
+      passed: true,
+      consentVersion: "v1",
+    });
+    return NextResponse.json({ ok: true, socExamPassed: true });
+  }
+  if (parsed.data.action === "revoke-certificate") {
+    const revoked = await ctx.repo.revokeCertificate(parsed.data.credentialId, parsed.data.reason ?? "e2e_test_revocation");
+    return NextResponse.json({ ok: true, revoked });
   }
   const lessons = await getLessons({ rank: parsed.data.rank, track: "core" });
   const at = ctx.now().toISOString();

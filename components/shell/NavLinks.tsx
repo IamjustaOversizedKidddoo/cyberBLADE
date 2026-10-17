@@ -15,6 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/review", label: "[REVIEW]" },
   { href: "/labs", label: "[LABS]" },
   { href: "/exam", label: "[EXAM PREP]" },
+  { href: "/certificates", label: "[CREDENTIALS]" },
 ];
 
 export function NavLinks({ mobile = false }: { mobile?: boolean }) {
