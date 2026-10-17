@@ -840,14 +840,14 @@ Established the formal pedagogical foundation, quality standards contract, 12-mo
      21. `pentest-r1-m06-sqli-auth-bypass-union-01`: SQL Injection: Authentication Bypass and UNION Extraction *(Authored)*
      22. `pentest-r1-m06-xss-stored-reflected-01`: Cross-Site Scripting (XSS): Reflected, Stored, and Context Escapes *(Authored)*
      23. `pentest-r1-m06-lfi-path-traversal-auth-01`: Local File Inclusion (LFI), Directory Traversal, and Session Flaws *(Authored)*
-     24. `pentest-r1-m06-broken-auth-session-hijacking-01`: Broken Authentication and Session Management Flaws *(Planned)*
-     25. `pentest-r1-m06-idor-access-control-01`: Insecure Direct Object References (IDOR) and Broken Access Control *(Planned)*
+     24. `pentest-r1-m06-broken-auth-session-hijacking-01`: Broken Authentication and Session Management Flaws *(Authored)*
+     25. `pentest-r1-m06-idor-access-control-01`: Insecure Direct Object References (IDOR) and Broken Access Control *(Authored)*
 
    - **Module 07: Exploitation & Metasploit Fundamentals (`exploit` | Host & Network Penetration Testing):**
      26. `pentest-r1-m07-payloads-staged-reverse-shells-01`: Payload Mechanics, Reverse Shells, and Listener Configuration *(Authored)*
      27. `pentest-r1-m07-metasploit-framework-fundamentals-01`: Metasploit Framework Architecture and Meterpreter Operations *(Authored)*
-     28. `pentest-r1-m07-payload-generation-msfvenom-01`: Custom Payload Generation with Msfvenom *(Planned)*
-     29. `pentest-r1-m07-shell-stabilization-tty-01`: Upgrading and Stabilizing Shells to Interactive TTYs *(Planned)*
+     28. `pentest-r1-m07-payload-generation-msfvenom-01`: Custom Payload Generation with Msfvenom *(Authored)*
+     29. `pentest-r1-m07-shell-stabilization-tty-01`: Upgrading and Stabilizing Shells to Interactive TTYs *(Authored)*
 
    - **Module 08: Password Attacks & Hash Cracking (`passwords` | Host & Network Penetration Testing):**
      30. `pentest-r1-m08-hash-identification-offline-cracking-01`: Hash Identification and Offline Cracking with John and Hashcat *(Authored)*
@@ -917,9 +917,39 @@ Completed the full curriculum authoring and cheat sheet delivery for Modules 01 
    - Registered new skills (`pentest_web_server_fingerprinting`) in `content/pentest/skills.yaml` and `content/coverage/pentest.yaml`.
 
 3. **Verification & Quality Gates Passed:**
-   - `npm run check:content` ✓ (112 lessons, 44 labs, 27 objectives validated; 0 errors).
+   - `npm run check:content` ✓ (116 lessons, 44 labs, 27 objectives validated; 0 errors).
    - `npm run typecheck` ✓ (0 errors).
    - `npm run lint` ✓ (0 errors).
    - Unit tests: `tests/unit/lib/content/` (15 test files, 131 tests passed).
+
+---
+
+### Entry PT-3: Penetration Testing L1 Modules 06 & 07 Completion (2026-10-18)
+Completed the full curriculum authoring, code root cause and secure fix analysis, and comprehensive cheat sheet delivery for Modules 06 (Web Application Attacks) and 07 (Exploitation & Metasploit Fundamentals) of the Penetration Testing Level 1 (L1) track, strictly adhering to the Quality Standards Contract (`docs/ops/pentest-standards.md`).
+
+1. **Authored Lessons & Assessments (100% Standards Compliant):**
+   - **Module 06 (Web Application Attacks):**
+     - `pentest-r1-m06-broken-auth-session-hijacking-01`: Broken Authentication, Session Hijacking, and Brute-Force Protections (covers cookie flags `HttpOnly`, `Secure`, `SameSite`, session fixation, predictable token entropy, root cause in insecure session code, and secure session lifecycle remediation).
+     - `pentest-r1-m06-idor-access-control-01`: Insecure Direct Object References (IDOR) and Broken Access Control (covers horizontal vs vertical privilege escalation, parameter tampering, REST APIs, root cause in unvalidated record queries, and secure session-bound tenant query remediation).
+     - `content/tracks/pentest/l1/m06-web-attacks/cheat-sheet.md`: Comprehensive field reference covering HTTP deep-dive, Burp Suite workflow (Proxy, Repeater, Intruder attack types), content discovery, SQL injection (union, error, boolean/time blind, auth bypass, root cause & parameterized query fix), XSS (reflected, stored, DOM, sinks/sources, root cause & CSP / output encoding fix), command injection (metacharacters, root cause & execFile fix), LFI/RFI and directory traversal (PHP wrappers, root cause & whitelist fix), file-upload bypasses (MIME tampering, extension blacklist bypass, magic bytes, root cause & out-of-root random storage fix), authentication/session flaws, IDOR, and brute-force protections.
+   - **Module 07 (Exploitation & Metasploit Fundamentals):**
+     - `pentest-r1-m07-payload-generation-msfvenom-01`: Custom Payload Generation and Encoding with Msfvenom (covers staged vs stageless naming, output formats, bad character elimination with `-b`, encoder realities vs AV evasion myths, and listener matching).
+     - `pentest-r1-m07-shell-stabilization-tty-01`: Upgrading and Stabilizing Shells to Interactive TTYs (covers the 5-step Python PTY upgrade, `Ctrl+Z`, `stty raw -echo; fg`, `reset`, `export TERM=xterm-256color`, window geometry synchronization, alternative spawners with `script` and `socat`, and operational stability).
+     - `content/tracks/pentest/l1/m07-exploitation/cheat-sheet.md`: Comprehensive field reference covering exploit classifications, payload architectures, bind vs reverse shells, Metasploit Framework operations (`msfconsole`, `multi/handler`, Meterpreter post-exploitation), `msfvenom` recipes, manual public exploit analysis and cross-compilation with MinGW, shell stabilization, and avoiding destructive exploits.
+
+2. **Quality Contract & Schema Adherence:**
+   - Every lesson includes all 10 mandatory sections in exact order (Outcome hook, Why this matters, Before you start, Core ideas, Worked example with realistic dead end/false lead, Try it with `<MicroExercise />`, Common mistakes with $\ge 3$ items, What good looks like / Defender's view, In the real world, Remember it like this, Interview answer, Check your understanding with `<TerminalCheck />`, Key terms with `<KeyTerms />`, Practice this with `<PracticeThis />`).
+   - Every web lesson explicitly contrasts vulnerable source code illustrating root causes with hardened, secure implementation code demonstrating proper mitigations.
+   - Every check question provides exactly 4 options with rich, educational explanations for both the correct answer and all distractors.
+   - Word counts strictly governed within 800–1,600 words of non-code prose.
+   - Indicators restricted to RFC 5737 (`192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`) and RFC 2606 (`example.com`, `*.example`).
+   - Registered 4 new skills: `pentest_broken_auth_sessions`, `pentest_idor_access_control`, `pentest_payload_msfvenom`, and `pentest_shell_stabilization` in `content/pentest/skills.yaml` and `content/coverage/pentest.yaml`.
+
+3. **Verification & Quality Gates Passed:**
+   - `npm run check:content` ✓ (116 lessons, 44 labs, 27 objectives validated; 0 errors).
+   - `npm run typecheck` ✓ (0 errors).
+   - `npm run lint` ✓ (0 errors).
+   - Unit tests: `tests/unit/lib/content/` (15 test files, 131 tests passed).
+
 
 
