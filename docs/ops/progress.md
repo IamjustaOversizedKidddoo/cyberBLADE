@@ -674,3 +674,67 @@ Engineered and delivered "NetRange" — a deterministic, fully simulated multi-h
    - `npm run scan:bundle` ✓ (92 client artifacts, 0 leaks detected)
    - Playwright E2E (`tests/e2e/netrange-lab.spec.ts`) ✓ (2 passed on desktop Chrome, 2 passed on mobile Pixel 7: end-to-end completion of Scenario (a) foothold + privesc flag submissions + 390px mobile responsiveness).
    - **Strict Constraint**: Zero SOC L2 files (`lib/lab-engine/soc/rules`, SOC exams) touched.
+
+### Entry W5: Pentest L1 Practical Performance Exam & Assessment Architecture Completed (2026-10-17)
+Engineered and delivered the **Pentest L1 Practical Performance Exam** system (performance-based assessment aligned with eJPT) for CyberBLADE on branch `build/weekend`.
+
+1. **Exam Format & Assessment Architecture:**
+   - Designed and integrated dual assessment formats in `content/pentest/exams/config.yaml`:
+     * **Practical Performance Exam**: 3 hours (180m, configurable), 30 questions (18 finding questions against target network hosts + 12 theory questions from technical knowledge bank), passing score >= 70%, 24h retake cooldown.
+     * **Diagnostic Mock Assessment**: Untimed (720m relaxed), 15 questions (8 finding questions + 7 theory questions), 0m cooldown for low-stakes practice.
+   - Dual-component weighted scoring: 60% findings / 40% theory, passing threshold >= 70%.
+   - Server-authoritative timer with auto-submission on expiration, idempotent submission handling, and retake cooldown (24h for practical, 0m for mock).
+   - Seed-based deterministic scenario generation (`generatePentestExamScenario(seed)`): completely fresh IP assignments, banner variations, credentials, and answers per attempt. Zero oracle or answer keys leaked to the client.
+
+2. **Knowledge Bank (65 Technical Items) & Curriculum Claims:**
+   - Authored 65 comprehensive technical items in `content/pentest/exams/knowledge-bank.yaml` mapped across 4 core domains:
+     * Assessment Methodologies (14 items)
+     * Host & Network Auditing (17 items)
+     * Host & Network Pentesting (20 items)
+     * Web App Pentesting (14 items)
+   - Every question includes rich pedagogical explanations, distractor rationales, and domain tags.
+   - Audited curriculum claims against the 65 items, logging unverified items P34–P70 in `docs/ops/pentest-curriculum-claims.md` for full truthfulness.
+
+3. **Readiness Gate & Study Plan:**
+   - Built provisional readiness diagnostic gate at `app/(app)/exam/pentest/readiness/page.tsx` and `lib/lab-engine/pentest/exam/readiness.ts`.
+   - 4-point readiness criteria matrix:
+     1. Curriculum module completion (>= 12 modules)
+     2. Hands-on NetRange labs completed (>= 3 labs)
+     3. Mock assessment passed (>= 70% score)
+     4. Domain mastery floor (>= 70% in every domain)
+   - Diagnostic status: `ready`, `close`, or `not_ready`.
+   - Exact estimate disclaimer prominently displayed: `"Your recent practice meets our provisional readiness criteria. This is an estimate, not a guarantee of passing any exam."`
+   - Personalized per-domain study plan (`lib/lab-engine/pentest/exam/study-plan.ts`) dynamically diagnosing weak domains and linking to targeted modules, review flashcards, and NetRange labs.
+
+4. **Interactive Exam Workspace & Results Dossier:**
+   - Split tactical layout (`components/labs/pentest/exams/`):
+     * `PentestExamTimerHud.tsx`: Server-synchronized countdown timer with 10m/5m/1m audio-visual threshold warnings and automatic submission trigger.
+     * `PentestTerminalWorkspace.tsx`: Simulated attack console running `nmap`, `searchsploit`, `msfconsole`, `curl`, `smbclient`, `ftp`, `ssh`, `john`, `route`, and host shell against 4 target hosts (`apex-gw01`, `web-srv01`, `db-int01`, `vault-srv01`).
+     * `PentestQuestionsPanel.tsx`: Resilient form handler supporting short answers, MCQs, multi-select, and ordering with debounce auto-saving (`savePentestExamAnswerAction`).
+     * `PentestExamRunner.tsx`: Full assessment coordinator with responsive tabs for mobile viewports, progress tracker, and confirm-to-submit modal.
+     * `PentestExamResultView.tsx`: Comprehensive post-submission dossier featuring Passed/Failed badge, 4-domain mastery bars, component weighting (60% findings / 40% theory), full question review with explanations, and 1-click certificate claim (`ClaimCertificateModal`).
+   - Routes:
+     * `/exam/pentest`: Assessment lobby with format selector, rules, and attempt history.
+     * `/exam/pentest/readiness`: Diagnostic gate and study plan.
+     * `/exam/pentest/[examId]`: Active assessment runner and completed result view.
+     * `/exam/pentest/[examId]/result`: Direct result dossier.
+     * `/labs/pentest/exams`: Redirect to `/exam/pentest`.
+
+5. **Data, Security, RLS & Bundle Scanner:**
+   - Created Supabase migration `20261017120000_pentest_l1_exams.sql`: `pentest_exam_attempts` and `pentest_exam_answers` with strict owner-only RLS, immutable submitted states, and cascade deletion in `delete_user_account`.
+   - Added 2-user isolation tests on PGlite in `tests/db/pentest-exams.test.ts` (10 passing tests verifying RLS cross-user isolation and delete cascade).
+   - Added GDPR learner export allowlist in `lib/identity/learner-export.ts` (`pentest_exam_attempts`, `pentest_exam_answers`).
+   - Extended client bundle scanner `lib/security/bundle-scan.ts` with leak detection rules (`pentest-exam-keys`, `pentest-exam-answers`), and verified 0 leaks across 95 compiled artifacts in Next.js production build.
+   - Enforced feature flag `PENTEST_EXAMS_ENABLED` (default off).
+
+6. **Quality Gates & Verification:**
+   - `npm run lint` ✓ (0 errors)
+   - `npm run typecheck` ✓ (0 errors, 33 routes generated)
+   - `npm run check:content` ✓ (105 lessons, 44 labs, 27 objectives)
+   - `npm test` ✓ (254 test files, 2,291 tests passing, including 20 new pentest exam unit tests)
+   - `npm run test:security` ✓ (25 test files, 259 tests passing)
+   - `npm run test:db` ✓ (9 test files, 127 tests passing on PGlite)
+   - `npm run build` ✓ (Next.js Turbopack production build, 33 static & dynamic routes generated)
+   - `npm run scan:bundle` ✓ (95 client artifacts, 0 leaks detected)
+   - Playwright E2E (`tests/e2e/pentest-exam.spec.ts`) ✓ (readiness gate -> mock assessment start -> live runner & terminal -> submit -> result dossier -> certificate issuance).
+   - **Strict Constraint**: Zero SOC L1 / L2 files or behaviors modified; all 254 test files remain green.
