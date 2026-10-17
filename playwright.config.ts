@@ -28,6 +28,7 @@ export default defineConfig({
       SOC_L2_ENABLED: "true",
       SOC_RULES_ENABLED: "true",
       SOC_REPORTS_ENABLED: "true",
+      PENTEST_ENABLED: "true",
       PENTEST_EXAMS_ENABLED: "true",
       // AI writing feedback in preview with a deterministic local mock (never a real provider).
       SOC_AI_GRADING_MODE: "preview",
