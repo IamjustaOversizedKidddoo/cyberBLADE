@@ -29,7 +29,7 @@
     "soc:ai:calibration": "tsx --conditions=react-server scripts/soc-ai-calibration.mts",
     "soc:ai:drift": "tsx --conditions=react-server scripts/soc-ai-drift.mts",
     "soc:ai:eval-real": "tsx --conditions=react-server scripts/soc-ai-eval-real.mts",
-    "test:db": "vitest run tests/db",
+    "test:db": "vitest run tests/db --maxWorkers=1",
     "scan:bundle": "tsx scripts/scan-client-bundle.mts",
     "soc:exam-calibration": "tsx scripts/soc-exam-calibration.mts",
     "soc:exam-accommodation": "tsx --conditions=react-server scripts/soc-exam-accommodation.mts",

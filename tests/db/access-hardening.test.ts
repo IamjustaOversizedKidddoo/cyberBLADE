@@ -217,7 +217,7 @@ describe("secrets are not readable (S2)", () => {
     const risky = r.rows
       .filter((x) => /seed|truth|answer|raw_text|prompt|model_report|scenario_hash|reference/.test(x.c))
       .filter((x) => !(x.t === "soc_question_attempts" && x.c === "submitted_answer")) // the learner's own answer
-      .filter((x) => !(x.t === "soc_exam_answers" && (x.c === "answer" || x.c === "answered_at"))) // the learner's own exam answer and its time
+      .filter((x) => !((x.t === "soc_exam_answers" || x.t === "pentest_exam_answers") && (x.c === "answer" || x.c === "answered_at"))) // the learner's own exam answer and its time
       .filter((x) => x.c !== "prompt_version") // a version label such as "p1", not prompt text
       .map((x) => `${x.t}.${x.c}`);
     expect(risky).toEqual([]);

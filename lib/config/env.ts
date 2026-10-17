@@ -32,6 +32,7 @@ const envSchema = z.object({
   SOC_RULES_ENABLED: z.string().optional(),
   // Penetration Testing Track Feature Flag (default false, server-side gated)
   PENTEST_ENABLED: z.string().optional(),
+  PENTEST_EXAMS_ENABLED: z.string().optional(),
 });
 
 function devDefaultFlag(value: string | undefined): boolean {
@@ -44,6 +45,12 @@ function devDefaultFlag(value: string | undefined): boolean {
 /** Penetration Testing track L1. Default false; server-side gated. */
 export function isPentestEnabled(): boolean {
   const flag = process.env.PENTEST_ENABLED;
+  return flag === "true" || flag === "1";
+}
+
+/** Penetration Testing L1 practical exams. Default false; server-side gated. */
+export function isPentestExamsEnabled(): boolean {
+  const flag = process.env.PENTEST_EXAMS_ENABLED;
   return flag === "true" || flag === "1";
 }
 

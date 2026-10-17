@@ -29,6 +29,12 @@ export const CERTIFICATE_TRACKS: TrackDefinition[] = [
     level: "Tier 1 Analyst",
     criteriaDescription: "Pass the comprehensive SOC Level 1 Practical Performance-Based Exam with a score of 70% or higher.",
   },
+  {
+    trackId: "pentest",
+    trackTitle: "Penetration Testing: Junior Penetration Tester",
+    level: "eJPT Practical",
+    criteriaDescription: "Pass the comprehensive Penetration Testing Level 1 Practical Performance-Based Exam with a score of 70% or higher.",
+  },
 ];
 
 /**
@@ -97,6 +103,34 @@ export async function evaluateTrackEligibility(
         eligible: true,
         snapshot: {
           tier: "Tier 1",
+          scorePercent: score,
+          verifiedAt: ctx.now().toISOString(),
+        },
+      };
+    }
+  }
+
+  if (trackId === "pentest") {
+    if (level === "eJPT Practical") {
+      const attempts = await ctx.repo.listPentestExamAttempts(userId);
+      const passedAttempt = attempts.find(
+        (a) => a.status === "submitted" && a.result && a.result.scorePercent >= 70,
+      );
+
+      if (!passedAttempt) {
+        return {
+          eligible: false,
+          reason: "Penetration Testing Level 1 practical exam has not been passed with ≥70% score.",
+          snapshot: {},
+        };
+      }
+
+      const score = passedAttempt.result!.scorePercent;
+      return {
+        eligible: true,
+        snapshot: {
+          track: "pentest",
+          level: "eJPT Practical",
           scorePercent: score,
           verifiedAt: ctx.now().toISOString(),
         },

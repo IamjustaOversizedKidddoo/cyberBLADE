@@ -7,7 +7,9 @@ import type { ReadinessConfig } from "./config";
 import type { SocExamAttemptRecord } from "./types";
 import { skillAverages } from "./study-plan";
 
-export const READINESS_STATEMENT = "Your recent practice meets our provisional readiness criteria. This is an estimate, not a guarantee of passing any exam.";
+import { READINESS_ESTIMATE_DISCLAIMER } from "@/lib/lab-engine/common/exam/disclaimer";
+
+export const READINESS_STATEMENT = READINESS_ESTIMATE_DISCLAIMER;
 
 export type ReadinessState = "not_ready" | "close" | "ready";
 

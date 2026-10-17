@@ -14,11 +14,14 @@ import { getCtx } from "@/lib/progress/context";
 import { getLessons } from "@/lib/content/lessons";
 import { e2eFixturesAllowed } from "@/lib/e2e/fixtures-guard";
 
+import { buildPentestExamResult } from "@/lib/lab-engine/pentest/exam/results";
+
 const bodySchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("promote"), rank: z.number().int().min(0).max(5) }),
   z.object({ action: z.literal("complete-rank-lessons"), rank: z.number().int().min(0).max(5) }),
   z.object({ action: z.literal("pass-challenge"), rank: z.number().int().min(0).max(5) }),
   z.object({ action: z.literal("pass-soc-exam") }),
+  z.object({ action: z.literal("pass-pentest-exam"), score: z.number().optional() }),
   z.object({ action: z.literal("revoke-certificate"), credentialId: z.string(), reason: z.string().optional() }),
 ]);
 
@@ -52,6 +55,46 @@ export async function POST(request: NextRequest) {
       consentVersion: "v1",
     });
     return NextResponse.json({ ok: true, socExamPassed: true });
+  }
+  if (parsed.data.action === "pass-pentest-exam") {
+    const score = parsed.data.score ?? 85;
+    const result = buildPentestExamResult({
+      format: "practical",
+      records: Array.from({ length: 30 }, (_, i) => ({
+        id: `q${i}`,
+        kind: i < 18 ? "finding" : "theory",
+        domain: i < 8 ? "host_network_auditing" : i < 15 ? "web_app_pentesting" : i < 22 ? "host_network_pentesting" : "assessment_methodologies",
+        skill: "pentest_skill",
+        correct: i < Math.round((30 * score) / 100),
+      })),
+      startedAt: ctx.now().toISOString(),
+      submittedAt: ctx.now().toISOString(),
+      deadlineAt: ctx.now().toISOString(),
+      submitReason: "learner",
+    });
+    const attempt = await ctx.repo.createPentestExamAttemptAtomic({
+      attempt: {
+        userId: operator.id,
+        format: "practical",
+        configVersion: 1,
+        scenarioId: "netrange-exam-integrated",
+        seed: "e2e-pass-seed",
+        itemIds: Array.from({ length: 30 }, (_, i) => `q${i}`),
+        scenarioState: {},
+        status: "submitted",
+        submitReason: "learner",
+        startedAt: ctx.now().toISOString(),
+        deadlineAt: ctx.now().toISOString(),
+        timeMultiplier: 1,
+        submittedAt: ctx.now().toISOString(),
+        result,
+      },
+      cooldownMinutes: 0,
+      maxAttempts: 10,
+      windowDays: 7,
+      now: ctx.now(),
+    });
+    return NextResponse.json({ ok: true, examId: attempt.id, scorePercent: result.scorePercent });
   }
   if (parsed.data.action === "revoke-certificate") {
     const revoked = await ctx.repo.revokeCertificate(parsed.data.credentialId, parsed.data.reason ?? "e2e_test_revocation");

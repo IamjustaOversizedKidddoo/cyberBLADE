@@ -96,6 +96,37 @@ export async function buildLearnerExport(ctx: Ctx, userId: string, aiFeedback: A
     })),
   );
 
+  const pentestExamAttempts = await ctx.repo.listPentestExamAttempts(userId);
+  const pentestExams = await Promise.all(
+    pentestExamAttempts.map(async (e) => ({
+      examId: e.id,
+      format: e.format,
+      scenarioId: e.status === "active" ? null : e.scenarioId,
+      status: e.status,
+      submitReason: e.submitReason,
+      startedAt: e.startedAt,
+      deadlineAt: e.deadlineAt,
+      submittedAt: e.submittedAt,
+      timeMultiplier: e.timeMultiplier,
+      result: e.result
+        ? {
+            scorePercent: e.result.scorePercent,
+            passed: e.result.passed,
+            components: e.result.components,
+            perDomain: e.result.perDomain,
+            perSkill: e.result.perSkill,
+            timeAnalysis: e.result.timeAnalysis,
+            integrityFlags: e.result.integrityFlags,
+          }
+        : null,
+      answers: (await ctx.repo.listPentestExamAnswers(e.id)).map((a) => ({
+        itemId: a.itemId,
+        answer: a.answer,
+        answeredAt: a.answeredAt,
+      })),
+    })),
+  );
+
   return {
     lessons,
     labAttempts: labAttempts.map((l) => ({ labId: l.labId, mode: l.mode, objectivesSolved: l.objectivesSolved, hintsUsed: l.hintsUsed, startedAt: l.startedAt, completedAt: l.completedAt, failedAt: l.failedAt })),
@@ -104,6 +135,7 @@ export async function buildLearnerExport(ctx: Ctx, userId: string, aiFeedback: A
     examReports,
     soc,
     socExams,
+    pentestExams,
     socDetectionRules: detectionRules.map((r) => ({
       id: r.id,
       examAttemptId: r.examAttemptId,

@@ -28,6 +28,7 @@ import type {
 } from "@/lib/lab-engine/soc/types";
 import type { SocEnrichmentLookupRecord } from "@/lib/lab-engine/soc/enrichment/types";
 import * as exam from "@/lib/lab-engine/soc/exam/supabase-exam-store";
+import * as pentestExam from "@/lib/lab-engine/pentest/exam/supabase-exam-store";
 import type {
   SocExamAccommodation,
   SocExamAnswerRecord,
@@ -35,6 +36,10 @@ import type {
   SocExamOutcomeReport,
   SocDetectionRuleRecord,
 } from "@/lib/lab-engine/soc/exam/types";
+import type {
+  PentestExamAnswerRecord,
+  PentestExamAttemptRecord,
+} from "@/lib/lab-engine/pentest/exam/types";
 import type { CertificateRecord, PublicCertificateVerification } from "@/lib/certificates/types";
 
 export class SupabaseProgressRepo implements ProgressRepo {
@@ -1568,6 +1573,38 @@ export class SupabaseProgressRepo implements ProgressRepo {
   }
   async listSocDetectionRules(userId: string, examAttemptId?: string) {
     return exam.listDetectionRules(await this.examClient(), userId, examAttemptId);
+  }
+
+  // --- Pentest exam mode ---------------------------------------------------------------------
+  async createPentestExamAttemptAtomic(input: {
+    attempt: Omit<PentestExamAttemptRecord, "id">;
+    cooldownMinutes: number;
+    maxAttempts: number;
+    windowDays: number;
+    now: Date;
+  }): Promise<PentestExamAttemptRecord> {
+    return pentestExam.createExamAtomic(await this.examClient(), input);
+  }
+  async getPentestExamAttempt(id: string) {
+    return pentestExam.getExam(await this.examClient(), id);
+  }
+  async listPentestExamAttempts(userId: string) {
+    return pentestExam.listExams(await this.examClient(), userId);
+  }
+  async findActivePentestExam(userId: string) {
+    return pentestExam.findActiveExam(await this.examClient(), userId);
+  }
+  async finalizePentestExamAttempt(
+    id: string,
+    patch: Pick<PentestExamAttemptRecord, "submitReason" | "submittedAt" | "result">,
+  ) {
+    return pentestExam.finalizeExam(await this.examClient(), id, patch);
+  }
+  async savePentestExamAnswer(answer: Omit<PentestExamAnswerRecord, "id">) {
+    return pentestExam.saveAnswer(await this.examClient(), answer);
+  }
+  async listPentestExamAnswers(examAttemptId: string) {
+    return pentestExam.listAnswers(await this.examClient(), examAttemptId);
   }
 
   async saveCertificate(cert: Omit<CertificateRecord, "id" | "createdAt">): Promise<CertificateRecord> {

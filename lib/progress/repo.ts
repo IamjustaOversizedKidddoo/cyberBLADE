@@ -29,12 +29,16 @@ import type {
   SocExamOutcomeReport,
   SocDetectionRuleRecord,
 } from "@/lib/lab-engine/soc/exam/types";
+import type {
+  PentestExamAnswerRecord,
+  PentestExamAttemptRecord,
+} from "@/lib/lab-engine/pentest/exam/types";
 import type { CertificateRecord, PublicCertificateVerification } from "@/lib/certificates/types";
 
 /** Shared exam-start rule (local store and Postgres check the same conditions). */
 export function examStartRefusal(
-  existing: SocExamAttemptRecord[],
-  input: { attempt: Pick<SocExamAttemptRecord, "userId" | "format">; cooldownMinutes: number; maxAttempts: number; windowDays: number; now: Date },
+  existing: Array<{ userId: string; format: string; status: string; submittedAt?: string | null; startedAt: string }>,
+  input: { attempt: { userId: string; format: string }; cooldownMinutes: number; maxAttempts: number; windowDays: number; now: Date },
 ): string | null {
   const mine = existing.filter((e) => e.userId === input.attempt.userId);
   if (mine.some((e) => e.status === "active")) return "exam is active";
@@ -168,6 +172,22 @@ export interface ProgressRepo {
   setSocExamAccommodation(rec: SocExamAccommodation): Promise<SocExamAccommodation>;
   saveSocDetectionRule(rule: Omit<SocDetectionRuleRecord, "id" | "submittedAt">): Promise<SocDetectionRuleRecord>;
   listSocDetectionRules(userId: string, examAttemptId?: string): Promise<SocDetectionRuleRecord[]>;
+  createPentestExamAttemptAtomic(input: {
+    attempt: Omit<PentestExamAttemptRecord, "id">;
+    cooldownMinutes: number;
+    maxAttempts: number;
+    windowDays: number;
+    now: Date;
+  }): Promise<PentestExamAttemptRecord>;
+  getPentestExamAttempt(id: string): Promise<PentestExamAttemptRecord | null>;
+  listPentestExamAttempts(userId: string): Promise<PentestExamAttemptRecord[]>;
+  findActivePentestExam(userId: string): Promise<PentestExamAttemptRecord | null>;
+  finalizePentestExamAttempt(
+    id: string,
+    patch: Pick<PentestExamAttemptRecord, "submitReason" | "submittedAt" | "result">,
+  ): Promise<{ record: PentestExamAttemptRecord; changed: boolean }>;
+  savePentestExamAnswer(answer: Omit<PentestExamAnswerRecord, "id">): Promise<PentestExamAnswerRecord>;
+  listPentestExamAnswers(examAttemptId: string): Promise<PentestExamAnswerRecord[]>;
   saveCertificate(cert: Omit<CertificateRecord, "id" | "createdAt">): Promise<CertificateRecord>;
   listCertificates(userId: string): Promise<CertificateRecord[]>;
   getCertificateByCredentialId(credentialId: string): Promise<CertificateRecord | null>;
@@ -933,6 +953,92 @@ export class StoreProgressRepo implements ProgressRepo {
     return all
       .filter((r) => r.userId === userId && (!examAttemptId || r.examAttemptId === examAttemptId))
       .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+  }
+
+  // --- Pentest exam mode ---------------------------------------------------------------------
+
+  async createPentestExamAttemptAtomic(input: {
+    attempt: Omit<PentestExamAttemptRecord, "id">;
+    cooldownMinutes: number;
+    maxAttempts: number;
+    windowDays: number;
+    now: Date;
+  }): Promise<PentestExamAttemptRecord> {
+    const created: PentestExamAttemptRecord = { ...input.attempt, id: randomUUID() };
+    await this.store.update((d) => {
+      d.pentestExamAttempts ??= {};
+      const refusal = examStartRefusal(Object.values(d.pentestExamAttempts), input);
+      if (refusal) throw new Error(refusal);
+      d.pentestExamAttempts[created.id] = created;
+    });
+    return created;
+  }
+
+  async getPentestExamAttempt(id: string): Promise<PentestExamAttemptRecord | null> {
+    return own((await this.store.read()).pentestExamAttempts ?? {}, id);
+  }
+
+  async listPentestExamAttempts(userId: string): Promise<PentestExamAttemptRecord[]> {
+    return Object.values((await this.store.read()).pentestExamAttempts ?? {})
+      .filter((e) => e.userId === userId)
+      .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
+  }
+
+  async findActivePentestExam(userId: string): Promise<PentestExamAttemptRecord | null> {
+    return (
+      Object.values((await this.store.read()).pentestExamAttempts ?? {}).find(
+        (e) => e.userId === userId && e.status === "active",
+      ) ?? null
+    );
+  }
+
+  async finalizePentestExamAttempt(
+    id: string,
+    patch: Pick<PentestExamAttemptRecord, "submitReason" | "submittedAt" | "result">,
+  ): Promise<{ record: PentestExamAttemptRecord; changed: boolean }> {
+    let out: { record: PentestExamAttemptRecord; changed: boolean } | null = null;
+    await this.store.update((d) => {
+      const cur = own(d.pentestExamAttempts ?? {}, id);
+      if (!cur) throw new Error("Exam attempt not found");
+      if (cur.status === "submitted") {
+        out = { record: cur, changed: false };
+        return;
+      }
+      Object.assign(cur, patch, { status: "submitted" as const });
+      out = { record: cur, changed: true };
+    });
+    return out!;
+  }
+
+  async savePentestExamAnswer(
+    answer: Omit<PentestExamAnswerRecord, "id">,
+  ): Promise<PentestExamAnswerRecord> {
+    let out: PentestExamAnswerRecord | null = null;
+    await this.store.update((d) => {
+      const exam = own(d.pentestExamAttempts ?? {}, answer.examAttemptId);
+      if (!exam || exam.userId !== answer.userId) throw new Error("Exam attempt not found");
+      if (exam.status !== "active") throw new Error("exam is closed");
+      d.pentestExamAnswers ??= {};
+      const existing = Object.values(d.pentestExamAnswers).find(
+        (a) => a.examAttemptId === answer.examAttemptId && a.itemId === answer.itemId,
+      );
+      if (existing) {
+        existing.answer = answer.answer;
+        existing.answeredAt = answer.answeredAt;
+        out = existing;
+      } else {
+        const rec = { ...answer, id: randomUUID() };
+        d.pentestExamAnswers[rec.id] = rec;
+        out = rec;
+      }
+    });
+    return out!;
+  }
+
+  async listPentestExamAnswers(examAttemptId: string): Promise<PentestExamAnswerRecord[]> {
+    return Object.values((await this.store.read()).pentestExamAnswers ?? {}).filter(
+      (a) => a.examAttemptId === examAttemptId,
+    );
   }
 
   async saveCertificate(cert: Omit<CertificateRecord, "id" | "createdAt">): Promise<CertificateRecord> {

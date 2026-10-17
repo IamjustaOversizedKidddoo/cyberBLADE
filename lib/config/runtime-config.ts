@@ -65,6 +65,7 @@ export const RUNTIME_VARS: VarSpec[] = [
   { name: "SOC_L2_ENABLED", visibility: "server", requiredInProduction: false, description: "L2 track (built & audited in Entry 16/17; default false for staged rollout)", check: bool },
   { name: "SOC_RULES_ENABLED", visibility: "server", requiredInProduction: false, description: "Detection-rule tool (built & audited in Entry 16/17; default false for staged rollout)", check: bool },
   { name: "PENTEST_ENABLED", visibility: "server", requiredInProduction: false, description: "Penetration Testing track L1 (default false for staged rollout)", check: bool },
+  { name: "PENTEST_EXAMS_ENABLED", visibility: "server", requiredInProduction: false, description: "Penetration Testing practical exam mode (default false for staged rollout)", check: bool },
   { name: "SOC_AI_GRADING_MODE", visibility: "server", requiredInProduction: false, description: "off | shadow | preview | live (live needs a signed gate)", check: oneOf("off", "shadow", "preview", "live") },
   { name: "SOC_AI_GRADING_KILL_SWITCH", visibility: "server", requiredInProduction: false, description: "1 = stop all AI grading", check: bool },
   { name: "SOC_AI_GRADING_MODEL_ID", visibility: "server", requiredInProduction: false, description: "Provider-qualified model id for the AI-grading gate" },

@@ -114,6 +114,57 @@ describe("track completion and certificate eligibility evaluation", () => {
     expect(after.snapshot).toMatchObject({ tier: "Tier 1" });
   });
 
+  it("Pentest L1: ineligible without passing exam; eligible when score >= 70%", async () => {
+    const before = await evaluateTrackEligibility(ctx, user, "pentest", "eJPT Practical");
+    expect(before.eligible).toBe(false);
+    expect(before.reason).toMatch(/Penetration Testing Level 1 practical exam has not been passed/i);
+
+    const exam = await repo.createPentestExamAttemptAtomic({
+      attempt: {
+        userId: user,
+        format: "practical",
+        configVersion: 1,
+        scenarioId: "netrange-exam-integrated",
+        seed: "test-seed",
+        itemIds: [],
+        scenarioState: null,
+        status: "active",
+        submitReason: null,
+        startedAt: "2026-10-17T10:00:00Z",
+        deadlineAt: "2026-10-17T13:00:00Z",
+        timeMultiplier: 1,
+        submittedAt: null,
+        result: null,
+      },
+      cooldownMinutes: 1440,
+      maxAttempts: 3,
+      windowDays: 14,
+      now: new Date("2026-10-17T10:00:00Z"),
+    });
+
+    await repo.finalizePentestExamAttempt(exam.id, {
+      submitReason: "learner",
+      submittedAt: "2026-10-17T12:00:00Z",
+      result: {
+        format: "practical",
+        scorePercent: 82,
+        passed: true,
+        passingScorePercent: 70,
+        components: [],
+        perDomain: [],
+        perSkill: [],
+        timeAnalysis: { durationSeconds: 7200, budgetSeconds: 10800, withinBudget: true },
+        integrityFlags: [],
+        submitReason: "learner",
+        submittedAt: "2026-10-17T12:00:00Z",
+      },
+    });
+
+    const afterExam = await evaluateTrackEligibility(ctx, user, "pentest", "eJPT Practical");
+    expect(afterExam.eligible).toBe(true);
+    expect(afterExam.snapshot).toMatchObject({ track: "pentest", level: "eJPT Practical", scorePercent: 82 });
+  });
+
   it("rejects unknown tracks or levels", async () => {
     const res = await evaluateTrackEligibility(ctx, user, "invalid-track", "Expert");
     expect(res.eligible).toBe(false);

@@ -96,6 +96,11 @@ import type {
 } from "@/lib/lab-engine/soc/exam/types";
 import type { CertificateRecord } from "@/lib/certificates/types";
 
+import type {
+  PentestExamAttemptRecord,
+  PentestExamAnswerRecord,
+} from "@/lib/lab-engine/pentest/exam/types";
+
 export type ProgressData = {
   lessons: Record<string, LessonProgress>;
   attempts: Record<string, LabAttempt>;
@@ -119,6 +124,8 @@ export type ProgressData = {
   socExamOutcomeReports?: Record<string, SocExamOutcomeReport>;
   socExamAccommodations?: Record<string, SocExamAccommodation>;
   socDetectionRules?: Record<string, SocDetectionRuleRecord>;
+  pentestExamAttempts?: Record<string, PentestExamAttemptRecord>;
+  pentestExamAnswers?: Record<string, PentestExamAnswerRecord>;
   certificates?: Record<string, CertificateRecord>;
 };
 
