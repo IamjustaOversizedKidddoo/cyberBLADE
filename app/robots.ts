@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 
 const flagOn = (v: string | undefined) => v === "true" || v === "1";
 
+export const dynamic = "force-dynamic";
+
 export default function robots(): MetadataRoute.Robots {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://cyberblade.dev";
   // Closed beta: nothing is indexed (BETA_NOINDEX, default on while BETA_INVITE_ONLY).

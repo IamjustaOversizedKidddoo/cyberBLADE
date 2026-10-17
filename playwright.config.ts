@@ -9,11 +9,13 @@ export default defineConfig({
   // Browsers and the server share one machine; past 2 workers the WebGL/pinned-scene tests starve the
   // server and unrelated journeys time out waiting for it.
   workers: 2,
-  use: { baseURL: E2E_BASE_URL },
-  webServer: {
-    command: `npm run build && npm run start -- -p ${E2E_PORT}`,
-    port: E2E_PORT,
-    reuseExistingServer: !process.env.CI,
+  use: { baseURL: process.env.BASE_URL || E2E_BASE_URL },
+  webServer: process.env.BASE_URL
+    ? undefined
+    : {
+        command: `npm run build && npm run start -- -p ${E2E_PORT}`,
+        port: E2E_PORT,
+        reuseExistingServer: !process.env.CI,
     env: {
       NEON_DATA_DIR: ".data-e2e",
       NEON_SHOW_DRAFTS: "true",

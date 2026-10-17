@@ -108,7 +108,8 @@ export function getServerEnv(): ServerEnv {
   }
 
   // Validate production rules
-  if (result.data.NODE_ENV === "production") {
+  const isProd = result.data.NODE_ENV === "production" && process.env.CYBERBLADE_ALLOW_LOCAL_E2E !== "true";
+  if (isProd || process.env.VERCEL === "1") {
     if (!result.data.NEXT_PUBLIC_SUPABASE_URL || !result.data.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       throw new Error(
         "CRITICAL PRODUCTION CONFIGURATION ERROR: Hosted Supabase configuration (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY) is required in production."
@@ -118,6 +119,10 @@ export function getServerEnv(): ServerEnv {
 
   cachedEnv = result.data;
   return cachedEnv;
+}
+
+export function assertEnv(): ServerEnv {
+  return getServerEnv();
 }
 
 /** Resets cached env (for testing). */

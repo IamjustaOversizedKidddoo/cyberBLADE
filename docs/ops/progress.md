@@ -324,3 +324,59 @@ Full gates:
 - test:e2e ✓ (162 passed, 24 skipped, 0 failed across desktop & mobile full suite)
 - Beta readiness recommendation: `SOC_L2_ENABLED` and `SOC_RULES_ENABLED` safe to enable for invite-only beta once owner reviews manual checklist.
 
+### Entry 18: Closed-Beta Deployment Readiness & Verification (Vercel + Hosted Supabase) (2026-10-17)
+Goal: Release engineering pass to verify and prepare CyberBLADE for closed-beta deployment on Vercel with hosted Supabase.
+All checks executed locally against PGlite and local production-mode server in strict accordance with Standing Rule 6 (no migrations executed against a live hosted DB).
+
+Scope completed:
+1. **Serverless Build & Tracing:**
+   - Updated `next.config.ts` to trace `"/**/*": ["./content/**/*", "./labs/**/*"]`, ensuring all serverless route lambdas bundle all curriculum YAMLs, MDX, scenario seeds, exam banks, and rubrics.
+   - Bounded Turbopack filesystem dynamic trace; production build succeeds with **0 warnings** across all 28 routes.
+   - Fail-closed storage verified: `assertSafeStorageMode()`, `assertRuntimeConfig()`, and `assertEnv()` refuse local JSON store and halt boot if Supabase URL / keys are missing in production.
+2. **Environment Configuration & Boot Validation:**
+   - Complete `.env.example` updated with accurate variable descriptions for all public and server variables.
+   - `lib/config/env.ts` updated with `assertEnv()` and wired into `instrumentation.ts` alongside `assertRuntimeConfig()`.
+   - Feature flags `SOC_L2_ENABLED=false` and `SOC_RULES_ENABLED=false` set as safe defaults for staged rollout per Entry 17 audit verdict.
+   - Zero AI provider keys in client bundle verified via `npm run scan:bundle` (87 artifacts, 0 leaks).
+3. **Database Migrations & 100% RLS Coverage:**
+   - Authored `scripts/db-migrate-prod.mts` and registered `npm run db:migrate:prod`.
+   - Applied all 14 timestamped migrations cleanly in chronological order to a fresh database.
+   - Audited all public tables via `pg_class` and `pg_policies`: **40/40 (100%) public tables have Row Level Security enabled** (0 blockers).
+   - Zero test seeds in learner-facing tables confirmed.
+4. **Hardening & Security Controls:**
+   - Strict CSP without `unsafe-eval` enforced in production. Security headers verified (HSTS, nosniff, SAMEORIGIN frame-ancestors, referrer-policy, permissions-policy).
+   - Rate limiting enforced on all sensitive routes via PostgreSQL atomic function `rate_limit_hit` (auth: 5/min, Handler: 30/min + per-user daily token caps, exam submits: 5/min).
+   - Closed-beta gate: `BETA_INVITE_ONLY=true` with atomic invite redemption; `app/robots.ts` set to `force-dynamic` to enforce `noindex` header and disallow crawlers.
+5. **Observability & Bug Reporting:**
+   - Error tracking seam (`ERROR_REPORTER_DSN`) with scrubbed Sentry adapter and fallback to PII-redacted structured JSON logs.
+   - `/api/health` verified (HTTP 200 `{ status: "ok" }`).
+   - In-app "Report a problem" widget (`FeedbackDialog.tsx`) verified; stores directly to `learner_feedback` table.
+6. **Vercel Configuration:**
+   - Configured `vercel.json` with target region `bom1` (Mumbai, India) and `maxDuration: 60` for serverless routes.
+7. **Smoke Testing & E2E Verification:**
+   - Enhanced `tests/e2e/smoke.spec.ts` with complete release user journey:
+     * Sign-up (operator onboarding)
+     * Lesson view (`/learn/core-r0-comp-hardware-01`)
+     * Socratic Handler consultation ("Simplify" prompt)
+     * 4 Lab Engines: Terminal (`core-r0-terminal-lab-01`), Files/VFS (`core-r0-files-lab-01`), Challenge Lobby (`/challenge/0`), and SOC Workspace (`/labs/soc/soc-l1-noisy-shift`)
+     * L1 practice exam start & timer verification (`/labs/soc/exams`)
+     * Sign-out and session revocation verification
+     * All 4 test cases passed across desktop and mobile.
+   - Verified 16/16 black-box smoke checks passing via `npm run smoke -- http://localhost:3200`.
+8. **Documentation:**
+   - Authored comprehensive deployment runbook `docs/ops/deploy.md` with complete env variable table, migration runbook, RLS coverage table, rollback steps, and Owner Manual Checklist.
+
+Full gates:
+- lint ✓ (0 errors, 53 pre-existing warnings)
+- typecheck ✓ (0 errors)
+- check:content ✓ (80 lessons, 34 labs, 27 objectives)
+- check:soc ✓ (1 scenario, 9 families with 50 seeds, 4 shifts with 50 seeds, 100% pass)
+- test:security ✓ (25 test files, 257 passed)
+- test:db ✓ (7 test files, 109 passed on PGlite)
+- test ✓ (244 test files, 2,130 passed)
+- build ✓ (Next.js Turbopack, 0 warnings, 28/28 pages)
+- scan:bundle ✓ (87 client artifacts, 0 leaks across 12 pattern rules)
+- test:e2e smoke ✓ (4/4 passed across desktop & mobile)
+- black-box smoke ✓ (16/16 checks passed)
+
+

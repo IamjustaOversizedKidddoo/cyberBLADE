@@ -9,6 +9,8 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   const { assertRuntimeConfig } = await import("./lib/config/runtime-config");
   assertRuntimeConfig();
+  const { assertEnv } = await import("./lib/config/env");
+  assertEnv();
   const { assertSafeStorageMode } = await import("./lib/supabase/config");
   assertSafeStorageMode();
 }
