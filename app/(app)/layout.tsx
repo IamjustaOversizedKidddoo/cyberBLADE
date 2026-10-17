@@ -20,7 +20,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         </p>
       )}
       {children}
-      <div className="fixed bottom-4 right-4 z-[2] print:hidden">
+      <div className="fixed bottom-4 left-4 z-[2] print:hidden">
         <FeedbackDialog label="Feedback" className="min-h-[44px] rounded-xs border border-cyan bg-surface-raised px-4 font-ui text-sm text-cyan shadow-lg hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-cyan" />
       </div>
     </AppShell>

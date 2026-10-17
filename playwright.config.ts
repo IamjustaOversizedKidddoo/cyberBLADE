@@ -25,6 +25,7 @@ export default defineConfig({
       SOC_HANDLER_ENABLED: "true",
       SOC_L2_ENABLED: "true",
       SOC_RULES_ENABLED: "true",
+      SOC_REPORTS_ENABLED: "true",
       // AI writing feedback in preview with a deterministic local mock (never a real provider).
       SOC_AI_GRADING_MODE: "preview",
       SOC_AI_PROVIDER: "mock-e2e",
