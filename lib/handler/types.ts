@@ -40,10 +40,21 @@ export type SocPromptContext = {
   myDetectionRules?: Array<{ id: string; title: string; severity: string; query: string }>;
 };
 
+export type PentestPromptContext = {
+  labId?: string;
+  labTitle?: string;
+  target?: string;
+  objectives?: HandlerObjective[];
+  recentCommands?: string[];
+  lessonId?: string;
+  lessonTitle?: string;
+};
+
 export type HandlerContext = {
-  /** "soc" is set only by the server-side SOC action; the general Handler action accepts lesson | lab. */
-  kind: "lesson" | "lab" | "soc";
+  /** "soc" and "pentest" are set by server-side specialized actions; general action accepts lesson | lab. */
+  kind: "lesson" | "lab" | "soc" | "pentest";
   soc?: SocPromptContext;
+  pentest?: PentestPromptContext;
   lessonId?: string;
   lessonTitle?: string;
   module?: string;
