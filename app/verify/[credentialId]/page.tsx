@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { verifyCertificatePublic } from "@/lib/certificates/service";
 import { CERTIFICATE_TRACKS } from "@/lib/certificates/eligibility";
 import { CertificateView } from "@/components/certificates/CertificateView";

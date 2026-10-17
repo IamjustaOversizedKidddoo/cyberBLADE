@@ -117,7 +117,7 @@ export async function revokeCertificateAdmin(
     await logSecurityEvent({
       userId: null,
       eventType: "certificate.revoked",
-      severity: "warning",
+      severity: "warn",
       metadata: { credential_id: credentialId, reason: reason ?? "administrative_action" },
     });
   }

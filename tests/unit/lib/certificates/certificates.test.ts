@@ -55,7 +55,7 @@ describe("track completion and certificate eligibility evaluation", () => {
     repo = new MemoryProgressRepo();
     ctx = {
       repo,
-      content: {} as any,
+      content: {} as unknown as Ctx["content"],
       now: () => new Date("2026-10-17T12:00:00Z"),
     } as unknown as Ctx;
   });
@@ -190,8 +190,8 @@ describe("repository certificates persistence and verification", () => {
       revokedAt: null,
     });
 
-    expect((verify as any).userId).toBeUndefined();
-    expect((verify as any).id).toBeUndefined();
+    expect((verify as unknown as Record<string, unknown>).userId).toBeUndefined();
+    expect((verify as unknown as Record<string, unknown>).id).toBeUndefined();
   });
 
   it("revocation updates status to revoked with reason", async () => {
@@ -254,7 +254,7 @@ describe("learner GDPR export allowlist for certificates", () => {
       scoreSnapshot: { rank: 1, challengeRank: 0 },
     });
 
-    const exportData = await buildLearnerExport(ctx, user, {} as any);
+    const exportData = await buildLearnerExport(ctx, user, {} as unknown as Parameters<typeof buildLearnerExport>[2]);
     expect(exportData.certificates).toHaveLength(1);
     expect(exportData.certificates[0]).toEqual({
       credentialId: slug,
@@ -267,7 +267,7 @@ describe("learner GDPR export allowlist for certificates", () => {
       scoreSnapshot: { rank: 1, challengeRank: 0 },
     });
 
-    expect((exportData.certificates[0] as any).userId).toBeUndefined();
-    expect((exportData.certificates[0] as any).id).toBeUndefined();
+    expect((exportData.certificates[0] as unknown as Record<string, unknown>).userId).toBeUndefined();
+    expect((exportData.certificates[0] as unknown as Record<string, unknown>).id).toBeUndefined();
   });
 });

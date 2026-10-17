@@ -35,7 +35,8 @@ async function main() {
       console.error("Error: Supabase admin client could not be initialized.");
       process.exit(1);
     }
-    const { data, error } = await admin.rpc("revoke_certificate", {
+    const client = admin as unknown as { rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: Error | null }> };
+    const { data, error } = await client.rpc("revoke_certificate", {
       p_credential_id: credentialId,
       p_reason: reason,
     });
@@ -59,7 +60,7 @@ async function main() {
   await logSecurityEvent({
     userId: null,
     eventType: "certificate.revoked",
-    severity: "warning",
+    severity: "warn",
     metadata: { credential_id: credentialId, reason, revoked_via: "admin_cli" },
   });
 

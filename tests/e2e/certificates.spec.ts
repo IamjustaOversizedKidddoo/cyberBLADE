@@ -4,7 +4,6 @@ import { onboard } from "./helpers/rank0";
 test.describe("certificates: earn → view → verify → revoked lifecycle", () => {
   test("full lifecycle: earn capstone, claim with display name, verify publicly, and handle revocation", async ({
     page,
-    request,
   }) => {
     // 1. Onboard as fresh learner
     const handle = `cert_user_${Date.now() % 100000}`;
@@ -67,8 +66,8 @@ test.describe("certificates: earn → view → verify → revoked lifecycle", ()
 
     // Check verified status and recipient information
     await expect(page.getByText(/REGISTRY STATUS: VERIFIED AUTHENTIC/i)).toBeVisible();
-    await expect(page.getByText("Agent Sterling")).toBeVisible();
-    await expect(page.getByText(/Shared Core/i)).toBeVisible();
+    await expect(page.getByText("Agent Sterling").first()).toBeVisible();
+    await expect(page.getByText(/Shared Core/i).first()).toBeVisible();
 
     // 7. Revoke certificate via admin fixture and check revoked state
     const revokeRes = await page.evaluate(async (slug) => {

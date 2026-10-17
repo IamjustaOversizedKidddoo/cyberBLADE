@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { claimCertificateAction } from "@/lib/certificates/service";
+import { claimCertificateAction } from "@/app/(app)/certificates/actions";
 
 interface ClaimCertificateModalProps {
   trackId: string;
