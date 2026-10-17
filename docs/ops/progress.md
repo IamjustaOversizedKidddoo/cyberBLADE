@@ -293,3 +293,34 @@ Full gates:
 - scan:bundle ✓ (88 client artifacts, 0 leaks across 12 pattern rules)
 - test:e2e ✓ (`tests/e2e/soc-exams.spec.ts` 4/4 passed)
 - Migration `20261016180000_soc_l2_exams.sql` executed on PGlite only, NOT on any hosted database.
+
+### Entry 17: SOC Level 2 (L2) Independent Audit & Fix (Phase A & B) (2026-10-17)
+Independent audit of L2 curriculum, detection evaluator, exam integrity, data isolation, Handler guards, report grading, deploy risk, UI accessibility, and test gaps:
+1. **Phase A Audit Findings Resolved:**
+   - `L2-A-01` (High): Knowledge bank L2 volume expanded from 25 to 45 items (added K46–K65 with certain citations in `soc-curriculum-claims.md`); 3-attempt repeat rate dropped from 100% to ~55.5%.
+   - `L2-A-02` (Medium): Fixed `ExamRunner.tsx` missing `initialRule` prop on `<DetectionRuleEditor />`, ensuring detection rule drafts persist across browser reloads.
+   - `L2-A-03` (Medium): Resolved Turbopack dynamic filesystem trace warning in `shift-composer.ts` by adding `process.cwd()` path bounding and `/*turbopackIgnore: true*/`, plus Next.js `outputFileTracingIncludes` in `next.config.ts`. Production build now completes with **zero warnings**.
+   - `L2-A-04` (Medium): Added comprehensive Playwright E2E spec for L2 detection rule challenge in `tests/e2e/soc-exams.spec.ts` (start, draft, reload persistence, submission, and holdout/twin scorecard).
+   - `L2-A-05` (Low): Fixed non-deterministic `new Date().toISOString()` in fallback alert generation in `lib/lab-engine/soc/rules/evaluator.ts`.
+   - `L2-A-06` (Low / Deferred): Zero dedicated L2 lessons/labs registered; mapped to foundational L1 modules in `readiness-l2.yaml` study plan (deferred full L2 lesson authoring to future curriculum milestone).
+2. **Security & Guard Hardening:**
+   - Enhanced `INPUT_RULES` in `lib/handler/soc-guard.ts` to intercept ground-truth telemetry, hold-out sample requests, and role-play bypass attempts without model calls.
+   - Added 15 fresh adversarial jailbreaks + 5 conceptual validation tests in `tests/unit/lib/handler/soc-mode.test.ts` (all 81 tests passing).
+   - Fixed floating `FeedbackDialog` collision with `HandlerDrawer` by moving feedback widget to `bottom-4 left-4`, resolving WCAG 2.5.8 touch-target violations across full E2E suite.
+3. **Grading Quality & Regression Proofs:**
+   - Added `scoping-report-l2-grader.test.ts` evaluating 3 strong, 3 weak, and 2 keyword-stuffed gamed reports against `scoping-report-l2-rubric.yaml`. Confirmed clean score separation.
+   - Added evaluator tests in `evaluator.test.ts` verifying wildcard-everything FPR penalization (100% FPR, failing score) and overfitted alert ID detection.
+
+Full gates:
+- lint ✓ (0 errors, 53 pre-existing warnings)
+- typecheck ✓ (0 errors)
+- check:content ✓ (80 lessons, 34 labs, 27 objectives, 45 L2 items)
+- check:soc ✓ (1 scenario, 9 families, 4 shifts, 100% pass across 50 seeds)
+- test ✓ (244 test files, 2130 passed)
+- test:security ✓ (25 test files, 257 passed)
+- test:db ✓ (7 test files, 109 passed on PGlite)
+- build ✓ (Next.js Turbopack, 0 warnings, 29/29 static pages)
+- scan:bundle ✓ (88 client artifacts, 0 leaks across 12 pattern rules)
+- test:e2e ✓ (162 passed, 24 skipped, 0 failed across desktop & mobile full suite)
+- Beta readiness recommendation: `SOC_L2_ENABLED` and `SOC_RULES_ENABLED` safe to enable for invite-only beta once owner reviews manual checklist.
+
