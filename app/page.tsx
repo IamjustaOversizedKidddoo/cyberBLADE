@@ -306,12 +306,21 @@ export default async function Home() {
             <div className="mt-10 grid gap-10 md:grid-cols-2 md:gap-x-12">
               {launch.map((t, i) => {
                 const glyph = TRACK_GLYPHS[t.id as LaunchTrackId];
+                const isLive = t.id === "soc";
+                const stamp = isLive ? "LIVE" : "ROADMAP";
+                const href = isLive ? "/learn/soc-l1" : `/learn/${t.id}`;
                 return (
                   <div key={t.id} data-from={fx({ y: 60, rotate: i % 2 ? 4 : -4, opacity: 0 })} data-at={String(0.45 + i * 0.06)} data-dur="0.2" className={WALL[i]}>
-                    <DossierCard fileNo={`TRACK ${String(i + 1).padStart(2, "0")}`} title={t.title} stamp="OPEN" stampTone={STAMP_TONE[t.id as LaunchTrackId]}>
-                      <TechnicalDiagram title={glyph.title} nodes={glyph.nodes} links={glyph.links} labels={false} ratio="16 / 6" className="my-4" />
-                      <p>{glyph.line}</p>
-                    </DossierCard>
+                    <Link href={href} className="block transition-transform hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan rounded-xs">
+                      <DossierCard fileNo={`TRACK ${String(i + 1).padStart(2, "0")}`} title={t.title} stamp={stamp} stampTone={STAMP_TONE[t.id as LaunchTrackId]}>
+                        <TechnicalDiagram title={glyph.title} nodes={glyph.nodes} links={glyph.links} labels={false} ratio="16 / 6" className="my-4" />
+                        <p>{glyph.line}</p>
+                        <div className="mt-4 pt-3 border-t border-void/10 flex items-center justify-between text-xs font-ui">
+                          <span className="text-void/60">{isLive ? "Curriculum Active" : "In Development"}</span>
+                          <span className="font-bold text-void hover:underline underline-offset-4">{isLive ? "ENTER TRACK →" : "VIEW ROADMAP →"}</span>
+                        </div>
+                      </DossierCard>
+                    </Link>
                   </div>
                 );
               })}

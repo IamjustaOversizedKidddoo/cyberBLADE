@@ -23,6 +23,8 @@ import { getLesson, getLessons } from "@/lib/content/lessons";
 import { renderMdx, type PluggableList } from "@/lib/content/mdx";
 import { requireOperator } from "@/lib/identity/session";
 import { canAccessRank } from "@/lib/progress/access";
+import { TRACKS } from "@/lib/catalog/tracks";
+import { TrackRoadmapPreview } from "@/components/catalog/TrackRoadmapPreview";
 import { getCtx } from "@/lib/progress/context";
 import { IconCheck, IconTerminal } from "@/components/ui/icons";
 import { answerCheckAction } from "../actions";
@@ -37,14 +39,24 @@ import { toPublicExercises } from "@/lib/content/exercises";
 import { resolvePracticeTarget, type PracticeCard } from "@/lib/content/practice";
 
 export async function generateMetadata(props: PageProps<"/learn/[lessonId]">): Promise<Metadata> {
-  const lesson = await getLesson((await props.params).lessonId);
-  return { title: `${lesson?.title ?? "Lesson"} · CyberBLADE` };
+  const { lessonId } = await props.params;
+  const lesson = await getLesson(lessonId);
+  if (lesson) return { title: `${lesson.title} · CyberBLADE` };
+  const track = TRACKS.find((t) => t.id === lessonId);
+  if (track) return { title: `${track.title} Roadmap · CyberBLADE` };
+  return { title: "Lesson · CyberBLADE" };
 }
 
 export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) {
   const { lessonId } = await props.params;
   const lesson = await getLesson(lessonId);
-  if (!lesson) notFound();
+  if (!lesson) {
+    const track = TRACKS.find((t) => t.id === lessonId);
+    if (track) {
+      return <TrackRoadmapPreview track={track} />;
+    }
+    notFound();
+  }
 
   const operator = await requireOperator();
   if (!canAccessRank(operator.rank, lesson.rank)) redirect(`/learn/core?locked=${lesson.rank}`);
