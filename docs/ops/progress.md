@@ -768,3 +768,122 @@ Conducted comprehensive integration review, audit self-checks, and full-pipeline
 4. **Auditor Briefing Document:**
    - Authored `docs/ops/weekend-handoff.md` covering W1–W5 feature increments, architectural decisions, database schemas, feature flags, known gaps, and a Top 10 Audit Focus List.
 
+---
+
+### Entry PT-0: Penetration Testing L1 Track Foundation & Quality Standards (2026-10-17)
+Established the formal pedagogical foundation, quality standards contract, 12-module track architecture, and automated content-linter enforcement for the CyberBLADE Penetration Testing Level 1 (L1) track, aligned to the eJPT (Junior Penetration Tester) examination pathway.
+
+1. **Operational Quality Standards Contract (`docs/ops/pentest-standards.md`):**
+   - Established the binding authoring contract for all present and future pentest curriculum development.
+   - **Lesson Anatomy (Strictly Enforced):** Frontmatter with 3–5 learning objectives, real-world hook (`## Why this matters on engagement`), concept explanation (800–1,500 words, plain English, every technical term defined upon first introduction), at least one worked example with realistic tool output and non-linear dead ends/false leads (`<LogBlock />` or realistic CLI format), interactive "Try It" step tied to a lab (`<MicroExercise />`), at least 3 common mistakes (`## Common mistakes`), defender's view detailing blue team detection and prevention (`## What good looks like`), key terms (`<KeyTerms />`), exactly 5 check questions (`<TerminalCheck />` with 4 options, each featuring comprehensive explanations for both right and wrong choices), and Handler AI hint context.
+   - **Module Anatomy:** 4–6 lessons per module, 10-question module synthesis checkpoint, $\ge 1$ interactive hands-on lab, and a cheat-sheet summary.
+   - **Realism & Tool Standards:** Real CLI syntax and flags for modern tool versions (`nmap`, `gobuster`/`ffuf`, `smbclient`, `enum4linux-ng`, `hydra`, `john`/`hashcat`, `sqlmap`, `Metasploit`, `linpeas`/`winpeas`, `chisel`/`SSH` tunneling) formatted authentically against strictly synthetic targets (RFC 5737: `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`; RFC 1918: `10.10.x.x`, `172.16.x.x`, `192.168.x.x`; RFC 2606: `example.lab`, `*.example`, `.test`, `.invalid`).
+   - **Ethics & Scope:** Explicit written authorization, statutory boundaries (CFAA, CMA, IT Act), third-party scope constraints, emergency halt protocol, and post-engagement cleanup.
+   - **Banned Patterns:** Zero placeholders (`TODO`, `FIXME`, `TBD`, `lorem ipsum`), zero shortcuts ("similar to the above", "truncated list"), zero proprietary exam question leaks.
+   - **Context & Resume Rules:** Guaranteed clean stopping points at lesson boundaries without thinning content; mandatory resumption from recorded incomplete lists.
+
+2. **Track Design Specification (`docs/design/pentest-track.md`):**
+   - Detailed blueprint for 12 sequential modules (M01–M12) spanning all 4 eJPT domains, each specifying 4–5 lesson IDs, titles, one-line outcomes, primary lab engine, prerequisites, and XP rewards.
+
+3. **Curriculum Claims & Blueprint Alignment (`docs/ops/pentest-curriculum-claims.md`):**
+   - Mapped all 12 modules directly to published eJPT domains, all designated with **UNVERIFIED** alignment status.
+
+4. **Catalog Registration & Server-Side Feature Gating:**
+   - Catalog registration maintained behind `PENTEST_ENABLED` (default `false` in `track.yaml` and runtime config).
+   - Server-side route gating verified: `/learn/pentest-l1` and subroutes return 404 when disabled; `/learn/pentest` renders `TrackRoadmapPreview`.
+   - Updated `playwright.config.ts` to include `PENTEST_ENABLED: "true"` for hermetic E2E test runs.
+
+5. **Content-Linter Upgrades & Standards Enforcement:**
+   - Enhanced `lib/content/pentest-lesson-lint.ts` to enforce:
+     - Minimum 5 check questions per lesson (`MIN_PENTEST_CHECKS = 5`).
+     - Required explanations for all right AND wrong options across every check question.
+     - Single correct option per question verification.
+     - Minimum 3 common mistakes under `## Common mistakes`.
+     - Strict word count bounds (minimum 800 words, maximum recommended 1,600 words).
+     - Automated detection and rejection of banned patterns (`TODO`, `FIXME`, `lorem ipsum`, `similar to the above`, `truncated list`).
+   - Updated all 14 previously 4-question check files across M06–M12 to 5 high-quality questions with full distractor rationales.
+   - Added 5 new unit tests in `tests/unit/lib/content/pentest-lesson-lint.test.ts` validating anatomy, word count, mistake count, distractor explanations, and banned pattern rejections (14/14 tests passing).
+
+6. **Full Pentest L1 Lesson Inventory (49 Lessons across 12 Modules):**
+
+   - **Module 01: Methodology, Scoping & Rules of Engagement (`scope` | Assessment Methodologies):**
+     1. `pentest-r1-m01-methodology-roe-01`: Penetration Testing Methodologies and the Rules of Engagement *(Authored)*
+     2. `pentest-r1-m01-legal-ethics-authorization-01`: Legal Authorizations, Computer Crime Statutes, and RoE Governance *(Authored)*
+     3. `pentest-r1-m01-threat-modeling-risk-01`: Threat Modeling and Asset Identification for Scoped Engagements *(Planned)*
+     4. `pentest-r1-m01-roe-communications-halt-01`: Engagement Communication Channels and Emergency Halt Operations *(Planned)*
+
+   - **Module 02: Passive Reconnaissance & OSINT (`osint` | Host & Network Auditing):**
+     5. `pentest-r1-m02-dns-whois-recon-01`: Passive Reconnaissance with WHOIS and DNS Records *(Authored)*
+     6. `pentest-r1-m02-search-dorking-subdomains-01`: Search Engine Dorking and Passive Subdomain Enumeration *(Authored)*
+     7. `pentest-r1-m02-leaked-credentials-git-01`: Source Code Repository Reconnaissance and Secret Hunting *(Planned)*
+     8. `pentest-r1-m02-asn-bgp-infrastructure-01`: Autonomous System (ASN) Mapping and External Infrastructure Footprinting *(Planned)*
+
+   - **Module 03: Active Host & Network Port Scanning (`scanning` | Host & Network Auditing):**
+     9. `pentest-r1-m03-nmap-host-discovery-01`: Active Host Discovery and Network Sweep Techniques *(Authored)*
+     10. `pentest-r1-m03-tcp-udp-port-scanning-01`: TCP and UDP Port Scanning Mechanics with Nmap *(Authored)*
+     11. `pentest-r1-m03-scan-timing-evasion-01`: Nmap Timing Templates, Probe Optimization, and Detection Evasion *(Planned)*
+     12. `pentest-r1-m03-nmap-scripting-engine-01`: Nmap Scripting Engine (NSE) for Rapid Discovery *(Planned)*
+
+   - **Module 04: Network Service Enumeration (`services` | Host & Network Auditing):**
+     13. `pentest-r1-m04-smb-enum-shares-01`: SMB Share Enumeration and Null Session Auditing *(Authored)*
+     14. `pentest-r1-m04-ftp-ssh-enum-01`: FTP and SSH Service Fingerprinting *(Authored)*
+     15. `pentest-r1-m04-snmp-db-enum-01`: SNMP and Database Service Enumeration *(Authored)*
+     16. `pentest-r1-m04-web-server-fingerprinting-01`: HTTP/HTTPS Web Server Header Inspection and Content Discovery *(Planned)*
+
+   - **Module 05: Vulnerability Identification & Assessment (`vuln` | Host & Network Auditing / Pentesting):**
+     17. `pentest-r1-m05-vuln-scanning-cve-search-01`: Vulnerability Scanning, CVE Matching, and CVSS Scoring *(Authored)*
+     18. `pentest-r1-m05-manual-verification-false-positives-01`: Manual Vulnerability Verification and False-Positive Elimination *(Authored)*
+     19. `pentest-r1-m05-exploit-db-compilation-01`: Evaluating Public Exploit Code and Safe Sandboxed Execution *(Planned)*
+     20. `pentest-r1-m05-vulnerability-prioritization-01`: Risk-Based Vulnerability Prioritization and Remediation Context *(Planned)*
+
+   - **Module 06: Web Application Attacks (`web` | Web Application Penetration Testing):**
+     21. `pentest-r1-m06-sqli-auth-bypass-union-01`: SQL Injection: Authentication Bypass and UNION Extraction *(Authored)*
+     22. `pentest-r1-m06-xss-stored-reflected-01`: Cross-Site Scripting (XSS): Reflected, Stored, and Context Escapes *(Authored)*
+     23. `pentest-r1-m06-lfi-path-traversal-auth-01`: Local File Inclusion (LFI), Directory Traversal, and Session Flaws *(Authored)*
+     24. `pentest-r1-m06-broken-auth-session-hijacking-01`: Broken Authentication and Session Management Flaws *(Planned)*
+     25. `pentest-r1-m06-idor-access-control-01`: Insecure Direct Object References (IDOR) and Broken Access Control *(Planned)*
+
+   - **Module 07: Exploitation & Metasploit Fundamentals (`exploit` | Host & Network Penetration Testing):**
+     26. `pentest-r1-m07-payloads-staged-reverse-shells-01`: Payload Mechanics, Reverse Shells, and Listener Configuration *(Authored)*
+     27. `pentest-r1-m07-metasploit-framework-fundamentals-01`: Metasploit Framework Architecture and Meterpreter Operations *(Authored)*
+     28. `pentest-r1-m07-payload-generation-msfvenom-01`: Custom Payload Generation with Msfvenom *(Planned)*
+     29. `pentest-r1-m07-shell-stabilization-tty-01`: Upgrading and Stabilizing Shells to Interactive TTYs *(Planned)*
+
+   - **Module 08: Password Attacks & Hash Cracking (`passwords` | Host & Network Penetration Testing):**
+     30. `pentest-r1-m08-hash-identification-offline-cracking-01`: Hash Identification and Offline Cracking with John and Hashcat *(Authored)*
+     31. `pentest-r1-m08-online-brute-force-hydra-01`: Online Network Authentication Brute-Forcing with Hydra *(Authored)*
+     32. `pentest-r1-m08-password-mutations-rules-01`: Wordlist Optimization and Custom Mutation Rules *(Planned)*
+     33. `pentest-r1-m08-unshadow-sam-dumping-01`: Extracting and Formatting Hashes from Linux and Windows *(Planned)*
+
+   - **Module 09: Post-Exploitation & Privilege Escalation (`privesc` | Host & Network Penetration Testing):**
+     34. `pentest-r1-m09-linux-privesc-suid-sudo-01`: Linux Privilege Escalation: SUID Binaries and Sudo Rights *(Authored)*
+     35. `pentest-r1-m09-windows-privesc-service-perms-01`: Windows Privilege Escalation: Service Permissions and Unquoted Paths *(Authored)*
+     36. `pentest-r1-m09-automated-privesc-scripts-01`: Automated Enumeration Scripts: LinPEAS and WinPEAS Analysis *(Planned)*
+     37. `pentest-r1-m09-kernel-exploits-hazards-01`: Evaluating Kernel Exploits and Operational Instability Risks *(Planned)*
+
+   - **Module 10: Pivoting & Network Routing (`pivoting` | Host & Network Penetration Testing):**
+     38. `pentest-r1-m10-ssh-port-forwarding-tunnels-01`: Network Pivoting with SSH Local and Remote Port Forwarding *(Authored)*
+     39. `pentest-r1-m10-dynamic-socks-proxychains-01`: Dynamic SOCKS Pivoting and Proxychains Routing *(Authored)*
+     40. `pentest-r1-m10-chisel-tunneling-firewalls-01`: Modern HTTP/WebSocket Tunneling with Chisel *(Planned)*
+     41. `pentest-r1-m10-internal-subnet-routing-01`: Multi-Homed Network Routing and Route Table Discovery *(Planned)*
+
+   - **Module 11: Technical & Executive Reporting (`reporting` | Assessment Methodologies):**
+     42. `pentest-r1-m11-findings-writeup-cvss-01`: Technical Findings Documentation and CVSS v3.1 Scoring *(Authored)*
+     43. `pentest-r1-m11-executive-summary-remediation-01`: Executive Summaries and Strategic Remediation Roadmaps *(Authored)*
+     44. `pentest-r1-m11-evidence-collection-scrubbing-01`: Evidence Collection, Screenshot Standards, and Data Sanitization *(Planned)*
+     45. `pentest-r1-m11-remediation-validation-retesting-01`: Remediation Retesting Procedures and Closeout Letters *(Planned)*
+
+   - **Module 12: Capstone Engagement Simulation (`capstone` | Full eJPT Domain Synthesis):**
+     46. `pentest-r1-m12-capstone-e2e-01`: End-to-End Penetration Testing Engagement Simulation *(Authored)*
+     47. `pentest-r1-m12-recon-foothold-capstone-01`: Capstone Phase 1: Perimeter Reconnaissance and Initial Access *(Planned)*
+     48. `pentest-r1-m12-privesc-pivot-capstone-01`: Capstone Phase 2: Internal Enumeration, Privilege Escalation, and Pivoting *(Planned)*
+     49. `pentest-r1-m12-findings-presentation-capstone-01`: Capstone Phase 3: Engagement Debrief, Evidence Compilation, and Executive Presentation *(Planned)*
+
+7. **Verification & Quality Gates:**
+   - `npm run lint` ✓ (0 errors)
+   - `npm run typecheck` ✓ (0 errors)
+   - `npm run check:content` ✓ (105 lessons, 44 labs, 27 objectives validated)
+   - `npm test` ✓ (254 test files, 2,295 passed, 0 failed)
+   - `npm run build` ✓ (Turbopack production build, 33 routes generated)
+   - Zero modifications to SOC L2 behavior or test suites.
+
