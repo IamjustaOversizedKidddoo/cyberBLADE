@@ -257,7 +257,7 @@ describe("SQL functions (S4, runtime)", () => {
           AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.objid = p.oid AND d.deptype = 'e')`, // skip pgcrypto etc.
     );
     for (const f of r.rows) expect((f.config ?? []).some((c) => c.startsWith("search_path=")), f.name).toBe(true);
-    expect(r.rows.filter((f) => f.definer).map((f) => f.name).sort()).toEqual(["delete_user_account", "prevent_operator_rank_escalation"]);
+    expect(r.rows.filter((f) => f.definer).map((f) => f.name).sort()).toEqual(["delete_user_account", "prevent_operator_rank_escalation", "verify_certificate"]);
   });
 });
 
