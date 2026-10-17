@@ -16,7 +16,7 @@ export const labSchema = z
   .object({
     id: z.string().regex(/^[a-z0-9-]+$/),
     title: z.string().min(1),
-    type: z.enum(["terminal", "packet", "webapp", "siem", "soc"]),
+    type: z.enum(["terminal", "packet", "webapp", "siem", "soc", "netrange"]),
     track: z.enum(TRACK_IDS),
     rank: z.number().int().min(0).max(5),
     estimated_minutes: z.number().int().min(5).max(240),

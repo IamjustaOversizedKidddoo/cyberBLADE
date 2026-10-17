@@ -1,0 +1,26 @@
+id: netrange-foothold-privesc-01
+title: "NetRange: Host Foothold & Sudo Privilege Escalation"
+type: netrange
+track: pentest
+rank: 0
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: netrange_foothold_privesc
+  params: {}
+objectives:
+  - id: foothold
+    prompt: "Compromise the vulnerable service on apex-srv01 (192.0.2.50) and submit the foothold flag found in /home/operator/flag.txt."
+    check: { kind: flag, answer_from: generator.flag_foothold }
+  - id: root
+    prompt: "Exploit sudo misconfigurations to escalate privileges to root and submit /root/flag.txt."
+    check: { kind: flag, answer_from: generator.flag_root }
+hints:
+  foothold:
+    - "Run nmap -sV -sC 192.0.2.50 to identify the FTP daemon version."
+    - "Search offline exploits with searchsploit vsftpd 2.3.4, then launch msfconsole to trigger exploit/unix/ftp/vsftpd_234_backdoor."
+  root:
+    - "Inspect sudo privileges with sudo -l."
+    - "Use the GTFOBins breakout for find: sudo find . -exec /bin/sh \\; to spawn a root shell."
+xp: 150
+mitre: ["T1190", "T1068", "T1548.003"]

@@ -252,6 +252,24 @@ export const LAB_DEBRIEFS: Record<string, LabDebrief> = {
     commonMistake: "Jumping directly into exploitation tools without methodically documenting enumerated vulnerabilities.",
     goFurther: "Draft a formal remediation report correlating findings with CVSS base scores and defensive fixes.",
   },
+  "netrange-foothold-privesc-01": {
+    concept: "Remote service exploitation and local privilege escalation using sudo GTFOBins execution.",
+    realWorld: "Penetration testers exploiting unpatched daemon backdoors followed by administrative binary misconfigurations.",
+    commonMistake: "Overlooking standard sudo delegation flags like NOPASSWD on interactive binaries like find.",
+    goFurther: "Harden servers with principle of least privilege and automate sudoers auditing with Lynis.",
+  },
+  "netrange-web-cred-reuse-01": {
+    concept: "Unprotected database backup exposure and cross-host credential reuse in lateral movement.",
+    realWorld: "Attackers scraping exposed web server backup directories to compromise core database infrastructure.",
+    commonMistake: "Assuming database passwords differ across environments and failing to test credentials on SSH.",
+    goFurther: "Deploy automated secret scanners and enforce multi-factor authentication on all administrative bastion logins.",
+  },
+  "netrange-pivot-internal-01": {
+    concept: "SMB reconnaissance, dual-homed bastion compromise, and static network pivot routing.",
+    realWorld: "Breaching perimeter systems to tunnel traffic into air-gapped or segmented internal subnets.",
+    commonMistake: "Forgetting to inspect dual-homed network interfaces on compromised gateway systems.",
+    goFurther: "Implement microsegmentation and monitor east-west lateral traffic using internal network intrusion sensors.",
+  },
 };
 
 export function getLabDebrief(labId: string): LabDebrief | undefined {

@@ -9,12 +9,20 @@ import { WebAppLab } from "./webapp/WebAppLab";
 import { SiemLab } from "./siem/SiemLab";
 import { ObjectivesPanel, type Objective, type SubmitResult } from "./ObjectivesPanel";
 
-// xterm.js needs the DOM: render the terminal in the browser only.
 const TerminalLab = dynamic(() => import("./terminal/TerminalLab"), {
   ssr: false,
   loading: () => (
     <div className="h-[420px] border border-line bg-console p-4 font-mono text-muted flex items-center justify-center">
       <span className="animate-pulse">Connecting to terminal engine…</span>
+    </div>
+  ),
+});
+
+const NetRangeLab = dynamic(() => import("./netrange/NetRangeLab"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[460px] border border-line bg-console p-4 font-mono text-muted flex items-center justify-center">
+      <span className="animate-pulse">Connecting to NetRange simulation engine…</span>
     </div>
   ),
 });
@@ -108,6 +116,13 @@ export function LabWorkspace({
           <WebAppLab env={env.app} attemptId={attemptId} />
         ) : env.kind === "siem" ? (
           <SiemLab env={env.siem} />
+        ) : env.kind === "netrange" ? (
+          <NetRangeLab
+            env={env.network}
+            attemptId={attemptId}
+            onSubmit={submit}
+            objectives={objectives}
+          />
         ) : (
           <SocLabSessionLoader scenarioId={env.scenarioId} onExit={() => router.push("/labs")} />
         )}

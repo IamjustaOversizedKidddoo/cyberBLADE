@@ -1,0 +1,26 @@
+id: netrange-web-cred-reuse-01
+title: "NetRange: Web Reconnaissance & Multi-Host Credential Reuse"
+type: netrange
+track: pentest
+rank: 2
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: netrange_web_cred_reuse
+  params: {}
+objectives:
+  - id: web
+    prompt: "Locate the exposed SQL backup file on apex-web01 (192.0.2.80) and submit the leaked credential flag."
+    check: { kind: flag, answer_from: generator.flag_web }
+  - id: cred_reuse
+    prompt: "Reuse the extracted deployment credentials to access apex-db01 (192.0.2.90) via SSH and submit /home/svc_deploy/flag.txt."
+    check: { kind: flag, answer_from: generator.flag_cred_reuse }
+hints:
+  web:
+    - "Inspect the web portal source code or run curl http://192.0.2.80/ to find references to backup dumps."
+    - "Read http://192.0.2.80/backup/db_backup.sql with curl to retrieve the user credentials."
+  cred_reuse:
+    - "Note the password for svc_deploy embedded inside the database SQL insert statement."
+    - "Log into apex-db01 using ssh svc_deploy@192.0.2.90 and cat /home/svc_deploy/flag.txt."
+xp: 150
+mitre: ["T1552.001", "T1078.003", "T1021.004"]

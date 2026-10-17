@@ -8,6 +8,8 @@ import { submitObjective } from "@/lib/progress/service";
 import { generateLab } from "@/lib/lab-engine/checks";
 import { dispatchHttpRequest } from "@/lib/lab-engine/webapp/simulator";
 import type { DispatchResult, HttpRequest } from "@/lib/lab-engine/webapp/types";
+import { execNetRangeCommand, createInitialNetRangeState } from "@/lib/lab-engine/netrange/engine";
+import type { NetRangeCmdResult, NetRangeState } from "@/lib/lab-engine/netrange/types";
 
 const args = z.tuple([z.string().min(1).max(100), z.string().min(1).max(50), z.string().max(500)]);
 
@@ -64,3 +66,58 @@ export async function dispatchWebAppRequestAction(
     currentDatabase,
   });
 }
+
+/**
+ * Executes a simulated NetRange network attack command on the server,
+ * preserving state transitions across the multi-host network while keeping
+ * target flags securely graded server-side.
+ */
+export async function dispatchNetRangeCommandAction(
+  attemptId: string,
+  rawLine: string,
+  currentState?: Partial<NetRangeState>,
+): Promise<NetRangeCmdResult> {
+  const line = z.string().max(1000).parse(rawLine);
+  const operator = await requireOperator();
+  const ctx = getCtx();
+  const attempt = await ctx.repo.getAttempt(attemptId);
+  if (!attempt || attempt.userId !== operator.id) throw new Error("not found");
+
+  const lab = await ctx.content.loadLab(attempt.labId);
+  if (attempt.mode === "challenge" && attempt.expiresAt && ctx.now() > new Date(attempt.expiresAt)) {
+    throw new Error("attempt expired");
+  }
+
+  const { env } = generateLab(lab, attempt.seed, ctx.content.generators);
+  if (env.kind !== "netrange") throw new Error("invalid lab type");
+
+  const clonedState: Partial<NetRangeState> | undefined = currentState
+    ? JSON.parse(JSON.stringify(currentState))
+    : undefined;
+  const state = createInitialNetRangeState(env.network.scenario, clonedState);
+  const result = execNetRangeCommand(line, state, env.network.scenario);
+
+  if (result.submit) {
+    const objIdx = result.submit.objective - 1;
+    const targetObj =
+      lab.objectives[objIdx] ??
+      lab.objectives.find((o) => o.id === `obj_${result.submit?.objective}`) ??
+      lab.objectives[0];
+
+    if (targetObj) {
+      try {
+        const subRes = await submitObjective(ctx, operator.id, attemptId, targetObj.id, result.submit.answer);
+        if (subRes.correct) {
+          result.stdout += `\n\x1b[32m[+] Flag verified! Objective "${targetObj.prompt.slice(0, 45)}..." completed (+${lab.xp} XP).\x1b[0m\n`;
+        } else {
+          result.stdout += `\n\x1b[31m[-] Flag incorrect for objective "${targetObj.prompt.slice(0, 45)}...". Verify target and syntax.\x1b[0m\n`;
+        }
+      } catch (err: unknown) {
+        result.stdout += `\n\x1b[33m[!] Submission notice: ${(err as Error).message}\x1b[0m\n`;
+      }
+    }
+  }
+
+  return JSON.parse(JSON.stringify(result));
+}
+

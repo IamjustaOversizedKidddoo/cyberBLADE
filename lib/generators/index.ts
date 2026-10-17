@@ -30,6 +30,9 @@ import { pentestHashcrack } from "./terminal/pentest-hashcrack";
 import { pentestLinuxPrivesc } from "./terminal/pentest-linux-privesc";
 import { pentestPivotAnalysis } from "./packet/pentest-pivot-analysis";
 import { pentestCapstone } from "./webapp/pentest-capstone";
+import { netrangeFootholdPrivesc } from "./netrange/netrange-foothold-privesc";
+import { netrangeWebCredReuse } from "./netrange/netrange-web-cred-reuse";
+import { netrangePivotInternal } from "./netrange/netrange-pivot-internal";
 
 export type GeneratorOutput = { env: LabEnv; answers: Record<string, string> };
 
@@ -66,4 +69,8 @@ export const GENERATORS: Record<string, Generator> = {
   pentest_linux_privesc: pentestLinuxPrivesc,
   pentest_pivot_analysis: pentestPivotAnalysis,
   pentest_capstone: pentestCapstone,
+  netrange_foothold_privesc: netrangeFootholdPrivesc,
+  netrange_web_cred_reuse: netrangeWebCredReuse,
+  netrange_pivot_internal: netrangePivotInternal,
 };
+

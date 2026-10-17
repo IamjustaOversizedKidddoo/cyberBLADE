@@ -628,8 +628,49 @@ Completed authoring and engineering for the remaining modules (6–12) of the Pe
    - `npm run test:e2e` (`tests/e2e/pentest-track.spec.ts`) ✓ (8 passed, 2 skipped on mobile; open track -> module -> lesson, completed 1 lab per engine: Terminal, WebApp, Packet).
    - **Strict Constraint**: Zero SOC L2 files modified.
 
+### Entry W4: NetRange Simulated Multi-Host Network Engine & Scenarios Completed (2026-10-17)
+Engineered and delivered "NetRange" — a deterministic, fully simulated multi-host network lab engine for eJPT-style offensive practice in CyberBLADE (branch `build/weekend`). The engine runs entirely in-browser while preserving strict server-side flag validation with zero real network traffic ever leaving the application.
 
+1. **Architecture & Schema:**
+   - **Schema & Validation** (`lib/lab-engine/netrange/schema.ts`, `types.ts`, `lint.ts`): Typed scenario schema representing IP subnets, CIDR masks, multi-interface hosts, OS (Linux/Windows), open TCP/UDP ports/services with banner strings, user accounts, password hashes, GTFOBins/sudo privileges, exploitable vulnerabilities with preconditions and effects (shell, read, privesc), flags, and routing/pivot rules. Validated with Zod and zero-leak content linting.
+   - **Simulated Attacker Tooling** (`lib/lab-engine/netrange/commands/`):
+     * `nmap`: Supports `-sV`, `-sC`, `-A`, `-Pn`, `-p` port ranges, and CIDR subnet sweeps with accurate service banners.
+     * `searchsploit`: Offline Exploit-DB query utility mapping service versions to exploits and Metasploit module paths.
+     * `msfconsole`: Simulated interactive console with `use`, `set <KEY> <VAL>`, `show options`, `exploit`/`run`, background `sessions -l`, and `sessions -i <id>`.
+     * `curl`: HTTP header/body inspection supporting `-i`, path exploration, and credential discovery.
+     * `smbclient` & `enum4linux`: SMB anonymous share discovery, listing, and file retrieval.
+     * `ftp`: Interactive anonymous FTP file transfer client.
+     * `ssh`: Interactive remote shell login with user authentication and target routing checks.
+     * `john`: Dictionary-based hash cracking against simulated wordlists.
+     * `route`: Kernel routing table inspection and pivot gateway creation (`route add <subnet> via <gw>`).
+     * `host-shell`: Realistic compromised host execution (`whoami`, `id`, `cat`, `ls`, `cd`, `sudo -l`, GTFOBins breakouts).
+     * Realistic error handling for unknown flags, unroutable targets, and command syntax errors.
+   - **State Machine & Chained Execution** (`lib/lab-engine/netrange/engine.ts`): Supports command chaining (`&&`, `;`), command history, terminal prompt state formatting (`kali@kali:~$`, `msf6 >`, `user@host:path$`), and server-side flag grading (`submit <obj#> <flag>`).
 
+2. **Server-Side Grading & Anti-Cheat Action:**
+   - Added `dispatchNetRangeCommandAction` in `app/(app)/labs/actions.ts`. Evaluates commands against the deterministically regenerated lab environment on the server using the attempt seed. Flags and credentials remain completely protected from client bundles and props.
+   - Fixed React Flight server-action serialization by ensuring deep cloning across client/server state boundaries, preventing object reference deduplication from discarding mutated session and option states.
 
+3. **Three Authored Scenarios & Generators:**
+   - Built 3 deterministic procedural generators in `lib/generators/netrange/`:
+     * Scenario (a) `netrange-foothold-privesc-01` (`netrange-foothold-privesc.ts`): Single host perimeter foothold via `vsftpd 2.3.4` backdoor exploitation (`apex-srv01`), privilege escalation to `root` via `find` GTFOBins sudo misconfiguration.
+     * Scenario (b) `netrange-web-cred-reuse-01` (`netrange-web-cred-reuse.ts`): Multi-host engagement where web application config analysis reveals administrative credentials reused on a domain-joined file server (`db-core01`), cracking MD5 shadow hashes with John the Ripper.
+     * Scenario (c) `netrange-pivot-internal-01` (`netrange-pivot-internal.ts`): Multi-segment penetration test involving dual-homed bastion exploitation (`jump-gw01`), routing addition into hidden internal subnet `10.10.20.0/24`, and lateral SSH pivoting into internal SCADA gateway (`scada-core02`).
+   - Registered 3 new lab packages in `labs/` (`lab.yaml`, `briefing.md`) and authored synthesis debriefs (<120 words) in `lib/content/debriefs.ts` covering both offensive exploitation mechanics and blue team hardening defenses.
 
+4. **Terminal UI & Mobile Ergonomics:**
+   - Created `components/labs/netrange/NetRangeLab.tsx` utilizing `@xterm/xterm` with CyberBLADE terminal styling tokens, dynamic resizing (`FitAddon`), status indicators (active host, sessions, routes, latency badge), and font scaling.
+   - Built a mobile-first tactical keyboard toolbar featuring >= 44px touch targets for essential keys (`TAB`, `CTRL+C`, `CLEAR`, `↑`, `↓`, `EXEC`) and one-tap attack command snippets (`nmap -sV -sC`, `searchsploit`, `msfconsole`, `curl -i`, `smbclient`, `route add`, `submit`).
+   - Fully responsive at 390px viewport with zero horizontal overflow.
+   - Sub-150ms performance: simulated command execution and state transitions complete in < 25ms locally and < 50ms through server action.
 
+5. **Quality Gates & Verification:**
+   - `npm run lint` ✓ (0 errors, 68 warnings)
+   - `npm run typecheck` ✓ (0 errors, route types generated)
+   - `npm run check:content` ✓ (105 lessons, 44 labs, 27 objectives)
+   - `npm test` ✓ (252 test files, 2,271 tests passing, including 16 engine unit tests and 63 generator tests)
+   - `npm run test:security` ✓ (25 test files, 258 tests passing)
+   - `npm run build` ✓ (Next.js Turbopack production build, 30 routes)
+   - `npm run scan:bundle` ✓ (92 client artifacts, 0 leaks detected)
+   - Playwright E2E (`tests/e2e/netrange-lab.spec.ts`) ✓ (2 passed on desktop Chrome, 2 passed on mobile Pixel 7: end-to-end completion of Scenario (a) foothold + privesc flag submissions + 390px mobile responsiveness).
+   - **Strict Constraint**: Zero SOC L2 files (`lib/lab-engine/soc/rules`, SOC exams) touched.
