@@ -809,26 +809,26 @@ Established the formal pedagogical foundation, quality standards contract, 12-mo
    - **Module 01: Methodology, Scoping & Rules of Engagement (`scope` | Assessment Methodologies):**
      1. `pentest-r1-m01-methodology-roe-01`: Penetration Testing Methodologies and the Rules of Engagement *(Authored)*
      2. `pentest-r1-m01-legal-ethics-authorization-01`: Legal Authorizations, Computer Crime Statutes, and RoE Governance *(Authored)*
-     3. `pentest-r1-m01-threat-modeling-risk-01`: Threat Modeling and Asset Identification for Scoped Engagements *(Planned)*
-     4. `pentest-r1-m01-roe-communications-halt-01`: Engagement Communication Channels and Emergency Halt Operations *(Planned)*
+     3. `pentest-r1-m01-threat-modeling-risk-01`: Threat Modeling and Asset Identification for Scoped Engagements *(Authored)*
+     4. `pentest-r1-m01-roe-communications-halt-01`: Engagement Communication Channels and Emergency Halt Operations *(Authored)*
 
    - **Module 02: Passive Reconnaissance & OSINT (`osint` | Host & Network Auditing):**
      5. `pentest-r1-m02-dns-whois-recon-01`: Passive Reconnaissance with WHOIS and DNS Records *(Authored)*
      6. `pentest-r1-m02-search-dorking-subdomains-01`: Search Engine Dorking and Passive Subdomain Enumeration *(Authored)*
-     7. `pentest-r1-m02-leaked-credentials-git-01`: Source Code Repository Reconnaissance and Secret Hunting *(Planned)*
-     8. `pentest-r1-m02-asn-bgp-infrastructure-01`: Autonomous System (ASN) Mapping and External Infrastructure Footprinting *(Planned)*
+     7. `pentest-r1-m02-leaked-credentials-git-01`: Source Code Repository Reconnaissance and Secret Hunting *(Authored)*
+     8. `pentest-r1-m02-asn-bgp-infrastructure-01`: Autonomous System (ASN) Mapping and External Infrastructure Footprinting *(Authored)*
 
    - **Module 03: Active Host & Network Port Scanning (`scanning` | Host & Network Auditing):**
      9. `pentest-r1-m03-nmap-host-discovery-01`: Active Host Discovery and Network Sweep Techniques *(Authored)*
      10. `pentest-r1-m03-tcp-udp-port-scanning-01`: TCP and UDP Port Scanning Mechanics with Nmap *(Authored)*
-     11. `pentest-r1-m03-scan-timing-evasion-01`: Nmap Timing Templates, Probe Optimization, and Detection Evasion *(Planned)*
-     12. `pentest-r1-m03-nmap-scripting-engine-01`: Nmap Scripting Engine (NSE) for Rapid Discovery *(Planned)*
+     11. `pentest-r1-m03-scan-timing-evasion-01`: Nmap Timing Templates, Probe Optimization, and Detection Evasion *(Authored)*
+     12. `pentest-r1-m03-nmap-scripting-engine-01`: Nmap Scripting Engine (NSE) for Rapid Discovery *(Authored)*
 
    - **Module 04: Network Service Enumeration (`services` | Host & Network Auditing):**
      13. `pentest-r1-m04-smb-enum-shares-01`: SMB Share Enumeration and Null Session Auditing *(Authored)*
      14. `pentest-r1-m04-ftp-ssh-enum-01`: FTP and SSH Service Fingerprinting *(Authored)*
      15. `pentest-r1-m04-snmp-db-enum-01`: SNMP and Database Service Enumeration *(Authored)*
-     16. `pentest-r1-m04-web-server-fingerprinting-01`: HTTP/HTTPS Web Server Header Inspection and Content Discovery *(Planned)*
+     16. `pentest-r1-m04-web-server-fingerprinting-01`: HTTP/HTTPS Web Server Header Inspection and Content Discovery *(Authored)*
 
    - **Module 05: Vulnerability Identification & Assessment (`vuln` | Host & Network Auditing / Pentesting):**
      17. `pentest-r1-m05-vuln-scanning-cve-search-01`: Vulnerability Scanning, CVE Matching, and CVSS Scoring *(Authored)*
@@ -882,8 +882,44 @@ Established the formal pedagogical foundation, quality standards contract, 12-mo
 7. **Verification & Quality Gates:**
    - `npm run lint` ✓ (0 errors)
    - `npm run typecheck` ✓ (0 errors)
-   - `npm run check:content` ✓ (105 lessons, 44 labs, 27 objectives validated)
+   - `npm run check:content` ✓ (112 lessons, 44 labs, 27 objectives validated)
    - `npm test` ✓ (254 test files, 2,295 passed, 0 failed)
    - `npm run build` ✓ (Turbopack production build, 33 routes generated)
    - Zero modifications to SOC L2 behavior or test suites.
+
+---
+
+### Entry PT-1: Penetration Testing L1 Modules 01–04 Completion (2026-10-18)
+Completed the full curriculum authoring and cheat sheet delivery for Modules 01 through 04 of the Penetration Testing Level 1 (L1) track, strictly adhering to the Quality Standards Contract (`docs/ops/pentest-standards.md`).
+
+1. **Authored Lessons & Assessments (100% Standards Compliant):**
+   - **Module 01 (Methodology & RoE):**
+     - `pentest-r1-m01-threat-modeling-risk-01`: Threat Modeling and Asset Identification for Scoped Engagements.
+     - `pentest-r1-m01-roe-communications-halt-01`: Engagement Communication Channels and Emergency Halt Operations.
+     - `content/tracks/pentest/l1/m01-methodology/cheat-sheet.md`: Operational methodology, scope, legal, and communication field guide.
+   - **Module 02 (Passive Reconnaissance & OSINT):**
+     - `pentest-r1-m02-leaked-credentials-git-01`: Source Code Repository Reconnaissance and Secret Hunting.
+     - `pentest-r1-m02-asn-bgp-infrastructure-01`: Autonomous System (ASN) Mapping and External Infrastructure Footprinting.
+     - `content/tracks/pentest/l1/m02-osint/cheat-sheet.md`: DNS, WHOIS, Certificate Transparency, ASN, and git reconnaissance field guide.
+   - **Module 03 (Active Host & Port Scanning):**
+     - `pentest-r1-m03-scan-timing-evasion-01`: Nmap Timing Templates, Probe Optimization, and Detection Evasion.
+     - `pentest-r1-m03-nmap-scripting-engine-01`: Nmap Scripting Engine (NSE) for Rapid Discovery.
+     - `content/tracks/pentest/l1/m03-scanning/cheat-sheet.md`: Network sweeps, TCP/UDP scanning mechanics, timing templates, and NSE field guide.
+   - **Module 04 (Network Service Enumeration):**
+     - `pentest-r1-m04-web-server-fingerprinting-01`: Web Server Fingerprinting and Content Discovery (`gobuster`, `ffuf`, Name-Based Virtual Hosting, status codes).
+     - `content/tracks/pentest/l1/m04-services/cheat-sheet.md`: SMB, FTP, SSH, SNMP, SQL/NoSQL databases, and web server discovery field guide.
+
+2. **Quality Contract & Schema Adherence:**
+   - Every lesson includes all 10 mandatory sections in exact order (Outcome hook, Why this matters, Before you start, Core ideas, Worked example with realistic dead end/false lead, Try it with `<MicroExercise />`, Common mistakes with $\ge 3$ items, What good looks like / Defender's view, In the real world, Remember it like this, Interview answer, Check your understanding with `<TerminalCheck />`, Key terms with `<KeyTerms />`, Practice this with `<PracticeThis />`).
+   - Every check question provides exactly 4 options with rich, educational explanations for both the correct answer and all distractors.
+   - Word counts strictly governed within 800–1,600 words of non-code prose.
+   - Indicators restricted to RFC 5737 (`192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`) and RFC 2606 (`example.com`, `*.example`).
+   - Registered new skills (`pentest_web_server_fingerprinting`) in `content/pentest/skills.yaml` and `content/coverage/pentest.yaml`.
+
+3. **Verification & Quality Gates Passed:**
+   - `npm run check:content` ✓ (112 lessons, 44 labs, 27 objectives validated; 0 errors).
+   - `npm run typecheck` ✓ (0 errors).
+   - `npm run lint` ✓ (0 errors).
+   - Unit tests: `tests/unit/lib/content/` (15 test files, 131 tests passed).
+
 
