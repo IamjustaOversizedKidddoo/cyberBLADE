@@ -515,6 +515,57 @@ Senior full-stack engineering milestone on branch `build/weekend` delivering ver
    - Hosted Supabase migration: apply `20261017100000_certificates_and_verification.sql` during next maintenance deployment window via `npm run db:migrate:prod`.
    - Remove `noindex` from `/verify/[credentialId]` upon public general availability (v1.0 GA).
 
+### Entry W2: Penetration Testing Track L1 (eJPT Prep) & Modules 1–5 Authoring (2026-10-17)
+Curriculum architect + engineer milestone on branch `build/weekend` designing the complete 11-module Penetration Testing L1 track targeting first-attempt eJPT readiness (with future pathways to CPTS/OSCP), authoring Modules 1–5 with companion checks, micro-exercises, and flashcards, cataloging unverified curriculum claims, creating content linting rules, and server-side gating behind `PENTEST_ENABLED`.
+
+1. **Architecture & Design Specifications:**
+   - `docs/design/pentest-track.md`: Complete curriculum blueprint defining 8 target outcomes, 11-module map, prerequisites (Core Rank 1 Operator), rank/XP system (Apex Security Assessments fictional firm; 1,000 XP total across L1), and lab engine mappings (Terminal, WebApp, Packet, Report).
+   - `docs/ops/pentest-curriculum-claims.md`: Mapped 11 modules to eJPT v2 exam domains (Assessment Methodologies, Host & Networking Auditing, Host & Network Penetration Testing, Web Application Penetration Testing) explicitly cataloged as UNVERIFIED in compliance with Standing Rule 4 (zero proprietary exam leaks). Established 33 synthetic technical claims (P1–P33) with citations to RFC 5737/2606, NIST SP 800-115, PTES, OWASP WSTG, Nmap reference guide, and CWE.
+
+2. **Module Status Table:**
+
+| Module ID | Title | Key / Slug | Status | Lessons Authored / Planned | Engine |
+| :--- | :--- | :--- | :---: | :---: | :--- |
+| **M01** | Methodology, Scoping & Rules of Engagement | `methodology` | **Done** | 2 / 2 (`01-methodology-roe`, `02-legal-authorization`) | Terminal / Report |
+| **M02** | Passive Reconnaissance & OSINT | `osint` | **Done** | 2 / 2 (`01-dns-whois-recon`, `02-search-dorking-subdomains`) | Terminal / WebApp |
+| **M03** | Active Host Discovery & Port Scanning | `scanning` | **Done** | 2 / 2 (`01-nmap-host-discovery`, `02-tcp-udp-port-scanning`) | Terminal / Packet |
+| **M04** | Network Service Enumeration | `services` | **Done** | 3 / 3 (`01-smb-enum-shares`, `02-ftp-ssh-enum`, `03-snmp-db-enum`) | Terminal / Packet |
+| **M05** | Vulnerability Identification & Assessment | `vuln-analysis` | **Done** | 2 / 2 (`01-vuln-scanning-cve-search`, `02-manual-verification-false-positives`) | Terminal / WebApp |
+| **M06** | Web Application Attacks | `web-attacks` | **Pending** | 0 / 3 (Authentication, Injection, Access Control) | WebApp |
+| **M07** | Exploitation Fundamentals & Metasploit | `exploitation` | **Pending** | 0 / 3 (Payloads, Handlers, Exploits) | Terminal |
+| **M08** | Password Attacks & Credential Access | `passwords` | **Pending** | 0 / 2 (Offline Cracking, Online Spraying) | Terminal |
+| **M09** | Post-Exploitation & Privilege Escalation | `post-exploit` | **Pending** | 0 / 3 (Linux PrivEsc, Windows PrivEsc, Local Enum) | Terminal |
+| **M10** | Pivoting, Port Forwarding & Routing | `pivoting` | **Pending** | 0 / 2 (SSH Tunnels, SOCKS Proxies) | Terminal / Packet |
+| **M11** | Penetration Testing Reporting & Documentation | `reporting` | **Pending** | 0 / 2 (Findings Writeup, Risk Scoring) | Report |
+
+3. **Content Authored (11 Complete Lesson Sets):**
+   - Authored all 11 lessons with complete companion sets (`.mdx`, `.checks.yaml`, `.exercises.yaml`, `.cards.yaml`).
+   - Every lesson includes:
+     * Outcome hook + Why this matters on engagement
+     * Before you start + Core ideas (scoping and explicit authorization taught first)
+     * Worked example (realistic tool output using exclusively RFC 5737 IPs `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24` and RFC 2606 domains `.example`)
+     * Try it + interactive MicroExercise component
+     * Common mistakes + What good looks like + In the real world
+     * Remember it like this + Interview answer
+     * Check your understanding (<TerminalCheck /> with >= 4 multiple-choice checks with explanations and distractor rationales)
+     * Key terms (<KeyTerms />) + Practice this (<PracticeThis />)
+     * Handler hint context for the AI tutor
+
+4. **Catalog Registration & Server-Side Gating:**
+   - Feature flag `PENTEST_ENABLED` (default false) added to runtime configuration and environment template (`lib/config/env.ts`, `lib/config/runtime-config.ts`, `.env.example`).
+   - Defined track configuration in `content/tracks/pentest/l1/track.yaml` (min_core_rank: 1, lesson_world: Apex Security Assessments).
+   - Created skills definition in `content/pentest/skills.yaml` and coverage matrix in `content/coverage/pentest.yaml`.
+   - Updated `lib/content/validate.ts` to allow `lesson.track === "pentest"`.
+   - Built track dashboard at `app/(app)/learn/pentest-l1/page.tsx` and gated route at `app/(app)/learn/[lessonId]/page.tsx` (returns 404 when disabled; redirects `/learn/pentest` to `/learn/pentest-l1` when enabled).
+
+5. **Tooling & Test Suite Health:**
+   - Built `lib/content/pentest-lesson-lint.ts` with checks for template headings, RFC 5737 indicators, SNMP OID disambiguation, check bounds, and time estimation.
+   - Integrated pentest validation directly into CI content gate `scripts/check-content.mts`.
+   - Authored unit test suite `tests/unit/lib/content/pentest-lesson-lint.test.ts` (10 tests, 100% passing).
+   - Zero changes made to SOC L2 files or rules (`lib/lab-engine/soc/rules`).
+   - Verification gates: `lint` ✓ (0 errors), `typecheck` ✓ (0 errors), `check:content` ✓ (91 lessons, 34 labs, 27 objectives), `test` ✓ (250 files, 2170 tests passing), `test:security` ✓ (25 files, 257 tests passing), `build` ✓ (Next.js Turbopack, 0 warnings across all 30 routes).
+
+
 
 
 

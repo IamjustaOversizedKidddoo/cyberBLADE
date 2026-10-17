@@ -11,9 +11,11 @@ import { DRILL_MIN_RANK } from "@/app/(app)/practice/drills/rank";
 import { parseExercises } from "@/lib/content/exercises";
 import { resolvePracticeTarget } from "@/lib/content/practice";
 import { keyTermsOf, lintSocLesson, prerequisiteGraphErrors } from "@/lib/content/soc-lesson-lint";
+import { lintPentestLesson } from "@/lib/content/pentest-lesson-lint";
 import { loadPracticePaths } from "@/lib/content/soc-curriculum";
 import { loadGeneratorMarkers } from "@/lib/content/soc-markers";
 import { loadLessonCards, loadSocCoverage, loadTrackConfig, renderTrackCardsModule, socCoverageErrors } from "@/lib/content/soc-track";
+import { loadPentestCoverage, loadPentestSkills, loadPentestTrackConfig } from "@/lib/content/pentest-track";
 import { coverageSchema, validateContent } from "@/lib/content/validate";
 import { GENERATORS } from "@/lib/generators";
 import { generateLab } from "@/lib/lab-engine/checks";
@@ -48,13 +50,19 @@ async function main(): Promise<number> {
 
   const coverage = coverageSchema.parse(parseYaml(await fs.readFile("content/coverage/core.yaml", "utf8")));
   const socCoverage = loadSocCoverage();
+  const pentestCoverage = loadPentestCoverage();
+
+  const extraObjectiveIds = new Set([
+    ...socCoverage.skills.map((s) => `soc:${s.id}`),
+    ...pentestCoverage.skills.map((s) => `pentest:${s.id}`),
+  ]);
 
   const result = await validateContent({
     lessons,
     checks,
     labs,
     coverage,
-    extraObjectiveIds: new Set(socCoverage.skills.map((s) => `soc:${s.id}`)),
+    extraObjectiveIds,
     generators: Object.keys(GENERATORS),
     runLessonCommands: (lesson) => {
       const lab = lesson.lab ? labsById.get(lesson.lab) : undefined;
@@ -141,6 +149,12 @@ async function main(): Promise<number> {
 
   errors.push(...result.errors);
 
+  const titles = new Map(lessons.map((l) => [l.id, l.title]));
+  const practiceError = (t: string) => {
+    const r = resolvePracticeTarget(t, (id) => titles.get(id) ?? null);
+    return typeof r === "string" ? r : null;
+  };
+
   // SOC L1 track lessons: template, leak scan, indicators, time, prerequisites, coverage, cards.
   const socWarnings: string[] = [];
   const socLessons = lessons.filter((l) => l.track === "soc");
@@ -148,11 +162,6 @@ async function main(): Promise<number> {
     const track = loadTrackConfig();
     const skillsDoc = parseYaml(await fs.readFile("content/soc/skills.yaml", "utf8")) as { skills: Array<{ id: string }> };
     const skillIds = new Set(skillsDoc.skills.map((s) => s.id));
-    const titles = new Map(lessons.map((l) => [l.id, l.title]));
-    const practiceError = (t: string) => {
-      const r = resolvePracticeTarget(t, (id) => titles.get(id) ?? null);
-      return typeof r === "string" ? r : null;
-    };
     const markers = loadGeneratorMarkers();
     const cardEntries = [];
     const termOwner = new Map<string, { lesson: string; definition: string }>();
@@ -216,7 +225,46 @@ async function main(): Promise<number> {
     if (actualCards.replace(/\r\n/g, "\n") !== expectedCards) errors.push("lib/review/track-cards.generated.ts is out of date: run npm run soc:curriculum -- cards");
   }
 
-  for (const w of [...result.warnings, ...socWarnings]) console.warn(`warning: ${w}`);
+  // Pentest L1 track lessons: template, leak scan, RFC 5737/2606 checks, exercises, cards.
+  const pentestWarnings: string[] = [];
+  const pentestLessons = lessons.filter((l) => l.track === "pentest");
+  if (pentestLessons.length) {
+    const pentestTrack = loadPentestTrackConfig();
+    const pentestSkillsDoc = loadPentestSkills();
+    const pentestSkillIds = new Set(pentestSkillsDoc.skills.map((s) => s.id));
+    for (const lesson of pentestLessons) {
+      let exercises = null;
+      let cards = null;
+      try {
+        exercises = await loadExercisesFile(lesson.filePath);
+      } catch (err) {
+        errors.push((err as Error).message);
+      }
+      try {
+        const c = loadLessonCards(lesson.filePath);
+        if (c) {
+          if (c.lesson !== lesson.id) errors.push(`${lesson.id}: cards file says lesson ${c.lesson}`);
+          cards = c.cards;
+        }
+      } catch (err) {
+        errors.push((err as Error).message);
+      }
+      const r = lintPentestLesson({
+        lesson,
+        checks: checks.get(lesson.id),
+        exercises,
+        cards,
+        skillIds: pentestSkillIds,
+        moduleKeys: new Set(pentestTrack.modules.map((m) => m.key)),
+        minCoreRank: pentestTrack.min_core_rank,
+        practiceError,
+      });
+      errors.push(...r.errors);
+      pentestWarnings.push(...r.warnings);
+    }
+  }
+
+  for (const w of [...result.warnings, ...socWarnings, ...pentestWarnings]) console.warn(`warning: ${w}`);
   for (const e of errors) console.error(`error: ${e}`);
   if (errors.length) {
     console.error(`\n✗ content check failed: ${errors.length} error(s)`);
