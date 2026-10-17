@@ -565,6 +565,70 @@ Curriculum architect + engineer milestone on branch `build/weekend` designing th
    - Zero changes made to SOC L2 files or rules (`lib/lab-engine/soc/rules`).
    - Verification gates: `lint` ✓ (0 errors), `typecheck` ✓ (0 errors), `check:content` ✓ (91 lessons, 34 labs, 27 objectives), `test` ✓ (250 files, 2170 tests passing), `test:security` ✓ (25 files, 257 tests passing), `build` ✓ (Next.js Turbopack, 0 warnings across all 30 routes).
 
+### Entry W3: Penetration Testing Track L1 Modules 6–12, Labs, Socratic Handler & Track Pages Completed (2026-10-17)
+Completed authoring and engineering for the remaining modules (6–12) of the Penetration Testing Level 1 (eJPT Prep) track on branch `build/weekend`. Authored 14 lessons across Modules 6–12 (totaling 25 lessons across all 12 modules), implemented 7 server-graded hands-on labs across existing engines (Terminal, WebApp, Packet), implemented the Socratic Pentest Handler mode with adversarial test suite, built the responsive Track Overview and Module Detail pages with 390px mobile verification, extended bundle scanning for pentest flags, and verified all quality gates.
+
+1. **Complete Module & Lab Coverage Table:**
+
+| Module ID | Title | Key / Slug | Status | Lessons Authored | Associated Hands-On Lab | Engine |
+| :--- | :--- | :--- | :---: | :---: | :--- | :--- |
+| **M01** | Methodology, Scoping & Rules of Engagement | `scope` | **Done** | 2 / 2 | — | (Concept / RoE Checklist) |
+| **M02** | Passive Reconnaissance & OSINT | `osint` | **Done** | 2 / 2 | — | (OSINT / DNS Queries) |
+| **M03** | Active Host Discovery & Port Scanning | `scanning` | **Done** | 2 / 2 | `pentest-m03-pkt-scan-01` (TCP Port Scan Signatures) | **Packet** |
+| **M04** | Network Service Enumeration | `services` | **Done** | 3 / 3 | `pentest-m04-term-services-01` (SMB Share Enumeration) | **Terminal** |
+| **M05** | Vulnerability Identification & Assessment | `vuln` | **Done** | 2 / 2 | — | (NVD / CVSS Verification) |
+| **M06** | Web Application Attacks | `web` | **Done** | 3 / 3 | `pentest-m06-web-attacks-01` (SQLi Auth Bypass & LFI Traversal) | **WebApp** |
+| **M07** | Exploitation Fundamentals & Metasploit | `exploit` | **Done** | 2 / 2 | — | (Staged Payloads / msfconsole) |
+| **M08** | Password Attacks & Credential Access | `passwords` | **Done** | 2 / 2 | `pentest-m08-term-hashcrack-01` (MD5 Hash Cracking) | **Terminal** |
+| **M09** | Post-Exploitation & Privilege Escalation | `privesc` | **Done** | 2 / 2 | `pentest-m09-term-privesc-01` (Linux Sudo Misconfiguration) | **Terminal** |
+| **M10** | Pivoting, Port Forwarding & Routing | `pivoting` | **Done** | 2 / 2 | `pentest-m10-pkt-pivot-01` (Pivot Tunnel Traffic) | **Packet** |
+| **M11** | Penetration Testing Reporting & Documentation | `reporting` | **Done** | 2 / 2 | — | (CVSS / Executive Remediation) |
+| **M12** | Capstone Engagement Simulation | `capstone` | **Done** | 1 / 1 | `pentest-m12-capstone-01` (Full-Scope WebApp Compromise) | **WebApp** |
+
+2. **Modules 6–12 Content Authoring:**
+   - Authored 14 comprehensive lessons bringing total Pentest L1 lessons to 25.
+   - Every lesson contains all 13 standard sections: Outcome hook, Why this matters, Before you start, Core ideas, Worked example (RFC 5737/2606 sanitized), Try it, Common mistakes, What good looks like, In the real world, Remember it like this, Interview answer, Check your understanding (`TerminalCheck` with >= 4 MCQs with distractor rationales), Key terms, Practice this, and Handler hints.
+   - Companion files authored for every lesson: `.checks.yaml`, `.exercises.yaml`, and `.cards.yaml` (front/back >= 10 characters).
+   - M06: `01-sqli-auth-bypass-union`, `02-xss-stored-reflected`, `03-lfi-path-traversal-auth`
+   - M07: `01-payloads-staged-reverse-shells`, `02-metasploit-framework-fundamentals`
+   - M08: `01-hash-identification-offline-cracking`, `02-online-brute-force-hydra`
+   - M09: `01-linux-privesc-suid-sudo`, `02-windows-privesc-service-perms`
+   - M10: `01-ssh-port-forwarding-tunnels`, `02-dynamic-socks-proxychains`
+   - M11: `01-findings-writeup-cvss`, `02-executive-summary-remediation`
+   - M12: `01-engagement-simulation-e2e`
+   - Updated `content/tracks/pentest/l1/track.yaml` (`enabled: true`, M12 added), `content/pentest/skills.yaml` (31 skills), and `content/coverage/pentest.yaml`.
+
+3. **Hands-On Laboratories on Existing Engines:**
+   - Created 7 procedural, deterministic, server-graded labs:
+     * Terminal Engine (3 labs): `pentest-m04-term-services-01` (SMB Shares), `pentest-m08-term-hashcrack-01` (MD5 wordlist cracking), `pentest-m09-term-privesc-01` (Sudo shell escape).
+     * WebApp Engine (2 labs): `pentest-m06-web-attacks-01` (SQLi Auth Bypass & LFI Traversal), `pentest-m12-capstone-01` (Full-Scope Web Compromise).
+     * Packet Engine (2 labs): `pentest-m03-pkt-scan-01` (Port Scan Signatures SYN vs Connect), `pentest-m10-pkt-pivot-01` (Pivoting Tunnel Traffic Analysis).
+   - Authored lab configurations (`lab.yaml`), briefings (`briefing.md`), and synthesis debriefs in `lib/content/debriefs.ts` for all 7 labs.
+   - Extended `lib/lab-engine/webapp/simulator.ts` with `pentest_web_portal` and `pentest_capstone_portal`.
+   - Extended `lib/security/bundle-scan.ts` with flag leak detection pattern `\bPENTEST\{[A-Za-z0-9_-]{6,}\}` and verified 0 client bundle leaks.
+
+4. **Socratic Pentest Handler Mode:**
+   - Implemented `lib/handler/pentest-guard.ts` and `lib/handler/pentest-mode.ts` enforcing Socratic guidance: redirects learner requests for direct answers, flags, and exploit dumps with methodology hints in English and Hinglish.
+   - Added output leak protection to catch and redact accidental flag revelations.
+   - Authored comprehensive test suite `tests/unit/lib/handler/pentest-mode.test.ts` (64 tests: 34 adversarial attack corpus prompts, 8 output guard leak tests, and 22 over-refusal concept queries).
+
+5. **Track Overview & Module Detail Pages:**
+   - Built `app/(app)/learn/pentest-l1/[module]/page.tsx` following CyberBLADE tactical design tokens (`HeroBand`, double-bezel cards, interactive checkpoint with `TerminalCheck`, hands-on lab badge/launcher, lesson progress, and prev/next navigation).
+   - Updated `app/(app)/learn/pentest-l1/page.tsx` linking module headers and embedding lab launcher badges.
+   - Verified responsive layout and touch targets (>= 44px) on mobile viewport (390px x 844px) with zero horizontal overflow.
+
+6. **Quality Gate Verification Results:**
+   - `npm run lint` ✓ (0 errors, 63 pre-existing warnings)
+   - `npm run typecheck` ✓ (0 errors, route types generated)
+   - `npm run check:content` ✓ (105 lessons, 41 labs, 27 objectives)
+   - `npm run test` ✓ (251 test files, 2,249 passed, 0 failed)
+   - `npm run test:security` ✓ (25 test files, 258 passed, 0 failed)
+   - `npm run build` ✓ (Next.js Turbopack production build, 30 routes)
+   - `npm run scan:bundle` ✓ (89 client artifacts, 0 leaks)
+   - `npm run test:e2e` (`tests/e2e/pentest-track.spec.ts`) ✓ (8 passed, 2 skipped on mobile; open track -> module -> lesson, completed 1 lab per engine: Terminal, WebApp, Packet).
+   - **Strict Constraint**: Zero SOC L2 files modified.
+
+
 
 
 
