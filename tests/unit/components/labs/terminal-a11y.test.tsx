@@ -49,7 +49,7 @@ describe("TerminalLab Accessibility Regression (C-19, C-20)", () => {
   it("ensures #terminal-exit anchor does not have prohibited aria-label", () => {
     const { container } = render(
       <TerminalLab
-        world={dummyWorld as any}
+        world={dummyWorld as unknown as Parameters<typeof TerminalLab>[0]["world"]}
         objectives={[]}
         onSubmit={vi.fn()}
       />
@@ -64,7 +64,7 @@ describe("TerminalLab Accessibility Regression (C-19, C-20)", () => {
   it("ensures terminal header hostname uses high-contrast text-muted class", () => {
     const { container } = render(
       <TerminalLab
-        world={dummyWorld as any}
+        world={dummyWorld as unknown as Parameters<typeof TerminalLab>[0]["world"]}
         objectives={[]}
         onSubmit={vi.fn()}
       />
