@@ -738,3 +738,33 @@ Engineered and delivered the **Pentest L1 Practical Performance Exam** system (p
    - `npm run scan:bundle` ✓ (95 client artifacts, 0 leaks detected)
    - Playwright E2E (`tests/e2e/pentest-exam.spec.ts`) ✓ (readiness gate -> mock assessment start -> live runner & terminal -> submit -> result dossier -> certificate issuance).
    - **Strict Constraint**: Zero SOC L1 / L2 files or behaviors modified; all 254 test files remain green.
+
+### Entry W6: Integration Hardening, Full Gate Verification & Weekend Handoff (2026-10-17)
+Conducted comprehensive integration review, audit self-checks, and full-pipeline quality gate execution across branch `build/weekend`. Prepared all deliverables and evidence for independent Tuesday auditor review without merging into `main`.
+
+1. **Full Quality Gate Verification:**
+   - `npm run lint` ✓ (0 errors, 68 pre-existing warnings)
+   - `npm run typecheck` ✓ (0 errors, 33 Next.js routes generated)
+   - `npm run check:content` ✓ (105 lessons, 44 labs, 27 objectives validated)
+   - `npm run check:soc` ✓ (1 scenario, 9 scenario families with 50 seeds, 4 shift profiles with 50 seeds passed)
+   - `npm test` ✓ (254 test files, 2,291 tests passed)
+   - `npm run test:security` ✓ (25 test files, 259 security tests passed)
+   - `npm run test:db` ✓ (9 test files, 127 tests passed on fresh PGlite in-order migrations)
+   - `npm run build` ✓ (Next.js Turbopack production build, 33 routes in 3.0s)
+   - `npm run scan:bundle` ✓ (95 client artifacts, 0 leaks across 13 security rules)
+   - `npm run test:e2e` ✓ (All weekend E2E suites passed on Desktop Chrome and Mobile Pixel 7 viewports: `certificates.spec.ts`, `netrange-lab.spec.ts`, `pentest-track.spec.ts`, `pentest-exam.spec.ts`, `weekend-evidence.spec.ts`)
+
+2. **Diff Self-Review (`main..build/weekend`):**
+   - Verified zero dead code and no leftover developer TODOs.
+   - Verified zero client-side leaks of flags, seeds, or answers.
+   - Verified clean database migrations applying in alphabetical/chronological order (`20261017100000_certificates_and_verification.sql` and `20261017120000_pentest_l1_exams.sql`).
+   - Confirmed both new feature flags (`PENTEST_ENABLED`, `PENTEST_EXAMS_ENABLED`) default to `false`.
+   - Verified zero modifications to SOC L2 behavior or test files.
+
+3. **Design Evidence & Viewport Verification:**
+   - Automated screenshot generation across 6 core screens at 390px (mobile) and 1440px (desktop): `docs/design/evidence/weekend/` (12 screenshots).
+   - Asserted zero horizontal overflow ($\le 0$px) across all routes on both viewports.
+
+4. **Auditor Briefing Document:**
+   - Authored `docs/ops/weekend-handoff.md` covering W1–W5 feature increments, architectural decisions, database schemas, feature flags, known gaps, and a Top 10 Audit Focus List.
+
