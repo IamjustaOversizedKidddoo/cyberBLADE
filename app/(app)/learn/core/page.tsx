@@ -132,7 +132,7 @@ function LessonList({ lessons, progress, open }: { lessons: Lesson[]; progress: 
               </div>
             ) : (
               <div className="p-1 rounded-sm border border-white/5 bg-surface/20">
-                <div className="block rounded-xs border border-line/40 bg-surface-subtle/80 p-3.5 sm:px-4.5 opacity-70">
+                <div className="block rounded-xs border border-line/40 bg-surface-subtle/80 p-3.5 sm:px-4.5">
                   {content}
                 </div>
               </div>

@@ -111,7 +111,7 @@ export default async function Home() {
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Magnetic>
                   <Link href="/start" className={`${START_BUTTON} border-ink bg-void text-ink hover:border-cyan hover:bg-cyan hover:text-void group`}>
-                    <span>Start Training</span>
+                    Start
                     <span className="ml-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-cyan/20 text-cyan group-hover:translate-x-1 transition-transform" aria-hidden="true">→</span>
                   </Link>
                 </Magnetic>
@@ -346,7 +346,7 @@ export default async function Home() {
             <div className="mt-6">
               <Magnetic>
                 <Link href="/start" className={`${START_BUTTON} border-void bg-void text-cyan hover:bg-paper hover:text-void group`}>
-                  <span>Start Training</span>
+                  Start
                   <span className="ml-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-cyan/20 text-cyan group-hover:translate-x-1 transition-transform" aria-hidden="true">→</span>
                 </Link>
               </Magnetic>
