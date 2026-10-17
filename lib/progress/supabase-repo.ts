@@ -35,6 +35,7 @@ import type {
   SocExamOutcomeReport,
   SocDetectionRuleRecord,
 } from "@/lib/lab-engine/soc/exam/types";
+import type { CertificateRecord, PublicCertificateVerification } from "@/lib/certificates/types";
 
 export class SupabaseProgressRepo implements ProgressRepo {
   private async getClient() {
@@ -1567,6 +1568,140 @@ export class SupabaseProgressRepo implements ProgressRepo {
   }
   async listSocDetectionRules(userId: string, examAttemptId?: string) {
     return exam.listDetectionRules(await this.examClient(), userId, examAttemptId);
+  }
+
+  async saveCertificate(cert: Omit<CertificateRecord, "id" | "createdAt">): Promise<CertificateRecord> {
+    const client = (await this.getClient()) as unknown as SupabaseClient;
+    const { data: existing } = await client
+      .from("certificates")
+      .select("*")
+      .eq("user_id", cert.userId)
+      .eq("track_id", cert.trackId)
+      .eq("level", cert.level)
+      .maybeSingle();
+
+    if (existing) {
+      return {
+        id: existing.id,
+        userId: existing.user_id,
+        trackId: existing.track_id,
+        level: existing.level,
+        nameAsChosen: existing.name_as_chosen,
+        credentialId: existing.credential_id,
+        issuedAt: existing.issued_at,
+        revokedAt: existing.revoked_at,
+        revocationReason: existing.revocation_reason,
+        scoreSnapshot: existing.score_snapshot ?? {},
+        createdAt: existing.created_at,
+      };
+    }
+
+    const { data, error } = await client
+      .from("certificates")
+      .insert({
+        user_id: cert.userId,
+        track_id: cert.trackId,
+        level: cert.level,
+        name_as_chosen: cert.nameAsChosen,
+        credential_id: cert.credentialId,
+        issued_at: cert.issuedAt,
+        revoked_at: cert.revokedAt ?? null,
+        revocation_reason: cert.revocationReason ?? null,
+        score_snapshot: cert.scoreSnapshot ?? {},
+      })
+      .select()
+      .single();
+
+    if (error) throw new Error(`Failed to save certificate: ${error.message}`);
+    return {
+      id: data.id,
+      userId: data.user_id,
+      trackId: data.track_id,
+      level: data.level,
+      nameAsChosen: data.name_as_chosen,
+      credentialId: data.credential_id,
+      issuedAt: data.issued_at,
+      revokedAt: data.revoked_at,
+      revocationReason: data.revocation_reason,
+      scoreSnapshot: data.score_snapshot ?? {},
+      createdAt: data.created_at,
+    };
+  }
+
+  async listCertificates(userId: string): Promise<CertificateRecord[]> {
+    const client = (await this.getClient()) as unknown as SupabaseClient;
+    const { data, error } = await client
+      .from("certificates")
+      .select("*")
+      .eq("user_id", userId)
+      .order("issued_at", { ascending: false });
+
+    if (error) throw new Error(`Failed to list certificates: ${error.message}`);
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      userId: row.user_id,
+      trackId: row.track_id,
+      level: row.level,
+      nameAsChosen: row.name_as_chosen,
+      credentialId: row.credential_id,
+      issuedAt: row.issued_at,
+      revokedAt: row.revoked_at,
+      revocationReason: row.revocation_reason,
+      scoreSnapshot: row.score_snapshot ?? {},
+      createdAt: row.created_at,
+    }));
+  }
+
+  async getCertificateByCredentialId(credentialId: string): Promise<CertificateRecord | null> {
+    const client = (await this.getClient()) as unknown as SupabaseClient;
+    const { data, error } = await client
+      .from("certificates")
+      .select("*")
+      .eq("credential_id", credentialId)
+      .maybeSingle();
+
+    if (error) throw new Error(`Failed to get certificate: ${error.message}`);
+    if (!data) return null;
+    return {
+      id: data.id,
+      userId: data.user_id,
+      trackId: data.track_id,
+      level: data.level,
+      nameAsChosen: data.name_as_chosen,
+      credentialId: data.credential_id,
+      issuedAt: data.issued_at,
+      revokedAt: data.revoked_at,
+      revocationReason: data.revocation_reason,
+      scoreSnapshot: data.score_snapshot ?? {},
+      createdAt: data.created_at,
+    };
+  }
+
+  async verifyCertificate(credentialId: string): Promise<PublicCertificateVerification | null> {
+    const client = (await this.getClient()) as unknown as SupabaseClient;
+    const { data, error } = await client.rpc("verify_certificate", { p_credential_id: credentialId });
+    if (error) throw new Error(`Failed to verify certificate: ${error.message}`);
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) return null;
+    return {
+      credentialId: row.credential_id,
+      nameAsChosen: row.name_as_chosen,
+      trackId: row.track_id,
+      level: row.level,
+      issuedAt: row.issued_at,
+      status: row.status as "valid" | "revoked",
+      revokedAt: row.revoked_at ?? null,
+    };
+  }
+
+  async revokeCertificate(credentialId: string, reason?: string | null): Promise<boolean> {
+    const client = (await this.getClient()) as unknown as SupabaseClient;
+    const { data, error } = await client.rpc("revoke_certificate", {
+      p_credential_id: credentialId,
+      p_reason: reason ?? null,
+    });
+    if (error) throw new Error(`Failed to revoke certificate: ${error.message}`);
+    return Boolean(data);
   }
 
   async deleteUserData(userId: string): Promise<void> {

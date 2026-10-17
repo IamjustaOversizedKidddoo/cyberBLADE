@@ -29,6 +29,7 @@ import type {
   SocExamOutcomeReport,
   SocDetectionRuleRecord,
 } from "@/lib/lab-engine/soc/exam/types";
+import type { CertificateRecord, PublicCertificateVerification } from "@/lib/certificates/types";
 
 /** Shared exam-start rule (local store and Postgres check the same conditions). */
 export function examStartRefusal(
@@ -167,6 +168,11 @@ export interface ProgressRepo {
   setSocExamAccommodation(rec: SocExamAccommodation): Promise<SocExamAccommodation>;
   saveSocDetectionRule(rule: Omit<SocDetectionRuleRecord, "id" | "submittedAt">): Promise<SocDetectionRuleRecord>;
   listSocDetectionRules(userId: string, examAttemptId?: string): Promise<SocDetectionRuleRecord[]>;
+  saveCertificate(cert: Omit<CertificateRecord, "id" | "createdAt">): Promise<CertificateRecord>;
+  listCertificates(userId: string): Promise<CertificateRecord[]>;
+  getCertificateByCredentialId(credentialId: string): Promise<CertificateRecord | null>;
+  verifyCertificate(credentialId: string): Promise<PublicCertificateVerification | null>;
+  revokeCertificate(credentialId: string, reason?: string | null): Promise<boolean>;
 }
 
 function latestAttempt(d: ProgressData, userId: string, labId: string, mode: AttemptMode): LabAttempt | null {
@@ -686,6 +692,13 @@ export class StoreProgressRepo implements ProgressRepo {
           }
         }
       }
+      if (d.certificates) {
+        for (const [k, v] of Object.entries(d.certificates)) {
+          if (v.userId === userId) {
+            delete d.certificates[k];
+          }
+        }
+      }
     });
   }
 
@@ -920,6 +933,66 @@ export class StoreProgressRepo implements ProgressRepo {
     return all
       .filter((r) => r.userId === userId && (!examAttemptId || r.examAttemptId === examAttemptId))
       .sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+  }
+
+  async saveCertificate(cert: Omit<CertificateRecord, "id" | "createdAt">): Promise<CertificateRecord> {
+    const existing = Object.values((await this.store.read()).certificates ?? {}).find(
+      (c) => c.userId === cert.userId && c.trackId === cert.trackId && c.level === cert.level,
+    );
+    if (existing) return existing;
+
+    const record: CertificateRecord = {
+      ...cert,
+      id: randomUUID(),
+      createdAt: new Date().toISOString(),
+    };
+    await this.store.update((d) => {
+      d.certificates ??= {};
+      d.certificates[record.id] = record;
+    });
+    return record;
+  }
+
+  async listCertificates(userId: string): Promise<CertificateRecord[]> {
+    return Object.values((await this.store.read()).certificates ?? {})
+      .filter((c) => c.userId === userId)
+      .sort((a, b) => (a.issuedAt < b.issuedAt ? 1 : -1));
+  }
+
+  async getCertificateByCredentialId(credentialId: string): Promise<CertificateRecord | null> {
+    return (
+      Object.values((await this.store.read()).certificates ?? {}).find((c) => c.credentialId === credentialId) ?? null
+    );
+  }
+
+  async verifyCertificate(credentialId: string): Promise<PublicCertificateVerification | null> {
+    const cert = await this.getCertificateByCredentialId(credentialId);
+    if (!cert) return null;
+    return {
+      credentialId: cert.credentialId,
+      nameAsChosen: cert.nameAsChosen,
+      trackId: cert.trackId,
+      level: cert.level,
+      issuedAt: cert.issuedAt,
+      status: cert.revokedAt ? "revoked" : "valid",
+      revokedAt: cert.revokedAt ?? null,
+    };
+  }
+
+  async revokeCertificate(credentialId: string, reason?: string | null): Promise<boolean> {
+    let changed = false;
+    await this.store.update((d) => {
+      d.certificates ??= {};
+      for (const c of Object.values(d.certificates)) {
+        if (c.credentialId === credentialId) {
+          c.revokedAt = new Date().toISOString();
+          c.revocationReason = reason ?? null;
+          changed = true;
+          break;
+        }
+      }
+    });
+    return changed;
   }
 }
 

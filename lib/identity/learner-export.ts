@@ -117,6 +117,16 @@ export async function buildLearnerExport(ctx: Ctx, userId: string, aiFeedback: A
     })),
     socExamOutcomeReports: examOutcomes.map((o) => ({ certFamily: o.certFamily, examDate: o.examDate, passed: o.passed, createdAt: o.createdAt })),
     socExamAccommodation: accommodation ? { multiplier: accommodation.multiplier, setAt: accommodation.setAt } : null,
+    certificates: (await ctx.repo.listCertificates(userId)).map((c) => ({
+      credentialId: c.credentialId,
+      trackId: c.trackId,
+      level: c.level,
+      nameAsChosen: c.nameAsChosen,
+      issuedAt: c.issuedAt,
+      status: c.revokedAt ? "revoked" : "valid",
+      revokedAt: c.revokedAt ?? null,
+      scoreSnapshot: c.scoreSnapshot ?? {},
+    })),
     aiFeedback,
   };
 }

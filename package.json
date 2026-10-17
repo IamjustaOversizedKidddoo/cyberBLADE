@@ -41,7 +41,8 @@
     "db:restore-check": "tsx scripts/db-restore-check.mts",
     "db:migrate:prod": "tsx scripts/db-migrate-prod.mts",
     "staging:verify": "tsx scripts/staging-verify.mts",
-    "smoke": "tsx scripts/smoke.mts"
+    "smoke": "tsx scripts/smoke.mts",
+    "cert:revoke": "tsx scripts/revoke-certificate.mts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

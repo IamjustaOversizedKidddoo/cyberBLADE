@@ -94,6 +94,7 @@ import type {
   SocExamOutcomeReport,
   SocDetectionRuleRecord,
 } from "@/lib/lab-engine/soc/exam/types";
+import type { CertificateRecord } from "@/lib/certificates/types";
 
 export type ProgressData = {
   lessons: Record<string, LessonProgress>;
@@ -118,6 +119,7 @@ export type ProgressData = {
   socExamOutcomeReports?: Record<string, SocExamOutcomeReport>;
   socExamAccommodations?: Record<string, SocExamAccommodation>;
   socDetectionRules?: Record<string, SocDetectionRuleRecord>;
+  certificates?: Record<string, CertificateRecord>;
 };
 
 export const emptyProgress = (): ProgressData => ({
