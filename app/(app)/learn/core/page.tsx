@@ -233,8 +233,13 @@ export default async function CoreMapPage(props: PageProps<"/learn/core">) {
 
       <div className="mx-auto max-w-4xl space-y-14 px-4 py-10 sm:px-6">
         {lockedRank !== null && (
-          <div role="status" className="rounded-sm border border-danger/40 bg-danger/10 px-4 py-3 text-xs font-ui text-danger">
-            {lockedNotice(lockedRank)}
+          <div role="status" className="rounded-sm border border-danger/40 bg-danger/10 px-4 py-3 text-xs font-ui text-danger space-y-1">
+            <p className="font-semibold">{lockedNotice(lockedRank)}</p>
+            {lockedRank === 1 && (
+              <p className="text-secondary text-[11px] font-sans">
+                Notice: Specialized career tracks (such as SOC Analyst L1) require clearance Rank 1 (Operator). Complete Rank 0 lessons and capstone to unlock.
+              </p>
+            )}
           </div>
         )}
 

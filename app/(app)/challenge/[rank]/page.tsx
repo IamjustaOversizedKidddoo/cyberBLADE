@@ -339,14 +339,27 @@ export default async function ChallengePage(props: PageProps<"/challenge/[rank]"
                 </div>
               )}
               {state.kind === "ready" && (
-                <div className="rounded-xs border-2 border-cyan bg-cyan/5 p-4 mb-6">
-                  <div className="flex items-center gap-2 mb-1">
-                    <IconCheck className="h-4 w-4 text-cyan shrink-0" />
-                    <SystemLabel className="text-cyan">READY TO DEPLOY</SystemLabel>
+                <div className="space-y-3 mb-6">
+                  {summary.lessons.some((l) => l.status !== "completed") && (
+                    <div className="rounded-xs border border-amber-500/40 bg-amber-500/10 p-3.5 text-xs">
+                      <div className="flex items-center gap-1.5 font-ui font-semibold text-amber-400 mb-1">
+                        <IconAlertTriangle className="h-4 w-4 shrink-0" />
+                        <span>RECOMMENDED PREREQUISITE</span>
+                      </div>
+                      <p className="text-secondary leading-relaxed">
+                        Recommended: Complete all Rank {rank} foundational lessons before attempting this timed capstone to ensure exam readiness.
+                      </p>
+                    </div>
+                  )}
+                  <div className="rounded-xs border-2 border-cyan bg-cyan/5 p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <IconCheck className="h-4 w-4 text-cyan shrink-0" />
+                      <SystemLabel className="text-cyan">READY TO DEPLOY</SystemLabel>
+                    </div>
+                    <p className="text-muted text-xs leading-relaxed">
+                      Machine will be generated when you start. The clock begins immediately.
+                    </p>
                   </div>
-                  <p className="text-muted text-xs leading-relaxed">
-                    Machine will be generated when you start. The clock begins immediately.
-                  </p>
                 </div>
               )}
             </div>
