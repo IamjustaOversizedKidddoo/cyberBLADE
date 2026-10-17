@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { safeNextPath } from "./routes";
 
-export const HANDLE_ERROR = "Use 3–20 letters, numbers or _";
+export const HANDLE_ERROR = "Use 3–20 letters, numbers, hyphens or _";
 export const RESERVED_HANDLE_ERROR = "This handle is reserved";
 export const AGREE_ERROR = "You must accept the agreement to continue";
 
@@ -40,7 +40,7 @@ export const handleSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .regex(/^[a-z0-9_]{3,20}$/, HANDLE_ERROR)
+  .regex(/^[a-z0-9_-]{3,20}$/, HANDLE_ERROR)
   .refine((h) => !isReservedHandle(h), { message: RESERVED_HANDLE_ERROR });
 
 export type StartFormResult =

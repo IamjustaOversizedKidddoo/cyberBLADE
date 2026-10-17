@@ -76,7 +76,7 @@ export function StartForm({ next, isHosted, inviteOnly, notice }: { next: string
             className="w-full border border-line bg-void px-3 py-2.5 font-mono text-ink focus:border-cyan outline-none transition-colors"
           />
           <p id="handle-help" className="text-xs text-secondary">
-            3–20 characters: letters, numbers or _. This is the only thing we store about you.
+            3–20 characters: letters, numbers, hyphens or _. This is the only thing we store about you.
           </p>
           {state.errors.handle && (
             <p id="handle-error" role="alert" className="text-sm font-mono text-danger font-semibold">

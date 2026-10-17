@@ -4,10 +4,16 @@ test("trims and lowercases the handle", () => {
   expect(handleSchema.parse("  Ghost_01 ")).toBe("ghost_01");
 });
 
-test.each(["<script>", "ab", "a".repeat(21), "has space", "dash-name", ""])("rejects %j", (input) => {
+test.each(["<script>", "ab", "a".repeat(21), "has space", ""])("rejects %j", (input) => {
   const result = handleSchema.safeParse(input);
   expect(result.success).toBe(false);
   expect(result.error?.issues[0]?.message).toBe(HANDLE_ERROR);
+});
+
+test("accepts handles with hyphens and underscores (A-01)", () => {
+  expect(handleSchema.parse("tester-a")).toBe("tester-a");
+  expect(handleSchema.parse("student-01")).toBe("student-01");
+  expect(handleSchema.parse("ghost_operator-99")).toBe("ghost_operator-99");
 });
 
 test.each(["admin", "root", "system", "cyberblade", "handler", "staff", "moderator", "support"])("rejects reserved handle %s", (handle) => {
