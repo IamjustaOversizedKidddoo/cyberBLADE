@@ -433,5 +433,88 @@ Lead engineer pass triaging and closing all findings from Pass A (QA/Functional)
    - Zero security controls or test assertions were weakened.
    - Verdict: **GO for inviting closed-beta cohort (20–100 learners)**.
 
+### Entry W1: Completion Certificates & Public Verification Registry (2026-10-17)
+Senior full-stack engineering milestone on branch `build/weekend` delivering verifiable completion certificates, cryptographic verification registry, and administrative revocation workflows.
+
+1. **Architecture & Deliverables Built:**
+   - **Data Layer & RLS (`supabase/migrations/20261017100000_certificates_and_verification.sql`):**
+     * `public.certificates` table: `id`, `user_id`, `track_id`, `level`, `name_as_chosen`, `credential_id`, `issued_at`, `revoked_at`, `revocation_reason`, `score_snapshot`, `created_at`.
+     * Idempotency guarantee: `UNIQUE (user_id, track_id, level)`.
+     * Strict RLS: `anon` and `PUBLIC` table select revoked; authenticated learners read only their own certificates (`auth.uid() = user_id`).
+     * `verify_certificate(p_credential_id TEXT)`: `SECURITY DEFINER` RPC with pinned `search_path = public, pg_temp` returning only safe public verification attributes (`name_as_chosen`, `track_id`, `level`, `issued_at`, `status`, `revoked_at`). Never returns emails or internal user IDs.
+     * `revoke_certificate(p_credential_id TEXT, p_reason TEXT)`: `SECURITY INVOKER` function with pinned `search_path` executable only by `service_role`.
+     * GDPR erasure cascade: updated `public.delete_user_account(target_user_id)` to cascade `DELETE FROM public.certificates WHERE user_id = target_user_id`.
+   - **Progress Repositories Parity:**
+     * `lib/progress/types.ts`: added `certificates` to `ProgressData`.
+     * `lib/progress/repo.ts` (`LocalProgressRepo`): added `saveCertificate`, `listCertificates`, `getCertificateByCredentialId`, `verifyCertificate`, `revokeCertificate`, and account deletion cleanup in `deleteUserData`.
+     * `lib/progress/supabase-repo.ts` (`SupabaseProgressRepo`): implemented equivalent database queries and RPC calls.
+   - **GDPR Export Allowlist Update (`lib/identity/learner-export.ts`):**
+     * Extended `buildLearnerExport` to include allowlisted public certificate metadata (`credentialId`, `trackId`, `level`, `nameAsChosen`, `issuedAt`, `status`, `revokedAt`, `scoreSnapshot`).
+   - **Issuance Logic & Domain Service (`lib/certificates/`):**
+     * `lib/certificates/slug.ts`: 128-bit unguessable slug generator (`cbl_<32 hex chars>`) using `node:crypto` `randomBytes(16)`.
+     * `lib/certificates/eligibility.ts`: server-authoritative evaluation of track completion criteria (Core Rank 1 Operator, Core Rank 2 Watcher, SOC Tier 1 Analyst). Never trusts client input.
+     * `lib/certificates/service.ts`: display name validation (2–60 chars, trimmed, control character & markup sanitization), rate-limited issuance action, public verification helper, and admin revocation handler.
+   - **Revocation Path & CLI Script (`scripts/revoke-certificate.mts`, `package.json`):**
+     * Admin CLI utility: `npm run cert:revoke -- --credential <id> --reason <reason> [--hosted]` with audit logging.
+   - **UI & Public Verification Pages:**
+     * `components/certificates/CertificateView.tsx`: double-bezel industrial chassis (`taste-soft` §4.A / `taste-brutalist` §5), SVG guilloche watermark, cryptographic fingerprint, high-contrast dynamic QR code to verification URL, dual authority signatures, and honest attribution footnote.
+     * `components/certificates/CertificateDownloadButtons.tsx`: client-side PDF print layout, high-resolution 2x PNG canvas export, SVG download, and link copy.
+     * `components/certificates/LinkedInShareButton.tsx`: direct "Add to LinkedIn" button with prefilled certification query parameters (`startTask=CERTIFICATION_NAME`, `certId`, `certUrl`, `issueYear`, `issueMonth`).
+     * `components/certificates/ClaimCertificateModal.tsx`: interactive modal allowing eligible learners to specify their recipient display name.
+     * `app/(app)/certificates/page.tsx`: authenticated "My Certificates" dashboard displaying issued credentials, unclaimed eligible tracks, and curriculum prerequisites.
+     * `app/verify/[credentialId]/page.tsx`: public verification page with `robots: { index: false, follow: false }` (`noindex` while in beta), verified/revoked status badges, credential overview, and full certificate view.
+     * Navigation: added `[CREDENTIALS]` link to `components/shell/NavLinks.tsx`.
+   - **Copy Honesty Policy:**
+     * All credentials explicitly labeled: "CyberBLADE Certificate of Completion". Disclaims endorsement by CompTIA, TryHackMe, OffSec, or third-party bodies.
+   - **SOC L2 Protection:**
+     * Zero modifications made to `lib/lab-engine/soc/rules` or SOC L2 exam files.
+
+2. **Files Created / Modified:**
+   - Migration & Database:
+     * `supabase/migrations/20261017100000_certificates_and_verification.sql`
+     * `tests/db/certificates.test.ts`
+     * `tests/db/access-hardening.test.ts`
+     * `tests/security/soc-report-security.test.ts`
+   - Domain & Services:
+     * `lib/certificates/types.ts`
+     * `lib/certificates/slug.ts`
+     * `lib/certificates/eligibility.ts`
+     * `lib/certificates/service.ts`
+     * `lib/progress/types.ts`
+     * `lib/progress/repo.ts`
+     * `lib/progress/supabase-repo.ts`
+     * `lib/identity/learner-export.ts`
+   - Actions & UI:
+     * `app/(app)/certificates/actions.ts`
+     * `app/(app)/certificates/page.tsx`
+     * `app/verify/[credentialId]/page.tsx`
+     * `components/certificates/CertificateView.tsx`
+     * `components/certificates/CertificateDownloadButtons.tsx`
+     * `components/certificates/LinkedInShareButton.tsx`
+     * `components/certificates/ClaimCertificateModal.tsx`
+     * `components/shell/NavLinks.tsx`
+   - Scripts & Tests:
+     * `scripts/revoke-certificate.mts`
+     * `app/api/e2e/route.ts`
+     * `tests/unit/lib/certificates/certificates.test.ts`
+     * `tests/e2e/certificates.spec.ts`
+     * `package.json`, `package-lock.json`
+
+3. **Gate Verification Results:**
+   - `npm run lint` ✓ (0 errors, 63 pre-existing warnings)
+   - `npm run typecheck` ✓ (0 errors across whole codebase)
+   - `npm run check:content` ✓ (80 lessons, 34 labs, 27 objectives)
+   - `npm run test` ✓ (249 test files, 2,160 passed, 0 failed)
+   - `npm run test:security` ✓ (25 test files, 257 passed, 0 failed)
+   - `npm run test:db` ✓ (8 test files, 118 passed on PGlite)
+   - `npm run build` ✓ (Next.js Turbopack production build, 0 warnings across all 29 routes)
+   - `npm run scan:bundle` ✓ (89 client artifacts, 0 leaks across 12 pattern rules + env secrets)
+   - `npm run test:e2e` ✓ (166 passed, 24 skipped, 0 failed across Chromium desktop & mobile)
+
+4. **Open Issues / Follow-ups:**
+   - Hosted Supabase migration: apply `20261017100000_certificates_and_verification.sql` during next maintenance deployment window via `npm run db:migrate:prod`.
+   - Remove `noindex` from `/verify/[credentialId]` upon public general availability (v1.0 GA).
+
+
 
 
