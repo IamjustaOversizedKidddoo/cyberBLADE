@@ -104,8 +104,28 @@ export function IocTableEditor({ iocs, onChange, disabled }: Props) {
           <thead>
             <tr className="border-b border-line bg-surface-raised text-[10px] uppercase tracking-wider text-muted">
               <th className="p-2 w-28">Type</th>
-              <th className="p-2">Indicator Value</th>
-              <th className="p-2 w-44">Observed Role</th>
+              <th className="p-2">
+                <span className="flex items-center gap-1">
+                  <span>Indicator Value</span>
+                  <span
+                    className="cursor-help text-muted hover:text-cyan"
+                    title="Indicator of Compromise (IoC): Technical evidence of malicious activity such as IP, domain, or file hash."
+                  >
+                    ℹ
+                  </span>
+                </span>
+              </th>
+              <th className="p-2 w-44">
+                <span className="flex items-center gap-1">
+                  <span>Observed Role</span>
+                  <span
+                    className="cursor-help text-muted hover:text-cyan"
+                    title="IoC function in the attack lifecycle (e.g. C2 = Command and Control, Delivery = initial exploit/phish, Staging = payload drop)."
+                  >
+                    ℹ
+                  </span>
+                </span>
+              </th>
               <th className="p-2">Notes</th>
               <th className="p-2 w-20 text-right">Actions</th>
             </tr>

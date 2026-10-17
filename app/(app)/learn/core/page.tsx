@@ -116,21 +116,25 @@ function LessonList({ lessons, progress, open }: { lessons: Lesson[]; progress: 
         return (
           <li key={l.id}>
             {open ? (
-              <Link
-                href={`/learn/${l.id}`}
-                className={`group block min-h-[44px] rounded-sm border p-4 sm:px-5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan ${
-                  isCompleted
-                    ? "border-success/30 bg-surface hover:border-success/60 hover:bg-surface-raised"
-                    : status === "in_progress"
-                    ? "border-amber-500/40 bg-surface-raised hover:border-amber-500/70"
-                    : "border-line bg-surface hover:border-cyan/50 hover:bg-surface-hover"
-                }`}
-              >
-                {content}
-              </Link>
+              <div className="p-1 rounded-sm border border-white/10 bg-surface/40 hover:border-cyan/40 transition-colors">
+                <Link
+                  href={`/learn/${l.id}`}
+                  className={`group block min-h-[44px] rounded-xs border p-3.5 sm:px-4.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan ${
+                    isCompleted
+                      ? "border-success/30 bg-surface hover:border-success/60 hover:bg-surface-raised"
+                      : status === "in_progress"
+                      ? "border-amber-500/40 bg-surface-raised hover:border-amber-500/70"
+                      : "border-cyan/20 bg-console hover:border-cyan/50 hover:bg-surface-hover"
+                  }`}
+                >
+                  {content}
+                </Link>
+              </div>
             ) : (
-              <div className="block rounded-sm border border-line/60 bg-surface-subtle p-4 sm:px-5">
-                {content}
+              <div className="p-1 rounded-sm border border-white/5 bg-surface/20">
+                <div className="block rounded-xs border border-line/40 bg-surface-subtle/80 p-3.5 sm:px-4.5 opacity-70">
+                  {content}
+                </div>
               </div>
             )}
           </li>

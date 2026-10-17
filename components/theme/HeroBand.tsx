@@ -22,7 +22,7 @@ export function HeroBand({ title, kicker, tone = "void", children }: Props) {
             <TypingText text={kicker} />
           </p>
         )}
-        <GlitchText as="h1" className="break-words text-[clamp(2.25rem,7vw,4.5rem)] text-ink leading-tight">
+        <GlitchText as="h1" className="break-words text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display uppercase tracking-tight text-ink leading-[0.95]">
           {title}
         </GlitchText>
         {children && <div className="mt-3 max-w-[65ch] text-sm sm:text-base text-muted leading-relaxed">{children}</div>}

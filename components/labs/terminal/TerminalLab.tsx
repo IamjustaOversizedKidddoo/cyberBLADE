@@ -39,6 +39,7 @@ export default function TerminalLab({ world, objectives, onSubmit }: Props) {
   const [liveAnnouncement, setLiveAnnouncement] = useState("");
   const [copiedNotice, setCopiedNotice] = useState(false);
   const [showKeyBar, setShowKeyBar] = useState(true);
+  const [isMaximized, setIsMaximized] = useState(false);
 
   // Latest values without rebuilding the terminal when they change.
   const objectivesRef = useRef(objectives);
@@ -297,7 +298,13 @@ export default function TerminalLab({ world, objectives, onSubmit }: Props) {
   };
 
   return (
-    <div className="rounded-sm border border-line bg-console overflow-hidden shadow-2xl focus-within:ring-2 focus-within:ring-cyan relative">
+    <div
+      className={
+        isMaximized
+          ? "fixed inset-2 md:inset-6 z-[80] bg-console border-2 border-cyan shadow-[0_0_50px_rgba(15,190,255,0.3)] flex flex-col rounded-sm overflow-hidden"
+          : "rounded-sm border border-line bg-console overflow-hidden shadow-2xl focus-within:ring-2 focus-within:ring-cyan relative"
+      }
+    >
       {/* Skip Past Terminal Link for Keyboard Users */}
       <a
         href="#terminal-exit"
@@ -398,6 +405,19 @@ export default function TerminalLab({ world, objectives, onSubmit }: Props) {
             </button>
           </div>
 
+          {/* Maximize / Restore Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsMaximized((m) => !m);
+              setTimeout(() => fitRef.current?.fit(), 50);
+            }}
+            aria-label={isMaximized ? "Restore terminal window" : "Maximize terminal to full screen"}
+            className="rounded-xs border border-line bg-surface-raised px-2 py-0.5 text-secondary hover:text-cyan hover:border-cyan focus:outline-none focus-visible:ring-1 focus-visible:ring-cyan inline-flex items-center gap-1"
+          >
+            <span>{isMaximized ? "⤓ Restore" : "⤢ Maximize"}</span>
+          </button>
+
           {/* Leave Terminal Button */}
           <button
             type="button"
@@ -415,7 +435,7 @@ export default function TerminalLab({ world, objectives, onSubmit }: Props) {
         ref={host}
         tabIndex={0}
         role="region"
-        className="h-[380px] sm:h-[430px] w-full bg-console p-2.5 sm:p-3 overflow-hidden outline-none"
+        className={`${isMaximized ? "flex-1 min-h-[400px]" : "h-[380px] sm:h-[430px]"} w-full bg-console p-2.5 sm:p-3 overflow-hidden outline-none`}
         aria-label={`Interactive terminal connected to ${world.hostname}. Press Escape then Tab to leave.`}
       />
 

@@ -87,9 +87,9 @@ export function ExamTimerHud({ examId, deadlineAt, serverNow, onExpired }: Props
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-surface px-4 py-2 font-ui text-sm" role="group" aria-label="Exam timer">
-      <p className="text-secondary">
-        Time left{" "}
-        <span className="font-mono text-base font-bold text-ink tabular-nums" aria-hidden="true">
+      <p className={`flex items-center gap-1.5 ${remaining !== null && remaining < 120 ? "text-danger border border-danger/60 bg-danger/10 rounded-xs px-2 py-0.5 animate-pulse" : "text-secondary"}`}>
+        <span>Time left</span>{" "}
+        <span className={`font-mono text-base font-bold tabular-nums ${remaining !== null && remaining < 120 ? "text-danger" : "text-ink"}`} aria-hidden="true">
           {remaining === null ? "--:--" : clock(remaining)}
         </span>
         <span className="sr-only">{remaining === null ? "loading" : spokenDuration(remaining)}</span>

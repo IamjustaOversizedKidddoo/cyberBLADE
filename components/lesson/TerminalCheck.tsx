@@ -96,7 +96,7 @@ function Question({
           return (
             <li key={i} className="rounded-xs transition-colors">
               <label
-                className={`flex items-start gap-3 p-3 rounded-xs border cursor-pointer select-none transition-all ${
+                className={`flex items-start gap-3 p-3 rounded-xs border cursor-pointer select-none transition-all has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-cyan has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-void ${
                   isSelected
                     ? "border-cyan/60 bg-cyan/10 text-ink shadow-[0_0_10px_rgba(15,190,255,0.1)]"
                     : "border-line/60 bg-surface-subtle/50 text-ink/80 hover:border-line hover:bg-surface-raised"
@@ -105,7 +105,7 @@ function Question({
                 <input
                   type="radio"
                   name={q.id}
-                  className="mt-0.5 h-4 w-4 accent-cyan cursor-pointer focus:ring-2 focus:ring-cyan"
+                  className="mt-0.5 h-4 w-4 accent-cyan cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan"
                   checked={isSelected}
                   onChange={() => setChoice(i)}
                 />

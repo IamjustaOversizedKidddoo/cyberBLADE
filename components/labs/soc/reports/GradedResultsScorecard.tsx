@@ -115,8 +115,16 @@ export function GradedResultsScorecard({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-ink uppercase text-[11px]">
-                      {criterionId.replace(/_/g, " ")}
+                    <span className="font-bold text-ink uppercase text-[11px] flex items-center gap-1">
+                      <span>{criterionId.replace(/_/g, " ")}</span>
+                      {criterionId.toLowerCase().includes("timeline") && (
+                        <span
+                          className="cursor-help font-normal text-muted hover:text-cyan"
+                          title="Evaluated via Kendall-Tau distance: mathematical measure of correct chronological ordering of intrusion milestones."
+                        >
+                          ℹ
+                        </span>
+                      )}
                     </span>
                     <span className="text-[10px] text-muted">
                       (Weight: {cRes.weight * 100}%)

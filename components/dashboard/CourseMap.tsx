@@ -50,8 +50,8 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
           </SystemLabel>
         </div>
 
-        {/* Rank nodes in a rigid grid */}
-        <ol className="mt-6 grid gap-px bg-line" aria-label="Shared core ranks">
+        {/* Rank nodes in double-bezel tactical chassis */}
+        <ol className="mt-6 space-y-3" aria-label="Shared core ranks">
           {CORE.ranks.map((r) => {
             const state = r.rank < currentRank ? "cleared" : r.rank === currentRank ? "current" : "locked";
             const isCurrent = state === "current";
@@ -61,69 +61,81 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
               <li
                 key={r.rank}
                 data-rank-node={r.rank}
-                className={`grid grid-cols-1 sm:grid-cols-[4rem_1fr_auto] gap-px bg-void ${isCurrent ? "ring-2 ring-cyan ring-inset" : ""}`}
+                className={`p-1 rounded-sm border ${
+                  isCurrent
+                    ? "border-cyan/50 bg-surface/70 shadow-[0_0_20px_rgba(15,190,255,0.08)]"
+                    : isCleared
+                    ? "border-purple/30 bg-surface/40"
+                    : "border-white/10 bg-surface/20"
+                }`}
               >
-                {/* Giant rank numeral cell */}
                 <div
-                  className={`flex items-center justify-center bg-void py-6 font-display text-5xl leading-none ${
-                    isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-muted"
+                  className={`grid grid-cols-1 sm:grid-cols-[4rem_1fr_auto] gap-px rounded-xs border ${
+                    isCurrent ? "border-cyan/30 bg-console" : isCleared ? "border-purple/20 bg-console" : "border-line/40 bg-console/60"
                   }`}
-                  aria-hidden="true"
                 >
-                  {String(r.rank).padStart(2, "0")}
-                </div>
-
-                {/* Main content */}
-                <div className="bg-void px-5 py-5">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <SystemLabel
-                      className={isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-secondary"}
-                    >
-                      {RANK_CODENAME[r.rank] ?? `RANK_${r.rank}`}
-                    </SystemLabel>
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-xs border px-2.5 py-0.5 font-ui text-xs tracking-wider uppercase font-semibold ${
-                        isCurrent
-                          ? "border-cyan/50 bg-cyan/10 text-cyan shadow-[0_0_10px_rgba(15,190,255,0.2)]"
-                          : isCleared
-                          ? "border-purple/50 bg-purple/10 text-purple"
-                          : "border-line/80 bg-surface text-secondary"
-                      }`}
-                    >
-                      {state === "cleared" ? "CLEARED" : state === "current" ? "ACTIVE" : "LOCKED"}
-                    </span>
+                  {/* Giant rank numeral cell */}
+                  <div
+                    className={`flex items-center justify-center bg-void py-6 font-display text-5xl leading-none ${
+                      isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-muted"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {String(r.rank).padStart(2, "0")}
                   </div>
-                  <h3 className={`mt-2 font-ui text-lg ${state === "locked" ? "text-secondary" : "text-ink"}`}>
-                    rank_{r.rank} · {r.name}
-                  </h3>
-                  <p className="mt-1 text-sm text-muted">{RANK_SUMMARY[r.rank]}</p>
-                </div>
 
-                {/* Action cell */}
-                <div className="flex items-center bg-void px-5">
-                  {isCurrent && (
-                    <Link
-                      href={`/learn/core#rank-${r.rank}`}
-                      aria-label={rankProgress.done > 0 ? "Continue" : `Begin rank_${r.rank}`}
-                      className="btn-glitch inline-flex min-h-[44px] items-center justify-center border-2 border-cyan px-5 py-2 font-ui text-sm text-cyan hover:bg-cyan hover:text-void"
-                    >
-                      {rankProgress.done > 0 ? "CONTINUE →" : "BEGIN →"}
-                    </Link>
-                  )}
-                  {isCleared && (
-                    <Link
-                      href={`/learn/core#rank-${r.rank}`}
-                      className="inline-flex min-h-[44px] items-center justify-center border border-purple px-4 py-2 font-ui text-xs text-purple hover:bg-purple hover:text-void transition-colors"
-                    >
-                      REVIEW
-                    </Link>
-                  )}
-                  {state === "locked" && (
-                    <span className="font-ui text-xs text-secondary tracking-wider flex items-center gap-1.5">
-                      <IconLock className="h-3.5 w-3.5" />
-                      <span>Unlock at Rank {r.rank - 1} Capstone</span>
-                    </span>
-                  )}
+                  {/* Main content */}
+                  <div className="bg-void px-5 py-5">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <SystemLabel
+                        className={isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-secondary"}
+                      >
+                        {RANK_CODENAME[r.rank] ?? `RANK_${r.rank}`}
+                      </SystemLabel>
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-xs border px-2.5 py-0.5 font-ui text-xs tracking-wider uppercase font-semibold ${
+                          isCurrent
+                            ? "border-cyan/50 bg-cyan/10 text-cyan shadow-[0_0_10px_rgba(15,190,255,0.2)]"
+                            : isCleared
+                            ? "border-purple/50 bg-purple/10 text-purple"
+                            : "border-line/80 bg-surface text-secondary"
+                        }`}
+                      >
+                        {state === "cleared" ? "CLEARED" : state === "current" ? "ACTIVE" : "LOCKED"}
+                      </span>
+                    </div>
+                    <h3 className={`mt-2 font-ui text-lg ${state === "locked" ? "text-secondary" : "text-ink"}`}>
+                      rank_{r.rank} · {r.name}
+                    </h3>
+                    <p className="mt-1 text-sm text-muted">{RANK_SUMMARY[r.rank]}</p>
+                  </div>
+
+                  {/* Action cell */}
+                  <div className="flex items-center bg-void px-5">
+                    {isCurrent && (
+                      <Link
+                        href={`/learn/core#rank-${r.rank}`}
+                        aria-label={rankProgress.done > 0 ? "Continue" : `Begin rank_${r.rank}`}
+                        className="btn-glitch inline-flex min-h-[44px] items-center justify-center border-2 border-cyan px-5 py-2 font-ui text-sm text-cyan hover:bg-cyan hover:text-void"
+                      >
+                        {rankProgress.done > 0 ? "CONTINUE →" : "BEGIN →"}
+                      </Link>
+                    )}
+                    {isCleared && (
+                      <Link
+                        href={`/learn/core#rank-${r.rank}`}
+                        className="inline-flex min-h-[44px] items-center justify-center border border-purple px-4 py-2 font-ui text-xs text-purple hover:bg-purple hover:text-void transition-colors"
+                      >
+                        REVIEW
+                      </Link>
+                    )}
+                    {state === "locked" && (
+                      <span className="font-ui text-xs text-secondary tracking-wider flex items-center gap-1.5">
+                        <IconLock className="h-3.5 w-3.5" />
+                        <span>Unlock at Rank {r.rank - 1} Capstone</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
               </li>
             );

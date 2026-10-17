@@ -387,7 +387,7 @@ export function AlertQueueTable({
             Severity {sortField === "severity" && (sortOrder === "asc" ? "▲" : "▼")}
           </button>
         </div>
-        <div className="w-28 hidden md:block">
+        <div className="w-28 hidden lg:block">
           <button
             type="button"
             onClick={() => toggleSort("source")}
@@ -484,7 +484,7 @@ export function AlertQueueTable({
                     </div>
 
                     {/* Source */}
-                    <div className="w-28 text-[11px] text-muted truncate hidden md:block">
+                    <div className="w-28 text-[11px] text-muted truncate hidden lg:block">
                       {alert.source}
                     </div>
 

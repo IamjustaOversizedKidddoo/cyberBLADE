@@ -191,7 +191,15 @@ export function ReportEditor({
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase text-muted mb-1">Classification</label>
+                <label className="block text-[10px] uppercase text-muted mb-1 flex items-center gap-1">
+                  <span>Classification</span>
+                  <span
+                    className="inline-flex cursor-help items-center justify-center rounded-full bg-surface-raised px-1 text-[9px] text-muted hover:text-cyan border border-line"
+                    title="Traffic Light Protocol (TLP): Standard for sharing sensitive security information. TLP:AMBER is restricted to SOC internal staff."
+                  >
+                    ℹ
+                  </span>
+                </label>
                 <select
                   value={report.header.classification}
                   disabled={disabled}
@@ -236,8 +244,14 @@ export function ReportEditor({
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[10px] uppercase text-muted mb-1">
-                  Investigation Disposition *
+                <label className="block text-[10px] uppercase text-muted mb-1 flex items-center gap-1">
+                  <span>Investigation Disposition *</span>
+                  <span
+                    className="inline-flex cursor-help items-center justify-center rounded-full bg-surface-raised px-1 text-[9px] text-muted hover:text-cyan border border-line"
+                    title="Operational verdict: True Positive (malicious incident), False Positive (benign alert), or Benign Positive (authorized activity)."
+                  >
+                    ℹ
+                  </span>
                 </label>
                 <select
                   value={report.verdict.disposition}

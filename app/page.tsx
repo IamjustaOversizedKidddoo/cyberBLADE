@@ -110,8 +110,9 @@ export default async function Home() {
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <Magnetic>
-                  <Link href="/start" className={`${START_BUTTON} border-ink bg-void text-ink hover:border-cyan hover:bg-cyan hover:text-void`}>
-                    Start
+                  <Link href="/start" className={`${START_BUTTON} border-ink bg-void text-ink hover:border-cyan hover:bg-cyan hover:text-void group`}>
+                    <span>Start Training</span>
+                    <span className="ml-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-cyan/20 text-cyan group-hover:translate-x-1 transition-transform" aria-hidden="true">→</span>
                   </Link>
                 </Magnetic>
                 <a href="#curriculum" className="inline-flex min-h-[44px] items-center justify-center border border-ink/40 bg-void/80 px-6 py-2.5 font-ui text-base tracking-wider text-muted hover:border-cyan hover:text-cyan transition-colors">
@@ -344,8 +345,9 @@ export default async function Home() {
             <p className="text-lg">No experience needed. Choose a handle, accept the rules, and begin at Rank 0.</p>
             <div className="mt-6">
               <Magnetic>
-                <Link href="/start" className={`${START_BUTTON} border-void bg-void text-cyan hover:bg-paper hover:text-void`}>
-                  Start
+                <Link href="/start" className={`${START_BUTTON} border-void bg-void text-cyan hover:bg-paper hover:text-void group`}>
+                  <span>Start Training</span>
+                  <span className="ml-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-cyan/20 text-cyan group-hover:translate-x-1 transition-transform" aria-hidden="true">→</span>
                 </Link>
               </Magnetic>
             </div>

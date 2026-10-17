@@ -30,7 +30,7 @@ export function ChallengeTimer({ expiresAt }: { expiresAt: string }) {
 
   const left = deadline - now;
   const isWarning = left < 5 * 60_000;
-  const isCritical = left < 60_000;
+  const isCritical = left < 120_000;
 
   useEffect(() => {
     const timer = setInterval(() => {
