@@ -1366,3 +1366,30 @@ Engineered the complete CyberBLADE Pentest L1 Practical Performance Exam system 
    - `npm run scan:bundle` ✓ (0 leaks across 96 client artifacts with 14 pattern rules).
    - Playwright E2E (`tests/e2e/pentest-exam.spec.ts`) ✓ (2/2 tests passed on desktop & mobile viewports: readiness → mock → exam → submit → result → certificate).
    - **Strict Constraint**: Zero modifications to SOC L2 behavior; all SOC tests remain 100% green.
+
+---
+
+### Entry PT-11: Senior Penetration Tester Curriculum Review & Quality Audit (2026-10-18)
+
+Executed an independent, comprehensive senior penetration tester review (OSCP/CPTS level) of the CyberBLADE Penetration Testing Track (Rank 1 / Level 1 — eJPT Alignment) on branch `build/weekend` according to the authoring contract in `docs/ops/pentest-standards.md`.
+
+1. **Review Scope & Component Counts:**
+   - **Reviewed:** 46 lessons (M01–M12), 46 `.checks.yaml` question sets (230 MCQs), 46 `.exercises.yaml` micro-exercises, 46 `.cards.yaml` flashcards, 62 labs (terminal, web, packet, and NetRange), 5 NetRange multi-host scenarios (A–E), and 124 knowledge bank items (`content/pentest/exams/knowledge-bank.yaml`).
+   - **Fixed:** 10 items (8 lesson word-count trims to comply strictly with the 1,600-word ceiling, 1 Hydra `-p` vs `-P` / `-l` vs `-L` beginner clarity clarification, and 1 automated audit script regex refinement).
+   - **Remaining:** 0 open issues.
+
+2. **Five-Dimension Technical Evaluation:**
+   - **Technical Accuracy:** Verified all commands, flags, and syntax across modern tool versions (`nmap 7.90+`, `hydra 9.0+`, `gobuster`, `ffuf`, `smbclient`, `john`, `hashcat`, `sqlmap`, `msfconsole`, `chisel`). Confirmed realistic terminal outputs with genuine false leads and dead ends (CDN edge shielding, unexploitable SUID binaries, and account lockout protections).
+   - **Beginner Clarity:** Verified that all specialized jargon (e.g., SUID, GTFOBins, Pass-the-Hash, Unquoted Service Paths, Chisel SOCKS proxies, STRIDE, PASTA, RIRs) is explicitly defined on first occurrence. Added clarifying guidance in `02-online-brute-force-hydra.mdx` regarding literal string flags (`-l`, `-p`) for password spraying vs wordlist files (`-L`, `-P`) for dictionary attacks.
+   - **Standards Compliance:** Verified complete 13-section lesson anatomy across all 46 lessons in exact order. Confirmed that every lesson possesses an extensive, concrete `## What good looks like` Defender's View detailing blue team telemetry, Windows Event IDs, Linux audit rules, Snort/Sigma signatures, and hardening controls. Trimmed 8 slightly over-length lessons to sit comfortably within the 1,300–1,500 word range.
+   - **eJPT Exam Alignment:** Audited all 4 official eJPT blueprint domains (Assessment Methodologies, Host & Network Auditing, Host & Network Penetration Testing, Web Application Penetration Testing). Zero curriculum gaps identified; comprehensive practical depth across all required domains.
+   - **Ethics & Scope:** Verified prominent legal boundary warnings (CFAA 18 U.S.C. § 1030, UK Computer Misuse Act 1990), non-destructive testing constraints, Emergency Halt protocols, and 100% compliance with RFC 5737 and RFC 2606 synthetic documentation boundaries.
+
+3. **Audit Log Artifact (`docs/ops/pentest-content-review.md`):**
+   - Published formal review log detailing all audited components, issue-by-issue fixes (`ID | file | problem | fix`), eJPT domain matrix, tool accuracy verification, and ethical safeguards.
+
+4. **Quality Gates Verification:**
+   - `npm run check:content` ✓ (126 lessons, 62 labs, 27 objectives validated; 0 errors).
+   - `npm test` ✓ (255/255 test files passed, 2,410/2,410 tests green).
+   - `npm run build` ✓ (Turbopack production build succeeded; 33 routes compiled).
+

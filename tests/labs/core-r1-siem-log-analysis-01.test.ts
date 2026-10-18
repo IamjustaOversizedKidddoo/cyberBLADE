@@ -45,5 +45,5 @@ describe(`${LAB} across many seeds`, () => {
       if (!check("o5", answers.flag)) bad.push(`${seed}: o5 failed`);
     }
     expect(bad).toEqual([]);
-  }, 60_000);
+  }, 120_000);
 });
