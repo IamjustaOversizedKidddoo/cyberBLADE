@@ -852,14 +852,14 @@ Established the formal pedagogical foundation, quality standards contract, 12-mo
    - **Module 08: Password Attacks & Hash Cracking (`passwords` | Host & Network Penetration Testing):**
      30. `pentest-r1-m08-hash-identification-offline-cracking-01`: Hash Identification and Offline Cracking with John and Hashcat *(Authored)*
      31. `pentest-r1-m08-online-brute-force-hydra-01`: Online Network Authentication Brute-Forcing with Hydra *(Authored)*
-     32. `pentest-r1-m08-password-mutations-rules-01`: Wordlist Optimization and Custom Mutation Rules *(Planned)*
-     33. `pentest-r1-m08-unshadow-sam-dumping-01`: Extracting and Formatting Hashes from Linux and Windows *(Planned)*
+     32. `pentest-r1-m08-password-mutations-rules-01`: Wordlist Optimization, Mutations, and Rule-Based Cracking *(Authored)*
+     33. `pentest-r1-m08-unshadow-sam-dumping-01`: Hash Extraction, SAM Dumping, Pass-the-Hash, and Credential Reuse *(Authored)*
 
    - **Module 09: Post-Exploitation & Privilege Escalation (`privesc` | Host & Network Penetration Testing):**
      34. `pentest-r1-m09-linux-privesc-suid-sudo-01`: Linux Privilege Escalation: SUID Binaries and Sudo Rights *(Authored)*
      35. `pentest-r1-m09-windows-privesc-service-perms-01`: Windows Privilege Escalation: Service Permissions and Unquoted Paths *(Authored)*
-     36. `pentest-r1-m09-automated-privesc-scripts-01`: Automated Enumeration Scripts: LinPEAS and WinPEAS Analysis *(Planned)*
-     37. `pentest-r1-m09-kernel-exploits-hazards-01`: Evaluating Kernel Exploits and Operational Instability Risks *(Planned)*
+     36. `pentest-r1-m09-linux-post-exploitation-privesc-01`: Linux Post-Exploitation: Cron, Capabilities, Credentials, and Kernel Safety *(Authored)*
+     37. `pentest-r1-m09-windows-post-exploitation-privesc-01`: Windows Post-Exploitation: Scheduled Tasks, Tokens, Meterpreter, and Active Directory Scope *(Authored)*
 
    - **Module 10: Pivoting & Network Routing (`pivoting` | Host & Network Penetration Testing):**
      38. `pentest-r1-m10-ssh-port-forwarding-tunnels-01`: Network Pivoting with SSH Local and Remote Port Forwarding *(Authored)*
@@ -950,6 +950,35 @@ Completed the full curriculum authoring, code root cause and secure fix analysis
    - `npm run typecheck` ✓ (0 errors).
    - `npm run lint` ✓ (0 errors).
    - Unit tests: `tests/unit/lib/content/` (15 test files, 131 tests passed).
+
+---
+
+### Entry PT-4: Penetration Testing L1 Modules 08 & 09 Completion (2026-10-18)
+Completed the full curriculum authoring, assessments, and comprehensive cheat sheet delivery for Modules 08 (Password Attacks & Hash Cracking) and 09 (Post-Exploitation & Privilege Escalation) of the Penetration Testing Level 1 (L1) track, strictly adhering to the Quality Standards Contract (`docs/ops/pentest-standards.md`).
+
+1. **Authored Lessons & Assessments (100% Standards Compliant):**
+   - **Module 08 (Password Attacks & Hash Cracking):**
+     - `pentest-r1-m08-password-mutations-rules-01`: Wordlist Optimization, Mutations, and Rule-Based Cracking (covers dictionary limits, keyspace combinatorics, targeted scraping with CeWL, Hashcat rule syntax and execution with `best64.rule`, and John the Ripper `--rules` engines).
+     - `pentest-r1-m08-unshadow-sam-dumping-01`: Hash Extraction, SAM Dumping, Pass-the-Hash, and Credential Reuse (covers hashing vs encryption principles, Linux `/etc/shadow` extraction with `unshadow`, Windows SAM and SYSTEM hive backup, offline extraction with `secretsdump.py`, Pass-the-Hash authentication without plaintext recovery, and enterprise credential reuse auditing).
+     - `content/tracks/pentest/l1/m08-passwords/cheat-sheet.md`: Comprehensive field reference covering hashing vs encryption, hash type identifier codes (modes 0, 100, 1000, 1800, 3200), John and Hashcat CLI commands, CeWL and Crunch syntax, THC Hydra network attacks and lockout thresholds, local hash dumping, Pass-the-Hash recipes (`psexec.py`, `nxc`), and blue team detections.
+   - **Module 09 (Post-Exploitation & Privilege Escalation):**
+     - `pentest-r1-m09-linux-post-exploitation-privesc-01`: Linux Post-Exploitation: Cron, Capabilities, Credentials, and Kernel Safety (covers host reconnaissance, writable cron tasks, tar wildcard injection, POSIX capabilities like `cap_setuid+ep` on Python, credential hunting in `.bash_history` and configuration files, and strict operational safety rules regarding kernel panics).
+     - `pentest-r1-m09-windows-post-exploitation-privesc-01`: Windows Post-Exploitation: Scheduled Tasks, Tokens, Meterpreter, and Active Directory Scope (covers host and privilege reconnaissance, writable scheduled tasks via `schtasks`, stored credentials with `cmdkey` and `runas /savecred`, token impersonation via `SeImpersonatePrivilege` and PrintSpoofer, Metasploit `getsystem` / post modules, and fundamental Active Directory situational awareness).
+     - `content/tracks/pentest/l1/m09-privesc/cheat-sheet.md`: Comprehensive field reference covering Linux privilege escalation (SUID, sudo, cron, capabilities, credentials, kernel cautions, LinPEAS), Windows privilege escalation (unquoted paths, weak service ACLs, scheduled tasks, stored credentials, token impersonation, WinPEAS), Metasploit post modules, and native Active Directory domain queries.
+
+2. **Quality Contract & Schema Adherence:**
+   - Every lesson includes all 10 mandatory sections in exact order (Outcome hook, Why this matters, Before you start, Core ideas, Worked example with realistic dead end/false lead, Try it with `<MicroExercise />`, Common mistakes with $\ge 3$ items, What good looks like / Defender's view, In the real world, Remember it like this, Interview answer, Check your understanding with `<TerminalCheck />`, Key terms with `<KeyTerms />`, Practice this with `<PracticeThis />`).
+   - Every check question provides exactly 4 options with rich, educational explanations for both the correct answer and all distractors.
+   - Word counts strictly governed within 800–1,600 words of non-code prose.
+   - Indicators restricted to RFC 5737 (`192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`) and RFC 2606 (`example.com`, `*.example`).
+   - Registered 4 new skills: `pentest_password_mutations_rules`, `pentest_hash_extraction_pth`, `pentest_linux_post_exploitation`, and `pentest_windows_post_exploitation` in `content/pentest/skills.yaml` and `content/coverage/pentest.yaml`.
+
+3. **Verification & Quality Gates Passed:**
+   - `npm run check:content` ✓ (120 lessons, 44 labs, 27 objectives validated; 0 errors).
+   - `npm run typecheck` ✓ (0 errors).
+   - `npm run lint` ✓ (0 errors).
+   - Unit tests: `tests/unit/lib/content/` (15 test files, 131 tests passed).
+
 
 
 
