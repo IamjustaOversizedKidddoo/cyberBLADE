@@ -1218,4 +1218,76 @@ Authored and verified 4 additional comprehensive multi-host practical penetratio
    - Playwright E2E (`tests/e2e/netrange-lab.spec.ts`) ✓ (6/6 tests passed on desktop & mobile viewports).
    - **Strict Constraint**: Zero SOC L2 files touched.
 
+---
+
+### Entry PT-9: Penetration Testing Knowledge Bank Expansion & Practice Assessment Exams (2026-10-18)
+
+Authored, verified, and integrated the expanded CyberBLADE Penetration Testing Knowledge Bank (`content/pentest/exams/knowledge-bank.yaml`) containing 124 curated assessment items across all 12 modules, and upgraded the two practice exams (`practical` and `mock`) to 40 questions each (20 procedural NetRange findings + 20 theory items) with seeded question selection. Zero proprietary exam questions or solutions leak to the client bundle.
+
+1. **Knowledge Bank Item Architecture & Breakdown:**
+   - **Total Items:** 124 authentic items across all 12 modules, mapped to curriculum lessons and verified claims.
+   - **Item Types Mix:**
+     - `mcq` (67 items): Multiple-choice questions with 4 distinct options and comprehensive explanations for each right and wrong option.
+     - `multi` (14 items): Multi-select questions assessing multi-metric or multi-component concepts (e.g. CVSS Exploitability group, DOM XSS sinks, reverse shell TTY stabilization, Pass-the-Hash mechanics).
+     - `log` (27 items): Output-interpretation items displaying authentic CLI/terminal output (Nmap, Gobuster, SearchSploit, curl, netcat, Metasploit console, Hashcat sessions, `/etc/shadow`, Windows `icacls`, `whoami /priv`, Linux `getcap`, `ip route`, CVSS v3.1 vector strings, Credential Loot Matrix).
+     - `short_answer` (16 items): Normalized server-side string inputs (case-insensitive, whitespace-trimmed, punctuation-stripped) for core CLI flags and utilities (e.g. `nmap -sn`, `searchsploit -m`, `hydra -f`, `unshadow`, `sc qc`).
+   - **Difficulty Spectrum:**
+     - Difficulty 1 (Foundational): 39 items (~31.5%)
+     - Difficulty 2 (Intermediate / Practical): 72 items (~58.1%)
+     - Difficulty 3 (Advanced / Complex Edge Cases): 13 items (~10.5%)
+   - **eJPT Domain Alignment & Weights:**
+     - **Assessment Methodologies:** 23 items (18.5%) — Modules M01, M05, M11, M12
+     - **Host & Network Auditing:** 31 items (25.0%) — Modules M02, M03, M04, M05
+     - **Host & Network Penetration Testing:** 46 items (37.1%) — Modules M07, M08, M09, M10
+     - **Web Application Penetration Testing:** 24 items (19.4%) — Module M06
+     *(Directly mirrors the published eJPT blueprint distribution: ~20–25% Methodologies, ~20–25% Auditing, ~35–40% Network Pentesting, ~15–20% Web App Pentesting).*
+
+2. **Module Distribution Matrix:**
+
+| Module | Title / Focus Area | Items | MCQ | Multi | Log | Short | Diff 1 | Diff 2 | Diff 3 | eJPT Domain |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **M01** | Assessment Methodologies & RoE | 10 | 7 | 1 | 1 | 1 | 4 | 6 | 0 | Assessment Methodologies |
+| **M02** | Passive Recon & OSINT | 8 | 4 | 1 | 2 | 1 | 3 | 5 | 0 | Host & Network Auditing |
+| **M03** | Active Host Discovery & Port Scanning | 10 | 6 | 1 | 1 | 2 | 3 | 7 | 0 | Host & Network Auditing |
+| **M04** | Network Service Enumeration | 9 | 3 | 2 | 3 | 1 | 3 | 6 | 0 | Host & Network Auditing |
+| **M05** | Vulnerability Assessment & CVSS | 8 | 4 | 1 | 2 | 1 | 3 | 5 | 0 | Methodologies & Auditing |
+| **M06** | Web Application Pentesting | 24 | 11 | 4 | 7 | 2 | 6 | 13 | 5 | Web Application Pentesting |
+| **M07** | Vulnerability Exploitation & Metasploit | 10 | 5 | 1 | 3 | 1 | 4 | 5 | 1 | Host & Network Pentesting |
+| **M08** | Password Attacks & Credential Hunting | 11 | 5 | 1 | 3 | 2 | 3 | 7 | 1 | Host & Network Pentesting |
+| **M09** | Privilege Escalation (Linux & Windows) | 12 | 4 | 1 | 5 | 2 | 2 | 7 | 3 | Host & Network Pentesting |
+| **M10** | Pivoting & Post-Exploitation Networking | 11 | 6 | 1 | 3 | 1 | 3 | 6 | 2 | Host & Network Pentesting |
+| **M11** | Reporting & Remediation Verification | 7 | 4 | 1 | 1 | 1 | 3 | 4 | 0 | Assessment Methodologies |
+| **M12** | Capstone & eJPT Exam Strategy | 4 | 2 | 1 | 1 | 0 | 1 | 2 | 1 | Assessment Methodologies |
+| **Total** | **Full 12-Module Pentest Curriculum** | **124** | **67** | **14** | **27** | **16** | **39** | **72** | **13** | **100% Curriculum Coverage** |
+
+3. **Practice Exams Upgrades (`content/pentest/exams/config.yaml`):**
+   - **Practical Exam (`practical`):**
+     * Timed mode: 180 minutes (3 hours).
+     * 40 total questions: 20 finding-procedural questions generated from the live multi-host NetRange scenario + 20 theoretical knowledge bank questions drawn using seeded rotation prioritizing unseen items.
+     * Weights: 0.50 practical findings, 0.50 theoretical concepts; passing threshold: 70%.
+   - **Mock Exam (`mock`):**
+     * Untimed/practice mode: 720 minutes (12 hours).
+     * 40 total questions: 20 finding-procedural questions from the live NetRange scenario + 20 theoretical knowledge bank questions.
+     * Weights: 0.50 practical findings, 0.50 theoretical concepts; passing threshold: 70%.
+   - **Procedural Finding Pool Expansion:** Expanded finding question definitions in `lib/lab-engine/pentest/exam/scenario-questions.ts` to 20 distinct candidate questions covering host IPs, OS detection, open ports, service versions, SMB shares, SQL injection parameters, hash types, cracked passwords, user permissions, and proof flags.
+
+4. **Curriculum Claims Audit (`docs/ops/pentest-curriculum-claims.md`):**
+   - Appended claims P71 through P125 under the **UNVERIFIED** alignment status.
+   - Every claim is grounded in authoritative industry sources (OWASP Top 10, POSIX specifications, NIST SP 800-115, RFC standards, PTES, and vendor manuals).
+   - `scripts/check-content.mts` validates that all 124 knowledge items have a verified corresponding claim row.
+
+5. **Linter & Anti-Duplicate Quality Assurance:**
+   - Implemented `lintPentestKnowledgeBank()` with token Jaccard similarity ($\ge 0.85$ threshold) checking all item stem pairs to prevent trivial rewordings and duplicates.
+   - Enforced 100% 12-module coverage and $\ge 120$ item minimum constraint in `scripts/check-content.mts`.
+
+6. **Full Quality Gates Verification Results:**
+   - `npm run lint` ✓ (0 ESLint errors across all components, lib, and tests).
+   - `npm run typecheck` ✓ (0 TypeScript compilation errors; all Next.js route types generated).
+   - `npm run check:content` ✓ (126 lessons, 62 labs, 27 objectives validated; 0 errors).
+   - `npm test` ✓ (255/255 test files passed, 2,410/2,410 tests green).
+   - `npm run build` ✓ (Turbopack production build succeeded; 33 static & dynamic routes compiled).
+   - `npm run scan:bundle` ✓ (0 leaks across 96 client artifacts with 14 pattern rules).
+   - **Strict Constraint**: Zero SOC L2 files or behaviors modified.
+
+
 

@@ -282,6 +282,28 @@ async function main(): Promise<number> {
     }
   }
 
+  // Pentest exams: config, readiness, knowledge bank validation, claims audit, and near-duplicate lint
+  try {
+    const { loadPentestExamConfig, loadPentestReadinessConfig } = await import("@/lib/lab-engine/pentest/exam/config");
+    const { loadPentestKnowledgeBank, lintPentestKnowledgeBank } = await import("@/lib/lab-engine/pentest/exam/knowledge");
+    loadPentestExamConfig();
+    loadPentestReadinessConfig();
+    const bank = loadPentestKnowledgeBank();
+    const lintResult = lintPentestKnowledgeBank(bank);
+    errors.push(...lintResult.errors);
+    for (const w of lintResult.warnings) pentestWarnings.push(w);
+
+    const claimsText = await fs.readFile("docs/ops/pentest-curriculum-claims.md", "utf8");
+    for (const item of bank.items) {
+      const row = claimsText.split("\n").find((l) => l.startsWith(`| ${item.claim} |`));
+      if (!row) {
+        errors.push(`knowledge item ${item.id}: claim ${item.claim} has no row in docs/ops/pentest-curriculum-claims.md`);
+      }
+    }
+  } catch (err) {
+    errors.push(`failed to check pentest exams: ${(err as Error).message}`);
+  }
+
   for (const w of [...result.warnings, ...socWarnings, ...pentestWarnings]) console.warn(`warning: ${w}`);
   for (const e of errors) console.error(`error: ${e}`);
   if (errors.length) {
