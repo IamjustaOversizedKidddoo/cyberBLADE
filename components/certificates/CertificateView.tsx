@@ -143,11 +143,13 @@ export async function CertificateView({
             {/* Track & Level Title */}
             <div className="mt-4 rounded-xs border border-line bg-surface/80 px-5 py-3">
               <p className="font-display text-lg sm:text-xl font-bold uppercase tracking-wide text-ink">
-                {trackTitle}
+                {certificate.trackId === "pentest"
+                  ? "CyberBLADE Completion: Junior Penetration Tester"
+                  : trackTitle}
               </p>
               <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
                 <span className="rounded-full bg-cyan/15 px-3 py-0.5 font-mono text-xs font-semibold text-cyan uppercase tracking-wider">
-                  Classification: {certificate.level}
+                  Classification: {certificate.trackId === "pentest" ? "CyberBLADE Completion (W1)" : certificate.level}
                 </span>
                 <span
                   className={`rounded-full px-3 py-0.5 font-mono text-xs font-semibold uppercase tracking-wider ${
@@ -157,6 +159,11 @@ export async function CertificateView({
                   {isRevoked ? "Status: Revoked" : "Status: Active & Verified"}
                 </span>
               </div>
+              {certificate.trackId === "pentest" && (
+                <p className="mt-2 text-center font-mono text-[11px] text-muted max-w-lg mx-auto leading-relaxed">
+                  CyberBLADE completion credential evaluating hands-on penetration testing performance. This credential is independent and does not represent an official certification by eLearnSecurity or INE.
+                </p>
+              )}
             </div>
 
             {/* Metadata & Signatures Grid */}

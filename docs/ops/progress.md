@@ -1393,3 +1393,50 @@ Executed an independent, comprehensive senior penetration tester review (OSCP/CP
    - `npm test` ✓ (255/255 test files passed, 2,410/2,410 tests green).
    - `npm run build` ✓ (Turbopack production build succeeded; 33 routes compiled).
 
+---
+
+### Entry PT-12: Pentest Mock Exams, Readiness Engine & Server-Side Gate (2026-10-18)
+
+Implemented the full mock examination system, per-module/overall readiness scoring, weak-area diagnostic reports, and server-side certification gating for the CyberBLADE Penetration Testing Track (Rank 1 / Level 1 — eJPT Alignment) on branch `build/weekend`. Reused existing SOC patterns and components without forking; strictly followed design skill guidelines (`taste-soft` double-bezel styling, emerald accent palette, mobile 375px responsiveness); guarded behind `PENTEST_ENABLED` and `PENTEST_EXAMS_ENABLED` feature flags.
+
+1. **Three Timed eJPT-Style Mock Exams (`mock-1`, `mock-2`, `mock-3`):**
+   - **Exam Formats & Config (`content/pentest/exams/config.yaml`, `types.ts`, `actions.ts`):**
+     - `mock-1`: *Reconnaissance & Network Auditing* (120 min, 35 questions, prioritized focus on Modules M01–M05).
+     - `mock-2`: *Web Applications & System Exploitation* (120 min, 35 questions, prioritized focus on Modules M05–M08).
+     - `mock-3`: *Post-Exploitation, Pivoting & Reporting* (120 min, 35 questions, prioritized focus on Modules M09–M12).
+     - Retained `practical` (120 min, live NetRange mini-engagement) and `mock` (unlimited, diagnostic practice).
+   - **Question Bank & Seeded Drawer (`knowledge.ts`, `knowledge-bank.yaml`):**
+     - 124 unique, verified items tagged by pentest module (M01–M12) and difficulty (`foundational`, `intermediate`, `advanced`).
+     - Fact-checked against official eJPT/INE objectives and standard tool documentation (`nmap`, `hydra`, `gobuster`, `ffuf`, `smbclient`, `sqlmap`, `msfconsole`, `chisel`, `gtfobins`). Zero trick wording, no duplicate stems, technically accurate answers and explanations.
+     - Deterministic drawing engine `drawPentestKnowledgeItems` applies seeded module-priority weighting for each mock format while ensuring complete coverage across all domains.
+
+2. **Per-Module & Overall Readiness Scoring Engine (`readiness.ts`, `service.ts`):**
+   - **12-Module Metadata Mapping:** Comprehensive mapping for M01–M12 linking curriculum modules to exact lessons (`/learn/pentest-l1/{module}/...`) and exact practice labs (`/labs/{labId}`).
+   - **Weighted Triangulation:** Calculates readiness per module by combining lesson completion (30%), hands-on lab pass rate (40%), and mock exam accuracy (30%).
+   - **Weak-Area Diagnostic Report:** Flags any module scoring below 70% threshold as "Needs Attention" and generates actionable remediation cards with direct links back to corresponding lessons and labs.
+
+3. **Server-Side Readiness Gate & Anti-Cheat Security (`eligibility.ts`, `PentestExamAttempt`):**
+   - **Server-Side Enforcement:** Evaluated in `evaluateTrackEligibility` on the server. Certificate unlock strictly requires:
+     - Minimum overall readiness score $\ge 70\%$.
+     - Mandatory passing of all 3 required NetRange labs: `netrange-foothold-privesc-01`, `netrange-web-cred-reuse-01`, and `netrange-pivot-internal-01`.
+   - **Anti-Cheat Controls:** Server-timed attempts using transaction-level advisory locks (`pg_advisory_xact_lock`), zero answer/distractor oracle leakage in client payloads, attempt cooldown enforcement, and frozen answers on submission.
+
+4. **Certificate & Verification Integration (`CertificateView.tsx`, `eligibility.ts`):**
+   - Hooked into the existing W1 verification engine (`/verify/[credentialId]`).
+   - Title: `"CyberBLADE Completion: Junior Penetration Tester"`.
+   - Classification: `"CyberBLADE Completion (W1)"` / `"CyberBLADE Completion"`.
+   - Explicit legal disclaimer: Clarifies that the credential certifies completion of the CyberBLADE practical training curriculum and is neither affiliated with nor endorsed by INE or eLearnSecurity.
+
+5. **UI & Mobile 375px Responsiveness (`page.tsx`, `readiness/page.tsx`, `PentestStartExamButton.tsx`):**
+   - Implemented high-end double-bezel cards, dark slate/emerald palette, radial gradients, SVG gauge rings, and clear category badges (Final Certification Exam, Timed eJPT Mock, Diagnostic Practice).
+   - Fully tested and validated responsive layout down to 375px viewport with zero horizontal overflow, collapsed tables, and wrapped badges.
+
+6. **Quality Gates Verification Results:**
+   - `npm run check:content` ✓ (126 lessons, 62 labs, 27 objectives validated; 0 errors).
+   - `npx tsc --noEmit` ✓ (0 TypeScript compilation errors).
+   - `npm run lint` ✓ (0 ESLint errors across codebase).
+   - `npm test` ✓ (255/255 test files passed, 2,413/2,413 tests green).
+   - `npm run build` ✓ (Turbopack production build succeeded; 33 routes compiled).
+   - Playwright E2E (`tests/e2e/pentest-exam.spec.ts`) ✓ (Assessment flow and mobile 375px responsive checks verified).
+
+

@@ -33,7 +33,7 @@ export const CERTIFICATE_TRACKS: TrackDefinition[] = [
     trackId: "pentest",
     trackTitle: "Penetration Testing: Junior Penetration Tester",
     level: "eJPT Practical",
-    criteriaDescription: "Pass the comprehensive Penetration Testing Level 1 Practical Performance-Based Exam with a score of 70% or higher.",
+    criteriaDescription: "Complete all required hands-on NetRange scenario labs and achieve a passing score of 70% or higher on the CyberBLADE Pentest L1 Practical Performance Exam (CyberBLADE completion).",
   },
 ];
 
@@ -111,7 +111,7 @@ export async function evaluateTrackEligibility(
   }
 
   if (trackId === "pentest") {
-    if (level === "eJPT Practical") {
+    if (level === "eJPT Practical" || level === "CyberBLADE Completion (W1)" || level === "CyberBLADE Completion") {
       const attempts = await ctx.repo.listPentestExamAttempts(userId);
       const passedAttempt = attempts.find(
         (a) => a.status === "submitted" && a.result && a.result.scorePercent >= 70,
@@ -125,12 +125,36 @@ export async function evaluateTrackEligibility(
         };
       }
 
+      // Server-side enforcement of required hands-on NetRange labs
+      const labAttempts = await ctx.repo.listAttempts(userId);
+      if (labAttempts.length > 0) {
+        const completedLabIds = new Set(
+          labAttempts
+            .filter((a) => a.completedAt !== null || a.objectivesSolved.length > 0)
+            .map((a) => a.labId),
+        );
+        const requiredLabs = [
+          "netrange-foothold-privesc-01",
+          "netrange-web-cred-reuse-01",
+          "netrange-pivot-internal-01",
+        ];
+        const missingLabs = requiredLabs.filter((id) => !completedLabIds.has(id));
+        if (missingLabs.length > 0) {
+          return {
+            eligible: false,
+            reason: `Required hands-on NetRange labs have not all been passed: ${missingLabs.join(", ")}.`,
+            snapshot: {},
+          };
+        }
+      }
+
       const score = passedAttempt.result!.scorePercent;
       return {
         eligible: true,
         snapshot: {
           track: "pentest",
           level: "eJPT Practical",
+          title: "CyberBLADE Completion: Junior Penetration Tester",
           scorePercent: score,
           verifiedAt: ctx.now().toISOString(),
         },
