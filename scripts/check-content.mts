@@ -96,6 +96,24 @@ async function main(): Promise<number> {
     }
   }
 
+  // Validate NetRange scenarios across all netrange labs
+  for (const lab of labs) {
+    if (lab.type === "netrange" && Object.hasOwn(GENERATORS, lab.dataset.generator)) {
+      try {
+        const out = generateLab(lab, "netrange-content-check");
+        if (out.env.kind === "netrange") {
+          const { lintNetRangeScenario } = await import("@/lib/lab-engine/netrange/lint");
+          const lintRes = lintNetRangeScenario(out.env.network.scenario);
+          if (!lintRes.valid) {
+            errors.push(`Lab ${lab.id} scenario lint failed: ${lintRes.errors.join("; ")}`);
+          }
+        }
+      } catch (err) {
+        errors.push(`Lab ${lab.id} generation failed: ${(err as Error).message}`);
+      }
+    }
+  }
+
   // Validate SOC scenario families
   try {
     const famDir = "content/soc/families";

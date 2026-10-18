@@ -66,6 +66,103 @@ Metasploit tip: Use the 'search' command to find modules by keyword.
     };
   }
 
+  if (cmd === "help" || cmd === "?") {
+    const help = `
+Core Commands
+=============
+
+    Command       Description
+    -------       -----------
+    search <term> Search module names and descriptions
+    use <name>    Interact with a module by name or index
+    set <opt> <v> Set a context-specific variable to a value
+    show options  Displays options for the current module
+    exploit / run Launch an exploit or run an auxiliary/post module
+    sessions      Dump session listings and display information about sessions
+    route         Route traffic through an active session
+    back          Move back from the current context
+    exit / quit   Exit the console
+`;
+    return { stdout: help.trim() + "\n", stderr: "", code: 0, nextState, prompt: formatPrompt(nextState, scenario) };
+  }
+
+  if (cmd === "search") {
+    const term = argv.slice(1).join(" ").toLowerCase();
+    if (!term) {
+      return { stdout: "", stderr: "[-] Usage: search <term>\nExample: search vsftpd\n", code: 1, nextState, prompt: formatPrompt(nextState, scenario) };
+    }
+
+    const availableModules = [
+      {
+        name: "exploit/unix/ftp/vsftpd_234_backdoor",
+        date: "2011-07-03",
+        rank: "excellent",
+        check: "No",
+        desc: "VSFTPD v2.3.4 Backdoor Execution",
+      },
+      {
+        name: "exploit/multi/samba/usermap_script",
+        date: "2007-05-14",
+        rank: "excellent",
+        check: "No",
+        desc: "Samba \"username map script\" Command Execution",
+      },
+      {
+        name: "exploit/multi/http/apache_normalize_path_rce",
+        date: "2021-10-05",
+        rank: "excellent",
+        check: "Yes",
+        desc: "Apache 2.4.49/2.4.50 Path Traversal & RCE",
+      },
+    ];
+
+    for (const host of scenario.hosts) {
+      for (const vuln of host.vulnerabilities ?? []) {
+        if (vuln.exploitPayload && !availableModules.some((m) => m.name === vuln.exploitPayload)) {
+          availableModules.push({
+            name: vuln.exploitPayload,
+            date: "2024-01-01",
+            rank: "excellent",
+            check: "Yes",
+            desc: vuln.name,
+          });
+        }
+      }
+    }
+
+    const matches = availableModules.filter(
+      (m) =>
+        m.name.toLowerCase().includes(term) ||
+        m.desc.toLowerCase().includes(term),
+    );
+
+    const out: string[] = [
+      "Matching Modules",
+      "================",
+      "",
+      "   #  Name                                          Disclosure Date  Rank       Check  Description",
+      "   -  ----                                          ---------------  ----       -----  -----------",
+    ];
+
+    matches.forEach((m, idx) => {
+      out.push(
+        `   ${idx}  ${m.name.padEnd(46)}  ${m.date}       ${m.rank.padEnd(11)}${m.check.padEnd(7)}${m.desc}`,
+      );
+    });
+
+    if (matches.length === 0) {
+      out.push("   No matching modules found.");
+    }
+
+    return {
+      stdout: out.join("\n") + "\n\n",
+      stderr: "",
+      code: 0,
+      nextState,
+      prompt: formatPrompt(nextState, scenario),
+    };
+  }
+
   if (cmd === "use") {
     const mod = argv[1];
     if (!mod) {

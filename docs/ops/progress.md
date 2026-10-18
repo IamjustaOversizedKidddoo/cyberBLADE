@@ -1124,3 +1124,46 @@ Final milestone on branch `build/weekend` delivering the remaining lessons and c
    - `npm run build` ✓ (Turbopack production build succeeded, all 33 static & dynamic routes compiled).
    - `npm run scan:bundle` ✓ (0 leaks across 96 client artifacts with 14 pattern rules).
    - Playwright E2E (`tests/e2e/pentest-track.spec.ts`) ✓ (8 passed across desktop & mobile, successfully completing one lab per engine: Terminal, WebApp, and Packet).
+
+---
+
+### Entry PT-7: NetRange Simulated Multi-Host Network Lab Engine (2026-10-18)
+
+Engineered and verified the `netrange` deterministic, fully simulated multi-host lab engine for eJPT-style practical penetration testing on branch `build/weekend`. Zero real network sockets or traffic leave the application.
+
+1. **Scenario Schema, Linter & PRNG Randomization Points:**
+   - **Schema & Types:** Defined complete Zod and TypeScript contracts in `lib/lab-engine/netrange/types.ts` and `schema.ts` specifying hosts, OS, network interfaces, subnets, services, banners, credentials, password hashes, vulnerabilities with explicit preconditions, filesystems, flags, and `randomizationPoints`.
+   - **Content Linter:** Implemented `lintNetRangeScenario()` enforcing RFC 5737/1918 addressing, valid CIDR blocks, gateway reachability, and objective references. Integrated into `npm run check:content`.
+
+2. **Simulated Tooling Suite (< 150ms execution):**
+   - **`nmap`:** Realistic output supporting `-sS` (SYN scan), `-sV` (service versions), `-sC` (NSE scripts), `-O` (OS fingerprinting), `-A` (aggressive), `-p` (port filtering), `-Pn` (skip host discovery), `-oN` (save scan output to downloaded files), and subnet sweeps.
+   - **`gobuster` & `ffuf`:** Directory discovery (`gobuster dir -u -w`) and fuzzing (`ffuf -u -w FUZZ`) matching simulated HTTP endpoints and wordlists.
+   - **`enum4linux` & `enum4linux-ng`:** SMB domain/workgroup enumeration, share discovery, user enumeration, and dialect reporting.
+   - **`smbclient`:** Null session auditing, share browsing, and file retrieval.
+   - **`ftp` & `ssh`:** Interactive sessions, anonymous FTP downloads, SSH authentication, `-D` dynamic SOCKS tunneling, and `-L` local port forwarding.
+   - **`curl`:** HTTP client supporting method overrides (`-X`), custom data (`-d`), headers, and realistic response headers.
+   - **`searchsploit`:** Querying bundled CVE/exploit database with realistic Exploit-DB output and paths.
+   - **`msfconsole`:** Interactive framework simulation featuring `search`, `use`, `set`, `show options`, `run`/`exploit`, and multi-session management (`sessions -l`, `sessions -i`).
+   - **`john` & `hashcat`:** Dictionary attacks over rockyou/wordlists supporting MD5 (`-m 0`), NTLM (`-m 1000`), sha512crypt (`-m 1800`), bcrypt (`-m 3200`), and `--show`.
+   - **Host Shells:** Realistic Linux (`whoami`, `hostname`, `cat`, `ls`, `id`, `sudo -l`, GTFOBins, `find`, `sh`, `ps`, `netstat`, `echo`) and Windows (`dir`, `type`, `ipconfig`, `net user`, `tasklist`, `whoami`) emulation.
+   - **Pivoting & Routing:** `ip route show/add`, `route -n`, dynamic SOCKS tunneling via `ssh -D`, and `proxychains` chaining.
+
+3. **Server-Side State Machine & Security:**
+   - Server-side per-attempt state machine with session stacking, audit logging, objective flag validation, and non-linear XP hint deduction.
+   - Guaranteed flag non-leakage (zero secret tokens sent to client state or returned in unknown command errors).
+   - Bundled scanner protection in `lib/security/bundle-scan.ts` preventing solution leakage.
+
+4. **Scenario A ("Foothold → privesc") & UI Ergonomics:**
+   - Authored `netrange-foothold-privesc-01` scenario simulating foothold via vsftpd 2.3.4 backdoor exploitation into root privilege escalation via sudo find GTFOBins breakout.
+   - Responsive UI tested and verified at 390px mobile viewport with dedicated mobile action buttons (`TAB`, `EXEC`) and no horizontal overflow.
+
+5. **Quality Gates Verification Results:**
+   - `npm run check:content` ✓ (126 lessons, 60 labs, 27 objectives validated; 0 errors).
+   - `npm run typecheck` ✓ (0 TypeScript compilation errors).
+   - `npm run lint` ✓ (0 ESLint errors).
+   - `npm run test:security` ✓ (25/25 test files passed, 260/260 tests green).
+   - `npm test` ✓ (254/254 test files passed, 2,380/2,380 tests green).
+   - `npm run build` ✓ (Turbopack production build succeeded, all 33 static & dynamic routes compiled).
+   - `npm run scan:bundle` ✓ (0 leaks across 96 client artifacts with 14 pattern rules).
+   - Playwright E2E (`tests/e2e/netrange-lab.spec.ts`) ✓ (4 passed across desktop & 390px mobile viewports).
+

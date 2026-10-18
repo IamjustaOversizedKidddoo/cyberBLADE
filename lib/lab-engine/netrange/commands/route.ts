@@ -7,8 +7,12 @@ export function execRoute(
   state: NetRangeState,
   scenario: NetRangeScenario,
 ): { stdout: string; stderr: string; code: number; nextState?: NetRangeState } {
-  // If just "route" or "route -n" or "ip route"
-  if (argv.length === 1 || (argv.length === 2 && argv[1] === "-n")) {
+  // If just "route" or "route -n" or "ip route [show|list]"
+  if (
+    argv.length === 1 ||
+    (argv.length === 2 &&
+      (argv[1] === "-n" || argv[1] === "show" || argv[1] === "list" || argv[1] === "s" || argv[1] === "l"))
+  ) {
     const lines = [
       "Kernel IP routing table",
       "Destination     Gateway         Genmask         Flags Metric Ref    Use Iface",

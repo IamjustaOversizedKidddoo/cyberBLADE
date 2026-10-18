@@ -148,6 +148,7 @@ export const netRangeScenarioSchema = z
     flags: z.array(netRangeFlagSchema).min(1),
     attackerTools: z.array(z.string()).optional(),
     wordlists: z.record(z.string(), z.array(z.string())).optional(),
+    randomizationPoints: z.record(z.string(), z.unknown()).optional(),
   })
   .refine(
     (s) => new Set(s.hosts.map((h) => h.id)).size === s.hosts.length,

@@ -32,6 +32,10 @@ export function execHostCommand(
     return { stdout: `${state.currentUser}\n`, stderr: "", code: 0 };
   }
 
+  if (cmd === "hostname") {
+    return { stdout: `${host?.hostname ?? "localhost"}\n`, stderr: "", code: 0 };
+  }
+
   if (cmd === "id") {
     if (state.currentUser === "root") {
       return { stdout: "uid=0(root) gid=0(root) groups=0(root)\n", stderr: "", code: 0 };
@@ -92,7 +96,6 @@ export function execHostCommand(
   // File listing: ls or dir
   if (cmd === "ls" || cmd === "dir") {
     if (!host) {
-      // Attacker machine files
       const files = Object.keys(state.downloadedFiles);
       if (files.length === 0) {
         return { stdout: "rockyou.txt\n", stderr: "", code: 0 };
@@ -121,7 +124,6 @@ export function execHostCommand(
     }
 
     if (!host) {
-      // Attacker machine files
       if (filename === "rockyou.txt") {
         const words = scenario.wordlists?.rockyou ?? ["password", "123456", "admin123", "summer2024", "hunter2"];
         return { stdout: words.slice(0, 10).join("\n") + "\n...\n", stderr: "", code: 0 };
@@ -133,12 +135,15 @@ export function execHostCommand(
     }
 
     const fs = host.filesystem ?? {};
-    // Match exact path, or relative to cwd, or base filename
     const matchedPath = Object.keys(fs).find(
       (p) =>
         p === filename ||
         p === `${state.currentCwd}/${filename}` ||
+        p === `${state.currentCwd}\\${filename}` ||
         p.endsWith(`/${filename}`) ||
+        p.endsWith(`\\${filename}`) ||
+        p.toLowerCase().endsWith(`\\${filename.toLowerCase()}`) ||
+        p.toLowerCase().endsWith(`/${filename.toLowerCase()}`) ||
         p === `/home/${state.currentUser}/${filename}` ||
         p === `/root/${filename}`,
     );
@@ -153,6 +158,87 @@ export function execHostCommand(
     }
 
     return { stdout: "", stderr: `cat: ${filename}: No such file or directory\n`, code: 1 };
+  }
+
+  // Echo command
+  if (cmd === "echo") {
+    const text = argv.slice(1).join(" ");
+    return { stdout: text + "\n", stderr: "", code: 0 };
+  }
+
+  // Grep command
+  if (cmd === "grep") {
+    const term = argv[1];
+    const filename = argv[2];
+    if (!term || !filename) {
+      return { stdout: "", stderr: "Usage: grep <pattern> <file>\n", code: 1 };
+    }
+    const fs = host?.filesystem ?? {};
+    const matchedPath = Object.keys(fs).find((p) => p === filename || p.endsWith(`/${filename}`));
+    if (matchedPath && fs[matchedPath]) {
+      const lines = fs[matchedPath].content.split("\n").filter((l) => l.includes(term));
+      return { stdout: (lines.length > 0 ? lines.join("\n") + "\n" : ""), stderr: "", code: 0 };
+    }
+    return { stdout: "", stderr: `grep: ${filename}: No such file or directory\n`, code: 1 };
+  }
+
+  // Process status: ps or tasklist
+  if (cmd === "ps" || cmd === "tasklist") {
+    if (host?.os === "windows" || cmd === "tasklist") {
+      const procs = [
+        "Image Name                     PID Session Name        Session#    Mem Usage",
+        "========================= ======== ================ =========== ============",
+        "System Idle Process              0 Services                   0          8 K",
+        "System                           4 Services                   0        240 K",
+        "smss.exe                       340 Services                   0      1,020 K",
+        "csrss.exe                      488 Services                   0      4,320 K",
+        "wininit.exe                    564 Services                   0      4,890 K",
+        "services.exe                   632 Services                   0      8,450 K",
+        "lsass.exe                      648 Services                   0     14,210 K",
+        "svchost.exe                    780 Services                   0     21,500 K",
+        "spoolsv.exe                   1240 Services                   0     11,200 K",
+        "cmd.exe                       2450 Console                    1      3,120 K",
+      ];
+      return { stdout: procs.join("\n") + "\n", stderr: "", code: 0 };
+    }
+
+    const procs = [
+      "  PID TTY          TIME CMD",
+      "    1 ?        00:00:02 systemd",
+      "  412 ?        00:00:00 systemd-journal",
+      "  580 ?        00:00:00 cron",
+      "  612 ?        00:00:01 sshd",
+      "  820 ?        00:00:00 vsftpd",
+      "  945 ?        00:00:00 apache2",
+      " 1420 pts/0    00:00:00 bash",
+      " 1580 pts/0    00:00:00 ps",
+    ];
+    return { stdout: procs.join("\n") + "\n", stderr: "", code: 0 };
+  }
+
+  // Netstat listening ports
+  if (cmd === "netstat") {
+    const lines = [
+      "Active Internet connections (only servers)",
+      "Proto Recv-Q Send-Q Local Address           Foreign Address         State",
+    ];
+    for (const svc of host?.services ?? []) {
+      lines.push(`tcp        0      0 0.0.0.0:${svc.port.toString().padEnd(16)}0.0.0.0:*               LISTEN`);
+    }
+    return { stdout: lines.join("\n") + "\n", stderr: "", code: 0 };
+  }
+
+  // Env variables
+  if (cmd === "env") {
+    const envVars = [
+      `USER=${state.currentUser}`,
+      `HOME=${state.currentUser === "root" ? "/root" : `/home/${state.currentUser}`}`,
+      "SHELL=/bin/bash",
+      "TERM=xterm-256color",
+      "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+      `PWD=${state.currentCwd}`,
+    ];
+    return { stdout: envVars.join("\n") + "\n", stderr: "", code: 0 };
   }
 
   // Sudo privilege escalation inspection & execution
@@ -194,9 +280,18 @@ export function execHostCommand(
         sudoTargetCmd.includes("-exec /bin/sh") ||
         sudoTargetCmd.includes("-exec /bin/bash") ||
         sudoTargetCmd.includes("-exec sh") ||
+        sudoTargetCmd.includes("-exec bash") ||
         sudoTargetCmd.includes(":!/bin/sh") ||
         sudoTargetCmd.includes(":!/bin/bash") ||
-        sudoTargetCmd.includes("import os; os.system");
+        sudoTargetCmd.includes("system(\"/bin/sh\")") ||
+        sudoTargetCmd.includes("system(\"/bin/bash\")") ||
+        sudoTargetCmd.includes("import os; os.system") ||
+        sudoTargetCmd.includes("--checkpoint-action=exec=") ||
+        sudoTargetCmd === "su" ||
+        sudoTargetCmd === "/bin/sh" ||
+        sudoTargetCmd === "/bin/bash" ||
+        sudoTargetCmd === "sh" ||
+        sudoTargetCmd === "bash";
 
       if (isShellEscape) {
         nextState.currentUser = "root";
@@ -227,7 +322,7 @@ export function execHostCommand(
   // Find SUID binaries: `find / -perm -4000 ...`
   if (cmd === "find") {
     const line = argv.join(" ");
-    if (line.includes("-perm -4000") || line.includes("-perm -u=s")) {
+    if (line.includes("-perm -4000") || line.includes("-perm -u=s") || line.includes("-perm /4000")) {
       const suids: string[] = [
         "/usr/bin/passwd",
         "/usr/bin/chfn",

@@ -9,10 +9,11 @@ import { execCurl } from "./commands/curl";
 import { execFtp } from "./commands/ftp";
 import { execSsh } from "./commands/ssh";
 import { execSearchsploit } from "./commands/searchsploit";
-import { execSmbclient, execEnum4linux } from "./commands/smbclient";
+import { execSmbclient, execEnum4linux, execEnum4linuxNg } from "./commands/smbclient";
 import { execMsfconsole } from "./commands/msfconsole";
-import { execJohn } from "./commands/john";
+import { execJohn, execHashcat } from "./commands/john";
 import { execRoute } from "./commands/route";
+import { execGobuster, execFfuf } from "./commands/gobuster";
 import { execHostCommand } from "./commands/host-shell";
 import { isTargetRoutable } from "./commands/util";
 
@@ -220,20 +221,26 @@ function executeSingleCommand(
 CyberBLADE NetRange - Tactical Attacker Terminal
 -------------------------------------------------
 Network Reconnaissance:
-  nmap [flags] <target/cidr>      TCP port scanner (-sV, -sC, -A, -p, -Pn)
+  nmap [flags] <target/cidr>      TCP port scanner (-sS, -sV, -sC, -A, -p, -O, -Pn, -oN)
   enum4linux <target-ip>          SMB/RPC user & share enumeration
+  enum4linux-ng <target-ip>       Next-gen SMB enumeration
   curl [-i] <url>                 HTTP request utility
+  gobuster dir -u <url> -w <word> Web content & directory discovery
+  ffuf -u <url/FUZZ> -w <word>    Fast web fuzzer
   smbclient -L <ip> / //<ip>/sh   SMB share listing & file retrieval
   ftp <target-ip>                 FTP interactive client
 
 Exploitation & Frameworks:
   searchsploit <keyword>          Offline Exploit-DB search utility
-  msfconsole                      Interactive Metasploit Framework console
-  john [--wordlist=file] <hash>   Hash cracking utility
+  msfconsole                      Interactive Metasploit Framework console (search/use/set/run)
+  john [--wordlist=file] <hash>   John the Ripper hash cracking utility
+  hashcat -m <mode> <file> <word> Hashcat password recovery suite
 
 Lateral Movement & Remote Access:
-  ssh [user@]<target> [-p port]   Secure Shell remote login
+  ssh [user@]<target> [-D port]   Secure Shell remote login & dynamic SOCKS proxying
+  proxychains <command> [args...] Run tool chained through active SOCKS proxy tunnel
   route [add <net> via <gw>]      Kernel routing table / subnet pivoting
+  ip route [add <net> via <gw>]   Linux iproute2 subnet management
   sessions [-l | -i <id>]         Manage active background sessions
 
 Lab Commands:
@@ -253,6 +260,22 @@ Lab Commands:
   // Tool dispatch
   if (cmd === "nmap") {
     const res = execNmap(argv, state, scenario);
+    return {
+      stdout: res.stdout,
+      stderr: res.stderr,
+      code: res.code,
+      nextState: res.nextState ?? nextState,
+      prompt: formatPrompt(res.nextState ?? nextState, scenario),
+    };
+  }
+
+  if (cmd === "gobuster") {
+    const res = execGobuster(argv, state, scenario);
+    return { ...res, nextState, prompt: formatPrompt(nextState, scenario) };
+  }
+
+  if (cmd === "ffuf") {
+    const res = execFfuf(argv, state, scenario);
     return { ...res, nextState, prompt: formatPrompt(nextState, scenario) };
   }
 
@@ -285,6 +308,11 @@ Lab Commands:
 
   if (cmd === "enum4linux") {
     const res = execEnum4linux(argv, state, scenario);
+    return { ...res, nextState, prompt: formatPrompt(nextState, scenario) };
+  }
+
+  if (cmd === "enum4linux-ng" || cmd === "enum4linux_ng") {
+    const res = execEnum4linuxNg(argv, state, scenario);
     return { ...res, nextState, prompt: formatPrompt(nextState, scenario) };
   }
 
@@ -326,6 +354,75 @@ Lab Commands:
     };
   }
 
+  if (cmd === "hashcat") {
+    const res = execHashcat(argv, state, scenario);
+    return {
+      stdout: res.stdout,
+      stderr: res.stderr,
+      code: res.code,
+      nextState: res.nextState ?? nextState,
+      prompt: formatPrompt(res.nextState ?? nextState, scenario),
+    };
+  }
+
+  if (cmd === "proxychains" || cmd === "proxychains4") {
+    if (argv.length < 2) {
+      return {
+        stdout: "",
+        stderr: "Usage: proxychains <command> [arguments]\nExample: proxychains nmap -sT -Pn 172.16.50.25\n",
+        code: 1,
+        nextState,
+        prompt: formatPrompt(nextState, scenario),
+      };
+    }
+
+    const subArgv = argv.slice(1);
+    const hasActiveTunnel =
+      (state.socksTunnels && state.socksTunnels.length > 0) ||
+      state.sessions.length > 0;
+
+    const proxyHeader = `[proxychains] config file found: /etc/proxychains.conf\n[proxychains] preloading /usr/lib/libproxychains4.so\n`;
+
+    if (!hasActiveTunnel) {
+      return {
+        stdout: proxyHeader + `[proxychains] Dynamic chain  ...  127.0.0.1:1080  ...  timeout\n`,
+        stderr: `[-] Proxychains error: Could not connect to SOCKS4/5 proxy 127.0.0.1:1080 (Connection refused)\n`,
+        code: 1,
+        nextState,
+        prompt: formatPrompt(nextState, scenario),
+      };
+    }
+
+    // With active tunnel, make internal subnets reachable via tunnel
+    const tunnelState: NetRangeState = {
+      ...state,
+      routes: [...state.routes],
+    };
+
+    for (const subnet of scenario.subnets) {
+      if (!tunnelState.routes.includes(subnet.cidr)) {
+        tunnelState.routes.push(subnet.cidr);
+      }
+    }
+
+    const subRes = executeSingleCommand(subArgv.join(" "), tunnelState, scenario);
+    const targetArg = subArgv.find((a) => !a.startsWith("-") && a.match(/^\d+\.\d+\.\d+\.\d+/));
+    const targetDisplay = targetArg ? `${targetArg}:80` : "target:80";
+    const chainNotice = `[proxychains] Dynamic chain  ...  127.0.0.1:1080  ...  ${targetDisplay}  ...  OK\n`;
+
+    return {
+      stdout: proxyHeader + chainNotice + subRes.stdout,
+      stderr: subRes.stderr,
+      code: subRes.code,
+      nextState: {
+        ...subRes.nextState,
+        routes: state.routes, // maintain base routing table
+      },
+      prompt: formatPrompt(subRes.nextState, scenario),
+      submit: subRes.submit,
+    };
+  }
+
   if (cmd === "route") {
     const res = execRoute(argv, state, scenario);
     return {
@@ -338,7 +435,7 @@ Lab Commands:
   }
 
   if (cmd === "ip") {
-    if (argv[1] === "route") {
+    if (argv[1] === "route" || argv[1] === "r") {
       const res = execRoute(["route", ...argv.slice(2)], state, scenario);
       return {
         stdout: res.stdout,
@@ -348,7 +445,7 @@ Lab Commands:
         prompt: formatPrompt(res.nextState ?? nextState, scenario),
       };
     }
-    if (argv[1] === "a" || argv[1] === "addr") {
+    if (argv[1] === "a" || argv[1] === "addr" || argv[1] === "link") {
       const out = `1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     inet 127.0.0.1/8 scope host lo
 2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000

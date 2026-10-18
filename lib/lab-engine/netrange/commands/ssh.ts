@@ -10,6 +10,9 @@ export function execSsh(
   let userOverride = "";
   let port = 22;
   let remoteCmd = "";
+  let dynamicSocksPort: number | null = null;
+  let localForwardSpec: string | null = null;
+  let backgroundNoCommand = false;
 
   for (let i = 1; i < argv.length; i++) {
     const a = argv[i];
@@ -17,6 +20,14 @@ export function execSsh(
       port = Number(argv[++i]);
     } else if (a === "-l" && i + 1 < argv.length) {
       userOverride = argv[++i];
+    } else if ((a === "-D" || a === "--dynamic") && i + 1 < argv.length) {
+      dynamicSocksPort = Number(argv[++i]);
+    } else if (a.startsWith("-D")) {
+      dynamicSocksPort = Number(a.slice(2));
+    } else if (a === "-L" && i + 1 < argv.length) {
+      localForwardSpec = argv[++i];
+    } else if (a === "-N" || a === "-f" || a === "-fn" || a === "-fN") {
+      backgroundNoCommand = true;
     } else if (!a.startsWith("-")) {
       if (!targetSpec) {
         targetSpec = a;
@@ -28,7 +39,7 @@ export function execSsh(
   }
 
   if (!targetSpec) {
-    return { stdout: "", stderr: "usage: ssh [-p port] [user@]hostname [command]\n", code: 1 };
+    return { stdout: "", stderr: "usage: ssh [-p port] [-D [bind_address:]port] [-L spec] [user@]hostname [command]\n", code: 1 };
   }
 
   let username = userOverride;
@@ -66,7 +77,49 @@ export function execSsh(
     return { stdout: "", stderr: `${username}@${iface.ip}: Permission denied (publickey,password).\n`, code: 1 };
   }
 
-  // Create or switch to session
+  // Handle Dynamic SOCKS Proxy (-D)
+  if (dynamicSocksPort) {
+    const socksPort = dynamicSocksPort;
+    const nextRoutes = [...state.routes];
+    for (const hostIface of host.interfaces) {
+      if (!nextRoutes.includes(hostIface.subnet)) {
+        nextRoutes.push(hostIface.subnet);
+      }
+    }
+
+    const nextTunnels = [...(state.socksTunnels ?? []), { port: socksPort, hostId: host.id }];
+    const nextState: NetRangeState = {
+      ...state,
+      routes: nextRoutes,
+      socksTunnels: nextTunnels,
+    };
+
+    if (backgroundNoCommand) {
+      return {
+        stdout: `[+] Dynamic SOCKS proxy established on 127.0.0.1:${socksPort} via ${userAccount.username}@${host.hostname} (backgrounded).\n`,
+        stderr: "",
+        code: 0,
+        nextState,
+        prompt: formatPrompt(nextState, scenario),
+      };
+    }
+  }
+
+  // Handle Local Port Forwarding (-L)
+  if (localForwardSpec) {
+    const nextState: NetRangeState = { ...state };
+    if (backgroundNoCommand) {
+      return {
+        stdout: `[+] Local forwarding established: ${localForwardSpec} via ${userAccount.username}@${host.hostname} (backgrounded).\n`,
+        stderr: "",
+        code: 0,
+        nextState,
+        prompt: formatPrompt(nextState, scenario),
+      };
+    }
+  }
+
+  // Create or switch to interactive session
   const newSessionId = (state.sessions.length > 0 ? Math.max(...state.sessions.map((s) => s.id)) : 0) + 1;
   const newSession: NetRangeSession = {
     id: newSessionId,

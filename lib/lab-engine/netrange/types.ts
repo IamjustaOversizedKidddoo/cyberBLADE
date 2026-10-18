@@ -128,6 +128,7 @@ export type NetRangeScenario = {
   flags: NetRangeFlag[];
   attackerTools?: string[];
   wordlists?: Record<string, string[]>;
+  randomizationPoints?: Record<string, unknown>;
 };
 
 export type NetRangeEnv = {
@@ -155,6 +156,7 @@ export type NetRangeState = {
   crackedHashes: Record<string, string>;
   downloadedFiles: Record<string, string>;
   history: string[];
+  socksTunnels?: Array<{ port: number; hostId: string }>;
   msfContext?: {
     selectedModule?: string;
     options: Record<string, string>;

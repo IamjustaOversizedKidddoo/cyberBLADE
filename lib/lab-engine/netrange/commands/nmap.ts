@@ -6,12 +6,15 @@ export function execNmap(
   argv: string[],
   state: NetRangeState,
   scenario: NetRangeScenario,
-): { stdout: string; stderr: string; code: number } {
+): { stdout: string; stderr: string; code: number; nextState?: NetRangeState } {
   let hasVersion = false;
   let hasScripts = false;
+  let hasOs = false;
   let hasPn = false;
+  let isSynScan = false;
   let requestedPorts: number[] | null = null;
   let allPorts = false;
+  let outputFile: string | null = null;
   const targets: string[] = [];
 
   for (let i = 1; i < argv.length; i++) {
@@ -19,6 +22,8 @@ export function execNmap(
     if (arg === "-sV" || arg === "-sC" || arg === "-A" || arg === "-sS" || arg === "-sT" || arg === "-O" || arg === "-Pn") {
       if (arg === "-sV" || arg === "-A") hasVersion = true;
       if (arg === "-sC" || arg === "-A") hasScripts = true;
+      if (arg === "-O" || arg === "-A") hasOs = true;
+      if (arg === "-sS") isSynScan = true;
       if (arg === "-Pn") hasPn = true;
     } else if (arg === "-p-") {
       allPorts = true;
@@ -30,6 +35,10 @@ export function execNmap(
     } else if (arg.startsWith("-p")) {
       const rest = arg.slice(2);
       requestedPorts = rest.split(",").map((p) => Number(p.trim())).filter((n) => !isNaN(n));
+    } else if (arg === "-oN" && i + 1 < argv.length) {
+      outputFile = argv[++i];
+    } else if (arg.startsWith("-oN=")) {
+      outputFile = arg.slice(5);
     } else if (!arg.startsWith("-")) {
       targets.push(arg);
     }
@@ -45,6 +54,9 @@ export function execNmap(
 
   const out: string[] = [];
   out.push("Starting Nmap 7.94 ( https://nmap.org ) at 2026-10-17 11:50 UTC");
+  if (isSynScan) {
+    out.push("Scanning with SYN Stealth Scan (half-open probes)");
+  }
 
   let hostsScanned = 0;
   let hostsUp = 0;
@@ -63,13 +75,24 @@ export function execNmap(
           continue;
         }
         hostsUp++;
-        formatHostScan(host, targetIp, out, hasVersion, hasScripts, requestedPorts, allPorts);
+        formatHostScan(host, targetIp, out, hasVersion, hasScripts, hasOs, requestedPorts, allPorts);
       }
     } else {
       hostsScanned++;
       const host = findHostByIpOrName(scenario, target);
       if (!host) {
-        out.push(`Failed to resolve "${target}".`);
+        if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(target)) {
+          out.push(`Nmap scan report for ${target}`);
+          if (hasPn) {
+            out.push("Host is up.");
+            out.push(`All 1000 scanned ports on ${target} are in ignored states.`);
+            out.push("Not shown: 1000 filtered tcp ports (no-response)");
+          } else {
+            out.push("Note: Host seems down. If it is really up, but blocking our ping probes, try -Pn");
+          }
+        } else {
+          out.push(`Failed to resolve "${target}".`);
+        }
         continue;
       }
 
@@ -89,13 +112,26 @@ export function execNmap(
         }
       } else {
         hostsUp++;
-        formatHostScan(host, targetIp, out, hasVersion, hasScripts, requestedPorts, allPorts);
+        formatHostScan(host, targetIp, out, hasVersion, hasScripts, hasOs, requestedPorts, allPorts);
       }
     }
   }
 
   out.push(`Nmap done: ${hostsScanned} IP address (${hostsUp} host${hostsUp === 1 ? "" : "s"} up) scanned in 0.42 seconds`);
-  return { stdout: out.join("\n") + "\n", stderr: "", code: 0 };
+  const stdout = out.join("\n") + "\n";
+
+  let nextState: NetRangeState | undefined;
+  if (outputFile) {
+    nextState = {
+      ...state,
+      downloadedFiles: {
+        ...state.downloadedFiles,
+        [outputFile]: stdout,
+      },
+    };
+  }
+
+  return { stdout, stderr: "", code: 0, nextState };
 }
 
 function formatHostScan(
@@ -104,6 +140,7 @@ function formatHostScan(
   out: string[],
   hasVersion: boolean,
   hasScripts: boolean,
+  hasOs: boolean,
   requestedPorts: number[] | null,
   _allPorts: boolean,
 ) {
@@ -135,5 +172,22 @@ function formatHostScan(
       }
     }
   }
+
+  if (hasOs) {
+    if (host.os === "linux") {
+      out.push("Device type: general purpose");
+      out.push("Running: Linux 5.X|4.X");
+      out.push("OS CPE: cpe:/o:linux:linux_kernel:5");
+      out.push("OS details: Linux 5.4 - 5.10");
+      out.push("Network Distance: 1 hop");
+    } else {
+      out.push("Device type: general purpose");
+      out.push("Running: Microsoft Windows Server 2019");
+      out.push("OS CPE: cpe:/o:microsoft:windows_server_2019");
+      out.push("OS details: Microsoft Windows Server 2019 Standard");
+      out.push("Network Distance: 1 hop");
+    }
+  }
+
   out.push("");
 }

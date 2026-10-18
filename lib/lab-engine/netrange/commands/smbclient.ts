@@ -172,3 +172,52 @@ enum4linux complete.
 `;
   return { stdout: out.trim() + "\n", stderr: "", code: 0 };
 }
+
+export function execEnum4linuxNg(
+  argv: string[],
+  state: NetRangeState,
+  scenario: NetRangeScenario,
+): { stdout: string; stderr: string; code: number } {
+  const target = argv.find((a) => !a.startsWith("-") && a !== "enum4linux-ng" && a !== "enum4linux_ng");
+  if (!target) {
+    return { stdout: "", stderr: "usage: enum4linux-ng [-h] [-A] [-U] [-S] <target>\n", code: 1 };
+  }
+
+  const host = findHostByIpOrName(scenario, target);
+  if (!host) {
+    return { stdout: "", stderr: `[!] Host ${target} could not be resolved or found\n`, code: 1 };
+  }
+
+  const iface = host.interfaces.find((i) => i.ip === target) ?? host.interfaces[0];
+  if (!isTargetRoutable(iface.ip, state.routes)) {
+    return { stdout: "", stderr: `[!] Host ${target} is unreachable via current routes\n`, code: 1 };
+  }
+
+  const smbSvc = host.services.find((s) => s.port === 445 || s.name === "smb" || s.name === "microsoft-ds");
+  const shares = smbSvc?.smbData ?? [
+    { name: "public", comment: "Public Documents", readOnly: false },
+    { name: "IPC$", comment: "Remote IPC", readOnly: true },
+  ];
+
+  const userLines = host.users.map((u) => `    - ${u.username} (RID: ${u.role === "root" || u.role === "administrator" ? 500 : 1000})`).join("\n");
+  const shareLines = shares.map((s) => `    - ${s.name} (Type: Disk, Access: ${s.readOnly ? "READ" : "READ/WRITE"}, Comment: ${s.comment ?? ""})`).join("\n");
+
+  const out = `
+[*] enum4linux-ng v1.3.1 ( https://github.com/cddmp/enum4linux-ng )
+[*] Running against ${iface.ip}
+[*] Host is up, latency 0.38ms
+[+] SMB Dialect: SMB 2_002, SMB 2_1, SMB 3_0
+[+] Workgroup/Domain: APEXCORP
+[+] OS: ${host.os === "windows" ? "Windows Server 2019 Standard 17763" : "Linux (Samba 4.9.5-Debian)"}
+[+] SMB Signing: not required
+[+] Sessions: Anonymous session established
+[+] Users found via RPC:
+${userLines}
+[+] Shares found:
+${shareLines}
+[*] Completed after 0.18 seconds.
+`;
+
+  return { stdout: out.trim() + "\n", stderr: "", code: 0 };
+}
+
