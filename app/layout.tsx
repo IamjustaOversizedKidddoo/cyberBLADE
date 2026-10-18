@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { SiteFooter } from "@/components/theme/SiteFooter";
 import { BRAND } from "@/lib/brand";
 import { PREFS_BOOT_SCRIPT } from "@/lib/theme/display-prefs";
@@ -36,7 +37,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${fontVariables} h-full antialiased`} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: PREFS_BOOT_SCRIPT }} />
+        <Script
+          id="prefs-boot"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: PREFS_BOOT_SCRIPT }}
+        />
       </head>
       <body className="flex min-h-full flex-col">
         <a

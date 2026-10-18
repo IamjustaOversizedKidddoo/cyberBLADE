@@ -14,9 +14,39 @@ export function isAudioEnabled(): boolean {
   return localStorage.getItem("cyberblade_audio") === "true";
 }
 
+const audioListeners = new Set<() => void>();
+
+export function subscribeAudio(onChange: () => void): () => void {
+  audioListeners.add(onChange);
+  if (typeof window === "undefined") {
+    return () => {
+      audioListeners.delete(onChange);
+    };
+  }
+
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === "cyberblade_audio" || e.key === null) {
+      onChange();
+    }
+  };
+  window.addEventListener("storage", onStorage);
+
+  const observer = typeof MutationObserver !== "undefined" ? new MutationObserver(onChange) : null;
+  if (observer) {
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-motion"] });
+  }
+
+  return () => {
+    audioListeners.delete(onChange);
+    window.removeEventListener("storage", onStorage);
+    observer?.disconnect();
+  };
+}
+
 export function setAudioEnabled(enabled: boolean): void {
   if (typeof window === "undefined") return;
   localStorage.setItem("cyberblade_audio", enabled ? "true" : "false");
+  audioListeners.forEach((fn) => fn());
 }
 
 function getContext(): AudioContext | null {
