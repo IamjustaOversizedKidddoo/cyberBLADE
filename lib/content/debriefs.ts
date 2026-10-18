@@ -270,6 +270,102 @@ export const LAB_DEBRIEFS: Record<string, LabDebrief> = {
     commonMistake: "Forgetting to inspect dual-homed network interfaces on compromised gateway systems.",
     goFurther: "Implement microsegmentation and monitor east-west lateral traffic using internal network intrusion sensors.",
   },
+  "pentest-m02-term-osint-01": {
+    concept: "Open-source intelligence (OSINT) and passive DNS reconnaissance.",
+    realWorld: "Mapping corporate perimeter attack surfaces and forgotten legacy subdomains before active network scanning.",
+    commonMistake: "Rushing into loud active scans before cataloging public subdomains, certificate logs, and DNS records.",
+    goFurther: "Correlate Certificate Transparency logs with crt.sh and sublist3r to discover hidden dev environments.",
+  },
+  "pentest-m03-term-nmap-01": {
+    concept: "Nmap port scan output triage and service version detection.",
+    realWorld: "Analyzing network port enumeration scans to pinpoint outdated daemon versions on target perimeters.",
+    commonMistake: "Skimming port states without cross-referencing service banners and version fingerprints.",
+    goFurther: "Combine Nmap script engine (NSE) default and version scripts for deep banner interrogation.",
+  },
+  "pentest-m04-pkt-creds-01": {
+    concept: "Cleartext authentication protocols and packet stream reconstruction.",
+    realWorld: "Intercepting unencrypted credentials on legacy protocols like FTP and HTTP across internal networks.",
+    commonMistake: "Failing to follow full TCP conversations to match usernames with subsequent password payloads.",
+    goFurther: "Enforce TLS encryption across all administrative services and deploy 802.1X network access control.",
+  },
+  "pentest-m05-term-vuln-01": {
+    concept: "Vulnerability triage, CVSS scoring, and exploit identification.",
+    realWorld: "Correlating discovered service versions against known CVE advisories to verify exploit feasibility safely.",
+    commonMistake: "Confusing theoretical vulnerability scanner outputs with confirmed, exploitable software vulnerabilities.",
+    goFurther: "Map CVE findings to NIST CVSS v3.1 vector strings and verify patch availability.",
+  },
+  "pentest-m06-web-sqli-union-01": {
+    concept: "UNION-based SQL injection and database record extraction.",
+    realWorld: "Exploiting unsanitized database queries to extract user hashes and sensitive records into HTTP responses.",
+    commonMistake: "Failing to determine the exact number of query columns and compatible data types before injecting.",
+    goFurther: "Use prepared statements with parameterized inputs to eliminate SQL injection at the application root.",
+  },
+  "pentest-m06-web-sqli-blind-01": {
+    concept: "Boolean-based blind SQL injection and differential response analysis.",
+    realWorld: "Extracting database data character-by-character when web applications suppress raw database error messages.",
+    commonMistake: "Overlooking subtle HTTP response variations like content length changes or conditional greeting text.",
+    goFurther: "Automate blind boolean SQL extraction using Python or SQLMap to map full database schemas.",
+  },
+  "pentest-m06-web-cmdi-01": {
+    concept: "Operating system command injection and input concatenation flaws.",
+    realWorld: "Exploiting administrative web utilities that pass user input unsanitized into shell execution functions.",
+    commonMistake: "Testing only single shell separators without verifying command chaining behavior or bypass characters.",
+    goFurther: "Refactor application logic to use safe system APIs avoiding shell invocation and apply strict whitelisting.",
+  },
+  "pentest-m06-web-xss-stored-01": {
+    concept: "Stored cross-site scripting (XSS) and cookie-based session theft.",
+    realWorld: "Injecting malicious scripts into persistent message boards to hijack administrative session tokens.",
+    commonMistake: "Treating XSS as merely alert boxes rather than a critical credential theft and account takeover vector.",
+    goFurther: "Configure HttpOnly and SameSite cookie flags and deploy strict Content Security Policies (CSP).",
+  },
+  "pentest-m06-web-upload-01": {
+    concept: "Unrestricted file upload bypass and web shell remote code execution.",
+    realWorld: "Bypassing naive client-side file extension checks to place executable scripts in publicly accessible web directories.",
+    commonMistake: "Relying solely on client-side MIME types or blacklist filters that miss executable extensions.",
+    goFurther: "Store uploaded files outside the web root on isolated object storage with randomized non-executable names.",
+  },
+  "pentest-m06-web-idor-01": {
+    concept: "Insecure Direct Object References (IDOR) and broken access control.",
+    realWorld: "Manipulating sequential record identifiers in API parameters to access confidential accounts without authorization.",
+    commonMistake: "Assuming client-side UI restrictions prevent users from editing URL parameters or request bodies.",
+    goFurther: "Implement server-side object-level access control checks and adopt unguessable UUIDs.",
+  },
+  "pentest-m07-term-msf-01": {
+    concept: "Metasploit Framework exploitation workflow and staged payload handling.",
+    realWorld: "Configuring multi-handler listeners and staged payloads to establish reliable reverse shells.",
+    commonMistake: "Misconfiguring listener LHOST/LPORT parameters resulting in failed reverse shell callbacks.",
+    goFurther: "Migrate meterpreter sessions to stable system processes and practice non-destructive exploitation.",
+  },
+  "pentest-m08-term-hydra-01": {
+    concept: "Network authentication brute-force attacks and rate-limit evasion.",
+    realWorld: "Testing SSH and FTP services for weak or default credentials during internal authorized assessments.",
+    commonMistake: "Setting thread counts too high, causing service crashes or triggering automated account lockouts.",
+    goFurther: "Implement fail2ban rate-limiting and enforce key-based SSH authentication disabling passwords.",
+  },
+  "pentest-m09-term-suid-01": {
+    concept: "Linux SetUID (SUID) binary abuse and PATH environment hijacking.",
+    realWorld: "Escalating privileges to root by exploiting custom administrative binaries that call tools without absolute paths.",
+    commonMistake: "Overlooking relative executable calls within SUID scripts that enable PATH manipulation.",
+    goFurther: "Audit SUID binaries regularly and strip unnecessary SUID bits using chmod u-s.",
+  },
+  "pentest-m09-term-cron-01": {
+    concept: "Scheduled cron task misconfiguration and world-writable script hijacking.",
+    realWorld: "Gaining administrative root access by modifying periodic maintenance scripts left world-writable.",
+    commonMistake: "Only checking user crontabs and missing system-wide jobs in /etc/crontab and /etc/cron.d/.",
+    goFurther: "Audit cron script file permissions with automated security baselines and enforce strict 750 ownership.",
+  },
+  "pentest-m10-term-winpriv-01": {
+    concept: "Windows unquoted service path vulnerability and binary planting.",
+    realWorld: "Elevating privileges to NT AUTHORITY\\SYSTEM on Windows endpoints running third-party software with unquoted paths.",
+    commonMistake: "Failing to check write permissions on intermediate folders along the unquoted path.",
+    goFurther: "Always enclose Windows service binary paths in quotes and audit registry ImagePath entries with PowerShell.",
+  },
+  "pentest-m11-term-tunnel-01": {
+    concept: "SSH dynamic port forwarding, SOCKS5 proxies, and proxychains pivoting.",
+    realWorld: "Tunnelling security testing tools through compromised perimeter bastion hosts into segmented internal subnets.",
+    commonMistake: "Forgetting to configure proxy_dns in proxychains, causing DNS leaks or failed internal hostname resolutions.",
+    goFurther: "Explore Chisel and Ligolo-ng for modern high-performance VPN-level tunneling across dual-homed pivots.",
+  },
 };
 
 export function getLabDebrief(labId: string): LabDebrief | undefined {

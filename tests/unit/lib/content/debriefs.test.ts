@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { LAB_DEBRIEFS, getLabDebrief } from "@/lib/content/debriefs";
+import { getLabDebrief } from "@/lib/content/debriefs";
 import { listLabs } from "@/lib/lab-engine/labs";
 
 describe("LAB_DEBRIEFS", () => {
   it("provides a debrief for all labs in the curriculum", async () => {
     const labs = await listLabs("labs");
-    expect(labs.length).toBe(44);
+    expect(labs.length).toBe(60);
 
     for (const lab of labs) {
       const debrief = getLabDebrief(lab.id);

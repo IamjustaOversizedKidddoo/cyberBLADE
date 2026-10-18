@@ -149,4 +149,208 @@ describe("WebApp Lab Simulator", () => {
     expect(crawlRes.exchange.response.status).toBe(200);
     expect(crawlRes.exchange.response.body).toContain("CYBERBLADE{xss_stealer_flag}");
   });
+
+  it("handles pentest_sqli_union with ORDER BY and UNION SELECT", () => {
+    const env: WebAppEnv = {
+      appId: "pentest_sqli_union",
+      name: "Apex Store",
+      baseUrl: "http://shop.apex.internal",
+      initialUrl: "http://shop.apex.internal/products",
+      database: {},
+      config: {
+        flags: {
+          flag_db: "PENTEST{union_test_flag}",
+        },
+      },
+    };
+
+    const res = dispatchHttpRequest({
+      env,
+      request: { method: "GET", url: "http://shop.apex.internal/products?category=test'%20UNION%20SELECT%201,2,3--", headers: {} },
+      currentCookies: {},
+      currentStorage: {},
+      currentDatabase: {},
+    });
+    expect(res.exchange.response.status).toBe(200);
+    expect(res.exchange.response.body).toContain("DATABASE INJECTION SUCCESSFUL");
+    expect(res.exchange.response.body).toContain("PENTEST{union_test_flag}");
+  });
+
+  it("handles pentest_sqli_blind differential boolean responses", () => {
+    const env: WebAppEnv = {
+      appId: "pentest_sqli_blind",
+      name: "Apex Verify",
+      baseUrl: "http://verify.apex.internal",
+      initialUrl: "http://verify.apex.internal/verify",
+      database: {},
+      config: {
+        flags: {
+          flag_blind: "PENTEST{blind_test_flag}",
+        },
+      },
+    };
+
+    const trueRes = dispatchHttpRequest({
+      env,
+      request: { method: "GET", url: "http://verify.apex.internal/verify?id=101%20and%201=1", headers: {} },
+      currentCookies: {},
+      currentStorage: {},
+      currentDatabase: {},
+    });
+    expect(trueRes.exchange.response.status).toBe(200);
+    expect(trueRes.exchange.response.body).toContain("STATUS: VERIFIED");
+    expect(trueRes.exchange.response.body).toContain("PENTEST{blind_test_flag}");
+
+    const falseRes = dispatchHttpRequest({
+      env,
+      request: { method: "GET", url: "http://verify.apex.internal/verify?id=101%20and%201=2", headers: {} },
+      currentCookies: {},
+      currentStorage: {},
+      currentDatabase: {},
+    });
+    expect(falseRes.exchange.response.status).toBe(200);
+    expect(falseRes.exchange.response.body).toContain("STATUS: NOT FOUND");
+  });
+
+  it("handles pentest_cmdi command execution", () => {
+    const env: WebAppEnv = {
+      appId: "pentest_cmdi",
+      name: "Ping Utility",
+      baseUrl: "http://net.apex.internal",
+      initialUrl: "http://net.apex.internal/ping",
+      database: {},
+      config: {
+        flags: {
+          flag_cmdi: "PENTEST{cmdi_test_flag}",
+        },
+      },
+    };
+
+    const whoamiRes = dispatchHttpRequest({
+      env,
+      request: {
+        method: "POST",
+        url: "http://net.apex.internal/tools/ping",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "ip=127.0.0.1;whoami",
+      },
+      currentCookies: {},
+      currentStorage: {},
+      currentDatabase: {},
+    });
+    expect(whoamiRes.exchange.response.status).toBe(200);
+    expect(whoamiRes.exchange.response.body).toContain("apex-operator");
+
+    const flagRes = dispatchHttpRequest({
+      env,
+      request: {
+        method: "POST",
+        url: "http://net.apex.internal/tools/ping",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "ip=127.0.0.1;cat /etc/apex_release",
+      },
+      currentCookies: {},
+      currentStorage: {},
+      currentDatabase: {},
+    });
+    expect(flagRes.exchange.response.status).toBe(200);
+    expect(flagRes.exchange.response.body).toContain("PENTEST{cmdi_test_flag}");
+  });
+
+  it("handles pentest_xss_stored comment submission and render", () => {
+    const env: WebAppEnv = {
+      appId: "pentest_xss_stored",
+      name: "Feedback Board",
+      baseUrl: "http://board.apex.internal",
+      initialUrl: "http://board.apex.internal/feedback",
+      database: {},
+      config: {
+        flags: {
+          flag_xss: "PENTEST{xss_test_flag}",
+        },
+      },
+    };
+
+    const postRes = dispatchHttpRequest({
+      env,
+      request: {
+        method: "POST",
+        url: "http://board.apex.internal/feedback",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "author=Attacker&message=%3Cscript%3Ealert(1)%3C/script%3E",
+      },
+      currentCookies: {},
+      currentStorage: {},
+      currentDatabase: {},
+    });
+    expect(postRes.exchange.response.status).toBe(200);
+    expect(postRes.exchange.response.body).toContain("PENTEST{xss_test_flag}");
+  });
+
+  it("handles pentest_file_upload shell execution", () => {
+    const env: WebAppEnv = {
+      appId: "pentest_file_upload",
+      name: "Portal",
+      baseUrl: "http://portal.apex.internal",
+      initialUrl: "http://portal.apex.internal/upload",
+      database: {},
+      config: {
+        flags: {
+          flag_upload: "PENTEST{upload_test_flag}",
+        },
+      },
+    };
+
+    const uploadRes = dispatchHttpRequest({
+      env,
+      request: {
+        method: "POST",
+        url: "http://portal.apex.internal/upload",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "filename=avatar.php&content_type=image/png",
+      },
+      currentCookies: {},
+      currentStorage: {},
+      currentDatabase: {},
+    });
+    expect(uploadRes.exchange.response.status).toBe(200);
+    expect(uploadRes.exchange.response.body).toContain("/uploads/avatar.php");
+
+    const execRes = dispatchHttpRequest({
+      env,
+      request: { method: "GET", url: "http://portal.apex.internal/uploads/avatar.php", headers: {} },
+      currentCookies: {},
+      currentStorage: {},
+      currentDatabase: uploadRes.updatedDatabase,
+    });
+    expect(execRes.exchange.response.status).toBe(200);
+    expect(execRes.exchange.response.body).toContain("PENTEST{upload_test_flag}");
+  });
+
+  it("handles pentest_idor access control bypass", () => {
+    const env: WebAppEnv = {
+      appId: "pentest_idor",
+      name: "Records",
+      baseUrl: "http://records.apex.internal",
+      initialUrl: "http://records.apex.internal/patient?id=204",
+      database: {},
+      config: {
+        flags: {
+          flag_idor: "PENTEST{idor_test_flag}",
+        },
+      },
+    };
+
+    const vipRes = dispatchHttpRequest({
+      env,
+      request: { method: "GET", url: "http://records.apex.internal/patient?id=201", headers: {} },
+      currentCookies: {},
+      currentStorage: {},
+      currentDatabase: {},
+    });
+    expect(vipRes.exchange.response.status).toBe(200);
+    expect(vipRes.exchange.response.body).toContain("PENTEST{idor_test_flag}");
+    expect(vipRes.exchange.response.body).toContain("Senator Evelyn Vance");
+  });
 });
+

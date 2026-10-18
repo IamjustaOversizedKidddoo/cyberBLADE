@@ -1068,3 +1068,59 @@ Final milestone on branch `build/weekend` delivering the remaining lessons and c
    - `npm run build` ✓ (Turbopack production build succeeded, all 33 static & dynamic routes compiled in 2.5s).
    - Playwright E2E (`tests/e2e/pentest-track.spec.ts`) ✓ (8 passed across desktop & mobile viewports: verified track landing page, Module 10 detail page, lesson reader, check quiz submission, and all 3 lab engines: Terminal, WebApp, Packet).
    - Responsive & A11y Verification: Tested at 390px, 768px, and 1440px viewports with 0px horizontal overflow, WCAG 2.1 AA focus visible rings, and full keyboard accessibility.
+
+---
+
+### Entry PT-6: Hands-On Penetration Testing Labs Suite (16 New Labs, Full Existing Engine Coverage, Zero Client Leaks)
+
+**Summary of Deliverables:**
+1. **Hands-On Lab Expansion (16 New Labs, 23 Pentest Labs Total):**
+   - Built 16 new practical penetration testing labs strictly on EXISTING engines (`terminal`, `webapp`, `packet`), guaranteeing that every module from Module 2 through Module 11 features at least one dedicated hands-on scenario.
+   - Each lab package includes a comprehensive `briefing.md`, `lab.yaml` with typed objectives and XP hints, server-side flag validation, seeded PRNG variants, and an executive defender's debrief adhering to the strict $\le 120$ words standard.
+
+2. **Zero-Knowledge Client Bundling & Bundle Leak Scanner Extension:**
+   - Extended `LEAK_RULES` in `lib/security/bundle-scan.ts` with the new rule `pentest-lab-answers` to ensure all generator internals, answer maps, and verification tokens remain strictly confined to the server.
+   - Confirmed `npm run scan:bundle` passes with 0 leaks across 96 client artifacts.
+
+3. **Handler Pentest Mode & Socratic Guidance:**
+   - Extended `lib/handler/pentest-guard.ts` to detect unauthorized attacks against real-world external systems, high-risk DDoS, or unverified IPs/domains.
+   - Enhanced Socratic methodology guidance in both English and Hinglish that nudges learners toward sound tradecraft without ever revealing lab flags or exploit payloads.
+   - Added 32 new attack + over-refusal tests mirroring the SOC handler test harness (totaling 94 tests in `pentest-mode.test.ts`, all passing).
+
+4. **Curriculum Lab Inventory Table:**
+
+| id | module | engine | variants | status |
+| :--- | :---: | :---: | :---: | :---: |
+| `pentest-m02-term-osint-01` | M02 | Terminal | Seeded passive DNS, subdomains, TXT flags | ✅ Production Ready |
+| `pentest-m03-term-nmap-01` | M03 | Terminal | Seeded open ports, SSH versions, scan banners | ✅ Production Ready |
+| `pentest-m03-pkt-scan-01` | M03 | Packet | Seeded SYN vs Connect scan signatures, scanner IPs | ✅ Production Ready |
+| `pentest-m04-pkt-creds-01` | M04 | Packet | Seeded cleartext FTP USER/PASS auth, client IPs | ✅ Production Ready |
+| `pentest-m04-term-services-01` | M04 | Terminal | Seeded SMB shares, permissions, engagement flags | ✅ Production Ready |
+| `pentest-m05-term-vuln-01` | M05 | Terminal | Seeded CVE advisories, vulnerable daemon versions | ✅ Production Ready |
+| `pentest-m06-web-attacks-01` | M06 | WebApp | Seeded SQLi auth bypass tokens, LFI path flags | ✅ Production Ready |
+| `pentest-m06-web-sqli-union-01` | M06 | WebApp | Seeded 3-column UNION injection, admin passwords | ✅ Production Ready |
+| `pentest-m06-web-sqli-blind-01` | M06 | WebApp | Seeded boolean-based blind injection conditions | ✅ Production Ready |
+| `pentest-m06-web-cmdi-01` | M06 | WebApp | Seeded command separator injection, whoami/flags | ✅ Production Ready |
+| `pentest-m06-web-xss-stored-01` | M06 | WebApp | Seeded stored XSS comment execution, admin cookies | ✅ Production Ready |
+| `pentest-m06-web-upload-01` | M06 | WebApp | Seeded executable file upload bypass, web shells | ✅ Production Ready |
+| `pentest-m06-web-idor-01` | M06 | WebApp | Seeded sequential patient IDs, VIP dossier flags | ✅ Production Ready |
+| `pentest-m07-term-msf-01` | M07 | Terminal | Seeded Metasploit RC scripts, staged payloads | ✅ Production Ready |
+| `pentest-m08-term-hashcrack-01` | M08 | Terminal | Seeded MD5/NTLM/SHA-256 hashes, wordlists | ✅ Production Ready |
+| `pentest-m08-term-hydra-01` | M08 | Terminal | Seeded SSH online brute-force logs, cracked creds | ✅ Production Ready |
+| `pentest-m09-term-privesc-01` | M09 | Terminal | Seeded SUID binaries, sudo NOPASSWD configs | ✅ Production Ready |
+| `pentest-m09-term-suid-01` | M09 | Terminal | Seeded SUID GTFOBins, PATH execution hijacking | ✅ Production Ready |
+| `pentest-m09-term-cron-01` | M09 | Terminal | Seeded world-writable root cron scripts, crontabs | ✅ Production Ready |
+| `pentest-m10-pkt-pivot-01` | M10 | Packet | Seeded SSH pivot tunnels, internal subnet traffic | ✅ Production Ready |
+| `pentest-m10-term-winpriv-01` | M10 | Terminal | Seeded unquoted service paths, SYSTEM registry keys | ✅ Production Ready |
+| `pentest-m11-term-tunnel-01` | M11 | Terminal | Seeded SSH dynamic SOCKS, proxychains configs | ✅ Production Ready |
+| `pentest-m12-capstone-01` | M12 | WebApp | Full multi-stage capstone web application audit | ✅ Production Ready |
+
+5. **Quality Gates Verification Results:**
+   - `npm run check:content` ✓ (126 lessons, 60 labs, 27 objectives validated; 0 errors).
+   - `npm run typecheck` ✓ (0 TypeScript compilation errors across codebase).
+   - `npm run lint` ✓ (0 ESLint errors).
+   - `npm run test:security` ✓ (25/25 test files passed, 260/260 tests green).
+   - `npm test` ✓ (254/254 test files passed, 2,364/2,364 tests green).
+   - `npm run build` ✓ (Turbopack production build succeeded, all 33 static & dynamic routes compiled).
+   - `npm run scan:bundle` ✓ (0 leaks across 96 client artifacts with 14 pattern rules).
+   - Playwright E2E (`tests/e2e/pentest-track.spec.ts`) ✓ (8 passed across desktop & mobile, successfully completing one lab per engine: Terminal, WebApp, and Packet).

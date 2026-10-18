@@ -109,6 +109,24 @@ export function dispatchHttpRequest(input: {
     case "pentest_capstone_portal":
       res = handlePentestCapstonePortal(req, env, cookies);
       break;
+    case "pentest_sqli_union":
+      res = handlePentestSqliUnion(req, env);
+      break;
+    case "pentest_sqli_blind":
+      res = handlePentestSqliBlind(req, env);
+      break;
+    case "pentest_cmdi":
+      res = handlePentestCmdi(req, env);
+      break;
+    case "pentest_xss_stored":
+      res = handlePentestXssStored(req, env, cookies, database);
+      break;
+    case "pentest_file_upload":
+      res = handlePentestFileUpload(req, env, database);
+      break;
+    case "pentest_idor":
+      res = handlePentestIdor(req, env);
+      break;
     default:
       res = {
         status: 404,
@@ -981,6 +999,355 @@ function handlePentestCapstonePortal(
   }
 
   return { status: 404, statusText: "Not Found", headers: { "Content-Type": "text/html" }, body: `<h1>404 Not Found</h1>` };
+}
+
+// -----------------------------------------------------------------------------
+// 7. Pentest L1 SQLi UNION Column Extraction (pentest_sqli_union)
+// -----------------------------------------------------------------------------
+function handlePentestSqliUnion(req: HttpRequest, env: WebAppEnv): HttpResponse {
+  const flags = env.config.flags as Record<string, string>;
+  const category = (req.query.category || "").trim();
+
+  const baseProducts = [
+    { id: 1, name: "Industrial Server Chassis", cat: "hardware", price: "$850.00" },
+    { id: 2, name: "Gigabit Managed Switch 48-Port", cat: "hardware", price: "$1,250.00" },
+    { id: 3, name: "Cat6A Shielded Patch Cable (10m)", cat: "cables", price: "$35.00" },
+    { id: 4, name: "Hardware Security Module (HSM)", cat: "security", price: "$4,500.00" },
+  ];
+
+  if (!category) {
+    const rows = baseProducts
+      .map(
+        (p) =>
+          `<tr><td>${p.id}</td><td>${p.name}</td><td>${p.cat}</td><td>${p.price}</td></tr>`,
+      )
+      .join("");
+
+    return {
+      status: 200,
+      statusText: "OK",
+      headers: { "Content-Type": "text/html" },
+      body: `<!DOCTYPE html><html><head><title>Apex Logistics Catalog</title><style>body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:2rem;}table{border-collapse:collapse;width:100%;margin-top:1rem;}th,td{border:1px solid #30363d;padding:8px;text-align:left;}th{background:#161b22;}</style></head><body><h1>APEX HARDWARE // INVENTORY CATALOG</h1><p>Filter by category: <a href="/products?category=hardware">Hardware</a> | <a href="/products?category=cables">Cables</a> | <a href="/products?category=security">Security</a></p><table><tr><th>Item ID</th><th>Item Name</th><th>Category</th><th>Price</th></tr>${rows}</table></body></html>`,
+    };
+  }
+
+  const rawLower = category.toLowerCase();
+  if (rawLower.includes("union") && rawLower.includes("select")) {
+    const unionPart = rawLower.split("select")[1] || "";
+    const cleanUnion = unionPart.split("--")[0].split("#")[0];
+    const columns = cleanUnion.split(",").map((s) => s.trim());
+
+    if (columns.length === 3) {
+      return {
+        status: 200,
+        statusText: "OK",
+        headers: { "Content-Type": "text/html" },
+        body: `<!DOCTYPE html><html><head><title>Apex Logistics Catalog</title><style>body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:2rem;}table{border-collapse:collapse;width:100%;margin-top:1rem;}th,td{border:1px solid #30363d;padding:8px;text-align:left;}th{background:#161b22;}</style></head><body><h1>APEX HARDWARE // INVENTORY CATALOG</h1><p>Query Filter: <code>${escapeHtml(category)}</code></p><p style="color:#3fb950;">[DATABASE INJECTION SUCCESSFUL: 3 COLUMNS MATCHED]</p><table><tr><th>Item ID</th><th>Item Name</th><th>Category</th></tr><tr><td>1</td><td>DATABASE_VERSION: PostgreSQL 14.7-ApexDB</td><td>FLAG: <strong>${flags.flag_db}</strong></td></tr></table></body></html>`,
+      };
+    } else {
+      return {
+        status: 500,
+        statusText: "Internal Server Error",
+        headers: { "Content-Type": "text/html" },
+        body: `<!DOCTYPE html><html><body style="background:#0d1117;color:#f85149;font-family:monospace;padding:2rem;"><h2>DATABASE QUERY ERROR</h2><p>ERROR 1222 (21000): The used SELECT statements have a different number of columns.</p><p>Target Query: <code>SELECT id, name, category FROM products WHERE category = '${escapeHtml(category)}'</code></p></body></html>`,
+      };
+    }
+  }
+
+  const filtered = baseProducts.filter((p) => p.cat === category.toLowerCase());
+  const rows = filtered
+    .map(
+      (p) =>
+        `<tr><td>${p.id}</td><td>${p.name}</td><td>${p.cat}</td><td>${p.price}</td></tr>`,
+    )
+    .join("");
+
+  return {
+    status: 200,
+    statusText: "OK",
+    headers: { "Content-Type": "text/html" },
+    body: `<!DOCTYPE html><html><head><title>Apex Logistics Catalog</title><style>body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:2rem;}table{border-collapse:collapse;width:100%;margin-top:1rem;}th,td{border:1px solid #30363d;padding:8px;text-align:left;}th{background:#161b22;}</style></head><body><h1>APEX HARDWARE // INVENTORY CATALOG</h1><p>Category: <code>${escapeHtml(category)}</code> (<a href="/products">View All</a>)</p><table><tr><th>Item ID</th><th>Item Name</th><th>Category</th><th>Price</th></tr>${rows}</table></body></html>`,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// 8. Pentest L1 Boolean-Based Blind SQLi (pentest_sqli_blind)
+// -----------------------------------------------------------------------------
+function handlePentestSqliBlind(req: HttpRequest, env: WebAppEnv): HttpResponse {
+  const flags = env.config.flags as Record<string, string>;
+  const idParam = (req.query.id || "").trim();
+
+  if (!idParam) {
+    return {
+      status: 200,
+      statusText: "OK",
+      headers: { "Content-Type": "text/html" },
+      body: `<!DOCTYPE html><html><head><title>Member Registry Verification</title><style>body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:2rem;}input,button{padding:8px;background:#161b22;color:#c9d1d9;border:1px solid #30363d;}</style></head><body><h1>APEX MEMBERSHIP // VERIFICATION PORTAL</h1><p>Query membership status by Member ID (e.g. 101):</p><form method="GET" action="/verify"><input type="text" name="id" placeholder="Member ID" value="101" /><button type="submit">Verify Status</button></form></body></html>`,
+    };
+  }
+
+  const rawLower = idParam.toLowerCase();
+
+  let isTrue = false;
+  if (idParam === "101") {
+    isTrue = true;
+  } else if (rawLower.includes("101 and 1=1") || rawLower.includes("101' and '1'='1") || rawLower.includes("101 and true")) {
+    isTrue = true;
+  } else if (rawLower.includes("101 and 1=2") || rawLower.includes("101' and '1'='2") || rawLower.includes("101 and false")) {
+    isTrue = false;
+  } else if (rawLower.includes("substr") || rawLower.includes("substring")) {
+    if (rawLower.includes("'a'") || rawLower.includes('"a"') || rawLower.includes("=65")) {
+      isTrue = true;
+    } else {
+      isTrue = false;
+    }
+  } else if (idParam.startsWith("101")) {
+    isTrue = true;
+  }
+
+  const resultMarkup = isTrue
+    ? `<div style="border:1px solid #3fb950;background:#0d2818;color:#3fb950;padding:1rem;margin-top:1rem;"><strong>STATUS: VERIFIED</strong><p>Member ID 101 is registered as an Active Executive Operative.</p><p style="font-size:11px;color:#8b949e;">[BLIND INFERENCE KEY: ${flags.flag_blind}]</p></div>`
+    : `<div style="border:1px solid #f85149;background:#251014;color:#f85149;padding:1rem;margin-top:1rem;"><strong>STATUS: NOT FOUND</strong><p>No active member record corresponds to query criteria.</p></div>`;
+
+  return {
+    status: 200,
+    statusText: "OK",
+    headers: { "Content-Type": "text/html" },
+    body: `<!DOCTYPE html><html><head><title>Member Registry Verification</title><style>body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:2rem;}input,button{padding:8px;background:#161b22;color:#c9d1d9;border:1px solid #30363d;}</style></head><body><h1>APEX MEMBERSHIP // VERIFICATION PORTAL</h1><form method="GET" action="/verify"><input type="text" name="id" placeholder="Member ID" value="${escapeHtml(idParam)}" /><button type="submit">Verify Status</button></form>${resultMarkup}</body></html>`,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// 9. Pentest L1 Command Injection (pentest_cmdi)
+// -----------------------------------------------------------------------------
+function handlePentestCmdi(req: HttpRequest, env: WebAppEnv): HttpResponse {
+  const flags = env.config.flags as Record<string, string>;
+
+  let executedOutput = "";
+  let hostInput = "127.0.0.1";
+
+  if (req.method === "POST" && req.path.includes("ping")) {
+    const form = parseFormBody(req.body);
+    hostInput = form.ip || form.host || "127.0.0.1";
+
+    const hasCmdi =
+      hostInput.includes(";") ||
+      hostInput.includes("|") ||
+      hostInput.includes("&&") ||
+      hostInput.includes("`") ||
+      hostInput.includes("$(");
+
+    if (hasCmdi) {
+      const lower = hostInput.toLowerCase();
+      let cmdOut = "";
+      if (lower.includes("whoami")) {
+        cmdOut += "apex-operator\n";
+      }
+      if (lower.includes("hostname")) {
+        cmdOut += "apex-edge-router\n";
+      }
+      if (lower.includes("id")) {
+        cmdOut += "uid=1001(apex-operator) gid=1001(apex-operator) groups=1001(apex-operator)\n";
+      }
+      if (
+        lower.includes("cat /etc/apex_release") ||
+        lower.includes("cat /etc/*") ||
+        lower.includes("flag") ||
+        lower.includes("ls")
+      ) {
+        cmdOut += `APEX OS v4.2.1-HARDENED\nPROOF OF RCE: ${flags.flag_cmdi}\n`;
+      }
+      if (!cmdOut) {
+        cmdOut = `apex-edge-router: /bin/sh: command executed successfully\n`;
+      }
+
+      executedOutput = `PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.\n64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.042 ms\n--- 127.0.0.1 ping statistics ---\n1 packets transmitted, 1 received, 0% packet loss\n\n[INJECTED COMMAND OUTPUT]:\n${cmdOut}`;
+    } else {
+      executedOutput = `PING ${escapeHtml(hostInput)} (${escapeHtml(hostInput)}) 56(84) bytes of data.\n64 bytes from ${escapeHtml(hostInput)}: icmp_seq=1 ttl=64 time=0.038 ms\n64 bytes from ${escapeHtml(hostInput)}: icmp_seq=2 ttl=64 time=0.041 ms\n--- ${escapeHtml(hostInput)} ping statistics ---\n2 packets transmitted, 2 received, 0% packet loss`;
+    }
+  }
+
+  return {
+    status: 200,
+    statusText: "OK",
+    headers: { "Content-Type": "text/html" },
+    body: `<!DOCTYPE html><html><head><title>Network Diagnostics</title><style>body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:2rem;}input,button{padding:8px;background:#161b22;color:#c9d1d9;border:1px solid #30363d;}pre{background:#161b22;border:1px solid #30363d;padding:1rem;color:#7ee787;overflow-x:auto;}</style></head><body><h1>APEX INFRASTRUCTURE // NETWORK DIAGNOSTIC CONSOLE</h1><p>ICMP Echo Diagnostic Tool (ping):</p><form method="POST" action="/tools/ping"><input type="text" name="ip" value="${escapeHtml(hostInput)}" style="width:300px;" /><button type="submit">Execute Diagnostic</button></form>${executedOutput ? `<h3>Command Execution Results:</h3><pre>${escapeHtml(executedOutput)}</pre>` : ""}</body></html>`,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// 10. Pentest L1 Stored XSS (pentest_xss_stored)
+// -----------------------------------------------------------------------------
+function handlePentestXssStored(
+  req: HttpRequest,
+  env: WebAppEnv,
+  _cookies: Record<string, string>,
+  database: Record<string, Array<Record<string, unknown>>>,
+): HttpResponse {
+  const flags = env.config.flags as Record<string, string>;
+  const feedbackList = (database.feedback as Array<{ id: number; author: string; msg: string; time: string }>) || [];
+
+  if (feedbackList.length === 0) {
+    feedbackList.push(
+      { id: 1, author: "System Health Monitor", msg: "All gateway services operational at nominal latency.", time: "10:00:00" },
+      { id: 2, author: "Security Officer", msg: "Reminder: rotate administrative API keys before Friday.", time: "10:15:22" },
+    );
+    database.feedback = feedbackList;
+  }
+
+  let adminReviewAlert = "";
+
+  if (req.method === "POST") {
+    const form = parseFormBody(req.body);
+    const author = form.author || "Anonymous";
+    const msg = form.message || "";
+
+    if (msg.trim()) {
+      feedbackList.push({
+        id: feedbackList.length + 1,
+        author,
+        msg,
+        time: new Date().toISOString().slice(11, 19),
+      });
+
+      const lower = msg.toLowerCase();
+      if (lower.includes("<script") || lower.includes("onerror=") || lower.includes("onload=") || lower.includes("javascript:")) {
+        adminReviewAlert = `<div style="border:1px solid #f85149;background:#251014;color:#f85149;padding:1rem;margin-top:1rem;"><strong>[ADMIN BOT NOTICE]:</strong> Stored payload executed in administrator review session! Intercepted admin session cookie: <code>adm_sess_token=9a82bf01c</code>.<br />STORED XSS FLAG: <strong>${flags.flag_xss}</strong></div>`;
+      }
+    }
+  }
+
+  const renderedMessages = feedbackList
+    .map(
+      (m) =>
+        `<div style="border-bottom:1px solid #30363d;padding:8px 0;"><span style="color:#58a6ff;">${escapeHtml(m.author)}</span> <span style="color:#8b949e;font-size:11px;">[${m.time}]</span><p style="margin:4px 0;">${m.msg}</p></div>`,
+    )
+    .join("");
+
+  return {
+    status: 200,
+    statusText: "OK",
+    headers: { "Content-Type": "text/html" },
+    body: `<!DOCTYPE html><html><head><title>Apex Community Board</title><style>body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:2rem;}input,textarea,button{width:100%;padding:8px;margin:4px 0;background:#161b22;color:#c9d1d9;border:1px solid #30363d;box-sizing:border-box;}</style></head><body><h1>APEX OPERATIONS // ACTIVITY LOG</h1>${adminReviewAlert}<div style="margin:2rem 0;background:#161b22;padding:1rem;border:1px solid #30363d;"><h3>Submit Incident Update</h3><form method="POST" action="/feedback"><input type="text" name="author" placeholder="Your Handle / ID" /><textarea name="message" placeholder="Message content..." rows="3"></textarea><button type="submit">Submit Entry</button></form></div><h3>Recorded Updates</h3>${renderedMessages}</body></html>`,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// 11. Pentest L1 File Upload Bypass (pentest_file_upload)
+// -----------------------------------------------------------------------------
+function handlePentestFileUpload(
+  req: HttpRequest,
+  env: WebAppEnv,
+  database: Record<string, Array<Record<string, unknown>>>,
+): HttpResponse {
+  const flags = env.config.flags as Record<string, string>;
+  const uploads = (database.uploads as Array<{ filename: string; path: string; executable: boolean }>) || [];
+  database.uploads = uploads;
+
+  if (req.path.startsWith("/uploads/")) {
+    const requestedFile = req.path.replace("/uploads/", "") || req.query.file || "";
+    const matched = uploads.find((u) => u.filename === requestedFile || u.path.endsWith(requestedFile));
+    if (matched && matched.executable) {
+      return {
+        status: 200,
+        statusText: "OK",
+        headers: { "Content-Type": "text/html" },
+        body: `<!DOCTYPE html><html><body style="background:#090d13;color:#3fb950;font-family:monospace;padding:2rem;"><h1>PHP BACKDOOR EXECUTED</h1><p>Current Process: www-data (uid=33)</p><div style="border:1px solid #3fb950;padding:1rem;">FILE UPLOAD EXPLOIT FLAG: <strong>${flags.flag_upload}</strong></div></body></html>`,
+      };
+    }
+    return {
+      status: 200,
+      statusText: "OK",
+      headers: { "Content-Type": "text/plain" },
+      body: `File ${requestedFile} loaded as static image artifact.`,
+    };
+  }
+
+  let uploadNotice = "";
+  if (req.method === "POST" && req.path.includes("upload")) {
+    const form = parseFormBody(req.body);
+    const filename = form.filename || "avatar.png";
+    const contentType = form.content_type || "image/png";
+
+    const isImageMime = contentType.includes("image/png") || contentType.includes("image/jpeg");
+    const isPhp = filename.endsWith(".php") || filename.includes(".php.");
+
+    if (isImageMime) {
+      const publicPath = `/uploads/${filename}`;
+      uploads.push({
+        filename,
+        path: publicPath,
+        executable: isPhp,
+      });
+
+      uploadNotice = `<div style="border:1px solid #3fb950;background:#0d2818;color:#3fb950;padding:1rem;margin-top:1rem;"><strong>FILE UPLOAD SUCCESSFUL</strong><p>File saved to: <a href="${publicPath}">${publicPath}</a></p></div>`;
+    } else {
+      uploadNotice = `<div style="border:1px solid #f85149;background:#251014;color:#f85149;padding:1rem;margin-top:1rem;"><strong>UPLOAD REJECTED</strong><p>Only image MIME types (image/png, image/jpeg) permitted.</p></div>`;
+    }
+  }
+
+  return {
+    status: 200,
+    statusText: "OK",
+    headers: { "Content-Type": "text/html" },
+    body: `<!DOCTYPE html><html><head><title>Profile Image Management</title><style>body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:2rem;}input,button{padding:8px;margin:4px 0;background:#161b22;color:#c9d1d9;border:1px solid #30363d;}</style></head><body><h1>APEX STAFF // PROFILE ASSET UPLOADER</h1><p>Upload security badge avatar:</p><form method="POST" action="/upload"><p>Filename: <input type="text" name="filename" value="avatar.php.png" style="width:250px;" /></p><p>Content-Type Header: <input type="text" name="content_type" value="image/png" style="width:250px;" /></p><button type="submit">Upload Image</button></form>${uploadNotice}<h3>Uploaded Artifacts in /uploads/:</h3><ul>${uploads.map((u) => `<li><a href="${u.path}">${u.filename}</a></li>`).join("")}</ul></body></html>`,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// 12. Pentest L1 IDOR Record Tampering (pentest_idor)
+// -----------------------------------------------------------------------------
+function handlePentestIdor(req: HttpRequest, env: WebAppEnv): HttpResponse {
+  const flags = env.config.flags as Record<string, string>;
+  const idParam = (req.query.id || "204").trim();
+
+  const patientRecords: Record<string, { name: string; room: string; status: string; notes: string; clearanceFlag?: string }> = {
+    "201": {
+      name: "Senator Evelyn Vance",
+      room: "VIP Suite 01",
+      status: "Confidential - Executive Priority",
+      notes: "Admitted under diplomatic medical immunity protocol. Clearance active.",
+      clearanceFlag: flags.flag_idor,
+    },
+    "202": {
+      name: "Arthur Pendelton",
+      room: "Ward B, Room 102",
+      status: "Routine Observation",
+      notes: "Post-operative follow-up standard prescription issued.",
+    },
+    "203": {
+      name: "Marcus Brody",
+      room: "Ward C, Room 205",
+      status: "Discharged",
+      notes: "Patient records archived for institutional insurance audit.",
+    },
+    "204": {
+      name: "Johnathan Doe",
+      room: "Outpatient Clinic",
+      status: "Standard Consultation",
+      notes: "Annual executive physical examination completed.",
+    },
+  };
+
+  const patient = patientRecords[idParam];
+
+  const detailsHtml = patient
+    ? `<div style="border:1px solid #30363d;background:#161b22;padding:1.5rem;margin-top:1rem;">
+         <h2 style="color:#58a6ff;margin-top:0;">PATIENT DOSSIER: ${escapeHtml(patient.name)}</h2>
+         <p><strong>Record ID:</strong> ${escapeHtml(idParam)}</p>
+         <p><strong>Assigned Room:</strong> ${escapeHtml(patient.room)}</p>
+         <p><strong>Clinical Status:</strong> ${escapeHtml(patient.status)}</p>
+         <p><strong>Medical Notes:</strong> ${escapeHtml(patient.notes)}</p>
+         ${patient.clearanceFlag ? `<div style="border:1px solid #3fb950;background:#0d2818;color:#3fb950;padding:1rem;margin-top:1rem;"><strong>IDOR BREACH SUCCESSFUL:</strong><br />CONFIDENTIAL MEDICAL CLEARANCE FLAG: <strong>${patient.clearanceFlag}</strong></div>` : ""}
+       </div>`
+    : `<div style="border:1px solid #f85149;background:#251014;color:#f85149;padding:1rem;margin-top:1rem;">No patient record found for ID ${escapeHtml(idParam)}.</div>`;
+
+  return {
+    status: 200,
+    statusText: "OK",
+    headers: { "Content-Type": "text/html" },
+    body: `<!DOCTYPE html><html><head><title>Apex Health Systems - Patient Portal</title><style>body{background:#0d1117;color:#c9d1d9;font-family:monospace;padding:2rem;}a{color:#58a6ff;}</style></head><body><h1>APEX HEALTH SYSTEMS // PATIENT RECORD REPOSITORY</h1><p>Viewing Record for Active Session: <a href="/patient/records?id=204">My Record (ID: 204)</a></p>${detailsHtml}</body></html>`,
+  };
 }
 
 function escapeHtml(str: string): string {

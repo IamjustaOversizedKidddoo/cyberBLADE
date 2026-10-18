@@ -21,6 +21,7 @@ const PLANTED: Record<string, string> = {
   "hidden-entity-roles": 'z.enum(["attacker_infra","victim"])',
   "exam-keys": '{"kb-win-4625":{"correctOptionIds":["o1a2b3c4d5"]}}',
   "pentest-exam-keys": "const s = generatePentestExamScenario(seed);",
+  "pentest-lab-answers": "const answers = pentestCleartextCreds(rng);",
   "rule-ground-truth": "evaluateDetectionRuleChallenge(familyId, seed, rule)",
   "seed-in-payload": '{"attempt":{"id":"x","seed":"a1b2c3"}}',
   "family-internals": "incidentTemplates:[{titleTemplate:'x'}]",

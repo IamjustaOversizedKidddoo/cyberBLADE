@@ -29,6 +29,8 @@ export const LEAK_RULES: LeakRule[] = [
   { id: "exam-keys", re: /knowledge-bank(-l2)?\.yaml|loadKnowledgeBank|knowledgeBankForFormat|gradeKnowledgeAnswer|knowledgeItemReview|drawKnowledgeItems|correctOptionIds|objectiveAlignment|buildExamResult|handoffChecks|evaluateReadiness/ },
   // Pentest exam answer keys and generators
   { id: "pentest-exam-keys", re: /loadPentestKnowledgeBank|gradePentestKnowledgeAnswer|pentestKnowledgeItemReview|drawPentestKnowledgeItems|generatePentestExamScenario|gradeFindingAnswer|findingQuestionReview|buildPentestExamResult|evaluatePentestReadiness/ },
+  // Pentest lab generators and server-side answer resolvers
+  { id: "pentest-lab-answers", re: /pentest_osint_recon|pentest_nmap_scan|pentest_cleartext_creds|pentest_vuln_triage|pentest_web_sqli_union|pentest_web_sqli_blind|pentest_web_cmdi|pentest_web_xss|pentest_web_upload|pentest_web_idor|pentest_msf_exploit|pentest_hydra_brute|pentest_suid_privesc|pentest_cron_privesc|pentest_win_privesc|pentest_tunnel_triage|pentestCleartextCreds|pentestNmapScan|pentestOsint|pentestVulnTriage/ },
   // Detection rule challenge ground truth, hold-out variants and scoping rubrics (Stage 1 L2).
   { id: "rule-ground-truth", re: /evaluateDetectionRuleChallenge|deriveHoldOutSeeds|holdOutEvents|benignEvents|scoping-report-l2-rubric/ },
   // Seeds and family internals
