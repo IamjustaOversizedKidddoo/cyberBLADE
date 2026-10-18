@@ -1289,5 +1289,80 @@ Authored, verified, and integrated the expanded CyberBLADE Penetration Testing K
    - `npm run scan:bundle` ✓ (0 leaks across 96 client artifacts with 14 pattern rules).
    - **Strict Constraint**: Zero SOC L2 files or behaviors modified.
 
+---
 
+### Entry PT-10: Pentest L1 Practical Exam System, Shared Abstractions & W1 Certificate Issuance (2026-10-18)
 
+Engineered the complete CyberBLADE Pentest L1 Practical Performance Exam system on branch `build/weekend`, reusing core assessment mechanics through shared abstractions (`timer.ts`, `opaque-keys.ts`, `disclaimer.ts`) without modifying SOC L2 behavior or regressing any existing test suites.
+
+1. **Pentest L1 Performance Exam Architecture (`content/pentest/exams/config.yaml`, `lib/lab-engine/pentest/exam/`):**
+   - **Timed Practical Exam (`practical`):**
+     * Duration: 180 minutes (3 hours default in beta).
+     * Question Pool: 35 finding questions answered directly from discoveries in the live NetRange network scenario.
+     * Weights: 100% scenario findings; passing threshold: $\ge 70\%$.
+     * Retake Policy: 24-hour (1440m) retake cooldown, max 3 attempts per 14-day rolling window.
+     * XP Award: 500 XP granted on verified pass.
+   - **Diagnostic Practice Mock (`mock`):**
+     * Duration: 720 minutes (untimed / relaxed diagnostic pace).
+     * 40 total questions: 20 NetRange scenario finding questions + 20 theoretical knowledge bank questions.
+     * Weights: 0.50 practical findings, 0.50 theoretical concepts; passing threshold: $\ge 70\%$.
+     * Cooldown: 0 minutes; counts toward the readiness gate criteria.
+   - **Scenario E-Style Multi-Host Target Network (`scenario-questions.ts`):**
+     * 4 hosts across 2 subnets:
+       - Perimeter DMZ (`192.0.2.0/24`): `apex-gw01` (.100, dual-homed router with OpenSSH and Samba) and `web-srv01` (.105, Apache httpd with SQL injection on `/portal/users.php?id=1` and `webadmin` user).
+       - Internal Operations Subnet (`172.16.50.0/24`): `db-int01` (.20, MySQL 8.0.35 and `dbadmin` config) and `vault-srv01` (.25, Tornado httpd 6.2 on port 8080 and crown jewel proof).
+     * Seed Pool Isolation: Exam seeds generated from dedicated `exam-pt1-*` prefix namespace isolated from practice seeds (`netrange_practice`), ensuring fresh, collision-free variants per attempt.
+     * 35 comprehensive finding questions covering host discovery, port scanning, service banners, SQL injection, credential hunting, Sudo `find` GTFOBins breakout, subnet routing, MySQL enumeration, Tornado proxy inspection, and proof flags across all 4 eJPT domains:
+       - *Assessment Methodologies*: 5 questions
+       - *Host & Network Auditing*: 12 questions
+       - *Host & Network Penetration Testing*: 12 questions
+       - *Web Application Penetration Testing*: 6 questions
+   - **Server-Authoritative Timer & Idempotent Submission:**
+     * Active attempts enforce deadlines via `isExamExpired` and `calculateDeadlineAt`.
+     * Expiration triggers automated background submission (`finalizePentestExam`).
+     * Idempotent submission: Repeated submit requests return identical finalized state.
+     * Zero client secrets: Seeds, answers, acceptable answer variations, and scenario ground truths never leak to the client browser.
+
+2. **Readiness Gate & Personalized Study Plan (`/exam/pentest/readiness`):**
+   - **4-Point Criteria Matrix (`readiness.ts`):**
+     1. Complete all 12 Pentest track modules.
+     2. Complete at least 3 NetRange offensive practice labs.
+     3. Achieve $\ge 70\%$ passing score on the Pentest L1 mock assessment.
+     4. Maintain a score floor of $\ge 70\%$ across every eJPT domain.
+   - **Shared Legal Disclaimer:** Enforces exact wording from `READINESS_ESTIMATE_DISCLAIMER`: *"Your recent practice meets our provisional readiness criteria. This is an estimate, not a guarantee of passing any exam."*
+   - **Targeted Study Plan (`study-plan.ts`):** Analyzes domain mastery from prior mock attempts and generates customized remediation modules, drills, and lab references for any domain falling below 70%.
+
+3. **Results Dossier & Cryptographic W1 Certificate Issuance:**
+   - **Post-Submission Dossier (`PentestExamResultView.tsx`):**
+     * 4-domain mastery breakdown progress bars with color-coded score indicators.
+     * Component score breakdown and time utilization analysis.
+     * Comprehensive question-by-question review revealing correct answers, submitted answers, and full pedagogical explanations.
+   - **W1 Credential Claim Integration (`lib/certificates/eligibility.ts`, `PentestExamResultView.tsx`):**
+     * Verified pass ($\ge 70\%$) unlocks the "Claim Pentest L1 Certificate" modal.
+     * Aligned with `CERTIFICATE_TRACKS`: `trackId="pentest"`, `trackTitle="Penetration Testing: Junior Penetration Tester"`, `level="eJPT Practical"`.
+     * Issues verifiable SHA-256 cryptographic credential to the public registry (`/certificates` and `/verify/[credentialId]`).
+
+4. **Database Migration, RLS, Export Allowlists & Security:**
+   - **Migration `20261017120000_pentest_l1_exams.sql`:**
+     * Tables `pentest_exam_attempts` and `pentest_exam_answers` with partial unique index `pentest_exam_attempts_one_active` preventing concurrent attempts.
+     * Row Level Security: Authenticated learners read only their own rows.
+     * Column-level permission revokes `seed` column from authenticated learners.
+     * Trigger `trg_pentest_exam_answers_open_only` freezes answers once an attempt status transitions away from `active`.
+     * Atomic RPC `pentest_start_exam_attempt` with `pg_advisory_xact_lock` preventing parallel creation races and enforcing cooldowns.
+     * Cascade account deletion in `delete_user_account` (Standing Rule 6 / GDPR).
+   - **Two-User PGlite Suite (`tests/db/pentest-exams.test.ts`):** 9 tests verifying atomic start, one-active constraint, frozen answer enforcement, retake cooldowns, retake limits, RPC role denial, two-user isolation, column-level seed redaction, and cascade erasure.
+   - **Export Allowlist (`lib/identity/learner-export.ts`):** Includes pentest exam attempts, answers, and outcome summaries while strictly omitting seeds and ground truth.
+   - **Bundle Leak Scanner (`lib/security/bundle-scan.ts`):** Rules for `pentest-exam-keys`, `pentest-lab-answers`, `seed-in-payload`, and `flag-values`.
+   - **Server Feature Flag:** `PENTEST_EXAMS_ENABLED` in `lib/config/env.ts` defaults to `false`.
+
+5. **Full Quality Gates Verification Results:**
+   - `npm run lint` ✓ (0 ESLint errors across codebase).
+   - `npm run typecheck` ✓ (0 TypeScript compilation errors; route types generated).
+   - `npm run check:content` ✓ (126 lessons, 62 labs, 27 objectives validated; 0 errors).
+   - `npm test` ✓ (255/255 test files passed, 2,410/2,410 tests green).
+   - `npm run test:security` ✓ (25/25 test files passed, 260/260 tests green).
+   - `npm run test:db` ✓ (9/9 test files passed, 127/127 tests green).
+   - `npm run build` ✓ (Turbopack production build succeeded; 33 routes compiled).
+   - `npm run scan:bundle` ✓ (0 leaks across 96 client artifacts with 14 pattern rules).
+   - Playwright E2E (`tests/e2e/pentest-exam.spec.ts`) ✓ (2/2 tests passed on desktop & mobile viewports: readiness → mock → exam → submit → result → certificate).
+   - **Strict Constraint**: Zero modifications to SOC L2 behavior; all SOC tests remain 100% green.
