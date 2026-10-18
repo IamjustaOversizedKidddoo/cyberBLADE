@@ -265,10 +265,22 @@ export const LAB_DEBRIEFS: Record<string, LabDebrief> = {
     goFurther: "Deploy automated secret scanners and enforce multi-factor authentication on all administrative bastion logins.",
   },
   "netrange-pivot-internal-01": {
-    concept: "SMB reconnaissance, dual-homed bastion compromise, and static network pivot routing.",
-    realWorld: "Breaching perimeter systems to tunnel traffic into air-gapped or segmented internal subnets.",
-    commonMistake: "Forgetting to inspect dual-homed network interfaces on compromised gateway systems.",
-    goFurther: "Implement microsegmentation and monitor east-west lateral traffic using internal network intrusion sensors.",
+    concept: "DMZ web application compromise, dual-homed router pivoting, and internal service exploitation.",
+    realWorld: "Adversaries chaining perimeter web vulnerabilities with internal pivot routes to access air-gapped data tiers.",
+    commonMistake: "Failing to enumerate secondary network interfaces on compromised bastion systems.",
+    goFurther: "Implement strict microsegmentation and deploy internal network sensors to detect east-west pivot traffic.",
+  },
+  "netrange-windows-smb-privesc-01": {
+    concept: "Windows SMB share enumeration, credential harvesting, and unquoted service path privilege escalation.",
+    realWorld: "Penetration testers exploiting unquoted service paths running as LocalSystem to elevate privileges on Windows endpoints.",
+    commonMistake: "Forgetting to inspect service binary paths for unquoted spaces and weak folder ACLs.",
+    goFurther: "Always wrap Windows service binary paths in quotes and audit registry ImagePath values with PowerShell.",
+  },
+  "netrange-mini-exam-01": {
+    concept: "Comprehensive multi-host penetration testing combining web SQLi, hash cracking, pivoting, and Windows privesc.",
+    realWorld: "Executing full-scope internal network penetration assessments mimicking realistic enterprise environments.",
+    commonMistake: "Fixating on a single host without mapping the broader dual-homed network architecture.",
+    goFurther: "Automate note-taking and maintain meticulous command logs throughout multi-host engagements.",
   },
   "pentest-m02-term-osint-01": {
     concept: "Open-source intelligence (OSINT) and passive DNS reconnaissance.",

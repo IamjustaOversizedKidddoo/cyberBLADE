@@ -1,9 +1,10 @@
 import type {
   NetRangeCmdResult,
   NetRangeScenario,
+  NetRangeSession,
   NetRangeState,
 } from "./types";
-import { formatPrompt, parseArgv } from "./commands/util";
+import { findHostByIpOrName, formatPrompt, parseArgv } from "./commands/util";
 import { execNmap } from "./commands/nmap";
 import { execCurl } from "./commands/curl";
 import { execFtp } from "./commands/ftp";
@@ -238,6 +239,7 @@ Exploitation & Frameworks:
 
 Lateral Movement & Remote Access:
   ssh [user@]<target> [-D port]   Secure Shell remote login & dynamic SOCKS proxying
+  evil-winrm -i <ip> -u <u> -p <p> Windows Remote Management shell
   proxychains <command> [args...] Run tool chained through active SOCKS proxy tunnel
   route [add <net> via <gw>]      Kernel routing table / subnet pivoting
   ip route [add <net> via <gw>]   Linux iproute2 subnet management
@@ -340,6 +342,93 @@ Lab Commands:
       code: res.code,
       nextState: res.nextState ?? nextState,
       prompt: res.prompt ?? formatPrompt(res.nextState ?? nextState, scenario),
+    };
+  }
+
+  if (cmd === "evil-winrm" || cmd === "evil_winrm") {
+    let targetIp = "";
+    let user = "";
+    let pass = "";
+    for (let i = 1; i < argv.length; i++) {
+      if ((argv[i] === "-i" || argv[i] === "--ip") && i + 1 < argv.length) targetIp = argv[++i];
+      else if ((argv[i] === "-u" || argv[i] === "--user") && i + 1 < argv.length) user = argv[++i];
+      else if ((argv[i] === "-p" || argv[i] === "--password") && i + 1 < argv.length) pass = argv[++i];
+    }
+    if (!targetIp || !user) {
+      return {
+        stdout: "",
+        stderr: "Usage: evil-winrm -i <target-ip> -u <username> -p <password>\n",
+        code: 1,
+        nextState,
+        prompt: formatPrompt(nextState, scenario),
+      };
+    }
+    const host = findHostByIpOrName(scenario, targetIp);
+    if (!host) {
+      return {
+        stdout: "",
+        stderr: `[!] Error: Could not connect to ${targetIp}: Connection refused\n`,
+        code: 1,
+        nextState,
+        prompt: formatPrompt(nextState, scenario),
+      };
+    }
+    const iface = host.interfaces.find((i) => i.ip === targetIp) ?? host.interfaces[0];
+    if (!isTargetRoutable(iface.ip, state.routes)) {
+      return {
+        stdout: "",
+        stderr: `[!] Error: Destination host ${targetIp} is unreachable\n`,
+        code: 1,
+        nextState,
+        prompt: formatPrompt(nextState, scenario),
+      };
+    }
+    const userAcc = host.users.find((u) => u.username.toLowerCase() === user.toLowerCase());
+    if (!userAcc) {
+      return {
+        stdout: "",
+        stderr: `[!] Error: Authentication failed for ${user}\n`,
+        code: 1,
+        nextState,
+        prompt: formatPrompt(nextState, scenario),
+      };
+    }
+    if (userAcc.password && pass && userAcc.password !== pass) {
+      return {
+        stdout: "",
+        stderr: `[!] Error: Bad credentials for ${user}\n`,
+        code: 1,
+        nextState,
+        prompt: formatPrompt(nextState, scenario),
+      };
+    }
+    const newSessionId = (state.sessions.length > 0 ? Math.max(...state.sessions.map((s) => s.id)) : 0) + 1;
+    const newSession: NetRangeSession = {
+      id: newSessionId,
+      hostId: host.id,
+      user: userAcc.username,
+      type: "shell",
+      openedAt: "2026-10-18T10:00:00Z",
+    };
+    const nextStateSession: NetRangeState = {
+      ...state,
+      currentHostId: host.id,
+      currentUser: userAcc.username,
+      currentCwd: `C:\\Users\\${userAcc.username}`,
+      sessions: [...state.sessions, newSession],
+      activeSessionId: newSessionId,
+    };
+    const out = `
+Evil-WinRM shell v3.5
+Info: Establishing connection to remote endpoint ${iface.ip}:5985
+*Evil-WinRM* PS C:\\Users\\${userAcc.username}> 
+`;
+    return {
+      stdout: out.trim() + "\n",
+      stderr: "",
+      code: 0,
+      nextState: nextStateSession,
+      prompt: formatPrompt(nextStateSession, scenario),
     };
   }
 

@@ -3,39 +3,43 @@ import type { Rng } from "../rng";
 import type { NetRangeScenario } from "@/lib/lab-engine/netrange/types";
 
 /**
- * Scenario (c): DMZ Compromise -> Routing / Pivot -> Internal Subnet Target
+ * Scenario (d): DMZ Web Server -> Discover Internal Subnet -> Gateway Pivot -> Internal Service Exploit (3 hosts)
  * - DMZ Subnet: 192.0.2.0/24 (accessible from start)
  * - Internal Subnet: 172.16.50.0/24 (blocked until routed via gateway)
- * - Target 1: 192.0.2.100 / 172.16.50.10 (apex-gw01 dual-homed router)
- * - Target 2: 172.16.50.25 (vault-srv01 internal vault API)
+ * - Host 1: 192.0.2.60 (apex-dmz-web01 perimeter web portal)
+ * - Host 2: 192.0.2.100 / 172.16.50.10 (apex-gw01 dual-homed router)
+ * - Host 3: 172.16.50.25 (vault-srv01 internal vault API)
  * - Attack Path:
- *   1. Attacker enumerates SMB on apex-gw01 (192.0.2.100).
- *   2. Smbclient extracts creds.txt leaking credentials and Flag 1 (pivot_gw).
- *   3. Attacker connects via SSH to apex-gw01, examines ifconfig/ip a to see 172.16.50.10/24.
- *   4. Attacker configures route: route add 172.16.50.0/24 via 192.0.2.100.
- *   5. Scans or curls http://172.16.50.25:8080/api/crown_jewel to capture Flag 2 (internal_crown).
+ *   1. Attacker queries DMZ web server (192.0.2.60) at /api/diagnostics.
+ *   2. Response discloses gateway node credentials (pivotuser) and Flag 1 (dmz_web).
+ *   3. Attacker connects via SSH to apex-gw01 (192.0.2.100), retrieves /home/pivotuser/flag.txt for Flag 2 (pivot_gw).
+ *   4. Attacker runs ifconfig / ip route on gateway, discovering the dual-homed eth1 interface (172.16.50.10/24).
+ *   5. Attacker establishes routing: ip route add 172.16.50.0/24 via 192.0.2.100 (or ssh -D 1080).
+ *   6. Attacker connects to internal vault service at http://172.16.50.25:8080/api/crown_jewel and retrieves Flag 3 (internal_crown).
  */
 export function netrangePivotInternal(
   rng: Rng,
   _params: Record<string, unknown>,
 ): GeneratorOutput {
+  const hexDmz = rng.hex(8);
   const hexGw = rng.hex(8);
   const hexInternal = rng.hex(8);
   const hexPass = rng.hex(4);
 
+  const flagDmz = `PENTEST{dmz_web_${hexDmz}}`;
   const flagGw = `PENTEST{pivot_gw_${hexGw}}`;
   const flagInternal = `PENTEST{internal_crown_${hexInternal}}`;
   const pivotPassword = `PivotKey${hexPass}!`;
 
   const scenario: NetRangeScenario = {
     id: "netrange-pivot-internal",
-    title: "DMZ Pivot & Internal Subnet Access",
-    description: "Compromise a dual-homed perimeter bastion via misconfigured SMB shares, establish a static pivot route into the isolated internal subnet, and retrieve confidential assets.",
+    title: "DMZ Web Foothold, Gateway Pivot & Internal Vault Exploitation",
+    description: "Compromise a DMZ web application, leverage leaked infrastructure credentials to access a dual-homed gateway, pivot into an isolated internal subnet, and retrieve the crown jewel data from an internal vault service.",
     author: "CyberBLADE PenTest Range",
     subnets: [
       {
         cidr: "192.0.2.0/24",
-        name: "Perimeter DMZ",
+        name: "Perimeter DMZ Subnet",
         accessibleFromStart: true,
       },
       {
@@ -52,6 +56,64 @@ export function netrangePivotInternal(
       },
     ],
     hosts: [
+      {
+        id: "apex-dmz-web01",
+        hostname: "apex-dmz-web01",
+        os: "linux",
+        interfaces: [
+          {
+            ip: "192.0.2.60",
+            subnet: "192.0.2.0/24",
+            mac: "00:50:56:c0:d1:e2",
+          },
+        ],
+        services: [
+          {
+            port: 80,
+            protocol: "tcp",
+            name: "http",
+            version: "nginx 1.18.0 (Ubuntu)",
+            banner: "Server: nginx/1.18.0",
+            state: "open",
+            httpData: {
+              "/": {
+                status: 200,
+                body: "<!DOCTYPE html><html><head><title>Apex Corporate Edge</title></head><body><h1>Apex Edge Gateway</h1><p>Public diagnostic portal. API available at /api/diagnostics</p></body></html>\n",
+              },
+              "/api/diagnostics": {
+                status: 200,
+                body: JSON.stringify(
+                  {
+                    status: "OPERATIONAL",
+                    role: "DMZ Edge Portal",
+                    flag: flagDmz,
+                    infrastructure: {
+                      internal_bastion: "192.0.2.100",
+                      bastion_user: "pivotuser",
+                      bastion_pass: pivotPassword,
+                      notes: "Connect via SSH to apex-gw01 for maintenance.",
+                    },
+                  },
+                  null,
+                  2,
+                ) + "\n",
+              },
+            },
+          },
+        ],
+        users: [
+          {
+            username: "www-data",
+            role: "user",
+          },
+        ],
+        filesystem: {
+          "/var/www/html/flag.txt": {
+            content: `${flagDmz}\n`,
+            owner: "www-data",
+          },
+        },
+      },
       {
         id: "apex-gw01",
         hostname: "apex-gw01",
@@ -140,11 +202,19 @@ export function netrangePivotInternal(
             httpData: {
               "/": {
                 status: 200,
-                body: "<!DOCTYPE html><html><head><title>Internal Vault Service</title></head><body><h1>Vault Restricted Area</h1><p>Internal network only. Access /api/crown_jewel for authentication keys.</p></body></html>",
+                body: "<!DOCTYPE html><html><head><title>Internal Vault Service</title></head><body><h1>Vault Restricted Area</h1><p>Internal network only. Access /api/crown_jewel for authentication keys.</p></body></html>\n",
               },
               "/api/crown_jewel": {
                 status: 200,
-                body: `{\n  "status": "AUTHORIZED",\n  "classification": "TOP_SECRET",\n  "crown_jewel": "${flagInternal}"\n}\n`,
+                body: JSON.stringify(
+                  {
+                    status: "AUTHORIZED",
+                    classification: "TOP_SECRET",
+                    crown_jewel: flagInternal,
+                  },
+                  null,
+                  2,
+                ) + "\n",
               },
             },
           },
@@ -166,6 +236,13 @@ export function netrangePivotInternal(
     ],
     flags: [
       {
+        id: "flag_dmz",
+        flag: flagDmz,
+        hostId: "apex-dmz-web01",
+        path: "/api/diagnostics",
+        objectiveId: "obj_dmz",
+      },
+      {
         id: "flag_gw",
         flag: flagGw,
         hostId: "apex-gw01",
@@ -180,6 +257,12 @@ export function netrangePivotInternal(
         objectiveId: "obj_internal",
       },
     ],
+    randomizationPoints: {
+      pivotPassword,
+      hexDmz,
+      hexGw,
+      hexInternal,
+    },
   };
 
   return {
@@ -193,6 +276,7 @@ export function netrangePivotInternal(
       },
     },
     answers: {
+      flag_dmz: flagDmz,
       flag_gateway: flagGw,
       flag_internal: flagInternal,
     },

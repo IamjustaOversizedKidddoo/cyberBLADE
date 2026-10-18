@@ -1,0 +1,27 @@
+id: netrange-windows-smb-privesc-01
+title: "NetRange: Windows SMB Reconnaissance & Service Misconfiguration PrivEsc"
+type: netrange
+track: pentest
+rank: 0
+estimated_minutes: 25
+briefing: briefing.md
+dataset:
+  generator: netrange_windows_smb_privesc
+  params: {}
+objectives:
+  - id: smb
+    prompt: "Enumerate the SMB service on WIN-SRV01 (192.0.2.120), retrieve contractor_notes.txt from the engineering share, and submit the foothold flag."
+    check: { kind: flag, answer_from: generator.flag_smb }
+  - id: privesc
+    prompt: "Establish a remote session as contractor, exploit the misconfigured ApexBackupSvc service to elevate privileges to Administrator, and submit C:\\Users\\Administrator\\flag.txt."
+    check: { kind: flag, answer_from: generator.flag_privesc }
+hints:
+  smb:
+    - "Run smbclient -L //192.0.2.120 or enum4linux-ng 192.0.2.120 to enumerate network shares."
+    - "Connect to the engineering share using smbclient //192.0.2.120/engineering and download contractor_notes.txt."
+  privesc:
+    - "Log into WIN-SRV01 using evil-winrm -i 192.0.2.120 -u contractor -p <password> or ssh contractor@192.0.2.120."
+    - "Inspect service binaries with sc qc ApexBackupSvc or wmic service get name,pathname to identify the unquoted binary path running as LocalSystem."
+    - "Start the vulnerable service with sc start ApexBackupSvc or net start ApexBackupSvc to spawn an elevated shell."
+xp: 175
+mitre: ["T1021.002", "T1078.003", "T1574.009"]

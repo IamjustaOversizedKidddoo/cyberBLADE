@@ -104,6 +104,17 @@ export const netRangeInterfaceSchema = z.object({
   mac: z.string().optional(),
 });
 
+export const netRangeWindowsServiceSchema = z.object({
+  name: z.string().min(1),
+  displayName: z.string().optional(),
+  binPath: z.string().min(1),
+  startType: z.enum(["auto", "demand", "disabled"]).default("demand"),
+  runAs: z.string().default("LocalSystem"),
+  state: z.enum(["RUNNING", "STOPPED"]).default("RUNNING"),
+  unquotedPath: z.boolean().optional(),
+  canConfigure: z.boolean().optional(),
+});
+
 export const netRangeHostSchema = z.object({
   id: z.string().regex(/^[a-z0-9_-]+$/),
   hostname: z.string().min(1),
@@ -114,6 +125,7 @@ export const netRangeHostSchema = z.object({
   filesystem: z.record(z.string(), netRangeFileSchema).optional(),
   sudoRules: z.array(netRangeSudoRuleSchema).optional(),
   vulnerabilities: z.array(netRangeVulnerabilitySchema).optional(),
+  windowsServices: z.array(netRangeWindowsServiceSchema).optional(),
 });
 
 export const netRangeSubnetSchema = z.object({

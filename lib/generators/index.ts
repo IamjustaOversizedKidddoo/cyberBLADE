@@ -33,6 +33,8 @@ import { pentestCapstone } from "./webapp/pentest-capstone";
 import { netrangeFootholdPrivesc } from "./netrange/netrange-foothold-privesc";
 import { netrangeWebCredReuse } from "./netrange/netrange-web-cred-reuse";
 import { netrangePivotInternal } from "./netrange/netrange-pivot-internal";
+import { netrangeWindowsSmbPrivesc } from "./netrange/netrange-windows-smb-privesc";
+import { netrangeMiniExam } from "./netrange/netrange-mini-exam";
 
 import { pentestOsint } from "./terminal/pentest-osint";
 import { pentestNmapScan } from "./terminal/pentest-nmap-scan";
@@ -89,6 +91,8 @@ export const GENERATORS: Record<string, Generator> = {
   netrange_foothold_privesc: netrangeFootholdPrivesc,
   netrange_web_cred_reuse: netrangeWebCredReuse,
   netrange_pivot_internal: netrangePivotInternal,
+  netrange_windows_smb_privesc: netrangeWindowsSmbPrivesc,
+  netrange_mini_exam: netrangeMiniExam,
   pentest_osint_recon: pentestOsint,
   pentest_nmap_scan: pentestNmapScan,
   pentest_cleartext_creds: pentestCleartextCreds,

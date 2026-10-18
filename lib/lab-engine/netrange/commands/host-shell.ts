@@ -339,7 +339,7 @@ export function execHostCommand(
     return { stdout: ".\n", stderr: "", code: 0 };
   }
 
-  // Windows net command: net user, net localgroup
+  // Windows net command: net user, net start, net localgroup
   if (cmd === "net") {
     if (argv[1] === "user") {
       const names = host?.users.map((u) => u.username) ?? ["Administrator", "Guest", "operator"];
@@ -351,6 +351,152 @@ export function execHostCommand(
       ];
       return { stdout: out.join("\n") + "\n", stderr: "", code: 0 };
     }
+    if (argv[1] === "start") {
+      const svcName = argv.slice(2).join(" ");
+      const services = host?.windowsServices ?? [];
+      const svc = services.find((s) => s.name.toLowerCase() === svcName.toLowerCase());
+      if (svc && (svc.unquotedPath || svc.canConfigure || svc.runAs === "LocalSystem" || svc.runAs === "NT AUTHORITY\\SYSTEM")) {
+        nextState.currentUser = "Administrator";
+        nextState.currentCwd = "C:\\Windows\\system32";
+        return {
+          stdout: `The ${svc.name} service is starting....\nThe ${svc.name} service was started successfully.\n[+] Elevated session spawned: NT AUTHORITY\\SYSTEM\n`,
+          stderr: "",
+          code: 0,
+          nextState,
+          prompt: formatPrompt(nextState, scenario),
+        };
+      }
+      if (svc) {
+        return { stdout: `The ${svc.name} service was started successfully.\n`, stderr: "", code: 0 };
+      }
+      return { stdout: "The service name is invalid.\n", stderr: "", code: 2 };
+    }
+  }
+
+  // Windows sc command: sc qc, sc query, sc config, sc start
+  if (cmd === "sc") {
+    const sub = (argv[1] || "").toLowerCase();
+    const svcName = argv[2] || "";
+    const services = host?.windowsServices ?? [];
+    const svc = services.find((s) => s.name.toLowerCase() === svcName.toLowerCase());
+
+    if (sub === "qc") {
+      if (!svc) {
+        return {
+          stdout: `[SC] OpenService FAILED 1060:\n\nThe specified service does not exist as an installed service.\n`,
+          stderr: "",
+          code: 1,
+        };
+      }
+      const out = [
+        "[SC] QueryServiceConfig SUCCESS",
+        "",
+        `SERVICE_NAME: ${svc.name}`,
+        "        TYPE               : 10  WIN32_OWN_PROCESS",
+        `        START_TYPE         : ${svc.startType === "auto" ? "2   AUTO_START" : "3   DEMAND_START"}`,
+        "        ERROR_CONTROL      : 1   NORMAL",
+        `        BINARY_PATH_NAME   : ${svc.binPath}`,
+        "        LOAD_ORDER_GROUP   :",
+        "        TAG                : 0",
+        `        DISPLAY_NAME       : ${svc.displayName ?? svc.name}`,
+        "        DEPENDENCIES       :",
+        `        SERVICE_START_NAME : ${svc.runAs ?? "LocalSystem"}`,
+      ];
+      return { stdout: out.join("\n") + "\n", stderr: "", code: 0 };
+    }
+
+    if (sub === "query") {
+      const targetSvc = svcName ? svc : services[0];
+      if (svcName && !svc) {
+        return {
+          stdout: `[SC] EnumQueryServicesStatus:OpenService FAILED 1060:\n\nThe specified service does not exist as an installed service.\n`,
+          stderr: "",
+          code: 1,
+        };
+      }
+      if (targetSvc) {
+        const out = [
+          `SERVICE_NAME: ${targetSvc.name}`,
+          `DISPLAY_NAME: ${targetSvc.displayName ?? targetSvc.name}`,
+          "        TYPE               : 10  WIN32_OWN_PROCESS",
+          `        STATE              : ${targetSvc.state === "STOPPED" ? "1  STOPPED" : "4  RUNNING"}`,
+          "                                (STOPPABLE, NOT_PAUSABLE, ACCEPTS_SHUTDOWN)",
+          "        WIN32_EXIT_CODE    : 0  (0x0)",
+          "        SERVICE_EXIT_CODE  : 0  (0x0)",
+          "        CHECKPOINT         : 0x0",
+          "        WAIT_HINT          : 0x0",
+        ];
+        return { stdout: out.join("\n") + "\n", stderr: "", code: 0 };
+      }
+      return { stdout: "SERVICE_NAME: Spooler\n        STATE: 4  RUNNING\n", stderr: "", code: 0 };
+    }
+
+    if (sub === "config") {
+      if (!svc) {
+        return { stdout: "[SC] OpenService FAILED 1060:\n\nService not found.\n", stderr: "", code: 1 };
+      }
+      return { stdout: "[SC] ChangeServiceConfig SUCCESS\n", stderr: "", code: 0 };
+    }
+
+    if (sub === "start") {
+      if (!svc) {
+        return { stdout: `[SC] StartService: OpenService FAILED 1060\n`, stderr: "", code: 1 };
+      }
+      if (svc.unquotedPath || svc.canConfigure || svc.runAs === "LocalSystem" || svc.runAs === "NT AUTHORITY\\SYSTEM") {
+        nextState.currentUser = "Administrator";
+        nextState.currentCwd = "C:\\Windows\\system32";
+        return {
+          stdout: `[SC] StartService SUCCESS\n[+] Service '${svc.name}' executed with LocalSystem privileges.\n[+] Elevated session spawned: NT AUTHORITY\\SYSTEM\n`,
+          stderr: "",
+          code: 0,
+          nextState,
+          prompt: formatPrompt(nextState, scenario),
+        };
+      }
+      return { stdout: `SERVICE_NAME: ${svc.name}\n        STATE              : 4  RUNNING\n`, stderr: "", code: 0 };
+    }
+  }
+
+  // Windows wmic service
+  if (cmd === "wmic") {
+    if (argv.slice(1).join(" ").toLowerCase().includes("service")) {
+      const services = host?.windowsServices ?? [];
+      const lines = [
+        "DisplayName                        Name           PathName                                                    StartMode",
+        "=================================  =============  ==========================================================  =========",
+      ];
+      for (const s of services) {
+        const dName = (s.displayName ?? s.name).padEnd(33);
+        const name = s.name.padEnd(13);
+        const path = s.binPath.padEnd(58);
+        const start = s.startType === "auto" ? "Auto" : "Manual";
+        lines.push(`${dName}  ${name}  ${path}  ${start}`);
+      }
+      return { stdout: lines.join("\n") + "\n", stderr: "", code: 0 };
+    }
+  }
+
+  // Windows accesschk
+  if (cmd === "accesschk" || cmd === "accesschk.exe") {
+    const services = host?.windowsServices ?? [];
+    const lines = ["AccessChk v6.12 - Check access rights of files, services, registry keys"];
+    for (const s of services) {
+      if (s.canConfigure || s.unquotedPath) {
+        lines.push(`  RW ${s.name}`);
+        lines.push("        SERVICE_ALL_ACCESS");
+      }
+    }
+    return { stdout: lines.join("\n") + "\n", stderr: "", code: 0 };
+  }
+
+  // Windows copy
+  if (cmd === "copy") {
+    const src = argv[1];
+    const dest = argv[2];
+    if (!src || !dest) {
+      return { stdout: "", stderr: "The syntax of the command is incorrect.\n", code: 1 };
+    }
+    return { stdout: "        1 file(s) copied.\n", stderr: "", code: 0 };
   }
 
   return {
@@ -361,3 +507,4 @@ export function execHostCommand(
     code: 127,
   };
 }
+

@@ -6,7 +6,7 @@ describe("generator property tests across all generators", () => {
   const generatorEntries = Object.entries(GENERATORS);
 
   it("registers all distinct generators", () => {
-    expect(generatorEntries.length).toBe(47);
+    expect(generatorEntries.length).toBe(49);
   });
 
   for (const [name, generator] of generatorEntries) {

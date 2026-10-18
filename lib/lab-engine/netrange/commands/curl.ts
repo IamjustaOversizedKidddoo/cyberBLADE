@@ -57,7 +57,21 @@ export function execCurl(
   }
 
   const endpoints = httpSvc.httpData ?? {};
-  const matched = endpoints[path];
+  const fullPathWithSearch = path + (parsedUrl.search || "");
+  const matched =
+    endpoints[fullPathWithSearch] ??
+    endpoints[path] ??
+    Object.entries(endpoints).find(([k]) => {
+      if (k.includes("?")) {
+        const [kPath, kQuery] = k.split("?");
+        return (
+          kPath === path &&
+          (parsedUrl.search.includes(kQuery) ||
+            kQuery.split("&").every((part) => parsedUrl.search.includes(part)))
+        );
+      }
+      return false;
+    })?.[1];
   const endpoint = (matched && (!matched.method || matched.method === method))
     ? matched
     : (path === "/" ? endpoints["/"] ?? {

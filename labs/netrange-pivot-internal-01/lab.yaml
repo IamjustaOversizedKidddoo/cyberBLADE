@@ -1,26 +1,32 @@
 id: netrange-pivot-internal-01
-title: "NetRange: Dual-Homed Gateway Pivot & Internal Vault Access"
+title: "NetRange: DMZ Web Foothold, Gateway Pivot & Internal Vault Exploitation"
 type: netrange
 track: pentest
-rank: 3
+rank: 0
 estimated_minutes: 30
 briefing: briefing.md
 dataset:
   generator: netrange_pivot_internal
   params: {}
 objectives:
+  - id: dmz
+    prompt: "Query the DMZ edge portal on apex-dmz-web01 (192.0.2.60) at /api/diagnostics and submit the DMZ flag."
+    check: { kind: flag, answer_from: generator.flag_dmz }
   - id: gateway
-    prompt: "Enumerate the SMB service on apex-gw01 (192.0.2.100), extract credentials from the public share, and submit the gateway flag."
+    prompt: "Log into apex-gw01 (192.0.2.100) via SSH using the discovered credentials and submit the gateway flag from /home/pivotuser/flag.txt."
     check: { kind: flag, answer_from: generator.flag_gateway }
   - id: internal
     prompt: "Pivot into the 172.16.50.0/24 subnet via apex-gw01 and submit the crown jewel flag from http://172.16.50.25:8080/api/crown_jewel."
     check: { kind: flag, answer_from: generator.flag_internal }
 hints:
+  dmz:
+    - "Run curl -i http://192.0.2.60/api/diagnostics to inspect the perimeter diagnostic response."
   gateway:
-    - "Use smbclient -L //192.0.2.100 or enum4linux 192.0.2.100 to discover shares permitting guest access."
-    - "Retrieve creds.txt from the public share on apex-gw01."
+    - "Extract the pivotuser credentials from the diagnostic endpoint."
+    - "Connect to apex-gw01 via ssh pivotuser@192.0.2.100 and read /home/pivotuser/flag.txt."
   internal:
-    - "Add a kernel route for the internal network using route add 172.16.50.0/24 via 192.0.2.100."
-    - "Query the vault API endpoint with curl -i http://172.16.50.25:8080/api/crown_jewel."
-xp: 200
-mitre: ["T1021.002", "T1090", "T1046"]
+    - "Inspect network interfaces on apex-gw01 using ifconfig or ip a to discover the 172.16.50.0/24 subnet."
+    - "Configure routing from the attacker host using ip route add 172.16.50.0/24 via 192.0.2.100 or start an SSH dynamic SOCKS proxy with ssh -D 1080 -f -N pivotuser@192.0.2.100."
+    - "Access the internal vault API via curl http://172.16.50.25:8080/api/crown_jewel (or via proxychains)."
+xp: 225
+mitre: ["T1190", "T1090", "T1046", "T1552.001"]

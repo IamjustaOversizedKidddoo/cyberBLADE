@@ -2,7 +2,7 @@ id: netrange-web-cred-reuse-01
 title: "NetRange: Web Reconnaissance & Multi-Host Credential Reuse"
 type: netrange
 track: pentest
-rank: 2
+rank: 0
 estimated_minutes: 25
 briefing: briefing.md
 dataset:

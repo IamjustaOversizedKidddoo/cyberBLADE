@@ -85,6 +85,17 @@ export type NetRangeInterface = {
   mac?: string;
 };
 
+export type NetRangeWindowsService = {
+  name: string;
+  displayName?: string;
+  binPath: string;
+  startType?: "auto" | "demand" | "disabled";
+  runAs?: string;
+  state?: "RUNNING" | "STOPPED";
+  unquotedPath?: boolean;
+  canConfigure?: boolean;
+};
+
 export type NetRangeHost = {
   id: string;
   hostname: string;
@@ -95,6 +106,7 @@ export type NetRangeHost = {
   filesystem?: Record<string, NetRangeFile>;
   sudoRules?: NetRangeSudoRule[];
   vulnerabilities?: NetRangeVulnerability[];
+  windowsServices?: NetRangeWindowsService[];
 };
 
 export type NetRangeSubnet = {

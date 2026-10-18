@@ -84,6 +84,66 @@ test.describe("NetRange Simulated Multi-Host Lab Engine", () => {
     await expect(page.getByText("Lab complete! XP added to your profile.")).toBeVisible({ timeout: 10_000 });
   });
 
+  test("completes scenario (b): web foothold -> db creds -> credential reuse SSH end-to-end", async ({ page }) => {
+    // 1. Authenticate and start attempt
+    await page.goto("/start?next=/labs/netrange-web-cred-reuse-01");
+    await page.getByLabel("Choose your operator handle").fill(`netrange_b_${Date.now() % 1_000_000}`);
+    await page.getByLabel("I have read and agree to the ethical use agreement").check();
+    await page.getByRole("button", { name: "Start" }).click();
+    await expect(page).toHaveURL(/\/labs\/netrange-web-cred-reuse-01$/);
+
+    // 2. Verify NetRange console
+    const termScreen = page.locator(".xterm-screen");
+    await termScreen.scrollIntoViewIfNeeded();
+    await expect(page.locator(".xterm-rows")).toContainText("NetRange Engine");
+    await expect(page.locator(".xterm-rows")).toContainText("kali@kali:~$");
+
+    // Helper to send command to terminal
+    const typeAndEnter = async (cmd: string) => {
+      await termScreen.click();
+      await page.waitForTimeout(50);
+      await page.keyboard.type(cmd, { delay: 10 });
+      await page.keyboard.press("Enter");
+    };
+
+    // 3. Web inspection reveals backup file
+    await typeAndEnter("curl http://192.0.2.80/");
+    await expect(page.locator(".xterm-rows")).toContainText("/backup/db_backup.sql", { timeout: 10_000 });
+
+    // 4. Retrieve SQL dump to extract web credential flag
+    await typeAndEnter("curl http://192.0.2.80/backup/db_backup.sql");
+    await expect(page.locator(".xterm-rows")).toContainText("PENTEST{web_cred_", { timeout: 10_000 });
+
+    const termText1 = await page.locator(".xterm-rows").innerText();
+    const matchWeb = termText1.match(/PENTEST\{web_cred_[a-f0-9]+\}/);
+    expect(matchWeb).not.toBeNull();
+    const flagWeb = matchWeb![0];
+
+    // Submit web flag
+    await typeAndEnter(`submit 1 ${flagWeb}`);
+    await expect(page.locator("#objectives-heading ~ ol > li").nth(0).getByText("✓ Solved")).toBeVisible({ timeout: 10_000 });
+
+    // 5. Credential reuse SSH into apex-db01 (192.0.2.90)
+    await typeAndEnter("ssh svc_deploy@192.0.2.90");
+    await expect(page.locator(".xterm-rows")).toContainText("svc_deploy@apex-db01", { timeout: 10_000 });
+
+    // 6. Read flag on db server
+    await typeAndEnter("cat /home/svc_deploy/flag.txt");
+    await expect(page.locator(".xterm-rows")).toContainText("PENTEST{cred_reuse_", { timeout: 10_000 });
+
+    const termText2 = await page.locator(".xterm-rows").innerText();
+    const matchReuse = termText2.match(/PENTEST\{cred_reuse_[a-f0-9]+\}/);
+    expect(matchReuse).not.toBeNull();
+    const flagReuse = matchReuse![0];
+
+    // Submit cred reuse flag
+    await typeAndEnter(`submit 2 ${flagReuse}`);
+    await expect(page.locator("#objectives-heading ~ ol > li").nth(1).getByText("✓ Solved")).toBeVisible({ timeout: 10_000 });
+
+    // Lab completion message
+    await expect(page.getByText("Lab complete! XP added to your profile.")).toBeVisible({ timeout: 10_000 });
+  });
+
   test("ergonomics work at 390px mobile viewport without horizontal overflow", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/start?next=/labs/netrange-foothold-privesc-01");

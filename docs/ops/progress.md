@@ -1167,3 +1167,55 @@ Engineered and verified the `netrange` deterministic, fully simulated multi-host
    - `npm run scan:bundle` ✓ (0 leaks across 96 client artifacts with 14 pattern rules).
    - Playwright E2E (`tests/e2e/netrange-lab.spec.ts`) ✓ (4 passed across desktop & 390px mobile viewports).
 
+---
+
+### Entry PT-8: NetRange Scenario Expansion Suite & Windows Attack Tooling (2026-10-18)
+
+Authored and verified 4 additional comprehensive multi-host practical penetration testing scenarios (Scenarios B, C, D, and E), expanding the NetRange catalogue to 5 full eJPT-aligned scenarios. Implemented simulated Windows offensive tooling (`evil-winrm`, service auditing/privilege escalation via `sc`, `wmic`, `accesschk`), URL parameter handling in `curl`, and created end-to-end automated solver test suites passing across $\ge 5$ seeds each.
+
+1. **Four Authored Scenarios & Procedural Generators:**
+   - **Scenario B (`netrange-web-cred-reuse-01`, 2 hosts):**
+     * Web foothold via UNION SQL injection against `apex-web01` (`192.0.2.50`), extracting MD5 shadow hash for the administrator account.
+     * Offline hash cracking via John the Ripper / Hashcat over bundled wordlist (`rockyou.txt`).
+     * Lateral movement via SSH credential reuse onto internal database server `db-core01` (`192.0.2.55`) retrieving internal database dump flag.
+   - **Scenario C (`netrange-windows-smb-privesc-01`, 1 host):**
+     * SMB enumeration (`smbclient -L`, `enum4linux`) against Windows host `apex-win01` (`192.0.2.80`), discovering readable `backups` share containing cleartext contractor credentials in `notes.txt`.
+     * Windows remote management foothold using `evil-winrm` over port 5985 to obtain interactive PowerShell shell and learner flag.
+     * Host enumeration identifying unquoted service path vulnerability in `ApexBackupSvc` (`C:\Program Files\Apex Backup\service.exe`). Service binary replacement and service restart (`sc config`, `sc start`) triggering SYSTEM privilege elevation and proof flag collection.
+   - **Scenario D (`netrange-pivot-internal-01`, 3 hosts across 2 subnets):**
+     * Initial perimeter web foothold on DMZ web server `apex-dmz-web01` (`192.0.2.60`).
+     * Network reconnaissance identifying dual-homed gateway `apex-gw01` (`192.0.2.100` / `172.16.50.10`).
+     * SSH compromise on gateway, routing table inspection, adding route `172.16.50.0/24`, establishing dynamic SOCKS proxy (`ssh -D 1080`), and lateral pivoting via `proxychains` to compromise internal data vault `vault-srv01` (`172.16.50.25`).
+   - **Scenario E ("Mini Exam" eJPT Rehearsal, 4 hosts across 2 subnets):**
+     * Spans perimeter DMZ (`192.0.2.0/24`) and internal enclave (`172.16.20.0/24`).
+     * Combines web SQLi data exfiltration on `apex-portal01`, hash cracking on operator workstation, Linux `sudo find` privilege escalation on dual-homed jumpbox `apex-jump01`, internal route pivoting (`172.16.20.0/24`), Metasploit exploitation against internal Linux daemon `corp-app01` (`172.16.20.15`), and Windows SMB credential discovery into unquoted service path privilege escalation to SYSTEM on Domain Controller `corp-dc01` (`172.16.20.50`).
+
+2. **Simulated Tooling Expansion:**
+   - **`evil-winrm`:** Added authentic WinRM CLI execution (`evil-winrm -i <ip> -u <user> -p <pass>`), establishing interactive remote Windows PowerShell sessions with credential validation.
+   - **Windows Service Auditing & Misconfiguration Exploitation:** Added Windows command simulation for `sc qc`, `sc query`, `sc config`, `sc start`, `net start`, `wmic service get`, `accesschk`, and `copy`. Exploiting unquoted service paths or misconfigured binpaths automatically elevates session privilege to `NT AUTHORITY\SYSTEM`.
+   - **`curl` Parameter & Query Search Matching:** Added URL query string parsing and query-parameter-aware route handling in simulated `curl`, enabling `curl -s "http://host/page?id=..."` SQL injection proofs.
+
+3. **Scenario Catalog Matrix (Scenarios A through E):**
+
+| ID | Scenario | Generator | Hosts & Subnets | Objectives & Attack Chain | Verification & Solver |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **A** | `netrange-foothold-privesc-01` | `netrangeFootholdPrivesc` | 1 host (`192.0.2.10`) | Perimeter vsftpd 2.3.4 backdoor exploit (`msfconsole`) → Sudo `find` GTFOBins privilege escalation to `root`. | 5 seeds verified (Solver: 100% green) |
+| **B** | `netrange-web-cred-reuse-01` | `netrangeWebCredReuse` | 2 hosts (`192.0.2.50`, `192.0.2.55`) | Web UNION SQL injection (`curl`) → MD5 shadow hash extraction → Hash cracking (`john`/`hashcat`) → Lateral SSH credential reuse on database host. | 5 seeds verified (Solver + E2E Playwright: 100% green) |
+| **C** | `netrange-windows-smb-privesc-01` | `netrangeWindowsSmbPrivesc` | 1 host (`192.0.2.80`) | SMB share enumeration (`smbclient`/`enum4linux`) → Cleartext creds in backup share → WinRM foothold (`evil-winrm`) → Unquoted service path privesc (`sc`/`wmic`) to SYSTEM. | 5 seeds verified (Solver: 100% green) |
+| **D** | `netrange-pivot-internal-01` | `netrangePivotInternal` | 3 hosts across 2 subnets (`192.0.2.60`, `192.0.2.100`/`172.16.50.10`, `172.16.50.25`) | DMZ web server foothold → Dual-homed gateway compromise → Internal route addition (`ip route add`) + SOCKS tunnel → Proxychains pivot to internal vault. | 5 seeds verified (Solver: 100% green) |
+| **E** | `netrange-mini-exam-01` | `netrangeMiniExam` | 4 hosts across 2 subnets (`192.0.2.0/24`, `172.16.20.0/24`) | Full eJPT rehearsal combining Web SQLi, hash cracking, Linux sudo privesc, internal pivoting, Metasploit exploitation, and Windows unquoted service privesc to SYSTEM. | 5 seeds verified (Solver: 100% green) |
+
+4. **Automated Solver Verification Suite & Quality Gates:**
+   - Authored `tests/unit/lib/lab-engine/netrange/scenarios-solver.test.ts` verifying all 5 scenarios end-to-end across 5 seeds each (25 total solver tests, 100% pass rate).
+   - Authored Playwright E2E test in `tests/e2e/netrange-lab.spec.ts` executing Scenario B web injection, password cracking, SSH credential reuse, flag capture, and submission on desktop and mobile viewports.
+   - `npm run check:content` ✓ (126 lessons, 62 labs, 27 objectives validated; 0 errors).
+   - `npm run typecheck` ✓ (0 TypeScript errors across codebase).
+   - `npm run lint` ✓ (0 ESLint errors).
+   - `npm run test:security` ✓ (25/25 test files passed, 260/260 tests green).
+   - `npm test` ✓ (255/255 test files passed, 2,409/2,409 tests green).
+   - `npm run build` ✓ (Turbopack production build succeeded, all 33 static & dynamic routes compiled).
+   - `npm run scan:bundle` ✓ (0 leaks across 96 client artifacts with 14 pattern rules).
+   - Playwright E2E (`tests/e2e/netrange-lab.spec.ts`) ✓ (6/6 tests passed on desktop & mobile viewports).
+   - **Strict Constraint**: Zero SOC L2 files touched.
+
+
