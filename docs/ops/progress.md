@@ -864,20 +864,19 @@ Established the formal pedagogical foundation, quality standards contract, 12-mo
    - **Module 10: Pivoting & Network Routing (`pivoting` | Host & Network Penetration Testing):**
      38. `pentest-r1-m10-ssh-port-forwarding-tunnels-01`: Network Pivoting with SSH Local and Remote Port Forwarding *(Authored)*
      39. `pentest-r1-m10-dynamic-socks-proxychains-01`: Dynamic SOCKS Pivoting and Proxychains Routing *(Authored)*
-     40. `pentest-r1-m10-chisel-tunneling-firewalls-01`: Modern HTTP/WebSocket Tunneling with Chisel *(Planned)*
-     41. `pentest-r1-m10-internal-subnet-routing-01`: Multi-Homed Network Routing and Route Table Discovery *(Planned)*
+     40. `pentest-r1-m10-chisel-tunneling-firewalls-01`: Modern HTTP/WebSocket Tunneling with Chisel *(Authored)*
+     41. `pentest-r1-m10-internal-subnet-routing-01`: Multi-Homed Network Routing and Route Table Discovery *(Authored)*
 
    - **Module 11: Technical & Executive Reporting (`reporting` | Assessment Methodologies):**
      42. `pentest-r1-m11-findings-writeup-cvss-01`: Technical Findings Documentation and CVSS v3.1 Scoring *(Authored)*
      43. `pentest-r1-m11-executive-summary-remediation-01`: Executive Summaries and Strategic Remediation Roadmaps *(Authored)*
-     44. `pentest-r1-m11-evidence-collection-scrubbing-01`: Evidence Collection, Screenshot Standards, and Data Sanitization *(Planned)*
-     45. `pentest-r1-m11-remediation-validation-retesting-01`: Remediation Retesting Procedures and Closeout Letters *(Planned)*
+     44. `pentest-r1-m11-evidence-collection-scrubbing-01`: Evidence Collection, Screenshot Standards, and Data Sanitization *(Authored)*
+     45. `pentest-r1-m11-remediation-validation-retesting-01`: Remediation Retesting Procedures and Closeout Letters *(Authored)*
 
    - **Module 12: Capstone Engagement Simulation (`capstone` | Full eJPT Domain Synthesis):**
      46. `pentest-r1-m12-capstone-e2e-01`: End-to-End Penetration Testing Engagement Simulation *(Authored)*
-     47. `pentest-r1-m12-recon-foothold-capstone-01`: Capstone Phase 1: Perimeter Reconnaissance and Initial Access *(Planned)*
-     48. `pentest-r1-m12-privesc-pivot-capstone-01`: Capstone Phase 2: Internal Enumeration, Privilege Escalation, and Pivoting *(Planned)*
-     49. `pentest-r1-m12-findings-presentation-capstone-01`: Capstone Phase 3: Engagement Debrief, Evidence Compilation, and Executive Presentation *(Planned)*
+     47. `pentest-r1-m12-sample-penetration-test-report-01`: Full Comprehensive Sample Penetration Test Report (Apex Health Systems) *(Authored)*
+     48. `pentest-r1-m12-ejpt-exam-strategy-tactics-01`: eJPT Practical Exam Strategy, Time Management, and Note-Taking *(Authored)*
 
 7. **Verification & Quality Gates:**
    - `npm run lint` ✓ (0 errors)
@@ -979,6 +978,93 @@ Completed the full curriculum authoring, assessments, and comprehensive cheat sh
    - `npm run lint` ✓ (0 errors).
    - Unit tests: `tests/unit/lib/content/` (15 test files, 131 tests passed).
 
+---
 
+### Entry PT-5: Penetration Testing L1 Curriculum & UI Completion (2026-10-18)
+Final milestone on branch `build/weekend` delivering the remaining lessons and cheat sheets for Modules 10 (Pivoting), 11 (Reporting), and 12 (Capstone & eJPT Exam Strategy), plus the full UI elevation, responsive field manual cheat-sheet viewers, operational progress maps, and end-to-end design evidence.
 
+1. **Authored Curriculum & Assessments (Modules 10, 11, 12):**
+   - **Module 10: Pivoting & Lateral Movement (`pivoting`):**
+     - `pentest-r1-m10-chisel-tunneling-firewalls-01`: Modern HTTP/WebSocket Tunneling with Chisel (covers egress firewall restrictions, TCP-over-HTTP encapsulation, reverse vs forward socks tunnels with `chisel server` and `chisel client`, Proxychains integration, and deep packet inspection signatures).
+     - `pentest-r1-m10-internal-subnet-routing-01`: Multi-Homed Network Routing and Route Table Discovery (covers kernel routing tables via `ip route` and `route print`, discovering non-routable enclaves, Metasploit `post/multi/manage/autoroute` and `portfwd`, multi-hop pivot chains, and cleanup).
+     - `content/tracks/pentest/l1/m10-pivoting/cheat-sheet.md`: Comprehensive field reference covering SSH `-L`/`-R`/`-D`, Proxychains configuration (`strict_chain` vs `round_robin`, DNS resolution), Chisel reverse proxies, Metasploit autoroute/portfwd, and internal CIDR discovery.
+   - **Module 11: Reporting & Professional Practice (`reporting`):**
+     - `pentest-r1-m11-evidence-collection-scrubbing-01`: Evidence Collection, Screenshot Standards, and Data Sanitization (covers step-by-step reproduction standards, terminal logs with timestamps and IP bindings, screenshot redactions, and PII/PHI sanitization under HIPAA §164.514 and GDPR Art. 4).
+     - `pentest-r1-m11-remediation-validation-retesting-01`: Remediation Retesting Procedures and Closeout Letters (covers diff-based retesting, verifying partial mitigations and bypasses, writing formal closeout letters, tracking residual risks, and engagement signoff).
+     - `content/tracks/pentest/l1/m11-reporting/cheat-sheet.md`: Comprehensive field guide covering CVSS v3.1 metric vectors, finding writeup anatomy, executive summary structures, screenshot and log standards, PHI/PII redaction, retesting methodology, and closeout letter templates.
+   - **Module 12: Capstone Engagement & eJPT Strategy (`capstone`):**
+     - `pentest-r1-m12-sample-penetration-test-report-01`: Full Comprehensive Sample Penetration Test Report for a Fictional Engagement (Apex Health Systems: executive summary, scope, engagement timeline, vulnerability breakdown with CVSS scores, step-by-step reproduction chains, tactical/strategic remediations, and cleanup confirmation).
+     - `pentest-r1-m12-ejpt-exam-strategy-tactics-01`: eJPT Practical Exam Strategy: Time Management, Note-Taking, and Question-Answering Tactics (covers 48-hour exam pacing, CherryTree/Obsidian note-taking schemas, flag verification, answering questions through deliberate host auditing rather than blind guessing, and recovery from rabbit holes).
+     - `content/tracks/pentest/l1/m12-capstone/cheat-sheet.md`: Comprehensive capstone field guide covering engagement workflows, full report template, eJPT 48-hour strategy checklist, and tactical exam pitfall recovery.
 
+2. **UI Elevation & Design System Alignment (`.agents/skills/taste-skill`):**
+   - **Track Landing Page (`/learn/pentest-l1`):** Integrated 6-Phase Operational Progress Map (Reconnaissance -> Scanning -> Enumeration -> Exploitation -> Post-Exploit -> Reporting), quick cheat sheet directory, live module completion badges, and double-bezel industrial chassis cards (`taste-soft` §4.A / `taste-brutalist` §5).
+   - **Module Detail Pages (`/learn/pentest-l1/[module]`):** Integrated interactive, searchable `CheatSheetViewer` component featuring tabbed sections, 1-click clipboard copy with visual feedback, breadcrumbs, hands-on lab banners, and high-contrast WCAG 2.1 AA focus rings (`has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-cyan`).
+   - **Lesson Reader (`/learn/[lessonId]`):** Added dedicated Pentest breadcrumb trail (`Penetration Tester L1 / Module XX / Lesson X of Y`), `> pentest_l1` kicker, upgraded `TerminalCheck` to `variant="readable"`, and ensured responsive code blocks scroll sideways without page-level sideways scroll.
+   - **Evidence Generation:** Automated Playwright screenshot pipeline in `tests/e2e/pentest-track.spec.ts` capturing verified evidence into `docs/design/evidence/pentest/`:
+     - `pentest-track-landing-1440.png` (Desktop 1440px)
+     - `pentest-track-landing-768.png` (Tablet 768px)
+     - `pentest-track-landing-390.png` (Mobile 390px, 0px sideways scroll)
+     - `pentest-module-pivoting-1440.png` (Module 10 Field Manual & Cheat Sheet)
+     - `pentest-lesson-reader-1440.png` (Lesson reader breadcrumb & layout)
+     - `pentest-lesson-quiz-answered-1440.png` (Interactive TerminalCheck with feedback)
+
+3. **FULL TRACK LESSON TABLE (All 12 Modules, All 46 Lessons):**
+
+| Mod | Ord | Lesson ID | Title | MITRE ATT&CK | XP | Lab / Engine |
+| :---: | :---: | :--- | :--- | :---: | :---: | :--- |
+| **M01** | 01 | `pentest-r1-m01-methodology-roe-01` | Penetration Testing Methodologies and Scoping Boundaries | T1595 | 60 | Concept / RoE Checklist |
+| **M01** | 02 | `pentest-r1-m01-legal-authorization-01` | Legal Authorizations, Statutory Frameworks, and Rules of Engagement | T1595 | 60 | Concept / Legal Scenarios |
+| **M01** | 03 | `pentest-r1-m01-threat-modeling-risk-01` | Threat Modeling and Asset Identification for Scoped Engagements | T1595 | 70 | Threat Modeling Matrix |
+| **M01** | 04 | `pentest-r1-m01-roe-communications-halt-01` | Engagement Communication Channels and Emergency Halt Operations | T1595 | 70 | Communications Triage |
+| **M02** | 05 | `pentest-r1-m02-dns-whois-recon-01` | DNS Enumeration, WHOIS Records, and Certificate Transparency Logs | T1596 | 60 | Passive DNS Queries |
+| **M02** | 06 | `pentest-r1-m02-search-dorking-subdomains-01` | Search Engine Dorking and Subdomain Discovery | T1596 | 70 | Dorking & OSINT Triage |
+| **M02** | 07 | `pentest-r1-m02-leaked-credentials-git-01` | Source Code Repository Reconnaissance and Secret Hunting | T1552.001 | 70 | Git Secret Reconnaissance |
+| **M02** | 08 | `pentest-r1-m02-asn-bgp-infrastructure-01` | Autonomous System (ASN) Mapping and External Infrastructure Footprinting | T1596.001 | 70 | ASN & CIDR Discovery |
+| **M03** | 09 | `pentest-r1-m03-nmap-host-discovery-01` | Nmap Host Discovery and ICMP/ARP Sweep Mechanics | T1595.001 | 70 | `pentest-m03-pkt-scan-01` (Packet) |
+| **M03** | 10 | `pentest-r1-m03-tcp-udp-port-scanning-01` | TCP SYN, Connect, and UDP Port Scanning Analysis | T1046 | 70 | `pentest-m03-pkt-scan-01` (Packet) |
+| **M03** | 11 | `pentest-r1-m03-scan-timing-evasion-01` | Nmap Timing Templates, Probe Optimization, and Detection Evasion | T1046 | 70 | `pentest-m03-pkt-scan-01` (Packet) |
+| **M03** | 12 | `pentest-r1-m03-nmap-scripting-engine-01` | Nmap Scripting Engine (NSE) for Rapid Discovery | T1046 | 80 | `pentest-m03-pkt-scan-01` (Packet) |
+| **M04** | 13 | `pentest-r1-m04-smb-enum-shares-01` | SMB Protocol Enumeration and Null Session Auditing | T1021.002 | 70 | `pentest-m04-term-services-01` (Terminal) |
+| **M04** | 14 | `pentest-r1-m04-ftp-ssh-enum-01` | FTP and SSH Banner Analysis and Anonymous Access Verification | T1021.004 | 70 | Service Banner Analysis |
+| **M04** | 15 | `pentest-r1-m04-snmp-db-enum-01` | SNMP Community String Sweeps and Database Service Enumeration | T1046 | 70 | SNMP MIB Enumeration |
+| **M04** | 16 | `pentest-r1-m04-web-server-fingerprinting-01` | Web Server Fingerprinting and Content Discovery | T1595.002 | 80 | Content Discovery Triage |
+| **M05** | 17 | `pentest-r1-m05-vuln-scanning-cve-search-01` | Vulnerability Scanner Triage and Public Exploit Database Searching | T1595.002 | 70 | CVE & Exploit-DB Triage |
+| **M05** | 18 | `pentest-r1-m05-manual-verification-false-positives-01` | Manual Vulnerability Verification and False-Positive Identification | T1595.002 | 70 | False-Positive Analysis |
+| **M06** | 19 | `pentest-r1-m06-sqli-auth-bypass-union-01` | SQL Injection: Authentication Bypass and UNION-Based Data Extraction | T1190 | 80 | `pentest-m06-web-attacks-01` (WebApp) |
+| **M06** | 20 | `pentest-r1-m06-xss-stored-reflected-01` | Cross-Site Scripting (XSS): Reflected, Stored, and Contextual Execution | T1189 | 70 | XSS Context Simulation |
+| **M06** | 21 | `pentest-r1-m06-lfi-path-traversal-auth-01` | Local File Inclusion, Directory Traversal, and Sensitive Data Access | T1083 | 80 | `pentest-m06-web-attacks-01` (WebApp) |
+| **M06** | 22 | `pentest-r1-m06-broken-auth-session-hijacking-01` | Broken Authentication, Session Hijacking, and Brute-Force Protections | T1078 | 80 | Session Lifecycle Analysis |
+| **M06** | 23 | `pentest-r1-m06-idor-access-control-01` | Insecure Direct Object References (IDOR) and Broken Access Control | T1078 | 80 | IDOR Parameter Audit |
+| **M07** | 24 | `pentest-r1-m07-payloads-staged-reverse-shells-01` | Staged vs Stageless Payloads and Reverse Shell Connection Handling | T1059 | 80 | Reverse Shell Mechanics |
+| **M07** | 25 | `pentest-r1-m07-metasploit-framework-fundamentals-01` | Metasploit Framework Operations and Exploit Execution Mechanics | T1059 | 80 | Metasploit Console Flow |
+| **M07** | 26 | `pentest-r1-m07-payload-generation-msfvenom-01` | Custom Payload Generation and Encoding with Msfvenom | T1027 | 80 | Msfvenom Payload Matrix |
+| **M07** | 27 | `pentest-r1-m07-shell-stabilization-tty-01` | Upgrading and Stabilizing Shells to Interactive TTYs | T1059 | 80 | PTY Shell Upgrade Triage |
+| **M08** | 28 | `pentest-r1-m08-hash-identification-offline-cracking-01` | Hash Identification and Offline Cracking with John and Hashcat | T1110.002 | 70 | `pentest-m08-term-hashcrack-01` (Terminal) |
+| **M08** | 29 | `pentest-r1-m08-online-brute-force-hydra-01` | Online Network Authentication Brute-Forcing with Hydra | T1110.001 | 70 | Hydra Network Triage |
+| **M08** | 30 | `pentest-r1-m08-password-mutations-rules-01` | Wordlist Optimization, Mutations, and Rule-Based Cracking | T1110.002 | 80 | Rule-Based Wordlist Flow |
+| **M08** | 31 | `pentest-r1-m08-unshadow-sam-dumping-01` | Hash Extraction, SAM Dumping, Pass-the-Hash, and Credential Reuse | T1003 | 80 | Pass-the-Hash Auditing |
+| **M09** | 32 | `pentest-r1-m09-linux-privesc-suid-sudo-01` | Linux Privilege Escalation: SUID Binaries and Sudo Rights | T1548.001 | 80 | `pentest-m09-term-privesc-01` (Terminal) |
+| **M09** | 33 | `pentest-r1-m09-windows-privesc-service-perms-01` | Windows Privilege Escalation: Service Permissions and Unquoted Paths | T1574.009 | 80 | Windows Service Audit |
+| **M09** | 34 | `pentest-r1-m09-linux-post-exploitation-privesc-01` | Linux Post-Exploitation: Cron, Capabilities, Credentials, and Kernel Safety | T1053.003 | 80 | Capabilities & Cron Triage |
+| **M09** | 35 | `pentest-r1-m09-windows-post-exploitation-privesc-01` | Windows Post-Exploitation: Scheduled Tasks, Tokens, Meterpreter, and Active Directory Scope | T1053.005 | 80 | Token Impersonation Audit |
+| **M10** | 36 | `pentest-r1-m10-ssh-port-forwarding-tunnels-01` | Network Pivoting with SSH Local and Remote Port Forwarding | T1090.001 | 80 | `pentest-m10-pkt-pivot-01` (Packet) |
+| **M10** | 37 | `pentest-r1-m10-dynamic-socks-proxychains-01` | Dynamic SOCKS Pivoting and Proxychains Routing | T1090.002 | 80 | Proxychains SOCKS Triage |
+| **M10** | 38 | `pentest-r1-m10-chisel-tunneling-firewalls-01` | Modern HTTP/WebSocket Tunneling with Chisel | T1090.001 | 80 | Chisel Tunneling Triage |
+| **M10** | 39 | `pentest-r1-m10-internal-subnet-routing-01` | Multi-Homed Network Routing and Route Table Discovery | T1016 | 80 | Internal Routing Triage |
+| **M11** | 40 | `pentest-r1-m11-findings-writeup-cvss-01` | Technical Findings Documentation and CVSS v3.1 Scoring | T1082 | 80 | CVSS Vector Calculator |
+| **M11** | 41 | `pentest-r1-m11-executive-summary-remediation-01` | Executive Summaries and Strategic Remediation Roadmaps | T1082 | 80 | Executive Summary Writing |
+| **M11** | 42 | `pentest-r1-m11-evidence-collection-scrubbing-01` | Evidence Collection, Screenshot Standards, and Data Sanitization | T1082 | 80 | Evidence Redaction Triage |
+| **M11** | 43 | `pentest-r1-m11-remediation-validation-retesting-01` | Remediation Retesting Procedures and Closeout Letters | T1082 | 80 | Retesting & Closeout Triage |
+| **M12** | 44 | `pentest-r1-m12-capstone-e2e-01` | Capstone Engagement: End-to-End Penetration Test Simulation | T1190 | 100 | `pentest-m12-capstone-01` (WebApp) |
+| **M12** | 45 | `pentest-r1-m12-sample-penetration-test-report-01` | Full Sample Penetration Test Report: Apex Health Systems Engagement | T1190 | 100 | Comprehensive Report Audit |
+| **M12** | 46 | `pentest-r1-m12-ejpt-exam-strategy-tactics-01` | eJPT Practical Exam Strategy: Time Management, Note-Taking, and Question-Answering Tactics | T1190 | 90 | Exam Pacing & Strategy Triage |
+
+4. **Quality Gates Verification Results:**
+   - `npm run check:content` ✓ (126 lessons, 44 labs, 27 objectives validated; 0 errors, 0 pentest warnings).
+   - `npm run typecheck` ✓ (0 errors across whole repository).
+   - `npm run lint` ✓ (0 errors, 68 pre-existing warnings).
+   - `npm test` ✓ (254 test files, 2,295 passed, 0 failed).
+   - `npm run build` ✓ (Turbopack production build succeeded, all 33 static & dynamic routes compiled in 2.5s).
+   - Playwright E2E (`tests/e2e/pentest-track.spec.ts`) ✓ (8 passed across desktop & mobile viewports: verified track landing page, Module 10 detail page, lesson reader, check quiz submission, and all 3 lab engines: Terminal, WebApp, Packet).
+   - Responsive & A11y Verification: Tested at 390px, 768px, and 1440px viewports with 0px horizontal overflow, WCAG 2.1 AA focus visible rings, and full keyboard accessibility.

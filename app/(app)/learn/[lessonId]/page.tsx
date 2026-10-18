@@ -106,6 +106,11 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
     : [];
   const socModule = isSoc ? groupModules(loadTrackConfig(), allLessons).find((m) => m.key === lesson.module) : undefined;
   const socIndex = socModule ? socModule.lessons.findIndex((l) => l.id === lesson.id) : -1;
+  const isPentest = lesson.track === "pentest";
+  const pentestConfig = isPentest ? loadPentestTrackConfig() : undefined;
+  const pentestModule = pentestConfig?.modules.find((m) => m.key === lesson.module);
+  const pentestSiblings = isPentest ? siblings.filter((l) => l.module === lesson.module) : [];
+  const pentestIndex = pentestSiblings.findIndex((l) => l.id === lesson.id);
 
   const body = await renderMdx(lesson.body, {
     ...proseComponents,
@@ -122,7 +127,7 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
         questions={toPublicChecks(checks, operator.id)}
         initialPassed={progress?.checksPassed ?? []}
         answer={answerCheckAction.bind(null, lesson.id)}
-        variant={isSoc ? "readable" : "terminal"}
+        variant={isSoc || isPentest ? "readable" : "terminal"}
         lessonId={lesson.id}
       />
     ),
@@ -171,7 +176,9 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
         kicker={
           lesson.track === "soc"
             ? `> soc_l1 · ${lesson.module} · ${lesson.estimated_minutes} min`
-            : `> rank_${lesson.rank} · ${lesson.module} · ${lesson.estimated_minutes} min`
+            : lesson.track === "pentest"
+              ? `> pentest_l1 · ${pentestModule?.title ?? lesson.module} · ${lesson.estimated_minutes} min`
+              : `> rank_${lesson.rank} · ${lesson.module} · ${lesson.estimated_minutes} min`
         }
       >
         <div className="flex flex-wrap items-center gap-3">
@@ -212,6 +219,27 @@ export default async function LessonPage(props: PageProps<"/learn/[lessonId]">) 
                 <li aria-hidden="true">/</li>
                 <li aria-current="page">
                   Lesson {socIndex + 1} of {socModule.lessons.length}
+                </li>
+              </ol>
+            </nav>
+          )}
+          {isPentest && pentestModule && (
+            <nav aria-label="Breadcrumb" className="mb-6 font-ui text-xs text-muted">
+              <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <li>
+                  <Link href="/learn/pentest-l1" className="text-cyan underline-offset-4 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan">
+                    Penetration Tester L1
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li>
+                  <Link href={`/learn/pentest-l1/${pentestModule.key}`} className="text-cyan underline-offset-4 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan">
+                    Module {pentestModule.order}: {pentestModule.title}
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li aria-current="page">
+                  Lesson {pentestIndex !== -1 ? pentestIndex + 1 : 1} of {pentestSiblings.length || 1}
                 </li>
               </ol>
             </nav>
