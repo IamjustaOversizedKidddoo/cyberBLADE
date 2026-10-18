@@ -7,6 +7,7 @@ import { getCtx } from "@/lib/progress/context";
 import { canAccessRank } from "@/lib/progress/access";
 import { generateLab } from "@/lib/lab-engine/checks";
 import { askHandler, requestProgressiveHint } from "@/lib/handler/service";
+import { askPentestHandler, type AskPentestHandlerInput } from "@/lib/handler/pentest-mode";
 import { getActiveExam } from "@/lib/lab-engine/soc/exam/service";
 import { rateLimit } from "@/lib/security/rate-limit";
 import type { HandlerContext, HandlerMessage, HandlerResponse } from "@/lib/handler/types";
@@ -21,7 +22,7 @@ const messageSchema = z.object({
 
 const askHandlerSchema = z.object({
   context: z.object({
-    kind: z.enum(["lesson", "lab"]),
+    kind: z.enum(["lesson", "lab", "soc", "pentest"]),
     lessonId: z.string().optional(),
     lessonTitle: z.string().optional(),
     module: z.string().optional(),
@@ -93,6 +94,23 @@ export async function askHandlerAction(rawInput: {
     parsed.context.isChallenge = true;
   }
 
+  // Pentest mode: Socratic guidance, 3 escalating hint levels, strict scope boundaries, injection hardening
+  if (
+    !parsed.context.isChallenge &&
+    (parsed.context.kind === "pentest" ||
+      parsed.context.labId?.startsWith("pentest-") ||
+      parsed.context.labId?.startsWith("netrange-"))
+  ) {
+    return askPentestHandler(ctx, operator.id, {
+      labId: parsed.context.labId,
+      lessonId: parsed.context.lessonId,
+      message: parsed.message,
+      objectives: parsed.context.objectives,
+      recentCommands: parsed.context.recentCommands,
+      history: parsed.history,
+    });
+  }
+
   // Derive known answers and server-side tier context if in practice lab
   let knownAnswers: string[] = [];
   if (!parsed.context.isChallenge && parsed.context.kind === "lab" && parsed.context.labId) {
@@ -139,6 +157,12 @@ export async function askHandlerAction(rawInput: {
     knownAnswers,
     userId: operator.id,
   });
+}
+
+export async function askPentestHandlerAction(input: AskPentestHandlerInput) {
+  const operator = await requireOperator();
+  const ctx = getCtx();
+  return askPentestHandler(ctx, operator.id, input);
 }
 
 export async function requestLabHintAction(attemptId: string, objectiveId: string) {

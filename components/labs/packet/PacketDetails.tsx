@@ -17,8 +17,8 @@ export function PacketDetails({ packet, onFollowStream }: Props) {
   }
 
   return (
-    <div className="space-y-3 border border-line bg-console p-4 text-ink">
-      <div className="flex items-center justify-between border-b border-line pb-2">
+    <div className="space-y-3 border border-line bg-console p-4 text-ink max-w-full overflow-hidden break-words">
+      <div className="flex flex-wrap items-center justify-between border-b border-line pb-2 gap-2">
         <h3 className="font-mono text-sm font-bold text-ink">Packet #{packet.no} Details</h3>
         {packet.tcp && onFollowStream && (
           <button
@@ -31,7 +31,7 @@ export function PacketDetails({ packet, onFollowStream }: Props) {
         )}
       </div>
 
-      <div className="space-y-2 font-mono text-xs">
+      <div className="space-y-2 font-mono text-xs break-words break-all">
         {/* Frame / Ethernet */}
         <details open className="border border-line/60 bg-console-deep p-2">
           <summary className="cursor-pointer select-none font-semibold text-muted hover:text-ink">

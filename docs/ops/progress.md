@@ -1439,4 +1439,36 @@ Implemented the full mock examination system, per-module/overall readiness scori
    - `npm run build` ✓ (Turbopack production build succeeded; 33 routes compiled).
    - Playwright E2E (`tests/e2e/pentest-exam.spec.ts`) ✓ (Assessment flow and mobile 375px responsive checks verified).
 
+---
+
+### Entry PT-13: Handler Pentest Mode + Lab Polish (2026-10-18)
+
+Implemented the dedicated Handler "pentest mode" (extending the SOC mode architecture without duplication) and polished all 28 pentest and NetRange labs across the platform on branch `build/weekend`. Adhered to the design skill guidelines (`taste-soft` double-bezel aesthetic, emerald/amber console accents, 375px mobile responsiveness) with all features guarded behind `PENTEST_ENABLED` (default OFF in production).
+
+1. **Part A: Handler "Pentest Mode" (`lib/handler/`):**
+   - **Socratic 3-Tier Escalation (`pentest-mode.ts`, `heuristic.ts`):** Escalates hints through three distinct server-tracked tiers without leaking flags or full exploit chains:
+     - Tier 1: Conceptual flaw and exposed service boundary analysis.
+     - Tier 2: Parameter-level guidance and tool flag focus.
+     - Tier 3: Step-by-step verification methodology without raw flag strings.
+     - Full exploit chain and walkthrough discussion is unlocked only after the learner completes the lab.
+   - **Scope Boundaries & Refusal (`pentest-guard.ts`):** Refuses all requests attempting to attack third-party domains, external IPs, or production infrastructure (e.g. `google.com`, `8.8.8.8`), redirecting the learner strictly to authorized simulated lab targets (RFC 5737 / `198.51.100.0/24`). Supports natural English and Hinglish Socratic redirects.
+   - **Context, Weak Areas & Offline Fallback:** Pulls active lab/lesson telemetry, overall readiness score, and learner weak areas from `getPentestExamInsights`. Fully operational offline-heuristics provider (`heuristic.ts`) when zero external API keys are configured.
+   - **Prompt-Injection Hardening:** Strips untrusted markup (`<untrusted_learner_telemetry>`), deflects DAN mode/jailbreak overrides, and redacts unexpected model flag leakage via `pentestOutputLeaks`.
+
+2. **Part B: Lab Polish for Every PT Lab:**
+   - **1-Click Clean State Reset (`actions.ts`, `LabWorkspace.tsx`):** Added server-side `resetLabAction(attemptId)` that archives the current attempt and spins up a pristine instance with a fresh random seed and 0 hints used (blocked on timed rank challenges). Wired into a responsive `[data-testid="reset-lab-btn"]` on the workspace control bar.
+   - **Scope Banner (`LabWorkspace.tsx`):** Rendered prominent `[data-testid="lab-scope-banner"]` ("ENGAGEMENT SCOPE // LAB-ONLY TARGETS") reminding operators that all activity must remain strictly confined to simulated lab environments.
+   - **Post-Solve Walkthrough with Defender View (`debriefs.ts`, `LabDebriefCard.tsx`):** Extended `LabDebrief` with optional `defenderView` and populated all 28 pentest and NetRange labs with detailed detection engineering, telemetry signatures (e.g. Suricata/Snort rules, Event IDs 4624/4688/7045), and architectural hardening steps.
+   - **Audited and Fixed 11 Discrepant Generators:** Identified and resolved generator-to-objective key mismatches across 11 pentest labs (`pentest-osint`, `pentest-nmap-scan`, `pentest-vuln-triage`, `pentest-web-cmdi`, `pentest-web-idor`, `pentest-web-sqli-blind`, `pentest-web-sqli-union`, `pentest-web-upload`, `pentest-web-xss`, `pentest-msf-exploit`, `pentest-hydra-brute`). Verified 62/62 labs with zero broken objectives or missing debriefs.
+
+3. **Part C: Tests & Verification:**
+   - **Unit Tests (`tests/unit/lib/handler/pentest-mode.test.ts`):** 103/103 tests passing covering 3-tier escalating hints, external scope refusals, prompt injection neutralizations, Hinglish redirects, and offline heuristics.
+   - **Playwright E2E (`tests/e2e/pentest-track.spec.ts`):** Added complete end-to-end lab flow at 375px mobile viewport verifying scope banner display, 1-click clean state reset, zero horizontal overflow (`scrollWidth - clientWidth <= 1`), full objective solution, and post-solve defender view rendering.
+   - **Gates Green:**
+     - `npx tsc --noEmit` ✓ (0 errors)
+     - `npm run lint` ✓ (0 errors)
+     - `npm test` ✓ (255/255 test files, 2,422/2,422 tests green)
+     - `npm run build` ✓ (Turbopack production build succeeded; 33 routes compiled)
+
+
 

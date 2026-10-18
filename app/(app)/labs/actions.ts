@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 import { rateLimit } from "@/lib/security/rate-limit";
-import { submitObjective } from "@/lib/progress/service";
+import { startLab, submitObjective } from "@/lib/progress/service";
 import { generateLab } from "@/lib/lab-engine/checks";
 import { dispatchHttpRequest } from "@/lib/lab-engine/webapp/simulator";
 import type { DispatchResult, HttpRequest } from "@/lib/lab-engine/webapp/types";
@@ -119,5 +119,24 @@ export async function dispatchNetRangeCommandAction(
   }
 
   return JSON.parse(JSON.stringify(result));
+}
+
+/**
+ * Resets a practice lab attempt to a clean, fresh state with a new seed and zero hints used.
+ * Strictly forbidden for timed rank challenges.
+ */
+export async function resetLabAction(attemptId: string) {
+  const operator = await requireOperator();
+  const ctx = getCtx();
+  const attempt = await ctx.repo.getAttempt(attemptId);
+  if (!attempt || attempt.userId !== operator.id) throw new Error("Attempt not found");
+  if (attempt.mode === "challenge") throw new Error("Rank challenges cannot be reset.");
+
+  // Mark current practice attempt as failed/archived so latestAttempt returns a fresh attempt
+  await ctx.repo.updateAttempt(attemptId, { failedAt: ctx.now().toISOString() });
+
+  // Start fresh practice attempt
+  const fresh = await startLab(ctx, operator.id, attempt.labId);
+  return { success: true, newAttemptId: fresh.attemptId };
 }
 

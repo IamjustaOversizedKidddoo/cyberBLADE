@@ -14,16 +14,16 @@ export function LabDebriefCard({ labId }: Props) {
   return (
     <aside
       aria-label="Mission debrief"
-      className="mt-6 rounded-sm border-2 border-cyan/60 bg-console p-5 shadow-[0_0_25px_rgba(15,190,255,0.12)] space-y-4"
+      className="mt-6 rounded-sm border-2 border-cyan/60 bg-console p-3.5 sm:p-5 shadow-[0_0_25px_rgba(15,190,255,0.12)] space-y-4 max-w-full overflow-hidden break-words"
     >
-      <div className="flex items-center justify-between border-b border-cyan/30 pb-3">
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-cyan animate-pulse" aria-hidden="true" />
-          <h3 className="font-ui text-xs font-bold tracking-widest text-cyan uppercase">
+      <div className="flex flex-wrap items-center justify-between border-b border-cyan/30 pb-3 gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="h-2 w-2 rounded-full bg-cyan animate-pulse shrink-0" aria-hidden="true" />
+          <h3 className="font-ui text-xs font-bold tracking-wider text-cyan uppercase truncate sm:whitespace-normal">
             MISSION DEBRIEF // OPERATIONAL SYNTHESIS
           </h3>
         </div>
-        <span className="font-mono text-[11px] text-muted uppercase">
+        <span className="font-mono text-[11px] text-muted uppercase shrink-0">
           ID: {labId}
         </span>
       </div>
@@ -58,6 +58,21 @@ export function LabDebriefCard({ labId }: Props) {
           <p className="text-secondary leading-relaxed">{debrief.goFurther}</p>
         </div>
       </div>
+
+      {debrief.defenderView && (
+        <div
+          data-testid="lab-debrief-defender-view"
+          className="rounded-xs border border-emerald-500/50 bg-emerald-950/20 p-3.5 sm:p-4 space-y-1.5 shadow-[0_0_20px_rgba(16,185,129,0.06)] max-w-full overflow-hidden break-words"
+        >
+          <div className="font-ui text-[11px] font-bold uppercase tracking-wider text-emerald-400 flex flex-wrap items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" aria-hidden="true" />
+            <span>🛡️ DEFENDER VIEW // DETECTION, TELEMETRY & HARDENING</span>
+          </div>
+          <p className="text-ink leading-relaxed font-sans text-xs break-words">
+            {debrief.defenderView}
+          </p>
+        </div>
+      )}
     </aside>
   );
 }

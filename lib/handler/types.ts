@@ -48,6 +48,9 @@ export type PentestPromptContext = {
   recentCommands?: string[];
   lessonId?: string;
   lessonTitle?: string;
+  readinessScore?: number;
+  weakAreas?: string[];
+  isCompleted?: boolean;
 };
 
 export type HandlerContext = {

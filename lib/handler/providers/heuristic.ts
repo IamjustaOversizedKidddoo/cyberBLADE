@@ -15,9 +15,13 @@ export class HeuristicProvider implements HandlerProvider {
     }
 
     const isLab = systemPrompt.includes("CURRENT LAB CONTEXT");
+    const isPentest = systemPrompt.includes("PENETRATION TESTING WORKSPACE");
 
     let topic = "cybersecurity operations";
-    const titleMatch = systemPrompt.match(/Title:\s*(.+)/i) || systemPrompt.match(/Lab Title:\s*(.+)/i);
+    const titleMatch =
+      systemPrompt.match(/Title:\s*(.+)/i) ||
+      systemPrompt.match(/Lab Title:\s*(.+)/i) ||
+      systemPrompt.match(/Target Lab:\s*(.+)/i);
     if (titleMatch && titleMatch[1]) {
       topic = titleMatch[1].trim();
     }
@@ -46,6 +50,53 @@ export class HeuristicProvider implements HandlerProvider {
         `2. **Evidence:** What exact output or error did the terminal return?\n` +
         `3. **Hypothesis:** What file, port, or process are we trying to locate?\n\n` +
         `Tell me what you observed, and we'll walk through the methodology together.`
+      );
+    }
+
+    // Hint requests in pentest mode (3 escalating levels)
+    if (cmd === "hint" && isPentest) {
+      const tierMatch =
+        systemPrompt.match(/Hint tier\s*(\d+)/i) ||
+        systemPrompt.match(/Learner's Authorized Hint Level:\s*Tier\s*(\d+)/i);
+      const tier = tierMatch ? parseInt(tierMatch[1], 10) : 1;
+      const readinessMatch = systemPrompt.match(/Learner Pentest Readiness:\s*(\d+)%/i);
+      const weakMatch = systemPrompt.match(/Learner's Weak Areas:\s*([^\n]+)/i);
+
+      let contextNote = "";
+      if (readinessMatch && readinessMatch[1]) {
+        contextNote += ` [Readiness: ${readinessMatch[1]}%]`;
+      }
+      if (weakMatch && weakMatch[1]) {
+        contextNote += ` (Weak area focus: ${weakMatch[1].split(";")[0]})`;
+      }
+
+      if (tier === 1) {
+        return (
+          `### Tactical Guidance // The Handler (Hint Tier 1: Conceptual Flaw)${contextNote}\n\n` +
+          `Analyze the service and input context:\n` +
+          `- What software daemon or web endpoint is exposed on the target?\n` +
+          `- What character, syntax delimiter, or parameter structure breaks the standard processing context?\n\n` +
+          `*Tactical Tip:* Review the briefing notes and run initial non-destructive probes in the terminal.`
+        );
+      }
+
+      if (tier === 2) {
+        return (
+          `### Tactical Guidance // The Handler (Hint Tier 2: Parameter & Tool Focus)${contextNote}\n\n` +
+          `Direct your enumeration to the specific parameters:\n` +
+          `- Inspect manual tool options and flags (e.g., check \`sudo -l\`, SUID bits via \`find / -perm -4000\`, or web request headers).\n` +
+          `- Examine the output for anomalies, custom paths, or non-default permissions.\n\n` +
+          `*Tactical Tip:* Narrow your test commands to the specific parameter or port identified in the initial scan.`
+        );
+      }
+
+      return (
+        `### Tactical Guidance // The Handler (Hint Tier 3: Step-by-Step Investigation)${contextNote}\n\n` +
+        `Follow this systematic verification methodology:\n` +
+        `1. Query the target endpoint with targeted arguments to confirm the vulnerability boundary.\n` +
+        `2. Execute the verification command or probe to extract the proof-of-access string.\n` +
+        `3. Submit your discovered value into the objective field.\n\n` +
+        `*Operational Note:* Exact flags and ready-made exploit scripts are strictly withheld before solve. Execute these verification steps and inspect the target response.`
       );
     }
 

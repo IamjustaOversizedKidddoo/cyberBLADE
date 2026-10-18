@@ -72,7 +72,7 @@ export default async function LabPage(props: PageProps<"/labs/[labId]">) {
       </div>
       <HandlerDrawer
         context={{
-          kind: "lab",
+          kind: lab.id.startsWith("pentest-") || lab.id.startsWith("netrange-") ? "pentest" : "lab",
           labId: lab.id,
           labTitle: lab.title,
           rank: lab.rank,
