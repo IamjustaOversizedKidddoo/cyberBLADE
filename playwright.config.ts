@@ -15,6 +15,7 @@ export default defineConfig({
     : {
         command: `npm run build && npm run start -- -p ${E2E_PORT}`,
         port: E2E_PORT,
+        timeout: 180_000,
         reuseExistingServer: !process.env.CI,
     env: {
       NEON_DATA_DIR: ".data-e2e",
@@ -30,6 +31,7 @@ export default defineConfig({
       SOC_REPORTS_ENABLED: "true",
       PENTEST_ENABLED: "true",
       PENTEST_EXAMS_ENABLED: "true",
+      CERTIFICATES_ENABLED: "true",
       // AI writing feedback in preview with a deterministic local mock (never a real provider).
       SOC_AI_GRADING_MODE: "preview",
       SOC_AI_PROVIDER: "mock-e2e",

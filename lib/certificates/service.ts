@@ -4,6 +4,7 @@ import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 import { logSecurityEvent } from "@/lib/security/audit-logger";
 import { rateLimit } from "@/lib/security/rate-limit";
+import { isCertificatesEnabled } from "@/lib/config/env";
 import { evaluateTrackEligibility } from "./eligibility";
 import { generateCredentialId, isValidCredentialId } from "./slug";
 import type { CertificateRecord, ClaimCertificateInput, PublicCertificateVerification } from "./types";
@@ -32,6 +33,9 @@ export function validateDisplayName(name: string): string {
 export async function claimCertificateAction(
   input: ClaimCertificateInput,
 ): Promise<{ success: boolean; certificate: CertificateRecord }> {
+  if (!isCertificatesEnabled()) {
+    throw new Error("Certificates system is currently disabled.");
+  }
   const operator = await requireOperator();
   const ctx = getCtx();
 

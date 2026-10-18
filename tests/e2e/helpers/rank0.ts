@@ -17,7 +17,7 @@ export async function submitObjective(page: Page, objective: number, answer: str
   const item = page.locator("#objectives-heading ~ ol > li").nth(objective);
   await item.getByLabel(`Answer for objective ${objective + 1}`).fill(answer);
   await item.getByRole("button", { name: "Submit" }).click();
-  if (!last) await expect(item.getByText("✓ Solved")).toBeVisible();
+  if (!last) await expect(item.getByText("✓ Solved")).toBeVisible({ timeout: 10_000 });
 }
 
 export const LAB_RECIPES: Record<string, (page: Page) => Promise<void>> = {

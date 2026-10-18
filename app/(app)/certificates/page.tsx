@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { isCertificatesEnabled } from "@/lib/config/env";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 import { listLearnerTrackEligibilities } from "@/lib/certificates/eligibility";
@@ -12,6 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CertificatesPage() {
+  if (!isCertificatesEnabled()) notFound();
   const operator = await requireOperator();
   const ctx = getCtx();
 

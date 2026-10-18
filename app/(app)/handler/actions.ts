@@ -6,6 +6,7 @@ import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 import { canAccessRank } from "@/lib/progress/access";
 import { generateLab } from "@/lib/lab-engine/checks";
+import { isPentestEnabled } from "@/lib/config/env";
 import { askHandler, requestProgressiveHint } from "@/lib/handler/service";
 import { askPentestHandler, type AskPentestHandlerInput } from "@/lib/handler/pentest-mode";
 import { getActiveExam } from "@/lib/lab-engine/soc/exam/service";
@@ -96,6 +97,7 @@ export async function askHandlerAction(rawInput: {
 
   // Pentest mode: Socratic guidance, 3 escalating hint levels, strict scope boundaries, injection hardening
   if (
+    isPentestEnabled() &&
     !parsed.context.isChallenge &&
     (parsed.context.kind === "pentest" ||
       parsed.context.labId?.startsWith("pentest-") ||
@@ -160,6 +162,9 @@ export async function askHandlerAction(rawInput: {
 }
 
 export async function askPentestHandlerAction(input: AskPentestHandlerInput) {
+  if (!isPentestEnabled()) {
+    throw new Error("Pentest mode is disabled.");
+  }
   const operator = await requireOperator();
   const ctx = getCtx();
   return askPentestHandler(ctx, operator.id, input);

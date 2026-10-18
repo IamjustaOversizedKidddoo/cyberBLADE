@@ -17,6 +17,7 @@ test.describe("NetRange Simulated Multi-Host Lab Engine", () => {
 
     // Helper to send command to terminal
     const typeAndEnter = async (cmd: string) => {
+      await termScreen.scrollIntoViewIfNeeded();
       await termScreen.click();
       await page.waitForTimeout(50);
       await page.keyboard.type(cmd, { delay: 10 });

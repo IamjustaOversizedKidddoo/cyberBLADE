@@ -5,6 +5,7 @@ import { BladeMark } from "@/components/art/BladeMark";
 import { BlinkCursor } from "@/components/theme/BlinkCursor";
 import { BRAND } from "@/lib/brand";
 import type { Operator } from "@/lib/identity/types";
+import { isCertificatesEnabled } from "@/lib/config/env";
 import { RankBadge } from "./RankBadge";
 import { NavLinks } from "./NavLinks";
 
@@ -15,6 +16,7 @@ export function AppShell({
   operator: Operator;
   children: React.ReactNode;
 }) {
+  const showCertificates = isCertificatesEnabled();
   return (
     <>
       <Scanlines />
@@ -40,7 +42,7 @@ export function AppShell({
 
           {/* CENTRE — navigation links + operator HUD badge */}
           <div className="hidden md:flex items-center gap-3">
-            <NavLinks />
+            <NavLinks showCertificates={showCertificates} />
 
             <div className="hidden xl:flex items-center gap-0 border border-line bg-surface rounded-xs">
               <span className="border-r border-line px-2.5 py-1 font-ui text-[11px] tracking-widest text-muted uppercase">
@@ -73,7 +75,7 @@ export function AppShell({
         </nav>
 
         {/* Mobile navigation row */}
-        <NavLinks mobile />
+        <NavLinks mobile showCertificates={showCertificates} />
       </header>
 
       {children}

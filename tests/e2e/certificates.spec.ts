@@ -26,8 +26,8 @@ test.describe("certificates: earn → view → verify → revoked lifecycle", ()
     expect(earnRes).toEqual({ ok: true, challengePassed: 0 });
 
     // 4. Reload /certificates: eligible banner should appear
-    await page.reload();
-    await expect(page.getByText("New Credential Eligible for Issuance!")).toBeVisible();
+    await page.goto("/certificates");
+    await expect(page.getByText("New Credential Eligible for Issuance!")).toBeVisible({ timeout: 10_000 });
 
     // Open claim modal and enter custom recipient display name
     const claimBtn = page.getByRole("button", { name: /Claim.*Operator.*Certificate/i }).first();
@@ -85,8 +85,8 @@ test.describe("certificates: earn → view → verify → revoked lifecycle", ()
     expect(revokeRes).toEqual({ ok: true, revoked: true });
 
     // Reload public verify page to observe revoked state
-    await page.reload();
-    await expect(page.getByText(/REGISTRY STATUS: REVOKED/i)).toBeVisible();
+    await page.goto(`/verify/${credentialId}`);
+    await expect(page.getByText(/REGISTRY STATUS: REVOKED/i)).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(/STATUS: CREDENTIAL REVOKED/i)).toBeVisible();
     await expect(page.getByText(/Honor code violation/i)).toBeVisible();
   });

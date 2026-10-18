@@ -18,8 +18,15 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/certificates", label: "[CREDENTIALS]" },
 ];
 
-export function NavLinks({ mobile = false }: { mobile?: boolean }) {
+export function NavLinks({
+  mobile = false,
+  showCertificates = false,
+}: {
+  mobile?: boolean;
+  showCertificates?: boolean;
+}) {
   const pathname = usePathname();
+  const items = showCertificates ? NAV_ITEMS : NAV_ITEMS.filter((item) => item.href !== "/certificates");
 
   function isActive(item: NavItem) {
     if (item.exact) return pathname === item.href;
@@ -29,7 +36,7 @@ export function NavLinks({ mobile = false }: { mobile?: boolean }) {
   if (mobile) {
     return (
       <div className="flex md:hidden items-center justify-around border-t border-line/60 bg-surface-subtle px-1 py-1 font-ui text-[11px] tracking-wider text-muted overflow-x-hidden">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const active = isActive(item);
           return (
             <Link
@@ -52,7 +59,7 @@ export function NavLinks({ mobile = false }: { mobile?: boolean }) {
 
   return (
     <div className="flex items-center gap-1.5 font-ui text-xs tracking-wider">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const active = isActive(item);
         return (
           <Link

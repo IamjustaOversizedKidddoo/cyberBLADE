@@ -33,6 +33,8 @@ const envSchema = z.object({
   // Penetration Testing Track Feature Flag (default false, server-side gated)
   PENTEST_ENABLED: z.string().optional(),
   PENTEST_EXAMS_ENABLED: z.string().optional(),
+  // Certificates & Public Verification Registry (default false, server-side gated)
+  CERTIFICATES_ENABLED: z.string().optional(),
 });
 
 function devDefaultFlag(value: string | undefined): boolean {
@@ -51,6 +53,12 @@ export function isPentestEnabled(): boolean {
 /** Penetration Testing L1 practical exams. Default false; server-side gated. */
 export function isPentestExamsEnabled(): boolean {
   const flag = process.env.PENTEST_EXAMS_ENABLED;
+  return flag === "true" || flag === "1";
+}
+
+/** Certificates and public verification registry. Default false; server-side gated. */
+export function isCertificatesEnabled(): boolean {
+  const flag = process.env.CERTIFICATES_ENABLED;
   return flag === "true" || flag === "1";
 }
 
