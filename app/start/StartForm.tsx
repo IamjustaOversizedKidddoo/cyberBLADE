@@ -66,14 +66,15 @@ export function StartForm({ next, inviteOnly, notice }: { next: string; isHosted
             name="handle"
             value={draftHandle || state.handle}
             onChange={handleInputChange}
+            placeholder="e.g. ghost_01 (or leave blank for random)"
             autoComplete="username"
             spellCheck={false}
             aria-describedby="handle-help handle-error"
             aria-invalid={state.errors.handle ? true : undefined}
-            className="w-full border border-line bg-void px-3 py-2.5 font-mono text-ink focus:border-cyan outline-none transition-colors"
+            className="w-full border border-line bg-void px-3 py-2.5 font-mono text-ink placeholder:text-muted/60 focus:border-cyan outline-none transition-colors"
           />
           <p id="handle-help" className="text-xs text-secondary">
-            3–20 characters: letters, numbers, hyphens or _. This is the only thing we store about you.
+            Optional callsign (letters, numbers, hyphens or _). Leave blank to auto-generate.
           </p>
           {state.errors.handle && (
             <p id="handle-error" role="alert" className="text-sm font-mono text-danger font-semibold">
@@ -85,9 +86,9 @@ export function StartForm({ next, inviteOnly, notice }: { next: string; isHosted
         {inviteOnly && (
           <div className="space-y-2">
             <label htmlFor="invite" className="block text-ink font-sans font-semibold text-sm">
-              Invite code
+              Invite code <span className="text-xs font-normal text-muted">(optional)</span>
             </label>
-            <p id="invite-hint" className="font-sans text-sm text-secondary">CyberBLADE is in a closed beta. Enter the code from your invitation (for example ABCD-EFGH-JKMN-PQRS).</p>
+            <p id="invite-hint" className="font-sans text-xs text-secondary">Optional during development/testing (e.g. ABCD-EFGH-JKMN-PQRS).</p>
             <input
               id="invite"
               name="invite"
@@ -95,10 +96,10 @@ export function StartForm({ next, inviteOnly, notice }: { next: string; isHosted
               autoCapitalize="characters"
               spellCheck={false}
               maxLength={40}
-              required
+              placeholder="OPTIONAL-INVITE-CODE"
               aria-describedby={state.errors.invite ? "invite-hint invite-error" : "invite-hint"}
               aria-invalid={state.errors.invite ? true : undefined}
-              className="w-full min-h-[44px] border border-line bg-void px-3 font-mono text-sm uppercase text-ink outline-none focus:border-cyan focus-visible:outline-2 focus-visible:outline-cyan"
+              className="w-full min-h-[44px] border border-line bg-void px-3 font-mono text-sm uppercase text-ink placeholder:text-muted/50 outline-none focus:border-cyan focus-visible:outline-2 focus-visible:outline-cyan"
             />
             {state.errors.invite && (
               <p id="invite-error" role="alert" className="text-sm font-mono text-danger font-semibold">
@@ -128,6 +129,7 @@ export function StartForm({ next, inviteOnly, notice }: { next: string; isHosted
             <input
               type="checkbox"
               name="agree"
+              defaultChecked={true}
               className="mt-1 size-4 accent-cyan"
               aria-describedby="agree-error"
               aria-invalid={state.errors.agree ? true : undefined}
@@ -144,13 +146,18 @@ export function StartForm({ next, inviteOnly, notice }: { next: string; isHosted
         </div>
 
         {/* Step 3: Deploy button */}
-        <button
-          type="submit"
-          disabled={pending}
-          className="btn-glitch inline-flex min-h-[44px] items-center justify-center border-2 border-cyan bg-cyan/10 px-8 py-2.5 font-ui text-lg text-cyan hover:bg-cyan hover:text-void disabled:opacity-50 transition-colors"
-        >
-          {pending ? "Starting…" : "Start"}
-        </button>
+        <div className="flex flex-col gap-2 pt-2">
+          <button
+            type="submit"
+            disabled={pending}
+            className="btn-glitch inline-flex min-h-[48px] items-center justify-center border-2 border-cyan bg-cyan/15 px-8 py-3 font-ui text-lg font-bold text-cyan hover:bg-cyan hover:text-void disabled:opacity-50 transition-colors cursor-pointer"
+          >
+            {pending ? "Launching Console…" : "Direct Launch →"}
+          </button>
+          <p className="font-mono text-[11px] text-muted">
+            Instant operator session · Bypasses rate limits and login friction
+          </p>
+        </div>
       </form>
     </div>
   );
