@@ -72,15 +72,23 @@ export function HostedAuthSection({ nextPath, inviteOnly }: Props) {
       {/* Google OAuth */}
       <button
         type="button"
+        disabled={loading}
         onClick={async () => {
           setError(null);
-          const res = await signInWithOAuth("google", nextPath, invite.trim() || undefined);
-          if (res && "error" in res) setError(res.error);
+          setLoading(true);
+          try {
+            const res = await signInWithOAuth("google", nextPath, invite.trim() || undefined);
+            if (res && "error" in res) setError(res.error);
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to initiate OAuth login.");
+          } finally {
+            setLoading(false);
+          }
         }}
-        className="w-full flex items-center justify-center gap-2 border border-line bg-console px-4 py-2.5 font-mono text-sm text-ink hover:border-cyan hover:text-cyan transition-colors"
+        className="w-full flex items-center justify-center gap-2 border border-line bg-console px-4 py-2.5 font-mono text-sm text-ink hover:border-cyan hover:text-cyan transition-colors disabled:opacity-50"
       >
         <span>[G]</span>
-        <span>CONTINUE WITH GOOGLE OAUTH</span>
+        <span>{loading ? "CONNECTING..." : "CONTINUE WITH GOOGLE OAUTH"}</span>
       </button>
 
       {/* Magic link form */}

@@ -81,7 +81,7 @@ async function prepareInvite(raw: FormDataEntryValue | string | null | undefined
 export async function signInWithOAuth(provider: "google" | "github", next = "/dashboard", invite?: string): Promise<{ error: string } | void> {
   const supabase = await createServerSupabaseClient();
   if (!supabase) {
-    throw new Error("Supabase authentication is not configured.");
+    return { error: "Supabase authentication is not configured in this environment." };
   }
 
   const inviteError = await prepareInvite(typeof invite === "string" ? invite.slice(0, 40) : undefined);
@@ -97,7 +97,7 @@ export async function signInWithOAuth(provider: "google" | "github", next = "/da
   });
 
   if (error || !data.url) {
-    throw new Error(error?.message || "Failed to initiate OAuth login.");
+    return { error: error?.message || "Failed to initiate OAuth login." };
   }
 
   redirect(data.url);

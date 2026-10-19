@@ -2,12 +2,11 @@
 
 import { useActionState, useState } from "react";
 import { EthicalUseAgreement } from "@/components/legal/EthicalUseAgreement";
-import { HostedAuthSection } from "@/components/auth/HostedAuthSection";
 import { startOperator, type StartState } from "./actions";
 
 const INITIAL: StartState = { errors: {}, handle: "" };
 
-export function StartForm({ next, isHosted, inviteOnly, notice }: { next: string; isHosted?: boolean; inviteOnly?: boolean; notice?: string | null }) {
+export function StartForm({ next, inviteOnly, notice }: { next: string; isHosted?: boolean; inviteOnly?: boolean; notice?: string | null }) {
   const [state, action, pending] = useActionState(startOperator, INITIAL);
   const [draftHandle, setDraftHandle] = useState(() => {
     if (typeof window !== "undefined") {
@@ -54,8 +53,6 @@ export function StartForm({ next, isHosted, inviteOnly, notice }: { next: string
         </p>
       )}
 
-      {/* Hosted sign-in creates the account through Supabase Auth; the handle form is local only. */}
-      {!isHosted && (
       <form action={action} className="space-y-6" noValidate>
         <input type="hidden" name="next" value={next} />
 
@@ -155,9 +152,6 @@ export function StartForm({ next, isHosted, inviteOnly, notice }: { next: string
           {pending ? "Starting…" : "Start"}
         </button>
       </form>
-      )}
-
-      {isHosted && <HostedAuthSection nextPath={next} inviteOnly={inviteOnly} />}
     </div>
   );
 }

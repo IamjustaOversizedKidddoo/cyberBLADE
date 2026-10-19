@@ -5,6 +5,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { OperatorStore } from "./operator-store";
 import type { Operator } from "./types";
 
+function getAdminOrNull() {
+  try {
+    return createAdminClient();
+  } catch {
+    return null;
+  }
+}
+
 export class SupabaseOperatorStore implements OperatorStore {
   async get(id: string): Promise<Operator | null> {
     const supabase = await createServerSupabaseClient();
@@ -29,7 +37,7 @@ export class SupabaseOperatorStore implements OperatorStore {
 
   async create(input: { handle: string; ethicsAcceptedAt: string; id?: string }): Promise<Operator> {
     const supabase = await createServerSupabaseClient();
-    const admin = createAdminClient();
+    const admin = getAdminOrNull();
     const client = admin ?? supabase;
     if (!client) throw new Error("Supabase client is not available.");
 
@@ -63,7 +71,7 @@ export class SupabaseOperatorStore implements OperatorStore {
 
   async setRank(id: string, rank: number): Promise<void> {
     const supabase = await createServerSupabaseClient();
-    const admin = createAdminClient();
+    const admin = getAdminOrNull();
     const client = admin ?? supabase;
     if (!client) throw new Error("Supabase client is not available.");
 
@@ -79,7 +87,7 @@ export class SupabaseOperatorStore implements OperatorStore {
 
   async delete(id: string): Promise<void> {
     const supabase = await createServerSupabaseClient();
-    const admin = createAdminClient();
+    const admin = getAdminOrNull();
     const client = admin ?? supabase;
     if (!client) throw new Error("Supabase client is not available.");
 

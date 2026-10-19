@@ -57,3 +57,6 @@ next-env.d.ts
 /docs/ops/screenshots/
 /docs/visual/before/*.png
 /docs/visual/after/*.png
+
+.vercel
+.env*

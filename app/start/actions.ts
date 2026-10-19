@@ -12,6 +12,8 @@ import { isBetaInviteOnly } from "@/lib/beta";
 import { checkInviteCode, redeemInviteCode } from "@/lib/beta/invite-flow";
 import { INVITE_ERROR } from "@/lib/beta/codes";
 
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+
 export type StartState = { errors: { handle?: string; agree?: string; invite?: string }; handle: string };
 
 export async function startOperator(_prev: StartState, formData: FormData): Promise<StartState> {
@@ -44,19 +46,42 @@ export async function startOperator(_prev: StartState, formData: FormData): Prom
     return { errors: result.errors, handle: String(formData.get("handle") ?? "") };
   }
 
+  // If Supabase is configured, establish an anonymous session for RLS alignment if possible
+  let id: string = randomUUID();
+  try {
+    const supabase = await createServerSupabaseClient();
+    if (supabase) {
+      const { data: authData } = await supabase.auth.signInAnonymously().catch(() => ({ data: null }));
+      if (authData?.user) {
+        id = authData.user.id;
+      }
+    }
+  } catch {
+    // Fall back to randomUUID
+  }
+
   // Closed beta: redeem the invite atomically for the new id before the operator exists.
-  const id = randomUUID();
   if (isBetaInviteOnly()) {
     const code = await checkInviteCode(String(formData.get("invite") ?? ""));
     if (!code || !(await redeemInviteCode(code, id))) {
       return { errors: { invite: INVITE_ERROR }, handle: String(formData.get("handle") ?? "") };
     }
   }
-  const operator = await getOperatorStore().create({
-    id,
-    handle: result.handle,
-    ethicsAcceptedAt: new Date().toISOString(),
-  });
+
+  let operator;
+  try {
+    operator = await getOperatorStore().create({
+      id,
+      handle: result.handle,
+      ethicsAcceptedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    return {
+      errors: { handle: err instanceof Error ? err.message : "Failed to initialize operator profile." },
+      handle: result.handle,
+    };
+  }
+
   await setOperatorCookie(operator.id);
   redirect(result.next);
 }
