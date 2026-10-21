@@ -48,7 +48,7 @@ export async function evaluateTrackEligibility(
 ): Promise<{ eligible: boolean; reason?: string; snapshot: Record<string, unknown> }> {
   if (trackId === "core") {
     if (level === "Operator") {
-      const passed = await ctx.repo.hasPassedChallenge(userId, 0);
+      const passed = await ctx.repo.hasPassedChallenge(userId, 0).catch(() => false);
       if (!passed) {
         return {
           eligible: false,
@@ -63,7 +63,7 @@ export async function evaluateTrackEligibility(
     }
 
     if (level === "Watcher") {
-      const passed = await ctx.repo.hasPassedChallenge(userId, 1);
+      const passed = await ctx.repo.hasPassedChallenge(userId, 1).catch(() => false);
       if (!passed) {
         return {
           eligible: false,
@@ -81,8 +81,8 @@ export async function evaluateTrackEligibility(
   if (trackId === "soc") {
     if (level === "Tier 1 Analyst") {
       const [outcomes, attempts] = await Promise.all([
-        ctx.repo.listSocExamOutcomeReports(userId),
-        ctx.repo.listSocExamAttempts(userId),
+        ctx.repo.listSocExamOutcomeReports(userId).catch(() => []),
+        ctx.repo.listSocExamAttempts(userId).catch(() => []),
       ]);
 
       const passedOutcome = outcomes.find((o) => o.passed);
@@ -112,7 +112,7 @@ export async function evaluateTrackEligibility(
 
   if (trackId === "pentest") {
     if (level === "eJPT Practical" || level === "CyberBLADE Completion (W1)" || level === "CyberBLADE Completion") {
-      const attempts = await ctx.repo.listPentestExamAttempts(userId);
+      const attempts = await ctx.repo.listPentestExamAttempts(userId).catch(() => []);
       const passedAttempt = attempts.find(
         (a) => a.status === "submitted" && a.result && a.result.scorePercent >= 70,
       );
@@ -177,7 +177,7 @@ export async function listLearnerTrackEligibilities(
   ctx: Ctx,
   userId: string,
 ): Promise<TrackCertificateEligibility[]> {
-  const existingCerts = await ctx.repo.listCertificates(userId);
+  const existingCerts = await ctx.repo.listCertificates(userId).catch(() => []);
   const certMap = new Map(existingCerts.map((c) => [`${c.trackId}:${c.level}`, c]));
 
   return Promise.all(

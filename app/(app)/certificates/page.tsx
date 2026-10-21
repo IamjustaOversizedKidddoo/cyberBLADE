@@ -18,7 +18,12 @@ export default async function CertificatesPage() {
   const operator = await requireOperator();
   const ctx = getCtx();
 
-  const eligibilities = await listLearnerTrackEligibilities(ctx, operator.id);
+  let eligibilities = [];
+  try {
+    eligibilities = await listLearnerTrackEligibilities(ctx, operator.id);
+  } catch (err) {
+    console.warn("[certificates] Could not compute eligibility:", err);
+  }
   const issuedList = eligibilities.filter((e) => e.issuedCertificate !== null);
   const unclaimedEligible = eligibilities.filter((e) => e.eligible && !e.issuedCertificate);
   const lockedTracks = eligibilities.filter((e) => !e.eligible);
