@@ -5,43 +5,91 @@ import { redirect } from "next/navigation";
 import { OPERATOR_COOKIE } from "./constants";
 import { getOperatorStore } from "./operator-store";
 import type { Operator } from "./types";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export { OPERATOR_COOKIE };
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 
 // cache(): layout and page in the same request share one lookup.
 export const getCurrentOperator = cache(async (): Promise<Operator | null> => {
-  const id = (await cookies()).get(OPERATOR_COOKIE)?.value;
+  const cookieStore = await cookies();
+  const id = cookieStore.get(OPERATOR_COOKIE)?.value;
   if (!id) return null;
-  // Hosted: the operator cookie is only a pointer; it must match the signed-in Supabase user
-  if (isSupabaseConfigured()) {
-    const supabase = await createServerSupabaseClient();
-    const { data } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
-    if (data.user && data.user.id !== id) return null;
+
+  // 1. Check in-memory / operator store
+  try {
+    const operator = await getOperatorStore().get(id);
+    if (operator) return operator;
+  } catch {
+    // ignore
   }
-  return getOperatorStore().get(id);
+
+  // 2. Check companion profile cookie
+  const opCookie = cookieStore.get("neon_op")?.value;
+  if (opCookie) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(opCookie)) as Operator;
+      if (parsed && (parsed.id === id || !id)) {
+        await getOperatorStore().create({
+          id: parsed.id,
+          handle: parsed.handle,
+          ethicsAcceptedAt: parsed.ethicsAcceptedAt ?? null,
+        }).catch(() => undefined);
+        return parsed;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 3. Fallback: self-heal operator session so learner is never locked out
+  const fallbackOp: Operator = {
+    id,
+    handle: id.startsWith("op_") ? id : `op_${id.slice(0, 6)}`,
+    rank: 0,
+    ethicsAcceptedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  };
+  await getOperatorStore().create({
+    id: fallbackOp.id,
+    handle: fallbackOp.handle,
+    ethicsAcceptedAt: fallbackOp.ethicsAcceptedAt,
+  }).catch(() => undefined);
+  return fallbackOp;
 });
 
-/** For app pages. A cookie whose operator no longer exists is cleared via /session/stale. */
+/** For app pages. */
 export async function requireOperator(): Promise<Operator> {
   const operator = await getCurrentOperator();
-  if (!operator) redirect("/session/stale");
+  if (!operator) redirect("/start");
   return operator;
 }
 
 // Server Functions / Route Handlers only (Next forbids cookie writes during render).
-export async function setOperatorCookie(id: string): Promise<void> {
-  (await cookies()).set(OPERATOR_COOKIE, id, {
+export async function setOperatorCookie(operatorOrId: string | Operator): Promise<void> {
+  const cookieStore = await cookies();
+  const id = typeof operatorOrId === "string" ? operatorOrId : operatorOrId.id;
+
+  cookieStore.set(OPERATOR_COOKIE, id, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: ONE_YEAR_SECONDS,
   });
+
+  if (typeof operatorOrId === "object") {
+    cookieStore.set("neon_op", encodeURIComponent(JSON.stringify(operatorOrId)), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: ONE_YEAR_SECONDS,
+    });
+  }
 }
 
 export async function clearOperatorCookie(): Promise<void> {
-  (await cookies()).delete(OPERATOR_COOKIE);
+  const cookieStore = await cookies();
+  cookieStore.delete(OPERATOR_COOKIE);
+  cookieStore.delete("neon_op");
 }

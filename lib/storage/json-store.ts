@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import os from "node:os";
 
 export type JsonStore<T> = {
   read(): Promise<T>;
@@ -23,7 +24,7 @@ export function dataPath(name: string): string {
   if (name.includes("..") || path.isAbsolute(name) || /[\/\\]/.test(name)) {
     throw new Error(`Invalid storage file name '${name}': path traversal characters are rejected`);
   }
-  const baseDir = process.env.NEON_DATA_DIR ?? ".data";
+  const baseDir = process.env.NEON_DATA_DIR ?? (process.env.VERCEL ? path.join(os.tmpdir(), "cyberblade-data") : ".data");
   const resolved = path.resolve(/* turbopackIgnore: true */ baseDir, name);
   const resolvedBase = path.resolve(/* turbopackIgnore: true */ baseDir);
   if (!resolved.startsWith(resolvedBase)) {

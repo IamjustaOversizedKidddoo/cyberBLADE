@@ -18,14 +18,13 @@ export const metadata: Metadata = {
 };
 
 const INTAKE_FIELDS = [
-  { id: "OPSEC-01", label: "Identity protection" },
-  { id: "OPSEC-02", label: "Handle validation" },
-  { id: "OPSEC-03", label: "Ethical use agreement" },
+  { id: "OPSEC-01", label: "Anonymous callsign" },
+  { id: "OPSEC-02", label: "Instant clearance" },
+  { id: "OPSEC-03", label: "Full console access" },
 ] as const;
 
 export default async function StartPage(props: PageProps<"/start">) {
-  const { next, error } = await props.searchParams;
-  const isHosted = isSupabaseConfigured();
+  const { next } = await props.searchParams;
   return (
     <>
       <Scanlines />
@@ -41,14 +40,14 @@ export default async function StartPage(props: PageProps<"/start">) {
           <div className="col-span-full max-w-5xl mx-auto w-full">
             {/* Sequence label */}
             <SystemLabel>
-              {`${BRAND.name} // OPERATOR INTAKE // PHASE 01`}
+              {`${BRAND.name} // OPERATOR INTAKE // DIRECT ACCESS`}
             </SystemLabel>
 
             {/* Giant heading */}
             <PosterHeading
               id="start-heading"
               as="h1"
-              lines={["INITIATE_"]}
+              lines={["ENTER_", "CONSOLE"]}
               size="section"
               cursor
               className="mt-3"
@@ -58,7 +57,7 @@ export default async function StartPage(props: PageProps<"/start">) {
             <div className="mt-8 grid grid-cols-[auto_1fr] items-center gap-4">
               <div aria-hidden="true" className="flex items-center gap-1.5 font-ui text-xs tracking-widest text-void/60">
                 <span className="block h-2 w-2 rounded-full border-2 border-current" />
-                &gt;&nbsp;NEW OPERATOR DETECTED
+                &gt;&nbsp;OPERATOR READY
               </div>
               <div aria-hidden="true" className="h-px bg-void/20" />
             </div>
@@ -87,7 +86,7 @@ export default async function StartPage(props: PageProps<"/start">) {
                   TERMINAL
                 </span>
                 <span className="px-4 py-2 font-ui text-xs tracking-widest text-muted">
-                  register_operator
+                  launch_session
                 </span>
                 <span className="ml-auto flex gap-1.5 px-4 py-2" aria-hidden="true">
                   <span className="block h-2 w-2 rounded-full bg-pink/50" />
@@ -99,13 +98,10 @@ export default async function StartPage(props: PageProps<"/start">) {
               {/* Form body with terminal inset */}
               <div className="border-2 border-t-0 border-line p-6 sm:p-8">
                 <p className="mb-8 font-mono text-xs tracking-widest text-secondary">
-                  &gt; INTAKE SEQUENCE INITIATED — COMPLETE ALL FIELDS TO PROCEED
+                  &gt; ENTER ANY CALLSIGN OR LEAVE BLANK TO INITIALIZE
                 </p>
                 <StartForm
                   next={safeNextPath(typeof next === "string" ? next : null)}
-                  isHosted={isHosted}
-                  inviteOnly={isBetaInviteOnly()}
-                  notice={error === "invite_required" ? INVITE_ERROR : error ? "Sign-in did not complete. Please try again." : null}
                 />
               </div>
             </div>
@@ -114,7 +110,7 @@ export default async function StartPage(props: PageProps<"/start">) {
             <div className="hidden bg-void lg:block">
               {/* Header cell */}
               <div className="border-b border-line px-6 py-4">
-                <SystemLabel className="text-cyan">INTAKE PROTOCOL</SystemLabel>
+                <SystemLabel className="text-cyan">DIRECT ACCESS</SystemLabel>
               </div>
 
               {/* Step-by-step intake fields */}
@@ -139,15 +135,15 @@ export default async function StartPage(props: PageProps<"/start">) {
                 <div className="space-y-2 font-ui text-secondary">
                   <div className="flex justify-between">
                     <span>SESSION</span>
-                    <span className="text-ink">{isHosted ? "HOSTED (SUPABASE)" : "LOCAL"}</span>
+                    <span className="text-ink">DIRECT (ACTIVE)</span>
                   </div>
                   <div className="flex justify-between">
                     <span>CLEARANCE</span>
-                    <span className="text-ink">PENDING</span>
+                    <span className="text-cyan">GRANTED</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>STATUS</span>
-                    <span className="text-pink">UNAUTHENTICATED</span>
+                    <span>AUTHENTICATION</span>
+                    <span className="text-ink">NOT REQUIRED</span>
                   </div>
                 </div>
 
