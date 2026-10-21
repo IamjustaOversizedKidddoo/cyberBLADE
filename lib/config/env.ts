@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { isAllContentUnlocked } from "../progress/access";
 
 /**
  * Validated server runtime configuration schema.
@@ -40,6 +41,7 @@ const envSchema = z.object({
 function devDefaultFlag(value: string | undefined): boolean {
   if (value === "false" || value === "0") return false;
   if (value === "true" || value === "1") return true;
+  if (isAllContentUnlocked()) return true;
   // Default on in development & test, off in production until reviewed
   return process.env.NODE_ENV !== "production";
 }
@@ -47,19 +49,25 @@ function devDefaultFlag(value: string | undefined): boolean {
 /** Penetration Testing track L1. Default false; server-side gated. */
 export function isPentestEnabled(): boolean {
   const flag = process.env.PENTEST_ENABLED;
-  return flag === "true" || flag === "1";
+  if (flag === "false" || flag === "0") return false;
+  if (flag === "true" || flag === "1") return true;
+  return isAllContentUnlocked();
 }
 
 /** Penetration Testing L1 practical exams. Default false; server-side gated. */
 export function isPentestExamsEnabled(): boolean {
   const flag = process.env.PENTEST_EXAMS_ENABLED;
-  return flag === "true" || flag === "1";
+  if (flag === "false" || flag === "0") return false;
+  if (flag === "true" || flag === "1") return true;
+  return isAllContentUnlocked();
 }
 
 /** Certificates and public verification registry. Default false; server-side gated. */
 export function isCertificatesEnabled(): boolean {
   const flag = process.env.CERTIFICATES_ENABLED;
-  return flag === "true" || flag === "1";
+  if (flag === "false" || flag === "0") return false;
+  if (flag === "true" || flag === "1") return true;
+  return isAllContentUnlocked();
 }
 
 /** SOC exam mode (Stage 1). Off in production until reviewed. */
@@ -92,27 +100,15 @@ export function isSocHandlerEnabled(): boolean {
 }
 
 export function isSocWorkspaceEnabled(): boolean {
-  const flag = process.env.SOC_WORKSPACE_ENABLED;
-  if (flag === "false" || flag === "0") return false;
-  if (flag === "true" || flag === "1") return true;
-  // Default on in development & test, off in production until reviewed
-  return process.env.NODE_ENV !== "production";
+  return devDefaultFlag(process.env.SOC_WORKSPACE_ENABLED);
 }
 
 export function isSocEnrichmentEnabled(): boolean {
-  const flag = process.env.SOC_ENRICHMENT_ENABLED;
-  if (flag === "false" || flag === "0") return false;
-  if (flag === "true" || flag === "1") return true;
-  // Default on in development & test, off in production until reviewed
-  return process.env.NODE_ENV !== "production";
+  return devDefaultFlag(process.env.SOC_ENRICHMENT_ENABLED);
 }
 
 export function isSocQueryEnabled(): boolean {
-  const flag = process.env.SOC_QUERY_ENABLED;
-  if (flag === "false" || flag === "0") return false;
-  if (flag === "true" || flag === "1") return true;
-  // Default on in development & test, off in production until reviewed
-  return process.env.NODE_ENV !== "production";
+  return devDefaultFlag(process.env.SOC_QUERY_ENABLED);
 }
 
 export type ServerEnv = z.infer<typeof envSchema>;
