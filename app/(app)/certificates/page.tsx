@@ -5,6 +5,7 @@ import { isCertificatesEnabled } from "@/lib/config/env";
 import { requireOperator } from "@/lib/identity/session";
 import { getCtx } from "@/lib/progress/context";
 import { listLearnerTrackEligibilities } from "@/lib/certificates/eligibility";
+import type { TrackCertificateEligibility } from "@/lib/certificates/types";
 import { CertificateView } from "@/components/certificates/CertificateView";
 import { ClaimCertificateModal } from "@/components/certificates/ClaimCertificateModal";
 
@@ -18,7 +19,7 @@ export default async function CertificatesPage() {
   const operator = await requireOperator();
   const ctx = getCtx();
 
-  let eligibilities = [];
+  let eligibilities: TrackCertificateEligibility[] = [];
   try {
     eligibilities = await listLearnerTrackEligibilities(ctx, operator.id);
   } catch (err) {
