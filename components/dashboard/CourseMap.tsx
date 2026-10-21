@@ -28,6 +28,13 @@ const GROUP_SIGIL: Record<TrackGroup, string> = {
   Leadership: "╬",
 };
 
+const TRACK_ROUTES: Record<string, string> = {
+  soc: "/learn/soc-l1",
+  pentest: "/learn/pentest-l1",
+  purple: "/learn/core",
+  cloud: "/learn/core",
+};
+
 type Props = { currentRank: number; xp: number; rankProgress: { done: number; total: number } };
 
 export function CourseMap({ currentRank, xp, rankProgress }: Props) {
@@ -36,7 +43,6 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
 
   return (
     <div className="space-y-16">
-
       {/* ── SHARED CORE ────────────────────────────────────────────────────── */}
       <section aria-labelledby="core-heading">
         {/* Section header */}
@@ -45,17 +51,16 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
             CAMPAIGN // SHARED_CORE
           </h2>
           <div aria-hidden="true" className="flex-1 h-px bg-line" />
-          <SystemLabel className="text-secondary">
-            {currentRank === 0 ? `RANK_${currentRank} ACTIVE` : `RANK_${currentRank - 1} CLEARED`}
+          <SystemLabel className="text-cyan">
+            ALL RANKS UNLOCKED
           </SystemLabel>
         </div>
 
         {/* Rank nodes in double-bezel tactical chassis */}
         <ol className="mt-6 space-y-3" aria-label="Shared core ranks">
           {CORE.ranks.map((r) => {
-            const state = r.rank < currentRank ? "cleared" : r.rank === currentRank ? "current" : "locked";
-            const isCurrent = state === "current";
-            const isCleared = state === "cleared";
+            const isCurrent = r.rank === currentRank;
+            const isCleared = r.rank < currentRank;
 
             return (
               <li
@@ -66,7 +71,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                     ? "border-cyan/50 bg-surface/70 shadow-[0_0_20px_rgba(15,190,255,0.08)]"
                     : isCleared
                     ? "border-purple/30 bg-surface/40"
-                    : "border-white/10 bg-surface/20"
+                    : "border-cyan/30 bg-surface/30"
                 }`}
               >
                 <div
@@ -77,7 +82,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                   {/* Giant rank numeral cell */}
                   <div
                     className={`flex items-center justify-center bg-void py-6 font-display text-5xl leading-none ${
-                      isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-muted"
+                      isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-cyan/80"
                     }`}
                     aria-hidden="true"
                   >
@@ -88,7 +93,7 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                   <div className="bg-void px-5 py-5">
                     <div className="flex flex-wrap items-center gap-3">
                       <SystemLabel
-                        className={isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-secondary"}
+                        className={isCurrent ? "text-cyan" : isCleared ? "text-purple" : "text-cyan/70"}
                       >
                         {RANK_CODENAME[r.rank] ?? `RANK_${r.rank}`}
                       </SystemLabel>
@@ -98,21 +103,21 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                             ? "border-cyan/50 bg-cyan/10 text-cyan shadow-[0_0_10px_rgba(15,190,255,0.2)]"
                             : isCleared
                             ? "border-purple/50 bg-purple/10 text-purple"
-                            : "border-line/80 bg-surface text-secondary"
+                            : "border-cyan/40 bg-cyan/5 text-cyan"
                         }`}
                       >
-                        {state === "cleared" ? "CLEARED" : state === "current" ? "ACTIVE" : "LOCKED"}
+                        {isCleared ? "CLEARED" : isCurrent ? "ACTIVE" : "UNLOCKED"}
                       </span>
                     </div>
-                    <h3 className={`mt-2 font-ui text-lg ${state === "locked" ? "text-secondary" : "text-ink"}`}>
+                    <h3 className="mt-2 font-ui text-lg text-ink">
                       rank_{r.rank} · {r.name}
                     </h3>
                     <p className="mt-1 text-sm text-muted">{RANK_SUMMARY[r.rank]}</p>
                   </div>
 
                   {/* Action cell */}
-                  <div className="flex items-center bg-void px-5">
-                    {isCurrent && (
+                  <div className="flex items-center bg-void px-5 py-3 sm:py-0">
+                    {isCurrent ? (
                       <Link
                         href={`/learn/core#rank-${r.rank}`}
                         aria-label={rankProgress.done > 0 ? "Continue" : `Begin rank_${r.rank}`}
@@ -120,20 +125,20 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                       >
                         {rankProgress.done > 0 ? "CONTINUE →" : "BEGIN →"}
                       </Link>
-                    )}
-                    {isCleared && (
+                    ) : isCleared ? (
                       <Link
                         href={`/learn/core#rank-${r.rank}`}
                         className="inline-flex min-h-[44px] items-center justify-center border border-purple px-4 py-2 font-ui text-xs text-purple hover:bg-purple hover:text-void transition-colors"
                       >
-                        REVIEW
+                        REVIEW →
                       </Link>
-                    )}
-                    {state === "locked" && (
-                      <span className="font-ui text-xs text-secondary tracking-wider flex items-center gap-1.5">
-                        <IconLock className="h-3.5 w-3.5" />
-                        <span>Unlock at Rank {r.rank - 1} Capstone</span>
-                      </span>
+                    ) : (
+                      <Link
+                        href={`/learn/core#rank-${r.rank}`}
+                        className="btn-glitch inline-flex min-h-[44px] items-center justify-center border border-cyan/60 bg-cyan/10 px-5 py-2 font-ui text-sm font-semibold text-cyan hover:bg-cyan hover:text-void transition-colors"
+                      >
+                        OPEN RANK →
+                      </Link>
                     )}
                   </div>
                 </div>
@@ -158,18 +163,18 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
       {/* ── LAUNCH TRACKS ──────────────────────────────────────────────────── */}
       <section aria-labelledby="tracks-heading">
         <div className="flex items-center gap-4 border-b-2 border-line pb-4">
-          <h2 id="tracks-heading" aria-label="job_tracks" className="font-ui text-sm tracking-[0.25em] text-muted">
-            JOB_TRACKS // UNLOCKS AFTER RANK_2
+          <h2 id="tracks-heading" aria-label="job_tracks" className="font-ui text-sm tracking-[0.25em] text-cyan">
+            JOB_TRACKS // OPEN &amp; READY TO EXPLORE
           </h2>
           <div aria-hidden="true" className="flex-1 h-px bg-line" />
-          <SystemLabel className="text-secondary">{launch.length} OPEN</SystemLabel>
+          <SystemLabel className="text-cyan">{launch.length} READY</SystemLabel>
         </div>
 
         <ul className="mt-6 grid gap-px bg-line sm:grid-cols-2" aria-label="Open job tracks">
           {launch.map((t, i) => (
             <li
               key={t.id}
-              className="relative overflow-hidden bg-void p-5"
+              className="relative overflow-hidden bg-void p-5 flex flex-col justify-between"
             >
               {i === 0 && (
                 <div className="pointer-events-none absolute inset-0 opacity-10">
@@ -177,13 +182,19 @@ export function CourseMap({ currentRank, xp, rankProgress }: Props) {
                 </div>
               )}
               <div className="relative">
-                <SystemLabel className="text-secondary">
+                <SystemLabel className="text-cyan">
                   {`TRACK ${String(i + 1).padStart(2, "0")} // ${t.group.toUpperCase()}`}
                 </SystemLabel>
-                <p className="mt-2 font-ui text-lg text-ink">{t.title}</p>
-                <p className="mt-3 border-t border-line pt-3 font-ui text-xs tracking-wider text-secondary">
-                  ▒ LOCKED — Complete shared core to unlock
-                </p>
+                <p className="mt-2 font-ui text-lg text-ink font-bold">{t.title}</p>
+                <div className="mt-4 border-t border-line pt-3 flex flex-wrap items-center justify-between gap-3">
+                  <span className="font-ui text-xs text-cyan font-semibold tracking-wider">● CLEARANCE ACTIVE</span>
+                  <Link
+                    href={TRACK_ROUTES[t.id] ?? "/learn/core"}
+                    className="btn-glitch inline-flex min-h-[38px] items-center justify-center border-2 border-cyan bg-cyan/15 px-4 py-1.5 font-ui text-xs font-bold text-cyan hover:bg-cyan hover:text-void transition-colors cursor-pointer"
+                  >
+                    ENTER TRACK →
+                  </Link>
+                </div>
               </div>
             </li>
           ))}

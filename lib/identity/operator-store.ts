@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Operator } from "./types";
 import { FileOperatorStore } from "./file-operator-store";
+import { isAllContentUnlocked } from "../progress/access";
 
 export interface OperatorStore {
   get(id: string): Promise<Operator | null>;
@@ -15,11 +16,14 @@ export class ResilientOperatorStore implements OperatorStore {
 
   async get(id: string): Promise<Operator | null> {
     if (ResilientOperatorStore.memory.has(id)) {
-      return ResilientOperatorStore.memory.get(id)!;
+      const op = ResilientOperatorStore.memory.get(id)!;
+      if (isAllContentUnlocked() && op.rank < 2) op.rank = 2;
+      return op;
     }
     try {
       const op = await this.fileStore.get(id);
       if (op) {
+        if (isAllContentUnlocked() && op.rank < 2) op.rank = 2;
         ResilientOperatorStore.memory.set(id, op);
         return op;
       }
@@ -31,10 +35,11 @@ export class ResilientOperatorStore implements OperatorStore {
 
   async create(input: { handle: string; ethicsAcceptedAt: string | null; id?: string }): Promise<Operator> {
     const id = input.id ?? randomUUID();
+    const rank = isAllContentUnlocked() ? 2 : 0;
     const op: Operator = {
       id,
       handle: input.handle,
-      rank: 0,
+      rank,
       ethicsAcceptedAt: input.ethicsAcceptedAt || new Date().toISOString(),
       createdAt: new Date().toISOString(),
     };

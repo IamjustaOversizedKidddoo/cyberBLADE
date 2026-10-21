@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { OPERATOR_COOKIE } from "./constants";
 import { getOperatorStore } from "./operator-store";
 import type { Operator } from "./types";
+import { isAllContentUnlocked } from "../progress/access";
 
 export { OPERATOR_COOKIE };
 const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
@@ -29,6 +30,7 @@ export const getCurrentOperator = cache(async (): Promise<Operator | null> => {
     try {
       const parsed = JSON.parse(decodeURIComponent(opCookie)) as Operator;
       if (parsed && (parsed.id === id || !id)) {
+        if (isAllContentUnlocked() && parsed.rank < 2) parsed.rank = 2;
         await getOperatorStore().create({
           id: parsed.id,
           handle: parsed.handle,
@@ -45,7 +47,7 @@ export const getCurrentOperator = cache(async (): Promise<Operator | null> => {
   const fallbackOp: Operator = {
     id,
     handle: id.startsWith("op_") ? id : `op_${id.slice(0, 6)}`,
-    rank: 0,
+    rank: isAllContentUnlocked() ? 2 : 0,
     ethicsAcceptedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   };

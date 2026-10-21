@@ -1,6 +1,7 @@
 import { newSeed } from "@/lib/generators/rng";
 import { generateLab } from "@/lib/lab-engine/checks";
 import type { LoadedLab } from "@/lib/lab-engine/lab-schema";
+import { isAllContentUnlocked } from "./access";
 import { checkAttemptAnswer, toSession, type Ctx, type LabSession } from "./service";
 
 export type ChallengeState =
@@ -30,7 +31,7 @@ export function challengeState(input: {
     const retryAt = addMinutes(failedAt, cooldownMinutes);
     if (now < retryAt) return { kind: "cooldown", retryAt: retryAt.toISOString() };
   }
-  if (!allLessonsDone) return { kind: "locked" };
+  if (!allLessonsDone && !isAllContentUnlocked()) return { kind: "locked" };
   return { kind: "ready" };
 }
 
