@@ -1673,7 +1673,10 @@ export class SupabaseProgressRepo implements ProgressRepo {
       .eq("user_id", userId)
       .order("issued_at", { ascending: false });
 
-    if (error) throw new Error(`Failed to list certificates: ${error.message}`);
+    if (error) {
+      console.warn(`[certificates] database error: ${error.message}`);
+      return [];
+    }
     return (data ?? []).map((row) => ({
       id: row.id,
       userId: row.user_id,
@@ -1697,7 +1700,10 @@ export class SupabaseProgressRepo implements ProgressRepo {
       .eq("credential_id", credentialId)
       .maybeSingle();
 
-    if (error) throw new Error(`Failed to get certificate: ${error.message}`);
+    if (error) {
+      console.warn(`[certificates] database error: ${error.message}`);
+      return null;
+    }
     if (!data) return null;
     return {
       id: data.id,
